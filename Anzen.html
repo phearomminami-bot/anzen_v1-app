@@ -703,6 +703,7 @@ window.__trRegistry = {
   "Recent inspections (all dates)": "ប្រវត្តិពិនិត្យថ្មីៗ (គ្រប់ថ្ងៃ)",
   "Click to open this date": "ចុចដើម្បីបើកថ្ងៃនេះ",
   "Inspect": "ពិនិត្យ",
+  "View fullscreen": "មើលពេញអេក្រង់",
   "No photo": "គ្មានរូប",
   "Add photo": "បន្ថែមរូប",
   "Delete this photo": "លុបរូបនេះ",
@@ -760,6 +761,7 @@ window.__trRegistry = {
   "Usage this month": "ម៉ោងប្រើប្រាស់ខែនេះ",
   "lessons": "មេរៀន",
   "Daily Inspection": "ពិនិត្យប្រចាំថ្ងៃ",
+  "Sort": "តម្រៀប",
   "No vehicles to display": "មិន​ទាន់​មាន​យានយន្ត",
   "Toggle vehicles visible in Vehicle management": "ធ្វើ​ឲ្យ​យានយន្ត​មើលឃើញ​នៅ​ Vehicle management",
   "Payment recorded": "បានចងចាំការបង់ · Payment recorded",
@@ -30292,7 +30294,20 @@ var FvDetailRow = ({
   } = useAppActions();
   var uploadRef = React.useRef();
   var [photoIdx, setPhotoIdx] = React.useState(0);
+  var [sliding, setSliding] = React.useState(null);
+  var [lightbox, setLightbox] = React.useState(false);
+  var [lbIdx, setLbIdx] = React.useState(0);
+  var touchStartX = React.useRef(null);
   var [, rerender] = React.useReducer(x => x + 1, 0);
+  React.useEffect(() => {
+    if (!lightbox) return;
+    var ph = v && v.photos && v.photos.length ? v.photos : v && v.photo ? [v.photo] : [];
+    var onKey = e => {
+      if (e.key === 'Escape') setLightbox(false);else if (e.key === 'ArrowRight') setLbIdx(i => Math.min(i + 1, ph.length - 1));else if (e.key === 'ArrowLeft') setLbIdx(i => Math.max(i - 1, 0));
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [lightbox, v]);
   if (!v) return null;
   var getPhotos = () => {
     if (v.photos && v.photos.length > 0) return v.photos;
@@ -30301,6 +30316,24 @@ var FvDetailRow = ({
   var photos = getPhotos();
   var safeIdx = Math.min(photoIdx, Math.max(0, photos.length - 1));
   var curPhoto = photos[safeIdx] || null;
+  var lbSafe = Math.min(lbIdx, Math.max(0, photos.length - 1));
+  var goTo = idx => {
+    if (idx < 0 || idx >= photos.length) return;
+    setSliding(idx > safeIdx ? 'left' : 'right');
+    setTimeout(() => {
+      setPhotoIdx(idx);
+      setSliding(null);
+    }, 200);
+  };
+  var onTouchStart = e => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  var onTouchEnd = e => {
+    if (touchStartX.current === null) return;
+    var dx = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (dx < -40) goTo(safeIdx + 1);else if (dx > 40) goTo(safeIdx - 1);
+  };
   var addPhoto = e => {
     var file = e.target.files?.[0];
     if (!file) return;
@@ -30344,7 +30377,134 @@ var FvDetailRow = ({
     rerender();
     forceUpdate();
   };
-  return React.createElement(Card, {
+  return React.createElement(React.Fragment, null, lightbox && photos.length > 0 && React.createElement("div", {
+    onClick: () => setLightbox(false),
+    style: {
+      position: 'fixed',
+      inset: 0,
+      zIndex: 9999,
+      background: 'rgba(0,0,0,.92)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }
+  }, React.createElement("img", {
+    src: photos[lbSafe],
+    onClick: e => e.stopPropagation(),
+    style: {
+      maxWidth: '92vw',
+      maxHeight: '88vh',
+      objectFit: 'contain',
+      borderRadius: 8,
+      boxShadow: '0 8px 40px rgba(0,0,0,.5)'
+    }
+  }), React.createElement("button", {
+    onClick: () => setLightbox(false),
+    title: tr('បិទ', 'Close'),
+    style: {
+      position: 'fixed',
+      top: 18,
+      right: 20,
+      width: 40,
+      height: 40,
+      borderRadius: '50%',
+      border: 'none',
+      background: 'rgba(255,255,255,.15)',
+      color: '#fff',
+      fontSize: 20,
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      lineHeight: 1
+    }
+  }, "\u2715"), lbSafe > 0 && React.createElement("button", {
+    onClick: e => {
+      e.stopPropagation();
+      setLbIdx(lbSafe - 1);
+    },
+    style: {
+      position: 'fixed',
+      left: 16,
+      top: '50%',
+      transform: 'translateY(-50%)',
+      width: 48,
+      height: 48,
+      borderRadius: '50%',
+      border: 'none',
+      background: 'rgba(255,255,255,.15)',
+      color: '#fff',
+      fontSize: 26,
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      lineHeight: 1
+    }
+  }, "\u2039"), lbSafe < photos.length - 1 && React.createElement("button", {
+    onClick: e => {
+      e.stopPropagation();
+      setLbIdx(lbSafe + 1);
+    },
+    style: {
+      position: 'fixed',
+      right: 16,
+      top: '50%',
+      transform: 'translateY(-50%)',
+      width: 48,
+      height: 48,
+      borderRadius: '50%',
+      border: 'none',
+      background: 'rgba(255,255,255,.15)',
+      color: '#fff',
+      fontSize: 26,
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      lineHeight: 1
+    }
+  }, "\u203A"), photos.length > 1 && React.createElement("div", {
+    style: {
+      position: 'fixed',
+      bottom: 76,
+      left: '50%',
+      transform: 'translateX(-50%)',
+      color: '#fff',
+      fontSize: 12,
+      fontFamily: '"JetBrains Mono",monospace',
+      background: 'rgba(0,0,0,.45)',
+      padding: '4px 12px',
+      borderRadius: 20
+    }
+  }, lbSafe + 1, " / ", photos.length), photos.length > 1 && React.createElement("div", {
+    onClick: e => e.stopPropagation(),
+    style: {
+      position: 'fixed',
+      bottom: 14,
+      left: '50%',
+      transform: 'translateX(-50%)',
+      display: 'flex',
+      gap: 6,
+      maxWidth: '92vw',
+      overflowX: 'auto',
+      padding: 4
+    }
+  }, photos.map((p, i) => React.createElement("img", {
+    key: i,
+    src: p,
+    onClick: () => setLbIdx(i),
+    style: {
+      width: 54,
+      height: 40,
+      objectFit: 'cover',
+      borderRadius: 5,
+      cursor: 'pointer',
+      flexShrink: 0,
+      border: i === lbSafe ? '2px solid #fff' : '2px solid transparent',
+      opacity: i === lbSafe ? 1 : .55
+    }
+  })))), React.createElement(Card, {
     pad: 0
   }, React.createElement("div", {
     style: {
@@ -30365,7 +30525,9 @@ var FvDetailRow = ({
       flexShrink: 0,
       background: 'var(--surface-muted)',
       border: '1px solid var(--border)'
-    }
+    },
+    onTouchStart: onTouchStart,
+    onTouchEnd: onTouchEnd
   }, React.createElement("input", {
     ref: uploadRef,
     type: "file",
@@ -30374,13 +30536,26 @@ var FvDetailRow = ({
       display: 'none'
     },
     onChange: addPhoto
-  }), curPhoto ? React.createElement("img", {
+  }), React.createElement("div", {
+    style: {
+      width: '100%',
+      height: '100%',
+      transform: sliding === 'left' ? 'translateX(-8%)' : sliding === 'right' ? 'translateX(8%)' : 'translateX(0)',
+      transition: sliding ? 'transform .2s ease' : 'none'
+    }
+  }, curPhoto ? React.createElement("img", {
     src: curPhoto,
+    onClick: () => {
+      setLbIdx(safeIdx);
+      setLightbox(true);
+    },
+    title: tr('មើលពេញអេក្រង់', 'View fullscreen'),
     style: {
       width: '100%',
       height: '100%',
       objectFit: 'cover',
-      display: 'block'
+      display: 'block',
+      cursor: 'zoom-in'
     }
   }) : React.createElement("div", {
     style: {
@@ -30392,8 +30567,8 @@ var FvDetailRow = ({
       color: 'var(--ink-3)',
       fontSize: 11
     }
-  }, tr('គ្មានរូប', 'No photo')), safeIdx > 0 && React.createElement("button", {
-    onClick: () => setPhotoIdx(safeIdx - 1),
+  }, tr('គ្មានរូប', 'No photo'))), safeIdx > 0 && React.createElement("button", {
+    onClick: () => goTo(safeIdx - 1),
     style: {
       position: 'absolute',
       left: 4,
@@ -30413,7 +30588,7 @@ var FvDetailRow = ({
       lineHeight: 1
     }
   }, "\u2039"), safeIdx < photos.length - 1 && React.createElement("button", {
-    onClick: () => setPhotoIdx(safeIdx + 1),
+    onClick: () => goTo(safeIdx + 1),
     style: {
       position: 'absolute',
       right: 4,
@@ -30483,12 +30658,13 @@ var FvDetailRow = ({
     }
   }, photos.map((_, i) => React.createElement("div", {
     key: i,
-    onClick: () => setPhotoIdx(i),
+    onClick: () => goTo(i),
     style: {
-      width: 5,
+      width: i === safeIdx ? 14 : 5,
       height: 5,
-      borderRadius: '50%',
+      borderRadius: 3,
       background: i === safeIdx ? '#fff' : 'rgba(255,255,255,.5)',
+      transition: 'width .2s',
       cursor: 'pointer'
     }
   })))), React.createElement("div", {
@@ -30733,7 +30909,7 @@ var FvDetailRow = ({
         color
       }
     }, doc.d || '—'));
-  })))));
+  }))))));
 };
 var FvLbl = ({
   children
@@ -33139,6 +33315,8 @@ var VehicleScreen = () => {
   var bp = useBreakpoint();
   var [, forceUpdate] = React.useReducer(x => x + 1, 0);
   var [selectedId, setSelectedId] = React.useState(null);
+  var [sortBy, setSortBy] = React.useState('plate');
+  var [sortAsc, setSortAsc] = React.useState(true);
   React.useEffect(() => {
     var prev = window.__notifyVehiclesChanged;
     window.__notifyVehiclesChanged = () => forceUpdate();
@@ -33148,6 +33326,77 @@ var VehicleScreen = () => {
   }, []);
   var visible = VEHICLES.filter(v => v.visible !== false);
   var selected = visible.find(v => v.id === selectedId) || null;
+  var STATUS_ORDER = {
+    Active: 0,
+    'Service due': 1,
+    Workshop: 2,
+    Idle: 3
+  };
+  var sorted = [...visible].sort((a, b) => {
+    if (sortBy === 'status') {
+      var d = (STATUS_ORDER[a.status] || 9) - (STATUS_ORDER[b.status] || 9);
+      return sortAsc ? d : -d;
+    }
+    var va = (sortBy === 'make' ? a.make : sortBy === 'cls' ? a.cls : a.plate) || '';
+    var vb = (sortBy === 'make' ? b.make : sortBy === 'cls' ? b.cls : b.plate) || '';
+    return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+  var SORT_OPTS = [{
+    id: 'plate',
+    km: 'ផ្លាកលេខ',
+    en: 'Plate'
+  }, {
+    id: 'make',
+    km: 'ឈ្មោះ',
+    en: 'Make'
+  }, {
+    id: 'status',
+    km: 'ស្ថានភាព',
+    en: 'Status'
+  }, {
+    id: 'cls',
+    km: 'ប្រភេទ',
+    en: 'Class'
+  }];
+  var SortBar = () => React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 5,
+      flexWrap: 'wrap'
+    }
+  }, React.createElement("span", {
+    style: {
+      fontSize: 11,
+      color: 'var(--ink-3)',
+      marginRight: 2
+    }
+  }, tr('តម្រៀប', 'Sort'), ":"), SORT_OPTS.map(s => {
+    var active = sortBy === s.id;
+    return React.createElement("button", {
+      key: s.id,
+      onClick: () => active ? setSortAsc(x => !x) : (setSortBy(s.id), setSortAsc(true)),
+      style: {
+        padding: '2px 8px',
+        borderRadius: 20,
+        fontSize: 11,
+        fontWeight: active ? 600 : 400,
+        border: active ? '1.5px solid var(--accent)' : '1px solid var(--border)',
+        background: active ? 'color-mix(in srgb,var(--accent) 12%,transparent)' : 'transparent',
+        color: active ? 'var(--accent)' : 'var(--ink-2)',
+        cursor: 'pointer',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 3,
+        lineHeight: 1.6
+      }
+    }, tr(s.km, s.en), active && React.createElement("span", {
+      style: {
+        fontSize: 9,
+        opacity: .8
+      }
+    }, sortAsc ? '↑' : '↓'));
+  }));
   var saveDates = (id, dates) => {
     var i = VEHICLES.findIndex(v => v.id === id);
     if (i !== -1) Object.assign(VEHICLES[i], dates);
@@ -33188,12 +33437,20 @@ var VehicleScreen = () => {
       }
     }, React.createElement("div", {
       style: {
-        padding: '10px 0 8px',
+        padding: '10px 0 6px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 6
+      }
+    }, React.createElement("span", {
+      style: {
         fontSize: 13,
         fontWeight: 600,
         color: 'var(--ink-2)'
       }
-    }, tr(`យានយន្ត · ${visible.length} គ្រឿង`, `Vehicles · ${visible.length}`)), visible.length === 0 ? React.createElement("div", {
+    }, tr(`យានយន្ត · ${visible.length} គ្រឿង`, `Vehicles · ${visible.length}`)), React.createElement(SortBar, null)), visible.length === 0 ? React.createElement("div", {
       style: {
         textAlign: 'center',
         padding: '48px 20px',
@@ -33202,7 +33459,7 @@ var VehicleScreen = () => {
       }
     }, tr('មិន​ទាន់​មាន​យានយន្ត', 'No vehicles to display')) : React.createElement(Card, {
       pad: 0
-    }, visible.map((v, idx) => {
+    }, sorted.map((v, idx) => {
       var pc = plateBg(v.trans);
       var allInsp = (window.__vehicleInspections || []).filter(r => r.vehicleId === v.id).sort((a, b) => b.date.localeCompare(a.date));
       var todayRec = allInsp.find(r => r.date === todayStr()) || null;
@@ -33289,10 +33546,18 @@ var VehicleScreen = () => {
       flexDirection: 'column',
       gap: 14
     }
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      flexWrap: 'wrap',
+      gap: 8
+    }
   }, React.createElement(SectionTitle, {
     km: `យានយន្ត · ${visible.length} គ្រឿង`,
     en: `Vehicles · ${visible.length} available`
-  }), visible.length === 0 ? React.createElement(Card, {
+  }), React.createElement(SortBar, null)), visible.length === 0 ? React.createElement(Card, {
     pad: 48,
     style: {
       textAlign: 'center',
@@ -33315,7 +33580,7 @@ var VehicleScreen = () => {
       fontSize: 12
     }
   }, tr('ធ្វើ​ឲ្យ​យានយន្ត​មើលឃើញ​នៅ​ Vehicle management', 'Toggle vehicles visible in Vehicle management'))) : React.createElement(FvCards, {
-    vehicles: visible,
+    vehicles: sorted,
     selectedId: selectedId,
     onSelect: setSelectedId,
     onStatusChange: cycleStatus,

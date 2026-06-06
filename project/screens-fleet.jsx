@@ -1524,7 +1524,23 @@ const FvDetailRow = ({ v, onEdit, forceUpdate }) => {
   const { toast, tr } = useAppActions();
   const uploadRef = React.useRef();
   const [photoIdx, setPhotoIdx] = React.useState(0);
+  const [sliding,  setSliding]  = React.useState(null); // 'left' | 'right' | null
+  const [lightbox, setLightbox] = React.useState(false);
+  const [lbIdx,    setLbIdx]    = React.useState(0);
+  const touchStartX = React.useRef(null);
   const [, rerender] = React.useReducer(x => x + 1, 0);
+
+  React.useEffect(() => {
+    if (!lightbox) return;
+    const ph = (v && v.photos && v.photos.length) ? v.photos : (v && v.photo ? [v.photo] : []);
+    const onKey = (e) => {
+      if (e.key === 'Escape') setLightbox(false);
+      else if (e.key === 'ArrowRight') setLbIdx(i => Math.min(i + 1, ph.length - 1));
+      else if (e.key === 'ArrowLeft')  setLbIdx(i => Math.max(i - 1, 0));
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [lightbox, v]);
 
   if (!v) return null;
 
@@ -1535,6 +1551,20 @@ const FvDetailRow = ({ v, onEdit, forceUpdate }) => {
   const photos = getPhotos();
   const safeIdx = Math.min(photoIdx, Math.max(0, photos.length - 1));
   const curPhoto = photos[safeIdx] || null;
+  const lbSafe = Math.min(lbIdx, Math.max(0, photos.length - 1));
+  const goTo = (idx) => {
+    if (idx < 0 || idx >= photos.length) return;
+    setSliding(idx > safeIdx ? 'left' : 'right');
+    setTimeout(() => { setPhotoIdx(idx); setSliding(null); }, 200);
+  };
+  const onTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
+  const onTouchEnd   = (e) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (dx < -40) goTo(safeIdx + 1);
+    else if (dx > 40) goTo(safeIdx - 1);
+  };
 
   const addPhoto = (e) => {
     const file = e.target.files?.[0];
@@ -1578,22 +1608,52 @@ const FvDetailRow = ({ v, onEdit, forceUpdate }) => {
   };
 
   return (
+    <>
+    {lightbox && photos.length > 0 && (
+      <div onClick={()=>setLightbox(false)} style={{position:'fixed',inset:0,zIndex:9999,background:'rgba(0,0,0,.92)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <img src={photos[lbSafe]} onClick={e=>e.stopPropagation()} style={{maxWidth:'92vw',maxHeight:'88vh',objectFit:'contain',borderRadius:8,boxShadow:'0 8px 40px rgba(0,0,0,.5)'}}/>
+        <button onClick={()=>setLightbox(false)} title={tr('បិទ','Close')} style={{position:'fixed',top:18,right:20,width:40,height:40,borderRadius:'50%',border:'none',background:'rgba(255,255,255,.15)',color:'#fff',fontSize:20,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>✕</button>
+        {lbSafe > 0 && (
+          <button onClick={e=>{e.stopPropagation();setLbIdx(lbSafe-1);}} style={{position:'fixed',left:16,top:'50%',transform:'translateY(-50%)',width:48,height:48,borderRadius:'50%',border:'none',background:'rgba(255,255,255,.15)',color:'#fff',fontSize:26,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>‹</button>
+        )}
+        {lbSafe < photos.length - 1 && (
+          <button onClick={e=>{e.stopPropagation();setLbIdx(lbSafe+1);}} style={{position:'fixed',right:16,top:'50%',transform:'translateY(-50%)',width:48,height:48,borderRadius:'50%',border:'none',background:'rgba(255,255,255,.15)',color:'#fff',fontSize:26,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>›</button>
+        )}
+        {photos.length > 1 && (
+          <div style={{position:'fixed',bottom:76,left:'50%',transform:'translateX(-50%)',color:'#fff',fontSize:12,fontFamily:'"JetBrains Mono",monospace',background:'rgba(0,0,0,.45)',padding:'4px 12px',borderRadius:20}}>{lbSafe+1} / {photos.length}</div>
+        )}
+        {photos.length > 1 && (
+          <div onClick={e=>e.stopPropagation()} style={{position:'fixed',bottom:14,left:'50%',transform:'translateX(-50%)',display:'flex',gap:6,maxWidth:'92vw',overflowX:'auto',padding:4}}>
+            {photos.map((p,i)=>(
+              <img key={i} src={p} onClick={()=>setLbIdx(i)} style={{width:54,height:40,objectFit:'cover',borderRadius:5,cursor:'pointer',flexShrink:0,border:i===lbSafe?'2px solid #fff':'2px solid transparent',opacity:i===lbSafe?1:.55}}/>
+            ))}
+          </div>
+        )}
+      </div>
+    )}
     <Card pad={0}>
       {/* Header */}
       <div style={{padding:'14px 18px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
         {/* Photo gallery */}
-        <div style={{position:'relative',width:160,height:100,borderRadius:8,overflow:'hidden',flexShrink:0,background:'var(--surface-muted)',border:'1px solid var(--border)'}}>
+        <div style={{position:'relative',width:160,height:100,borderRadius:8,overflow:'hidden',flexShrink:0,background:'var(--surface-muted)',border:'1px solid var(--border)'}}
+          onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
           <input ref={uploadRef} type="file" accept="image/*" style={{display:'none'}} onChange={addPhoto}/>
-          {curPhoto
-            ? <img src={curPhoto} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>
-            : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--ink-3)',fontSize:11}}>{tr('គ្មានរូប','No photo')}</div>
-          }
+          <div style={{
+            width:'100%',height:'100%',
+            transform: sliding==='left'?'translateX(-8%)':sliding==='right'?'translateX(8%)':'translateX(0)',
+            transition: sliding ? 'transform .2s ease' : 'none',
+          }}>
+            {curPhoto
+              ? <img src={curPhoto} onClick={()=>{setLbIdx(safeIdx);setLightbox(true);}} title={tr('មើលពេញអេក្រង់','View fullscreen')} style={{width:'100%',height:'100%',objectFit:'cover',display:'block',cursor:'zoom-in'}}/>
+              : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--ink-3)',fontSize:11}}>{tr('គ្មានរូប','No photo')}</div>
+            }
+          </div>
           {/* Prev / Next */}
           {safeIdx > 0 && (
-            <button onClick={()=>setPhotoIdx(safeIdx-1)} style={{position:'absolute',left:4,top:'50%',transform:'translateY(-50%)',width:22,height:22,borderRadius:'50%',border:'none',background:'rgba(0,0,0,.5)',color:'#fff',cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>‹</button>
+            <button onClick={()=>goTo(safeIdx-1)} style={{position:'absolute',left:4,top:'50%',transform:'translateY(-50%)',width:22,height:22,borderRadius:'50%',border:'none',background:'rgba(0,0,0,.5)',color:'#fff',cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>‹</button>
           )}
           {safeIdx < photos.length - 1 && (
-            <button onClick={()=>setPhotoIdx(safeIdx+1)} style={{position:'absolute',right:4,top:'50%',transform:'translateY(-50%)',width:22,height:22,borderRadius:'50%',border:'none',background:'rgba(0,0,0,.5)',color:'#fff',cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>›</button>
+            <button onClick={()=>goTo(safeIdx+1)} style={{position:'absolute',right:4,top:'50%',transform:'translateY(-50%)',width:22,height:22,borderRadius:'50%',border:'none',background:'rgba(0,0,0,.5)',color:'#fff',cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>›</button>
           )}
           {/* Add button */}
           <button onClick={()=>uploadRef.current?.click()} title={tr('បន្ថែមរូប','Add photo')} style={{position:'absolute',bottom:4,right:4,width:22,height:22,borderRadius:'50%',border:'none',background:'rgba(0,0,0,.55)',color:'#fff',cursor:'pointer',fontSize:15,display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>+</button>
@@ -1601,11 +1661,11 @@ const FvDetailRow = ({ v, onEdit, forceUpdate }) => {
           {photos.length > 0 && (
             <button onClick={delPhoto} title={tr('លុបរូបនេះ','Delete this photo')} style={{position:'absolute',bottom:4,left:4,width:22,height:22,borderRadius:'50%',border:'none',background:'rgba(160,0,0,.65)',color:'#fff',cursor:'pointer',fontSize:11,display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>✕</button>
           )}
-          {/* Dot indicators */}
+          {/* Pill indicators */}
           {photos.length > 1 && (
             <div style={{position:'absolute',bottom:4,left:'50%',transform:'translateX(-50%)',display:'flex',gap:3}}>
               {photos.map((_,i)=>(
-                <div key={i} onClick={()=>setPhotoIdx(i)} style={{width:5,height:5,borderRadius:'50%',background:i===safeIdx?'#fff':'rgba(255,255,255,.5)',cursor:'pointer'}}/>
+                <div key={i} onClick={()=>goTo(i)} style={{width:i===safeIdx?14:5,height:5,borderRadius:3,background:i===safeIdx?'#fff':'rgba(255,255,255,.5)',transition:'width .2s',cursor:'pointer'}}/>
               ))}
             </div>
           )}
@@ -1713,6 +1773,7 @@ const FvDetailRow = ({ v, onEdit, forceUpdate }) => {
         </div>
       </div>
     </Card>
+    </>
   );
 };
 
@@ -2899,6 +2960,8 @@ const VehicleScreen = () => {
   const bp = useBreakpoint();
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   const [selectedId, setSelectedId] = React.useState(null);
+  const [sortBy,  setSortBy]  = React.useState('plate');
+  const [sortAsc, setSortAsc] = React.useState(true);
   React.useEffect(() => {
     const prev = window.__notifyVehiclesChanged;
     window.__notifyVehiclesChanged = () => forceUpdate();
@@ -2907,6 +2970,44 @@ const VehicleScreen = () => {
 
   const visible = VEHICLES.filter(v => v.visible !== false);
   const selected = visible.find(v => v.id === selectedId) || null;
+
+  const STATUS_ORDER = { Active:0, 'Service due':1, Workshop:2, Idle:3 };
+  const sorted = [...visible].sort((a, b) => {
+    if (sortBy === 'status') {
+      const d = (STATUS_ORDER[a.status]||9) - (STATUS_ORDER[b.status]||9);
+      return sortAsc ? d : -d;
+    }
+    const va = (sortBy === 'make' ? a.make : sortBy === 'cls' ? a.cls : a.plate) || '';
+    const vb = (sortBy === 'make' ? b.make : sortBy === 'cls' ? b.cls : b.plate) || '';
+    return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+  const SORT_OPTS = [
+    { id:'plate',  km:'ផ្លាកលេខ', en:'Plate' },
+    { id:'make',   km:'ឈ្មោះ',    en:'Make'  },
+    { id:'status', km:'ស្ថានភាព', en:'Status'},
+    { id:'cls',    km:'ប្រភេទ',   en:'Class' },
+  ];
+  const SortBar = () => (
+    <div style={{display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}>
+      <span style={{fontSize:11,color:'var(--ink-3)',marginRight:2}}>{tr('តម្រៀប','Sort')}:</span>
+      {SORT_OPTS.map(s => {
+        const active = sortBy === s.id;
+        return (
+          <button key={s.id}
+            onClick={() => active ? setSortAsc(x=>!x) : (setSortBy(s.id), setSortAsc(true))}
+            style={{
+              padding:'2px 8px', borderRadius:20, fontSize:11, fontWeight: active ? 600 : 400,
+              border: active ? '1.5px solid var(--accent)' : '1px solid var(--border)',
+              background: active ? 'color-mix(in srgb,var(--accent) 12%,transparent)' : 'transparent',
+              color: active ? 'var(--accent)' : 'var(--ink-2)',
+              cursor:'pointer', display:'inline-flex', alignItems:'center', gap:3, lineHeight:1.6,
+            }}>
+            {tr(s.km, s.en)}{active && <span style={{fontSize:9,opacity:.8}}>{sortAsc?'↑':'↓'}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
 
   const saveDates = (id, dates) => {
     const i = VEHICLES.findIndex(v => v.id === id);
@@ -2941,8 +3042,11 @@ const VehicleScreen = () => {
           <VehicleMobileDetail v={selected} onClose={()=>setSelectedId(null)} tr={tr} onSaved={forceUpdate} onStatusChange={cycleStatus} onParkingChange={cycleParking}/>
         )}
         <div style={{display:'flex',flexDirection:'column',gap:0}}>
-          <div style={{padding:'10px 0 8px',fontSize:13,fontWeight:600,color:'var(--ink-2)'}}>
-            {tr(`យានយន្ត · ${visible.length} គ្រឿង`, `Vehicles · ${visible.length}`)}
+          <div style={{padding:'10px 0 6px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:6}}>
+            <span style={{fontSize:13,fontWeight:600,color:'var(--ink-2)'}}>
+              {tr(`យានយន្ត · ${visible.length} គ្រឿង`, `Vehicles · ${visible.length}`)}
+            </span>
+            <SortBar/>
           </div>
           {visible.length === 0 ? (
             <div style={{textAlign:'center',padding:'48px 20px',color:'var(--ink-3)',fontSize:13}}>
@@ -2950,7 +3054,7 @@ const VehicleScreen = () => {
             </div>
           ) : (
             <Card pad={0}>
-              {visible.map((v, idx) => {
+              {sorted.map((v, idx) => {
                 const pc = plateBg(v.trans);
                 const allInsp = (window.__vehicleInspections||[]).filter(r=>r.vehicleId===v.id).sort((a,b)=>b.date.localeCompare(a.date));
                 const todayRec = allInsp.find(r=>r.date===todayStr()) || null;
@@ -2995,10 +3099,13 @@ const VehicleScreen = () => {
   // ── Desktop: full cards ──────────────────────────────────────────────────────
   return (
     <div style={{display:'flex',flexDirection:'column',gap:14}}>
-      <SectionTitle
-        km={`យានយន្ត · ${visible.length} គ្រឿង`}
-        en={`Vehicles · ${visible.length} available`}
-      />
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:8}}>
+        <SectionTitle
+          km={`យានយន្ត · ${visible.length} គ្រឿង`}
+          en={`Vehicles · ${visible.length} available`}
+        />
+        <SortBar/>
+      </div>
       {visible.length === 0 ? (
         <Card pad={48} style={{textAlign:'center',color:'var(--ink-3)'}}>
           <div style={{fontSize:32,marginBottom:10}}>🚗</div>
@@ -3011,7 +3118,7 @@ const VehicleScreen = () => {
         </Card>
       ) : (
         <FvCards
-          vehicles={visible}
+          vehicles={sorted}
           selectedId={selectedId}
           onSelect={setSelectedId}
           onStatusChange={cycleStatus}
