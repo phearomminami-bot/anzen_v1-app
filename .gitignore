@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Vendored UMD copies (loaded from CDN at runtime)
+react.js
+react-dom.js
+babel.min.js
+
+# Old / alternate HTML exports (Anzen.html is the canonical build)
+Anzen_Features.html
+Anzen_local.html
+Anzen_template.html
+Phlov Drive.html
+cert_sample.html
+
+# Packaging / deploy artifacts
+Anzen_deploy_kit.zip
+anzen_deploy_kit/
+
+# Test scratch
+test_pdf_editor.py
+test_screenshots/
+
+# Local helper scripts / scratch
+strip_latin.py
+strip_latin2.py
+car-icons-preview.html
