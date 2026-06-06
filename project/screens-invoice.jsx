@@ -49,6 +49,7 @@ const getAddons = () => {
 
 const NewInvoiceScreen = ({ studentId: initStudentId }) => {
   const { toast, navigate, settingsVersion, tr } = useAppActions();
+  const bp = useBreakpoint();
 
   // Re-derive from settings on every settingsVersion bump
   const ss = window.__schoolSettings || {};
@@ -189,7 +190,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
         km="បង្កើត​វិក្កយបត្រ​ថ្មី"
         en={`Create invoice · ${invId} · ${sent ? 'sent' : 'draft'}`}
         action={
-          <div style={{display:'flex',gap:8}}>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'flex-end'}}>
             <Btn kind="ghost" size="md" onClick={handleDiscard}>{tr('បោះបង់','Discard')}</Btn>
             <Btn kind="ghost" size="md" icon={<Icon name="book" size={14}/>} onClick={handleDraft}>
               {savedDraft ? '✓ Saved draft' : tr('រក្សា​​ជា​ឯកសារ','Save draft')}
@@ -211,7 +212,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
         }
       />
 
-      <div style={{display:'grid',gridTemplateColumns:'1.05fr 1fr',gap:14,alignItems:'start'}}>
+      <div style={{display:'grid',gridTemplateColumns:bp.mobile?'1fr':'1.05fr 1fr',gap:14,alignItems:'start'}}>
         {/* ── LEFT: form ── */}
         <div style={{display:'flex',flexDirection:'column',gap:14}}>
 
@@ -267,7 +268,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
 
           {/* plan picker — live from Settings pricing */}
           <Card label={tr('វគ្គ​សិក្សា','COURSE PLAN')}>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
+            <div style={{display:'grid',gridTemplateColumns:bp.mobile?'1fr':'repeat(3,1fr)',gap:8}}>
               {plans.map(p => {
                 const sel = planId === p.id;
                 return (
@@ -300,7 +301,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
                 border:'1px solid var(--accent)',
                 borderRadius:10,
               }}>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 130px 90px',gap:14,alignItems:'center'}}>
+                <div style={{display:'grid',gridTemplateColumns:bp.mobile?'1fr auto':'1fr 130px 90px',gap:14,alignItems:'center'}}>
                   <div>
                     <div style={{fontSize:13,fontWeight:600,color:'var(--accent)'}}>{tr('កំណត់​ចំនួន​ម៉ោង','Number of hours')}</div>
                     <div style={{fontSize:11,color:'var(--ink-2)',marginTop:2}}>
@@ -333,7 +334,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
             <div style={{display:'flex',flexDirection:'column',gap:0}}>
               {addons.map((a, i) => (
                 <div key={a.id} style={{
-                  display:'grid', gridTemplateColumns:'1fr 90px 90px', gap:12, alignItems:'center',
+                  display:'grid', gridTemplateColumns:bp.mobile?'1fr 64px 64px':'1fr 90px 90px', gap:bp.mobile?8:12, alignItems:'center',
                   padding:'12px 0', borderTop: i ? '1px dashed var(--border)' : 'none',
                 }}>
                   <div>
@@ -351,7 +352,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
 
           {/* discount + tax + dates */}
           <Card label={tr('តម្លៃ','PRICING & DATES')}>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+            <div style={{display:'grid',gridTemplateColumns:bp.mobile?'1fr':'1fr 1fr',gap:14}}>
               <div>
                 <InvFieldLabel km="បញ្ចុះ​តម្លៃ" en="Discount"/>
                 <div style={{display:'flex',gap:6,marginTop:6}}>
@@ -402,7 +403,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
           {/* payment — filtered by Settings payment methods */}
           <Card label={tr('ការ​ទូទាត់','PAYMENT')}>
             <InvFieldLabel km="វិធីសាស្ត្រ" en="Method"/>
-            <div style={{display:'grid',gridTemplateColumns:`repeat(${Math.min(paymentMethods.length,4)},1fr)`,gap:6,marginTop:6}}>
+            <div style={{display:'grid',gridTemplateColumns:`repeat(${bp.mobile?Math.min(paymentMethods.length,2):Math.min(paymentMethods.length,4)},1fr)`,gap:6,marginTop:6}}>
               {paymentMethods.map(m => (
                 <button key={m.id} onClick={() => setPaymentMethod(m.id)} style={{
                   padding:'10px 8px',
@@ -472,7 +473,8 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
           </Card>
         </div>
 
-        {/* ── RIGHT: live preview ── */}
+        {/* ── RIGHT: live preview (hidden on mobile — use "PDF · Preview") ── */}
+        {!bp.mobile && (
         <div style={{position:'sticky',top:12}}>
           <div style={{
             background:'#fff',
@@ -599,6 +601,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
             <Btn kind="ghost" size="sm" onClick={() => navigate('settings')}>​ Settings</Btn>
           </div>
         </div>
+        )}
       </div>
     </div>
   );

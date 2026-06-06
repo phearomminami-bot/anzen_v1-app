@@ -40466,6 +40466,7 @@ var NewInvoiceScreen = ({
     settingsVersion,
     tr
   } = useAppActions();
+  var bp = useBreakpoint();
   var ss = window.__schoolSettings || {};
   var plans = getPlans();
   var enabledPMs = ss.payments || {};
@@ -40638,7 +40639,9 @@ var NewInvoiceScreen = ({
     action: React.createElement("div", {
       style: {
         display: 'flex',
-        gap: 8
+        gap: 8,
+        flexWrap: 'wrap',
+        justifyContent: 'flex-end'
       }
     }, React.createElement(Btn, {
       kind: "ghost",
@@ -40688,7 +40691,7 @@ var NewInvoiceScreen = ({
   }), React.createElement("div", {
     style: {
       display: 'grid',
-      gridTemplateColumns: '1.05fr 1fr',
+      gridTemplateColumns: bp.mobile ? '1fr' : '1.05fr 1fr',
       gap: 14,
       alignItems: 'start'
     }
@@ -40797,7 +40800,7 @@ var NewInvoiceScreen = ({
   }, React.createElement("div", {
     style: {
       display: 'grid',
-      gridTemplateColumns: 'repeat(3,1fr)',
+      gridTemplateColumns: bp.mobile ? '1fr' : 'repeat(3,1fr)',
       gap: 8
     }
   }, plans.map(p => {
@@ -40874,7 +40877,7 @@ var NewInvoiceScreen = ({
   }, React.createElement("div", {
     style: {
       display: 'grid',
-      gridTemplateColumns: '1fr 130px 90px',
+      gridTemplateColumns: bp.mobile ? '1fr auto' : '1fr 130px 90px',
       gap: 14,
       alignItems: 'center'
     }
@@ -40943,8 +40946,8 @@ var NewInvoiceScreen = ({
     key: a.id,
     style: {
       display: 'grid',
-      gridTemplateColumns: '1fr 90px 90px',
-      gap: 12,
+      gridTemplateColumns: bp.mobile ? '1fr 64px 64px' : '1fr 90px 90px',
+      gap: bp.mobile ? 8 : 12,
       alignItems: 'center',
       padding: '12px 0',
       borderTop: i ? '1px dashed var(--border)' : 'none'
@@ -40978,7 +40981,7 @@ var NewInvoiceScreen = ({
   }, React.createElement("div", {
     style: {
       display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
+      gridTemplateColumns: bp.mobile ? '1fr' : '1fr 1fr',
       gap: 14
     }
   }, React.createElement("div", null, React.createElement(InvFieldLabel, {
@@ -41079,7 +41082,7 @@ var NewInvoiceScreen = ({
   }), React.createElement("div", {
     style: {
       display: 'grid',
-      gridTemplateColumns: `repeat(${Math.min(paymentMethods.length, 4)},1fr)`,
+      gridTemplateColumns: `repeat(${bp.mobile ? Math.min(paymentMethods.length, 2) : Math.min(paymentMethods.length, 4)},1fr)`,
       gap: 6,
       marginTop: 6
     }
@@ -41225,7 +41228,7 @@ var NewInvoiceScreen = ({
       resize: 'vertical',
       outline: 'none'
     }
-  }))), React.createElement("div", {
+  }))), !bp.mobile && React.createElement("div", {
     style: {
       position: 'sticky',
       top: 12
@@ -41829,6 +41832,7 @@ var PublicScreen = () => {
     lang,
     tr
   } = useAppActions();
+  var bp = useBreakpoint();
   var ss = window.__schoolSettings || {};
   var clearedStudents = STUDENTS.filter(s => s.status === 'Cleared').length;
   var totalGraduates = 2400 + clearedStudents;
@@ -41940,11 +41944,12 @@ var PublicScreen = () => {
     }
   }, ss.website || 'anzen.drive', " \xB7 ", ss.name || 'Anzen', " Driving Academy"))), React.createElement("div", {
     style: {
-      padding: '18px 32px',
+      padding: bp.mobile ? '12px 16px' : '18px 32px',
       display: 'flex',
       alignItems: 'center',
-      gap: 24,
-      borderBottom: '1px solid var(--border)'
+      gap: bp.mobile ? 10 : 24,
+      borderBottom: '1px solid var(--border)',
+      flexWrap: 'wrap'
     }
   }, React.createElement("div", {
     style: {
@@ -41965,7 +41970,7 @@ var PublicScreen = () => {
       color: 'var(--ink-3)',
       letterSpacing: '.04em'
     }
-  }, "DRIVE ACADEMY"))), React.createElement("nav", {
+  }, "DRIVE ACADEMY"))), !bp.mobile && React.createElement("nav", {
     style: {
       display: 'flex',
       gap: 18,
@@ -41994,7 +41999,8 @@ var PublicScreen = () => {
     style: {
       display: 'flex',
       gap: 8,
-      alignItems: 'center'
+      alignItems: 'center',
+      marginLeft: bp.mobile ? 'auto' : 0
     }
   }, React.createElement("button", {
     onClick: () => setLang(lang === 'km' ? 'en' : 'km'),
@@ -42019,10 +42025,10 @@ var PublicScreen = () => {
   }, "\u1785\u17BB\u17C7\u200B\u1788\u17D2\u1798\u17C4\u17C7\u200B\u17A5\u17A1\u17BC\u179C \xB7 Enroll"))), React.createElement("div", {
     id: "pub-about",
     style: {
-      padding: '56px 32px 48px',
+      padding: bp.mobile ? '32px 16px' : '56px 32px 48px',
       display: 'grid',
-      gridTemplateColumns: '1.1fr 1fr',
-      gap: 48,
+      gridTemplateColumns: bp.mobile ? '1fr' : '1.1fr 1fr',
+      gap: bp.mobile ? 24 : 48,
       alignItems: 'center',
       background: 'var(--surface-muted)'
     }
@@ -42030,7 +42036,7 @@ var PublicScreen = () => {
     tone: "accent"
   }, "\u1785\u17BC\u179B\u179A\u17C0\u1793\u1790\u17D2\u1784\u17C3\u1793\u17C1\u17C7 \xB7 Enrolling for June cohort"), React.createElement("h1", {
     style: {
-      fontSize: 56,
+      fontSize: bp.mobile ? 32 : 56,
       fontWeight: 600,
       lineHeight: 1.05,
       letterSpacing: '-.02em',
@@ -42104,7 +42110,7 @@ var PublicScreen = () => {
       color: 'var(--ink-3)',
       marginTop: 2
     }
-  }, s.l))))), React.createElement("div", {
+  }, s.l))))), !bp.mobile && React.createElement("div", {
     style: {
       position: 'relative',
       height: 420
@@ -42183,7 +42189,7 @@ var PublicScreen = () => {
   }, "\u179F\u17D2\u17A2\u17C2\u1780 09:00 \xB7 Toyota Vios"))))), React.createElement("div", {
     id: "pub-courses",
     style: {
-      padding: '56px 32px'
+      padding: bp.mobile ? '36px 16px' : '56px 32px'
     }
   }, React.createElement("div", {
     style: {
@@ -42219,7 +42225,7 @@ var PublicScreen = () => {
     id: "pub-pricing",
     style: {
       display: 'grid',
-      gridTemplateColumns: 'repeat(3,1fr)',
+      gridTemplateColumns: bp.mobile ? '1fr' : 'repeat(3,1fr)',
       gap: 14
     }
   }, mainCourses.map((c, i) => {
@@ -42316,7 +42322,7 @@ var PublicScreen = () => {
   }))), React.createElement("div", {
     id: "pub-instructors",
     style: {
-      padding: '48px 32px',
+      padding: bp.mobile ? '36px 16px' : '48px 32px',
       background: 'var(--ink)',
       color: 'var(--bg)'
     }
@@ -42383,10 +42389,10 @@ var PublicScreen = () => {
     }
   }, i.en, " \xB7 \u2605", i.rating))))), React.createElement("div", {
     style: {
-      padding: '56px 32px',
+      padding: bp.mobile ? '36px 16px' : '56px 32px',
       display: 'grid',
-      gridTemplateColumns: '1.4fr 1fr',
-      gap: 32,
+      gridTemplateColumns: bp.mobile ? '1fr' : '1.4fr 1fr',
+      gap: bp.mobile ? 20 : 32,
       alignItems: 'center'
     }
   }, React.createElement("div", null, React.createElement("div", {
@@ -42471,7 +42477,7 @@ var PublicScreen = () => {
   }, "\u1785\u17BB\u17C7\u200B\u1788\u17D2\u1798\u17C4\u17C7\u200B\u17A5\u17A1\u17BC\u179C \xB7 Enroll now"))), React.createElement("div", {
     id: "pub-faq",
     style: {
-      padding: '48px 32px',
+      padding: bp.mobile ? '36px 16px' : '48px 32px',
       background: 'var(--surface-muted)',
       borderTop: '1px solid var(--border)'
     }
@@ -42494,7 +42500,7 @@ var PublicScreen = () => {
   }, "\u17A2\u17D2\u1793\u1780\u1798\u17B6\u1793\u179F\u17C6\u178E\u17BD\u179A? \u1799\u17BE\u1784\u1798\u17B6\u1793\u1785\u1798\u17D2\u179B\u17BE\u1799\u17D4"), React.createElement("div", {
     style: {
       display: 'grid',
-      gridTemplateColumns: 'repeat(2,1fr)',
+      gridTemplateColumns: bp.mobile ? '1fr' : 'repeat(2,1fr)',
       gap: 16,
       maxWidth: 800
     }
@@ -42533,12 +42539,12 @@ var PublicScreen = () => {
   }, faq.a))))), React.createElement("div", {
     id: "pub-contact",
     style: {
-      padding: '32px',
+      padding: bp.mobile ? '28px 16px' : '32px',
       background: 'var(--ink)',
       color: 'rgba(255,255,255,.7)',
       display: 'grid',
-      gridTemplateColumns: '1.5fr 1fr 1fr 1fr',
-      gap: 32,
+      gridTemplateColumns: bp.mobile ? '1fr 1fr' : '1.5fr 1fr 1fr 1fr',
+      gap: bp.mobile ? 20 : 32,
       fontSize: 12
     }
   }, React.createElement("div", null, React.createElement("div", {

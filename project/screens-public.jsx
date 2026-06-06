@@ -2,6 +2,7 @@
 
 const PublicScreen = () => {
   const { toast, navigate, setLang, lang, tr } = useAppActions();
+  const bp = useBreakpoint();
   const ss = window.__schoolSettings || {};
 
   // Real stats from live data
@@ -48,7 +49,7 @@ const PublicScreen = () => {
     </div>
 
     {/* page header / nav */}
-    <div style={{padding:'18px 32px',display:'flex',alignItems:'center',gap:24,borderBottom:'1px solid var(--border)'}}>
+    <div style={{padding:bp.mobile?'12px 16px':'18px 32px',display:'flex',alignItems:'center',gap:bp.mobile?10:24,borderBottom:'1px solid var(--border)',flexWrap:'wrap'}}>
       <div style={{display:'flex',alignItems:'center',gap:10}}>
         <Logo size={30}/>
         <div>
@@ -56,15 +57,17 @@ const PublicScreen = () => {
           <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.04em'}}>DRIVE ACADEMY</div>
         </div>
       </div>
-      <nav style={{display:'flex',gap:18,fontSize:13,color:'var(--ink-2)',flex:1,justifyContent:'center'}}>
-        {navLinks.map((n,i)=>(
-          <button key={i} onClick={()=>scrollTo(n.id)}
-            style={{border:'none',background:'transparent',padding:'4px 0',cursor:'pointer',color:'inherit',fontSize:13}}>
-            {n.km} <span style={{color:'var(--ink-3)',fontSize:11}}>· {n.en}</span>
-          </button>
-        ))}
-      </nav>
-      <div style={{display:'flex',gap:8,alignItems:'center'}}>
+      {!bp.mobile && (
+        <nav style={{display:'flex',gap:18,fontSize:13,color:'var(--ink-2)',flex:1,justifyContent:'center'}}>
+          {navLinks.map((n,i)=>(
+            <button key={i} onClick={()=>scrollTo(n.id)}
+              style={{border:'none',background:'transparent',padding:'4px 0',cursor:'pointer',color:'inherit',fontSize:13}}>
+              {n.km} <span style={{color:'var(--ink-3)',fontSize:11}}>· {n.en}</span>
+            </button>
+          ))}
+        </nav>
+      )}
+      <div style={{display:'flex',gap:8,alignItems:'center',marginLeft:bp.mobile?'auto':0}}>
         <button onClick={()=>setLang(lang==='km'?'en':'km')}
           style={{background:'transparent',border:'1px solid var(--border)',borderRadius:6,cursor:'pointer',
             fontSize:11,color:'var(--ink-3)',padding:'4px 8px',fontFamily:'"JetBrains Mono",monospace'}}>
@@ -76,10 +79,10 @@ const PublicScreen = () => {
     </div>
 
     {/* hero */}
-    <div id="pub-about" style={{padding:'56px 32px 48px',display:'grid',gridTemplateColumns:'1.1fr 1fr',gap:48,alignItems:'center',background:'var(--surface-muted)'}}>
+    <div id="pub-about" style={{padding:bp.mobile?'32px 16px':'56px 32px 48px',display:'grid',gridTemplateColumns:bp.mobile?'1fr':'1.1fr 1fr',gap:bp.mobile?24:48,alignItems:'center',background:'var(--surface-muted)'}}>
       <div>
         <Badge tone="accent">ចូលរៀនថ្ងៃនេះ · Enrolling for June cohort</Badge>
-        <h1 style={{fontSize:56,fontWeight:600,lineHeight:1.05,letterSpacing:'-.02em',margin:'18px 0 14px',fontFamily:'var(--font-display)'}}>
+        <h1 style={{fontSize:bp.mobile?32:56,fontWeight:600,lineHeight:1.05,letterSpacing:'-.02em',margin:'18px 0 14px',fontFamily:'var(--font-display)'}}>
           រៀនបើកបរ<br/>
           <span style={{color:'var(--accent)'}}>ដោយទំនុកចិត្ត។</span>
         </h1>
@@ -105,6 +108,7 @@ const PublicScreen = () => {
         </div>
       </div>
 
+      {!bp.mobile && (
       <div style={{position:'relative',height:420}}>
         <Photo tag="hero · student in car" w="100%" h={280} r={12} style={{position:'absolute',top:0,right:0,width:'90%'}}/>
         <Photo tag="instructor portrait" w={180} h={220} r={12} style={{position:'absolute',bottom:0,left:0,boxShadow:'0 18px 40px rgba(0,0,0,.12)'}}/>
@@ -119,10 +123,11 @@ const PublicScreen = () => {
           </div>
         </div>
       </div>
+      )}
     </div>
 
     {/* Courses */}
-    <div id="pub-courses" style={{padding:'56px 32px'}}>
+    <div id="pub-courses" style={{padding:bp.mobile?'36px 16px':'56px 32px'}}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginBottom:28}}>
         <div>
           <div style={{fontSize:11,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.08em'}}>OUR COURSES · វគ្គបង្រៀន</div>
@@ -131,7 +136,7 @@ const PublicScreen = () => {
         <Btn kind="ghost" size="md" onClick={()=>navigate('booking')} icon={<Icon name="arrow" size={14}/>}>ចុះ​ឈ្មោះ​ឥឡូវ</Btn>
       </div>
 
-      <div id="pub-pricing" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14}}>
+      <div id="pub-pricing" style={{display:'grid',gridTemplateColumns:bp.mobile?'1fr':'repeat(3,1fr)',gap:14}}>
         {mainCourses.map((c,i)=>{
           const clsColors = { B:'accent', A:'neutral', C:'neutral' };
           return (
@@ -171,7 +176,7 @@ const PublicScreen = () => {
     </div>
 
     {/* Instructors strip */}
-    <div id="pub-instructors" style={{padding:'48px 32px',background:'var(--ink)',color:'var(--bg)'}}>
+    <div id="pub-instructors" style={{padding:bp.mobile?'36px 16px':'48px 32px',background:'var(--ink)',color:'var(--bg)'}}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginBottom:24}}>
         <div>
           <div style={{fontSize:11,opacity:.5,fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.08em'}}>OUR INSTRUCTORS · គ្រូបង្រៀន</div>
@@ -191,7 +196,7 @@ const PublicScreen = () => {
     </div>
 
     {/* Testimonial + CTA */}
-    <div style={{padding:'56px 32px',display:'grid',gridTemplateColumns:'1.4fr 1fr',gap:32,alignItems:'center'}}>
+    <div style={{padding:bp.mobile?'36px 16px':'56px 32px',display:'grid',gridTemplateColumns:bp.mobile?'1fr':'1.4fr 1fr',gap:bp.mobile?20:32,alignItems:'center'}}>
       <div>
         <div style={{fontSize:11,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.08em'}}>មតិសិស្ស · TESTIMONIAL</div>
         <p style={{fontSize:28,lineHeight:1.4,letterSpacing:'-.005em',fontWeight:500,margin:'18px 0',fontFamily:'var(--font-display)'}}>
@@ -216,12 +221,12 @@ const PublicScreen = () => {
     </div>
 
     {/* FAQ */}
-    <div id="pub-faq" style={{padding:'48px 32px',background:'var(--surface-muted)',borderTop:'1px solid var(--border)'}}>
+    <div id="pub-faq" style={{padding:bp.mobile?'36px 16px':'48px 32px',background:'var(--surface-muted)',borderTop:'1px solid var(--border)'}}>
       <div style={{fontSize:11,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.08em',marginBottom:6}}>FAQ · សំណួរ​ចោទ​សួរ​ជា​ញឹក​ញាប់</div>
       <div style={{fontSize:28,fontWeight:600,letterSpacing:'-.01em',fontFamily:'var(--font-display)',marginBottom:24}}>
         អ្នកមានសំណួរ? យើងមានចម្លើយ។
       </div>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:16,maxWidth:800}}>
+      <div style={{display:'grid',gridTemplateColumns:bp.mobile?'1fr':'repeat(2,1fr)',gap:16,maxWidth:800}}>
         {[
           {q:'តើត្រូវការឯកសារអ្វីខ្លះ?', a:'អត្តសញ្ញាណប័ណ្ណ, លិខិតបញ្ជាក់សុខភាព, រូបថត 4×6 (2 ច្បាប់)'},
           {q:'ការពិនិត្យ Class B ចំណាយប៉ុន្មាន?', a:`$${mainCourses[0]?.price||180} — រួមបញ្ចូលទាំងការអនុវត្ត ${mainCourses[0]?.hrs||30}ម៉ោង និងប្រឡងផ្លូវ`},
@@ -237,7 +242,7 @@ const PublicScreen = () => {
     </div>
 
     {/* Footer */}
-    <div id="pub-contact" style={{padding:'32px',background:'var(--ink)',color:'rgba(255,255,255,.7)',display:'grid',gridTemplateColumns:'1.5fr 1fr 1fr 1fr',gap:32,fontSize:12}}>
+    <div id="pub-contact" style={{padding:bp.mobile?'28px 16px':'32px',background:'var(--ink)',color:'rgba(255,255,255,.7)',display:'grid',gridTemplateColumns:bp.mobile?'1fr 1fr':'1.5fr 1fr 1fr 1fr',gap:bp.mobile?20:32,fontSize:12}}>
       <div>
         <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
           <Logo size={24}/>
