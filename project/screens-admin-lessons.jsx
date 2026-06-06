@@ -51,6 +51,65 @@ const persistLessonsLib = () => {
 // Exposed so the Settings → Data backup export can include the lessons library.
 window.__persistLessonsLib = persistLessonsLib;
 
+// ── AI auto-translate (Khmer → English) ────────────────────────────────────
+async function aiTranslateKmToEn(kmText) {
+  const text = (kmText || '').trim();
+  if (!text) return '';
+  const apiKey = window.__schoolSettings && window.__schoolSettings.anthropicKey;
+  if (!apiKey) return null;
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 300,
+        messages: [{ role: 'user', content:
+          'Translate this Khmer driving-school lesson text into natural, concise English. '
+          + 'Return ONLY the English translation — no quotes, no notes, no Khmer.\n\n' + text }],
+      }),
+    });
+    if (!resp.ok) return '';
+    const data = await resp.json();
+    return ((data.content && data.content[0] && data.content[0].text) || '').trim();
+  } catch (e) { return ''; }
+}
+
+const useAutoTranslate = () => {
+  const { tr, toast } = useAppActions();
+  const [busy, setBusy] = React.useState(0);
+  const warned = React.useRef(false);
+  const translate = async (kmText, currentEn, fill) => {
+    const km = (kmText || '').trim();
+    if (!km || (currentEn || '').trim()) return;
+    if (!(window.__schoolSettings && window.__schoolSettings.anthropicKey)) {
+      if (!warned.current) {
+        warned.current = true;
+        toast(tr('បញ្ចូល Anthropic API Key ក្នុង Settings → AI ដើម្បីបកប្រែស្វ័យប្រវត្តិ',
+                 'Add an Anthropic API key in Settings → AI to auto-translate'), 'warn');
+      }
+      return;
+    }
+    setBusy(n => n + 1);
+    const en = await aiTranslateKmToEn(km);
+    setBusy(n => n - 1);
+    if (en) fill(en);
+  };
+  return { busy: busy > 0, translate };
+};
+
+const TrBadge = ({ show }) => show ? (
+  <span style={{fontSize:10,color:'var(--accent)',display:'inline-flex',alignItems:'center',gap:4,marginTop:4}}>
+    <span style={{width:8,height:8,border:'1.5px solid var(--accent)',borderTopColor:'transparent',borderRadius:'50%',display:'inline-block',animation:'_sp .7s linear infinite'}}/>
+    ✦ កំពុង​បក​ប្រែ…
+  </span>
+) : null;
+
 // id helpers — generate next sequential id within a list
 const nextLessonContentId = (list, prefix) => {
   const used = new Set(list.map(it => it.id));
@@ -72,7 +131,7 @@ const AlField = ({ km, en, children, full = true }) => (
   </div>
 );
 
-const AlInput = (p) => (
+const AlInput = ({ onFocus, onBlur, ...p }) => (
   <input {...p} style={{
     height:42, padding:'0 12px',
     border:'1px solid var(--border)', borderRadius:8,
@@ -81,12 +140,12 @@ const AlInput = (p) => (
     outline:'none',transition:'border-color .12s',
     ...(p.style||{}),
   }}
-    onFocus={e=>e.target.style.borderColor='var(--accent)'}
-    onBlur={e=>e.target.style.borderColor='var(--border)'}
+    onFocus={e=>{e.target.style.borderColor='var(--accent)'; onFocus&&onFocus(e);}}
+    onBlur={e=>{e.target.style.borderColor='var(--border)'; onBlur&&onBlur(e);}}
   />
 );
 
-const AlTextarea = React.forwardRef((p, ref) => (
+const AlTextarea = React.forwardRef(({ onFocus, onBlur, ...p }, ref) => (
   <textarea ref={ref} {...p} style={{
     padding:'10px 12px', minHeight:140,
     border:'1px solid var(--border)', borderRadius:8,
@@ -95,8 +154,8 @@ const AlTextarea = React.forwardRef((p, ref) => (
     lineHeight:1.55, outline:'none', resize:'vertical',
     transition:'border-color .12s', ...(p.style||{}),
   }}
-    onFocus={e=>e.target.style.borderColor='var(--accent)'}
-    onBlur={e=>e.target.style.borderColor='var(--border)'}
+    onFocus={e=>{e.target.style.borderColor='var(--accent)'; onFocus&&onFocus(e);}}
+    onBlur={e=>{e.target.style.borderColor='var(--border)'; onBlur&&onBlur(e);}}
   />
 ));
 
@@ -192,6 +251,8 @@ const ImagePickerButton = ({ onPick, label, accept = 'image/*', size = 'sm' }) =
 // ── Text-lesson form ──────────────────────────────────────────────────────
 const TextLessonForm = ({ initial, onSave, onCancel }) => {
   const { tr } = useAppActions();
+  const bp = useBreakpoint();
+  const { busy: trBusy, translate } = useAutoTranslate();
   const [km,    setKm]    = React.useState(initial?.km    || '');
   const [en,    setEn]    = React.useState(initial?.en    || '');
   const [mins,  setMins]  = React.useState(initial?.mins  || 10);
@@ -211,12 +272,13 @@ const TextLessonForm = ({ initial, onSave, onCancel }) => {
   };
 
   return (
-    <div style={{padding:'20px 28px 24px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+    <div style={{padding:bp.mobile?'18px 16px 22px':'20px 28px 24px',display:'grid',gridTemplateColumns:bp.mobile?'1fr':'1fr 1fr',gap:bp.mobile?12:16}}>
       <AlField km="ចំណងជើង · ខ្មែរ"   en="Title · Khmer" full={false}>
-        <AlInput value={km} onChange={e=>setKm(e.target.value)} placeholder="ឧ. ច្បាប់ចរាចរណ៍"/>
+        <AlInput value={km} onChange={e=>setKm(e.target.value)} onBlur={()=>translate(km, en, v=>setEn(p=>(p||'').trim()?p:v))} placeholder="ឧ. ច្បាប់ចរាចរណ៍"/>
       </AlField>
       <AlField km="ចំណងជើង · អង់គ្លេស" en="Title · English" full={false}>
         <AlInput value={en} onChange={e=>setEn(e.target.value)} placeholder="e.g. Road Traffic Law"/>
+        <TrBadge show={trBusy}/>
       </AlField>
       <AlField km="រយៈពេលអាន (នាទី)" en="Read time (minutes)" full={false}>
         <AlInput type="number" min="1" max="120" value={mins} onChange={e=>setMins(e.target.value)} style={{width:120}}/>
@@ -235,7 +297,7 @@ const TextLessonForm = ({ initial, onSave, onCancel }) => {
         </div>
       </div>
       <AlField km="ខ្លឹមសារ · ខ្មែរ"  en="Body · Khmer (use **bold** and • bullets)">
-        <AlTextarea ref={bodyKmRef} value={bodyKm} onChange={e=>setBodyKm(e.target.value)} placeholder={'ខ្លឹមសារ​មេរៀន...\n\n**ចំណុចសំខាន់:**\n• ...'}/>
+        <AlTextarea ref={bodyKmRef} value={bodyKm} onChange={e=>setBodyKm(e.target.value)} onBlur={()=>translate(bodyKm, bodyEn, v=>setBodyEn(p=>(p||'').trim()?p:v))} placeholder={'ខ្លឹមសារ​មេរៀន...\n\n**ចំណុចសំខាន់:**\n• ...'}/>
         <div style={{display:'flex',gap:8,marginTop:6,alignItems:'center',flexWrap:'wrap'}}>
           <ImagePickerButton
             label={tr('ដាក់​រូប · ខ្មែរ','Insert image · KH')}
@@ -315,6 +377,8 @@ const ImagePreviewStrip = ({ body, onRemove }) => {
 // ── Video-lesson form ─────────────────────────────────────────────────────
 const VideoLessonForm = ({ initial, onSave, onCancel }) => {
   const { tr } = useAppActions();
+  const bp = useBreakpoint();
+  const { busy: trBusy, translate } = useAutoTranslate();
   const [km,   setKm]   = React.useState(initial?.km   || '');
   const [en,   setEn]   = React.useState(initial?.en   || '');
   const [ytId, setYtId] = React.useState(initial?.ytId || '');
@@ -340,11 +404,12 @@ const VideoLessonForm = ({ initial, onSave, onCancel }) => {
   };
 
   return (
-    <div style={{padding:'20px 28px 24px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+    <div style={{padding:bp.mobile?'18px 16px 22px':'20px 28px 24px',display:'grid',gridTemplateColumns:bp.mobile?'1fr':'1fr 1fr',gap:bp.mobile?12:16}}>
       <AlField km="ចំណងជើង · ខ្មែរ"   en="Title · Khmer" full={false}>
-        <AlInput value={km} onChange={e=>setKm(e.target.value)} placeholder="ឧ. ការចត Parallel"/>
+        <AlInput value={km} onChange={e=>setKm(e.target.value)} onBlur={()=>translate(km, en, v=>setEn(p=>(p||'').trim()?p:v))} placeholder="ឧ. ការចត Parallel"/>
       </AlField>
       <AlField km="ចំណងជើង · អង់គ្លេស" en="Title · English" full={false}>
+        <TrBadge show={trBusy}/>
         <AlInput value={en} onChange={e=>setEn(e.target.value)} placeholder="e.g. Parallel Parking"/>
       </AlField>
       <AlField km="YouTube ID ឬ URL" en="YouTube ID or full URL">
@@ -396,6 +461,8 @@ const blankQuestion = () => ({
 
 const QuizForm = ({ initial, onSave, onCancel }) => {
   const { tr } = useAppActions();
+  const bp = useBreakpoint();
+  const { busy: trBusy, translate } = useAutoTranslate();
   const [km, setKm] = React.useState(initial?.km || '');
   const [en, setEn] = React.useState(initial?.en || '');
   const [questions, setQuestions] = React.useState(
@@ -413,6 +480,13 @@ const QuizForm = ({ initial, onSave, onCancel }) => {
       return { ...q, [key]: arr };
     }));
   };
+  const fillQEn = (qIdx, v) => setQuestions(qs => qs.map((q,i) =>
+    (i===qIdx && !(q.q_en||'').trim()) ? {...q, q_en:v} : q));
+  const fillOptEn = (qIdx, optIdx, v) => setQuestions(qs => qs.map((q,i) => {
+    if (i !== qIdx || (q.opts_en[optIdx]||'').trim()) return q;
+    const arr = [...q.opts_en]; arr[optIdx] = v;
+    return { ...q, opts_en: arr };
+  }));
 
   const submit = () => {
     if (!km.trim() && !en.trim()) return;
@@ -428,13 +502,14 @@ const QuizForm = ({ initial, onSave, onCancel }) => {
   };
 
   return (
-    <div style={{padding:'20px 28px 24px',display:'flex',flexDirection:'column',gap:16}}>
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+    <div style={{padding:bp.mobile?'18px 16px 22px':'20px 28px 24px',display:'flex',flexDirection:'column',gap:16}}>
+      <div style={{display:'grid',gridTemplateColumns:bp.mobile?'1fr':'1fr 1fr',gap:bp.mobile?12:16}}>
         <AlField km="ចំណងជើង · ខ្មែរ"   en="Quiz title · Khmer" full={false}>
-          <AlInput value={km} onChange={e=>setKm(e.target.value)} placeholder="ឧ. លំហាត់ ១"/>
+          <AlInput value={km} onChange={e=>setKm(e.target.value)} onBlur={()=>translate(km, en, v=>setEn(p=>(p||'').trim()?p:v))} placeholder="ឧ. លំហាត់ ១"/>
         </AlField>
         <AlField km="ចំណងជើង · អង់គ្លេស" en="Quiz title · English" full={false}>
           <AlInput value={en} onChange={e=>setEn(e.target.value)} placeholder="e.g. Quiz 1"/>
+          <TrBadge show={trBusy}/>
         </AlField>
       </div>
 
@@ -494,17 +569,18 @@ const QuizForm = ({ initial, onSave, onCancel }) => {
               </div>
             )}
 
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
-              <AlInput value={q.q_km} onChange={e=>updateQ(qi,{q_km:e.target.value})} placeholder="សំណួរ · ខ្មែរ"/>
+            <div style={{display:'grid',gridTemplateColumns:bp.mobile?'1fr':'1fr 1fr',gap:10,marginBottom:10}}>
+              <AlInput value={q.q_km} onChange={e=>updateQ(qi,{q_km:e.target.value})} onBlur={()=>translate(q.q_km, q.q_en, v=>fillQEn(qi, v))} placeholder="សំណួរ · ខ្មែរ"/>
               <AlInput value={q.q_en} onChange={e=>updateQ(qi,{q_en:e.target.value})} placeholder="Question · English"/>
             </div>
 
             <div style={{display:'flex',flexDirection:'column',gap:6}}>
               {[0,1,2,3].map(oi => (
-                <div key={oi} style={{display:'grid',gridTemplateColumns:'auto 1fr 1fr',gap:8,alignItems:'center'}}>
+                <div key={oi} style={{display:'grid',gridTemplateColumns:bp.mobile?'auto 1fr':'auto 1fr 1fr',gap:8,alignItems:bp.mobile?'flex-start':'center'}}>
                   <label style={{
                     display:'flex',alignItems:'center',gap:6,cursor:'pointer',
                     fontSize:11,fontFamily:'"JetBrains Mono",monospace',color:'var(--ink-3)',
+                    marginTop:bp.mobile?8:0,
                   }}
                     title={tr('ជា​ចម្លើយ​ត្រឹមត្រូវ','Mark as correct')}>
                     <input
@@ -516,8 +592,17 @@ const QuizForm = ({ initial, onSave, onCancel }) => {
                     />
                     {String.fromCharCode(65+oi)}
                   </label>
-                  <AlInput value={q.opts_km[oi]} onChange={e=>updateOpt(qi,oi,'km',e.target.value)} placeholder={`ជម្រើស ${String.fromCharCode(65+oi)} · ខ្មែរ`} style={{height:36,background:'var(--surface)'}}/>
-                  <AlInput value={q.opts_en[oi]} onChange={e=>updateOpt(qi,oi,'en',e.target.value)} placeholder={`Option ${String.fromCharCode(65+oi)} · English`} style={{height:36,background:'var(--surface)'}}/>
+                  {bp.mobile ? (
+                    <div style={{display:'flex',flexDirection:'column',gap:6}}>
+                      <AlInput value={q.opts_km[oi]} onChange={e=>updateOpt(qi,oi,'km',e.target.value)} onBlur={()=>translate(q.opts_km[oi], q.opts_en[oi], v=>fillOptEn(qi, oi, v))} placeholder={`ជម្រើស ${String.fromCharCode(65+oi)} · ខ្មែរ`} style={{height:36,background:'var(--surface)'}}/>
+                      <AlInput value={q.opts_en[oi]} onChange={e=>updateOpt(qi,oi,'en',e.target.value)} placeholder={`Option ${String.fromCharCode(65+oi)} · English`} style={{height:36,background:'var(--surface)'}}/>
+                    </div>
+                  ) : (
+                    <>
+                      <AlInput value={q.opts_km[oi]} onChange={e=>updateOpt(qi,oi,'km',e.target.value)} onBlur={()=>translate(q.opts_km[oi], q.opts_en[oi], v=>fillOptEn(qi, oi, v))} placeholder={`ជម្រើស ${String.fromCharCode(65+oi)} · ខ្មែរ`} style={{height:36,background:'var(--surface)'}}/>
+                      <AlInput value={q.opts_en[oi]} onChange={e=>updateOpt(qi,oi,'en',e.target.value)} placeholder={`Option ${String.fromCharCode(65+oi)} · English`} style={{height:36,background:'var(--surface)'}}/>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
@@ -534,120 +619,124 @@ const QuizForm = ({ initial, onSave, onCancel }) => {
 };
 
 // ── Row layouts for the list view ─────────────────────────────────────────
-const TextLessonRow = ({ item, onEdit, onDelete, tr }) => (
-  <div style={{
-    display:'grid',gridTemplateColumns:'auto 1fr auto auto',gap:14,
-    alignItems:'center', padding:'14px 16px',
-    border:'1px solid var(--border)', borderRadius:10, background:'var(--surface)',
-  }}>
-    <div style={{
-      width:38,height:38,borderRadius:8,flexShrink:0,
-      background:'var(--surface-muted)',
-      display:'flex',alignItems:'center',justifyContent:'center',color:'var(--ink-2)',
-    }}>
-      <Icon name="book" size={16}/>
-    </div>
-    <div style={{minWidth:0}}>
-      <div style={{fontSize:14,fontWeight:600}}>{item.km}</div>
-      <div style={{fontSize:12,color:'var(--ink-3)',marginTop:1}}>{item.en} · {item.mins} {tr('នាទី','min')}</div>
-    </div>
-    <div style={{fontFamily:'"JetBrains Mono",monospace',fontSize:11,color:'var(--ink-3)'}}>{item.id}</div>
-    <div style={{display:'flex',gap:6}}>
-      <Btn kind="ghost" size="sm" onClick={onEdit}>{tr('កែ','Edit')}</Btn>
-      <button onClick={onDelete} title={tr('លុប','Delete')}
-        style={{
-          width:30,height:30,border:'1px solid var(--border)',
-          background:'var(--surface)',borderRadius:8,cursor:'pointer',
-          color:'var(--ink-3)',display:'flex',alignItems:'center',justifyContent:'center',
-          transition:'all .12s',
-        }}
-        onMouseEnter={e=>{e.currentTarget.style.color='var(--danger)';e.currentTarget.style.borderColor='var(--danger)';}}
-        onMouseLeave={e=>{e.currentTarget.style.color='var(--ink-3)';e.currentTarget.style.borderColor='var(--border)';}}
-      ><Icon name="trash" size={13}/></button>
-    </div>
-  </div>
+const AlDelBtn = ({ onDelete, tr }) => (
+  <button onClick={onDelete} title={tr('លុប','Delete')}
+    style={{
+      width:30,height:30,border:'1px solid var(--border)',
+      background:'var(--surface)',borderRadius:8,cursor:'pointer',
+      color:'var(--ink-3)',display:'flex',alignItems:'center',justifyContent:'center',
+      transition:'all .12s',flexShrink:0,
+    }}
+    onMouseEnter={e=>{e.currentTarget.style.color='var(--danger)';e.currentTarget.style.borderColor='var(--danger)';}}
+    onMouseLeave={e=>{e.currentTarget.style.color='var(--ink-3)';e.currentTarget.style.borderColor='var(--border)';}}
+  ><Icon name="trash" size={13}/></button>
 );
 
-const VideoLessonRow = ({ item, onEdit, onDelete, tr }) => (
-  <div style={{
-    display:'grid',gridTemplateColumns:'auto 1fr auto auto',gap:14,
-    alignItems:'center', padding:'12px 16px 12px 12px',
-    border:'1px solid var(--border)', borderRadius:10, background:'var(--surface)',
-  }}>
-    <div style={{
-      width:88,height:50,borderRadius:6,flexShrink:0,
-      background:`#000 url(https://i.ytimg.com/vi/${item.ytId}/mqdefault.jpg) center/cover no-repeat`,
-      position:'relative',
-    }}>
-      <div style={{
-        position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',
-      }}>
-        <div style={{
-          width:24,height:24,borderRadius:999,background:'rgba(0,0,0,.65)',
-          display:'flex',alignItems:'center',justifyContent:'center',
-        }}>
+const TextLessonRow = ({ item, onEdit, onDelete, tr, mobile }) => {
+  const iconBox = (
+    <div style={{width:38,height:38,borderRadius:8,flexShrink:0,background:'var(--surface-muted)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--ink-2)'}}>
+      <Icon name="book" size={16}/>
+    </div>
+  );
+  const title = (
+    <div style={{minWidth:0,flex:1}}>
+      <div style={{fontSize:14,fontWeight:600,lineHeight:1.3}}>{item.km}</div>
+      <div style={{fontSize:12,color:'var(--ink-3)',marginTop:1}}>{item.en} · {item.mins} {tr('នាទី','min')}</div>
+    </div>
+  );
+  if (mobile) return (
+    <div style={{display:'flex',flexDirection:'column',gap:10,padding:'12px 14px',border:'1px solid var(--border)',borderRadius:10,background:'var(--surface)'}}>
+      <div style={{display:'flex',gap:12,alignItems:'flex-start'}}>{iconBox}{title}</div>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'flex-end',gap:8}}>
+        <span style={{fontFamily:'"JetBrains Mono",monospace',fontSize:11,color:'var(--ink-3)',marginRight:'auto'}}>{item.id}</span>
+        <Btn kind="ghost" size="sm" onClick={onEdit}>{tr('កែ','Edit')}</Btn>
+        <AlDelBtn onDelete={onDelete} tr={tr}/>
+      </div>
+    </div>
+  );
+  return (
+    <div style={{display:'grid',gridTemplateColumns:'auto 1fr auto auto',gap:14,alignItems:'center',padding:'14px 16px',border:'1px solid var(--border)',borderRadius:10,background:'var(--surface)'}}>
+      {iconBox}{title}
+      <div style={{fontFamily:'"JetBrains Mono",monospace',fontSize:11,color:'var(--ink-3)'}}>{item.id}</div>
+      <div style={{display:'flex',gap:6}}>
+        <Btn kind="ghost" size="sm" onClick={onEdit}>{tr('កែ','Edit')}</Btn>
+        <AlDelBtn onDelete={onDelete} tr={tr}/>
+      </div>
+    </div>
+  );
+};
+
+const VideoLessonRow = ({ item, onEdit, onDelete, tr, mobile }) => {
+  const thumb = (
+    <div style={{width:88,height:50,borderRadius:6,flexShrink:0,background:`#000 url(https://i.ytimg.com/vi/${item.ytId}/mqdefault.jpg) center/cover no-repeat`,position:'relative'}}>
+      <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <div style={{width:24,height:24,borderRadius:999,background:'rgba(0,0,0,.65)',display:'flex',alignItems:'center',justifyContent:'center'}}>
           <svg width="10" height="10" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
         </div>
       </div>
     </div>
-    <div style={{minWidth:0}}>
-      <div style={{fontSize:14,fontWeight:600}}>{item.km}</div>
-      <div style={{fontSize:12,color:'var(--ink-3)',marginTop:1}}>
-        {item.en} · {Math.floor(item.duration/60)} {tr('នាទី','min')}
+  );
+  const title = (
+    <div style={{minWidth:0,flex:1}}>
+      <div style={{fontSize:14,fontWeight:600,lineHeight:1.3}}>{item.km}</div>
+      <div style={{fontSize:12,color:'var(--ink-3)',marginTop:1}}>{item.en} · {Math.floor(item.duration/60)} {tr('នាទី','min')}</div>
+    </div>
+  );
+  if (mobile) return (
+    <div style={{display:'flex',flexDirection:'column',gap:10,padding:'12px 14px',border:'1px solid var(--border)',borderRadius:10,background:'var(--surface)'}}>
+      <div style={{display:'flex',gap:12,alignItems:'flex-start'}}>{thumb}{title}</div>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'flex-end',gap:8}}>
+        <span style={{fontFamily:'"JetBrains Mono",monospace',fontSize:11,color:'var(--ink-3)',marginRight:'auto',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:'40%'}}>{item.ytId}</span>
+        <Btn kind="ghost" size="sm" onClick={onEdit}>{tr('កែ','Edit')}</Btn>
+        <AlDelBtn onDelete={onDelete} tr={tr}/>
       </div>
     </div>
-    <div style={{fontFamily:'"JetBrains Mono",monospace',fontSize:11,color:'var(--ink-3)'}}>{item.ytId}</div>
-    <div style={{display:'flex',gap:6}}>
-      <Btn kind="ghost" size="sm" onClick={onEdit}>{tr('កែ','Edit')}</Btn>
-      <button onClick={onDelete} title={tr('លុប','Delete')}
-        style={{
-          width:30,height:30,border:'1px solid var(--border)',
-          background:'var(--surface)',borderRadius:8,cursor:'pointer',
-          color:'var(--ink-3)',display:'flex',alignItems:'center',justifyContent:'center',
-          transition:'all .12s',
-        }}
-        onMouseEnter={e=>{e.currentTarget.style.color='var(--danger)';e.currentTarget.style.borderColor='var(--danger)';}}
-        onMouseLeave={e=>{e.currentTarget.style.color='var(--ink-3)';e.currentTarget.style.borderColor='var(--border)';}}
-      ><Icon name="trash" size={13}/></button>
+  );
+  return (
+    <div style={{display:'grid',gridTemplateColumns:'auto 1fr auto auto',gap:14,alignItems:'center',padding:'12px 16px 12px 12px',border:'1px solid var(--border)',borderRadius:10,background:'var(--surface)'}}>
+      {thumb}{title}
+      <div style={{fontFamily:'"JetBrains Mono",monospace',fontSize:11,color:'var(--ink-3)'}}>{item.ytId}</div>
+      <div style={{display:'flex',gap:6}}>
+        <Btn kind="ghost" size="sm" onClick={onEdit}>{tr('កែ','Edit')}</Btn>
+        <AlDelBtn onDelete={onDelete} tr={tr}/>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
-const QuizRow = ({ item, onEdit, onDelete, tr }) => (
-  <div style={{
-    display:'grid',gridTemplateColumns:'auto 1fr auto auto',gap:14,
-    alignItems:'center', padding:'14px 16px',
-    border:'1px solid var(--border)', borderRadius:10, background:'var(--surface)',
-  }}>
-    <div style={{
-      width:38,height:38,borderRadius:8,flexShrink:0,
-      background:'var(--accent-soft)',
-      display:'flex',alignItems:'center',justifyContent:'center',color:'var(--accent)',
-    }}>
+const QuizRow = ({ item, onEdit, onDelete, tr, mobile }) => {
+  const iconBox = (
+    <div style={{width:38,height:38,borderRadius:8,flexShrink:0,background:'var(--accent-soft)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--accent)'}}>
       <Icon name="star" size={16}/>
     </div>
-    <div style={{minWidth:0}}>
-      <div style={{fontSize:14,fontWeight:600}}>{item.km}</div>
-      <div style={{fontSize:12,color:'var(--ink-3)',marginTop:1}}>
-        {item.en} · {item.questions.length} {tr('សំណួរ','question' + (item.questions.length===1?'':'s'))}
+  );
+  const title = (
+    <div style={{minWidth:0,flex:1}}>
+      <div style={{fontSize:14,fontWeight:600,lineHeight:1.3}}>{item.km}</div>
+      <div style={{fontSize:12,color:'var(--ink-3)',marginTop:1}}>{item.en} · {item.questions.length} {tr('សំណួរ','question' + (item.questions.length===1?'':'s'))}</div>
+    </div>
+  );
+  if (mobile) return (
+    <div style={{display:'flex',flexDirection:'column',gap:10,padding:'12px 14px',border:'1px solid var(--border)',borderRadius:10,background:'var(--surface)'}}>
+      <div style={{display:'flex',gap:12,alignItems:'flex-start'}}>{iconBox}{title}</div>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'flex-end',gap:8}}>
+        <span style={{fontFamily:'"JetBrains Mono",monospace',fontSize:11,color:'var(--ink-3)',marginRight:'auto'}}>{item.id}</span>
+        <Btn kind="ghost" size="sm" onClick={onEdit}>{tr('កែ','Edit')}</Btn>
+        <AlDelBtn onDelete={onDelete} tr={tr}/>
       </div>
     </div>
-    <div style={{fontFamily:'"JetBrains Mono",monospace',fontSize:11,color:'var(--ink-3)'}}>{item.id}</div>
-    <div style={{display:'flex',gap:6}}>
-      <Btn kind="ghost" size="sm" onClick={onEdit}>{tr('កែ','Edit')}</Btn>
-      <button onClick={onDelete} title={tr('លុប','Delete')}
-        style={{
-          width:30,height:30,border:'1px solid var(--border)',
-          background:'var(--surface)',borderRadius:8,cursor:'pointer',
-          color:'var(--ink-3)',display:'flex',alignItems:'center',justifyContent:'center',
-          transition:'all .12s',
-        }}
-        onMouseEnter={e=>{e.currentTarget.style.color='var(--danger)';e.currentTarget.style.borderColor='var(--danger)';}}
-        onMouseLeave={e=>{e.currentTarget.style.color='var(--ink-3)';e.currentTarget.style.borderColor='var(--border)';}}
-      ><Icon name="trash" size={13}/></button>
+  );
+  return (
+    <div style={{display:'grid',gridTemplateColumns:'auto 1fr auto auto',gap:14,alignItems:'center',padding:'14px 16px',border:'1px solid var(--border)',borderRadius:10,background:'var(--surface)'}}>
+      {iconBox}{title}
+      <div style={{fontFamily:'"JetBrains Mono",monospace',fontSize:11,color:'var(--ink-3)'}}>{item.id}</div>
+      <div style={{display:'flex',gap:6}}>
+        <Btn kind="ghost" size="sm" onClick={onEdit}>{tr('កែ','Edit')}</Btn>
+        <AlDelBtn onDelete={onDelete} tr={tr}/>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ── Section block (title + list + add button) ─────────────────────────────
 const AlSection = ({ km, en, count, icon, addLabel, onAdd, children }) => {
@@ -682,6 +771,7 @@ const AlSection = ({ km, en, count, icon, addLabel, onAdd, children }) => {
 // ── AdminLessonsScreen ────────────────────────────────────────────────────
 const AdminLessonsScreen = ({ role = 'admin' }) => {
   const { tr, toast, confirm, lang } = useAppActions();
+  const bp = useBreakpoint();
   const [section, setSection] = React.useState('theory');
   const [, force] = React.useReducer(x => x+1, 0);
 
@@ -765,24 +855,28 @@ const AdminLessonsScreen = ({ role = 'admin' }) => {
           <div style={{fontSize:11,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.08em'}}>
             {tr('បណ្ណាល័យ​មេរៀន','LESSON LIBRARY')}
           </div>
-          <div style={{fontSize:28,fontWeight:600,letterSpacing:'-.02em',marginTop:6,fontFamily:'var(--font-display)'}}>
+          <div style={{fontSize:bp.mobile?21:28,fontWeight:600,letterSpacing:'-.02em',marginTop:6,fontFamily:'var(--font-display)'}}>
             {tr('មេរៀន​បើក​បរ','Driving Lessons')}
           </div>
-          <div style={{fontSize:13,color:'var(--ink-2)',marginTop:4,maxWidth:560}}>
-            {tr(
-              'គ្រប់​គ្រង​មាតិកា​មេរៀន​ដែល​សិស្ស​អាច​មើល​នៅ​ផ្ទាំង "មេរៀន" — អត្ថបទ​ទ្រឹស្ដី, អត្ថបទ​អនុវត្ត, វីដេអូ និង​លំហាត់។',
-              'Manage the content students see in their Lessons tab — theory texts, practical guides, video tutorials, and quizzes.'
-            )}
+          {!bp.mobile && (
+            <div style={{fontSize:13,color:'var(--ink-2)',marginTop:4,maxWidth:560}}>
+              {tr(
+                'គ្រប់​គ្រង​មាតិកា​មេរៀន​ដែល​សិស្ស​អាច​មើល​នៅ​ផ្ទាំង "មេរៀន" — អត្ថបទ​ទ្រឹស្ដី, អត្ថបទ​អនុវត្ត, វីដេអូ និង​លំហាត់។',
+                'Manage the content students see in their Lessons tab — theory texts, practical guides, video tutorials, and quizzes.'
+              )}
+            </div>
+          )}
+        </div>
+        {!bp.mobile && (
+          <div style={{display:'flex',gap:8,flexShrink:0}}>
+            <Btn kind="ghost" size="md" onClick={()=>openNew('video')} icon={<Icon name="plus" size={14}/>}>
+              {tr('វីដេអូ​ថ្មី','New video')}
+            </Btn>
+            <Btn kind="primary" size="md" onClick={()=>openNew('text')} icon={<Icon name="plus" size={14}/>}>
+              {tr('មេរៀន​ថ្មី','New lesson')}
+            </Btn>
           </div>
-        </div>
-        <div style={{display:'flex',gap:8,flexShrink:0}}>
-          <Btn kind="ghost" size="md" onClick={()=>openNew('video')} icon={<Icon name="plus" size={14}/>}>
-            {tr('វីដេអូ​ថ្មី','New video')}
-          </Btn>
-          <Btn kind="primary" size="md" onClick={()=>openNew('text')} icon={<Icon name="plus" size={14}/>}>
-            {tr('មេរៀន​ថ្មី','New lesson')}
-          </Btn>
-        </div>
+        )}
       </div>
 
       {/* Section pills + meta */}
@@ -805,9 +899,11 @@ const AdminLessonsScreen = ({ role = 'admin' }) => {
             </button>
           ))}
         </div>
-        <div style={{fontSize:11,fontFamily:'"JetBrains Mono",monospace',color:'var(--ink-3)',letterSpacing:'.06em'}}>
-          {tr(`សរុប ${totalAll} ធាតុ`, `${totalAll} item${totalAll===1?'':'s'} · ${section}`)}
-        </div>
+        {!bp.mobile && (
+          <div style={{fontSize:11,fontFamily:'"JetBrains Mono",monospace',color:'var(--ink-3)',letterSpacing:'.06em'}}>
+            {tr(`សរុប ${totalAll} ធាតុ`, `${totalAll} item${totalAll===1?'':'s'} · ${section}`)}
+          </div>
+        )}
       </div>
 
       {/* Summary strip */}
@@ -847,7 +943,7 @@ const AdminLessonsScreen = ({ role = 'admin' }) => {
             onClick={()=>openNew('text')}
           />
         ) : texts.map((t,i)=>(
-          <TextLessonRow key={t.id||i} item={t} tr={tr}
+          <TextLessonRow key={t.id||i} item={t} tr={tr} mobile={bp.mobile}
             onEdit={()=>openEdit('text', t)}
             onDelete={()=>handleDelete(textsKey, t)}
           />
@@ -868,7 +964,7 @@ const AdminLessonsScreen = ({ role = 'admin' }) => {
             onClick={()=>openNew('video')}
           />
         ) : videos.map((v,i)=>(
-          <VideoLessonRow key={v.id||i} item={v} tr={tr}
+          <VideoLessonRow key={v.id||i} item={v} tr={tr} mobile={bp.mobile}
             onEdit={()=>openEdit('video', v)}
             onDelete={()=>handleDelete(videosKey, v)}
           />
@@ -889,7 +985,7 @@ const AdminLessonsScreen = ({ role = 'admin' }) => {
             onClick={()=>openNew('quiz')}
           />
         ) : quizzes.map((q,i)=>(
-          <QuizRow key={q.id||i} item={q} tr={tr}
+          <QuizRow key={q.id||i} item={q} tr={tr} mobile={bp.mobile}
             onEdit={()=>openEdit('quiz', q)}
             onDelete={()=>handleDelete(quizzesKey, q)}
           />
