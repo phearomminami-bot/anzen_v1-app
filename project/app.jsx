@@ -105,10 +105,8 @@ function App() {
     const f = FONT_OPTIONS[t.font] || FONT_OPTIONS.inter;
     root.style.setProperty('--font-en', f.en);
     root.style.setProperty('--font-display', f.display);
-    // Base font for un-sized text stays constant; the font-size control scales
-    // the content area via zoom (see renderLayout) so the whole UI reflows cleanly
-    // without distorting the layout.
-    root.style.setProperty('--font-size-base', '14px');
+    const sz = FONT_SIZE_OPTIONS.find(o => o.v === t.fontSize) || FONT_SIZE_OPTIONS[1];
+    root.style.setProperty('--font-size-base', sz.px + 'px');
     document.body.style.zoom = '';
   }, [t.accent, t.font, t.fontSize, t.dark]);
 
@@ -417,14 +415,11 @@ function App() {
   const DetailComp = detailEntry?.Component;
 
   const renderLayout = () => {
-    // Content zoom from the font-size setting — scales the whole content area
-    // uniformly (text + spacing) with reflow, so nothing gets distorted.
-    const uiZoom = (FONT_SIZE_OPTIONS.find(o => o.v === t.fontSize) || FONT_SIZE_OPTIONS[1]).zoom;
     // Mobile: always bottom bar, no sidebar
     if (bp.mobile) {
       return (
         <div style={{display:'flex',flexDirection:'column',minHeight:'100svh',width:'100vw',background:'var(--bg)'}}>
-          <main style={{flex:1,overflow:'auto',zoom:uiZoom,padding:'12px 14px',paddingBottom:72}}>{screens[current]}</main>
+          <main style={{flex:1,overflow:'auto',padding:'12px 14px',paddingBottom:72}}>{screens[current]}</main>
           <MobileBottomBar items={items} current={current} onGo={setCurrent} role={role} onLogout={logout}/>
         </div>
       );
@@ -434,7 +429,7 @@ function App() {
       return (
         <div style={{display:'flex',height:'100vh',width:'100vw',background:'var(--bg)'}}>
           <Sidebar items={items} current={current} onGo={setCurrent} role={role} onLogout={logout} onReorder={handleNavReorder} collapsed/>
-          <main style={{flex:1,overflow:'auto',zoom:uiZoom,padding:'16px 20px',minWidth:0}}>{screens[current]}</main>
+          <main style={{flex:1,overflow:'auto',padding:'16px 20px',minWidth:0}}>{screens[current]}</main>
         </div>
       );
     }
@@ -445,7 +440,7 @@ function App() {
           <Sidebar items={items} current={current} onGo={setCurrent} role={role} onLogout={logout} onReorder={handleNavReorder} collapsed={sideCollapsed} onToggleCollapse={toggleSideCollapsed}/>
           <div style={{flex:1,display:'flex',flexDirection:'column',minWidth:0}}>
             <ContentTopbar role={role}/>
-            <main style={{flex:1,overflow:'auto',zoom:uiZoom,padding:'24px 28px'}}>{screens[current]}</main>
+            <main style={{flex:1,overflow:'auto',padding:'24px 28px'}}>{screens[current]}</main>
           </div>
         </div>
       );
@@ -454,14 +449,14 @@ function App() {
       return (
         <div style={{display:'flex',flexDirection:'column',height:'100vh',width:'100vw',background:'var(--bg)'}}>
           <Topbar items={items} current={current} onGo={setCurrent} role={role} onLogout={logout} onReorder={handleNavReorder}/>
-          <main style={{flex:1,overflow:'auto',zoom:uiZoom,padding:'24px 28px'}}>{screens[current]}</main>
+          <main style={{flex:1,overflow:'auto',padding:'24px 28px'}}>{screens[current]}</main>
         </div>
       );
     }
     return (
       <div style={{display:'flex',flexDirection:'column',height:'100vh',width:'100vw',background:'var(--bg)'}}>
         <TabsBar items={items} current={current} onGo={setCurrent} role={role} onLogout={logout} onReorder={handleNavReorder}/>
-        <main style={{flex:1,overflow:'auto',zoom:uiZoom,padding:'24px 28px'}}>{screens[current]}</main>
+        <main style={{flex:1,overflow:'auto',padding:'24px 28px'}}>{screens[current]}</main>
       </div>
     );
   };
