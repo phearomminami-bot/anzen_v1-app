@@ -22,7 +22,7 @@ const ACCENT_OPTIONS = [
 ];
 
 const LOGIN_USERS = {
-  admin:      { km:'ឆាយ ភារម្យ',        en:'Chhay Phearom', title:'នាយក · School director',                   avatar:'admin'  },
+  admin:      { km:'ឆាយ ភារម្យ',        en:'Chhay Phearom', title:'នាយក',                   avatar:'admin'  },
   instructor: { km:'គ្រូបង្រៀន', en:'Instructor', title:'', avatar:'inst-1' },
   student:    { km:'', en:'', title:'', studentId:null, avatar:'port-1' },
 };
@@ -72,7 +72,7 @@ const FORM_WIDTHS  = { newStudent: 794, newVehicle: 760 };
 const FORM_DARK    = new Set(['newVehicle']);
 
 const DETAILS = {
-  lesson:       { Component: LessonDetail,      titleFn: () => ({km:'មេរៀន · Lesson',         en:'Lesson detail'   }) },
+  lesson:       { Component: LessonDetail,      titleFn: () => ({km:'មេរៀន',         en:'Lesson detail'   }) },
   student:      { Component: StudentProfile,    titleFn: (d) => ({km:d?.name,                 en:`${d?.id} · ${d?.cls}`}) },
   instructor:   { Component: InstructorProfile, titleFn: (d) => ({km:d?.name,                 en:d?.en}) },
   vehicle:      { Component: VehicleDetail,     titleFn: (d) => ({km:d?.plate || 'Vehicle',   en:d?.make}) },
@@ -1243,7 +1243,7 @@ const AppTweaks = ({ t, setTweak, setRoleAndAuth }) => (
     />
     <TweakSection label="Theme · រូបរាង"/>
     <TweakToggle
-      label="ងងឹត · Dark mode"
+      label="ងងឹត"
       value={!!t.dark}
       onChange={(v) => setTweak('dark', v)}
     />

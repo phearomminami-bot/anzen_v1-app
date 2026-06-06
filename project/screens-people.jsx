@@ -127,7 +127,7 @@ const StudentsScreen = ({ role = 'admin' }) => {
               </div>
               <button onClick={(e)=>{ e.stopPropagation(); openDetail('student', s); }} style={{
                 background:'transparent',border:'none',cursor:'pointer',padding:4,color:'var(--ink-3)',
-              }} title="មើល​ប្រវត្តិ​​រូប · Open profile">
+              }} title="មើល​ប្រវត្តិ​​រូប">
                 <Icon name="chev" size={14} stroke={1.5}/>
               </button>
             </div>

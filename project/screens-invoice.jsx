@@ -4,11 +4,11 @@
 const getPlans = () => {
   const pricing = window.__schoolSettings?.pricing;
   if (!pricing || !pricing.length) return [
-    {id:'plan-1', cls:'B', km:'ស្តង់ដារ · Standard', hrs:30, price:180, isExtra:false},
-    {id:'plan-2', cls:'B', km:'បន្ថែម · Intensive',  hrs:40, price:240, isExtra:false},
+    {id:'plan-1', cls:'B', km:'ស្តង់ដារ', hrs:30, price:180, isExtra:false},
+    {id:'plan-2', cls:'B', km:'បន្ថែម',  hrs:40, price:240, isExtra:false},
     {id:'plan-3', cls:'A', km:'ស្តង់ដារ ម៉ូតូ',      hrs:18, price:110, isExtra:false},
     {id:'plan-4', cls:'C', km:'ស្តង់ដារ ឡានដឹក',   hrs:40, price:320, isExtra:false},
-    {id:'plan-5', cls:'+', km:'ម៉ោងបន្ថែម · Extra hours', hrs:null, price:20, isExtra:true},
+    {id:'plan-5', cls:'+', km:'ម៉ោងបន្ថែម', hrs:null, price:20, isExtra:true},
   ];
   return pricing.map(p => ({
     id: `plan-${p.id}`,
@@ -24,8 +24,8 @@ const getPlans = () => {
 const ALL_PAYMENT_METHODS = [
   {id:'ABA',   l:'ABA Mobile',         k:'aba'},
   {id:'Wing',  l:'Wing',               k:'wing'},
-  {id:'Cash',  l:'សាច់​ប្រាក់ · Cash', k:'cash'},
-  {id:'Bank',  l:'ផ្ទេរ · Bank',       k:'bank'},
+  {id:'Cash',  l:'សាច់​ប្រាក់', k:'cash'},
+  {id:'Bank',  l:'ផ្ទេរ',       k:'bank'},
   {id:'PiPay', l:'Pi Pay',             k:'pipay'},
   {id:'Card',  l:'Credit card',        k:'card'},
 ];
@@ -33,11 +33,11 @@ const ALL_PAYMENT_METHODS = [
 const getAddons = () => {
   const addons = window.__schoolSettings?.addons;
   if (!addons || !addons.length) return [
-    {id:'ad-1', km:'ការប្រឡងផ្លូវ · Road exam fee',         qty:0, price:25},
-    {id:'ad-2', km:'មេរៀន​បន្ថែម · Extra lesson (1h)',        qty:0, price:18},
-    {id:'ad-3', km:'ការ​ប្រឡង​សាក​ · Mock test pack (×5)',    qty:0, price:30},
-    {id:'ad-4', km:'ឯកសារ permit · Permit paperwork',        qty:0, price:15},
-    {id:'ad-5', km:'សៀវភៅ​សិក្សា · Study handbook (KH/EN)',   qty:0, price:8},
+    {id:'ad-1', km:'ការប្រឡងផ្លូវ',         qty:0, price:25},
+    {id:'ad-2', km:'មេរៀន​បន្ថែម',        qty:0, price:18},
+    {id:'ad-3', km:'ការ​ប្រឡង​សាក​',    qty:0, price:30},
+    {id:'ad-4', km:'ឯកសារ permit',        qty:0, price:15},
+    {id:'ad-5', km:'សៀវភៅ​សិក្សា',   qty:0, price:8},
   ];
   return addons.map(a => ({
     id: `ad-${a.id}`,
@@ -99,7 +99,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
   const EXTRA_HOUR_PRICE = plan.price;
 
   const planLine = isExtraInvoice
-    ? { id:'extra', km:'ម៉ោងបន្ថែម · Additional training hours', sub:`${extraHours} × $${EXTRA_HOUR_PRICE} / ម៉ោង · per hour`, qty: extraHours, price: EXTRA_HOUR_PRICE }
+    ? { id:'extra', km:'ម៉ោងបន្ថែម', sub:`${extraHours} × $${EXTRA_HOUR_PRICE} / ម៉ោង · per hour`, qty: extraHours, price: EXTRA_HOUR_PRICE }
     : { id: plan.id, km: `Class ${plan.cls} · ${plan.km}`, sub: `${plan.hrs} ម៉ោងបង្រៀន`, qty: 1, price: plan.price };
   const lines = [planLine, ...addons.filter(a => a.qty > 0)];
   const subtotal    = lines.reduce((s, l) => s + l.qty * l.price, 0);
@@ -282,7 +282,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
                       <span style={{fontSize:12,fontWeight:500,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{p.km}</span>
                     </div>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginTop:10}}>
-                      <span style={{fontSize:11,color:'var(--ink-3)'}}>{p.isExtra ? 'តាម​ម៉ោង · per hour' : `${p.hrs} ម៉ោង · ${p.hrs}h`}</span>
+                      <span style={{fontSize:11,color:'var(--ink-3)'}}>{p.isExtra ? 'តាម​ម៉ោង' : `${p.hrs} ម៉ោង · ${p.hrs}h`}</span>
                       <span style={{fontSize:20,fontWeight:600,fontFamily:'var(--font-display)'}}>
                         ${p.price}{p.isExtra && <span style={{fontSize:11,color:'var(--ink-3)',fontWeight:400}}>/h</span>}
                       </span>

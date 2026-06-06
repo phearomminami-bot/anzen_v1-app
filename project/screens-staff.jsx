@@ -60,14 +60,14 @@ const StaffScreen = () => {
     if (emp) emp.leave = Math.max(0, (emp.leave || 0) - lv.days);
     forceUpdate();
     if (window.saveAllData) window.saveAllData();
-    toast('ច្បាប់ឈប់បានអនុម័ត · Leave approved', 'good');
+    toast('ច្បាប់ឈប់បានអនុម័ត', 'good');
   };
 
   const denyLeave = (lv) => {
     lv.status = 'Denied';
     forceUpdate();
     if (window.saveAllData) window.saveAllData();
-    toast('ច្បាប់ឈប់បានបដិសេធ · Leave denied', 'neutral');
+    toast('ច្បាប់ឈប់បានបដិសេធ', 'neutral');
   };
 
   const deleteLeave = (lv) => {
@@ -81,7 +81,7 @@ const StaffScreen = () => {
     }
     forceUpdate();
     if (window.saveAllData) window.saveAllData();
-    toast('បានលុបច្បាប់ឈប់ · Leave deleted', 'neutral');
+    toast('បានលុបច្បាប់ឈប់', 'neutral');
   };
 
   const editLeaveDays = (lv, days) => {
@@ -96,7 +96,7 @@ const StaffScreen = () => {
     setEditing(false);
     forceUpdate();
     if (window.saveAllData) window.saveAllData();
-    toast('បានលុបបុគ្គលិក · Staff removed', 'good');
+    toast('បានលុបបុគ្គលិក', 'good');
   };
 
   const saveEdit = (updated) => {
@@ -138,7 +138,7 @@ const StaffScreen = () => {
     setEditing(false);
     forceUpdate();
     if (window.saveAllData) window.saveAllData();
-    toast('បានកែ · Staff updated', 'good');
+    toast('បានកែ', 'good');
   };
 
   const savePhoto = (id, dataUrl) => {
@@ -1261,7 +1261,7 @@ const SfLeaveForm = ({ staff, onClose }) => {
     window.__leaveData.push({ id:nextId, emp:empId, type, from, to, days, status:'Pending', reason, filed:'Today' });
     if (window.__notifyStaffChanged) window.__notifyStaffChanged();
     if (window.saveAllData) window.saveAllData();
-    toast('បាន​ស្នើ​ច្បាប់​ឈប់ · Leave request submitted', 'good');
+    toast('បាន​ស្នើ​ច្បាប់​ឈប់', 'good');
     onClose();
   };
 
@@ -1394,7 +1394,7 @@ const SfPayroll = ({ staff }) => {
     else runs.unshift(run);
     if (window.saveAllData) window.saveAllData();
     forceUp();
-    toast(status === 'Paid' ? 'ប្រាក់ខែ​បានបញ្ជាក់ · Payroll confirmed' : 'បានរក្សា · Saved as draft', 'good');
+    toast(status === 'Paid' ? 'ប្រាក់ខែ​បានបញ្ជាក់' : 'បានរក្សា', 'good');
   };
 
   const markAllPaid = () => setEntries(prev => prev.map(e => ({...e, paid: true})));
@@ -1424,7 +1424,7 @@ const SfPayroll = ({ staff }) => {
               background:view===v?'var(--surface)':'transparent',
               color:view===v?'var(--ink)':'var(--ink-3)',
               borderRadius:5,fontSize:12,fontWeight:v===view?600:500,cursor:'pointer',
-            }}>{v==='run'?'វដ្ត​ទូទាត់ · Pay run':'ប្រវត្តិ · History'}</button>
+            }}>{v==='run'?'វដ្ត​ទូទាត់':'ប្រវត្តិ'}</button>
           ))}
         </div>
         {view==='run' && (
@@ -1455,9 +1455,9 @@ const SfPayroll = ({ staff }) => {
           {/* KPI strip */}
           <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:16}}>
             <Card><Stat label="Gross" value={`$${gross.toLocaleString()}`}/></Card>
-            <Card><Stat label="ការ​កាត់ · Deductions" value={`-$${deduct.toLocaleString()}`} sub="NSSF + Tax"/></Card>
+            <Card><Stat label="ការ​កាត់" value={`-$${deduct.toLocaleString()}`} sub="NSSF + Tax"/></Card>
             <Card><Stat label="Net payable" value={`$${net.toLocaleString()}`}/></Card>
-            <Card><Stat label="បានបង់ · Paid" value={`${paidCount}/${entries.length}`} sub={paidCount===entries.length&&entries.length>0?'Complete':'pending'}/></Card>
+            <Card><Stat label="បានបង់" value={`${paidCount}/${entries.length}`} sub={paidCount===entries.length&&entries.length>0?'Complete':'pending'}/></Card>
           </div>
 
           {/* Payroll table */}
@@ -1858,8 +1858,8 @@ const printStaffProfile = (s) => {
       <div>
         <h3>ការ​ងារ · EMPLOYMENT</h3>
         <table>
-          ${row('ចូល​ធ្វើ · Start', s.since)}
-          ${row('ប្រភេទ · Type', ext.empType||'Full-time')}
+          ${row('ចូល​ធ្វើ', s.since)}
+          ${row('ប្រភេទ', ext.empType||'Full-time')}
           ${row('Dept', s.dept)} ${row('Phone', s.phone!=='—'?s.phone:'')}
           ${row('Email', s.email!=='—'?s.email:'')} ${row('Manager', ext.manager)}
         </table>
@@ -1876,7 +1876,7 @@ const printStaffProfile = (s) => {
         </table>
         <h3>ឯកសារ · DOCUMENTS</h3>
         <table>
-          ${docRow('contract','កិច្ចសន្យា · Contract')}
+          ${docRow('contract','កិច្ចសន្យា')}
           ${docRow('license','ប័ណ្ណ​បើក​បរ')} ${docRow('medical','វិញ្ញាបន​វេជ្ជ')} ${docRow('bg','ត្រួត​ប្រវត្តិ')}
         </table>
       </div>
@@ -2064,7 +2064,7 @@ const SfExtendedInfo = ({ s }) => {
 
   const MARITAL = {single:'នៅ​លីវ', married:'រៀបការ', divorced:'លែង​លះ'};
   const EDU = {primary:'បឋម​សិក្សា', secondary:'មធ្យម​សិក្សា', high:'វិទ្យាល័យ', bachelor:'បរិញ្ញាបត្រ', master:'អនុ​បណ្ឌិត'};
-  const GENDER = {M:'ប្រុស · Male', F:'ស្រី · Female'};
+  const GENDER = {M:'ប្រុស', F:'ស្រី'};
 
   return (
     <div style={{borderTop:'1px dashed var(--border)'}}>
@@ -2081,8 +2081,8 @@ const SfExtendedInfo = ({ s }) => {
           <div>
             <div style={{font:'500 10px/1 "JetBrains Mono",monospace',letterSpacing:'.08em',textTransform:'uppercase',color:'var(--ink-3)',marginBottom:8}}>ផ្ទាល់ខ្លួន · PERSONAL</div>
             <div style={{display:'flex',flexDirection:'column',gap:6}}>
-              <XRow k="ភេទ · Gender" v={GENDER[ext.gender]||ext.gender}/>
-              <XRow k="ថ្ងៃ​ខែ · DOB" v={ext.dob}/>
+              <XRow k="ភេទ" v={GENDER[ext.gender]||ext.gender}/>
+              <XRow k="ថ្ងៃ​ខែ" v={ext.dob}/>
               <XRow k="ស្ថានភាព" v={MARITAL[ext.marital]||ext.marital}/>
               <XRow k="អត្ត​សញ្ញាណ" v={ext.idNum}/>
               <XRow k="អាសយដ្ឋាន" v={ext.address}/>
@@ -2092,9 +2092,9 @@ const SfExtendedInfo = ({ s }) => {
             <div style={{font:'500 10px/1 "JetBrains Mono",monospace',letterSpacing:'.08em',textTransform:'uppercase',color:'var(--ink-3)',marginBottom:8}}>អន្ត​រាយ · EMERGENCY</div>
             <div style={{display:'flex',flexDirection:'column',gap:6}}>
               <XRow k="ឈ្មោះ" v={ext.emergencyName}/>
-              <XRow k="ទំ​នាក់ · Relation" v={ext.emergencyRel}/>
+              <XRow k="ទំ​នាក់" v={ext.emergencyRel}/>
               <XRow k="ទូរស័ព្ទ" v={ext.emergencyPhone}/>
-              <XRow k="ប្រភេទ · Type" v={ext.empType}/>
+              <XRow k="ប្រភេទ" v={ext.empType}/>
               <XRow k="អ្នក​គ្រប់​គ្រង" v={ext.manager}/>
               {(ext.allowance||0) > 0 && <XRow k="ឧបត្ថម្ភ" v={`$${ext.allowance}`}/>}
               <XRow k="គណនី" v={ext.bankAccount}/>
@@ -2113,7 +2113,7 @@ const SfExtendedInfo = ({ s }) => {
             <div style={{font:'500 10px/1 "JetBrains Mono",monospace',letterSpacing:'.08em',textTransform:'uppercase',color:'var(--ink-3)',marginBottom:8}}>បើក​បរ · DRIVING</div>
             <div style={{display:'flex',flexDirection:'column',gap:6}}>
               <XRow k="ប្រភេទ​ប័ណ្ណ" v={ext.licenseType}/>
-              <XRow k="ផុត​ · Expiry" v={ext.licenseExpiry}/>
+              <XRow k="ផុត​" v={ext.licenseExpiry}/>
               {(ext.drivingExp||0) > 0 && <XRow k="បទ​ពិសោធន៍" v={`${ext.drivingExp} ឆ្នាំ`}/>}
               <XRow k="ថ្នាក់​គ្រូ" v={ext.instLevel}/>
               <XRow k="យានយន្ត" v={ext.assignedVehicle}/>

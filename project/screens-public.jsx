@@ -93,9 +93,9 @@ const PublicScreen = () => {
         </div>
         <div style={{marginTop:32,display:'flex',gap:32}}>
           {[
-            {n:`${totalGraduates.toLocaleString()}+`, l:'សិស្ស​បាន​ជោគ​ជ័យ · graduates'},
-            {n:`${passRate}%`,                        l:'ការ​ប្រឡង​ជាប់ · pass rate'},
-            {n:`${instrCount}`,                       l:'គ្រូ​មាន​វិញ្ញា​បន​បត្រ · certified instructors'},
+            {n:`${totalGraduates.toLocaleString()}+`, l:'សិស្ស​បាន​ជោគ​ជ័យ'},
+            {n:`${passRate}%`,                        l:'ការ​ប្រឡង​ជាប់'},
+            {n:`${instrCount}`,                       l:'គ្រូ​មាន​វិញ្ញា​បន​បត្រ'},
           ].map((s,i)=>(
             <div key={i}>
               <div style={{fontSize:24,fontWeight:600,fontFamily:'var(--font-display)',letterSpacing:'-.02em'}}>{s.n}</div>
@@ -152,8 +152,8 @@ const PublicScreen = () => {
               <ul style={{listStyle:'none',padding:0,margin:'18px 0 0',display:'flex',flexDirection:'column',gap:6,fontSize:12,color:'var(--ink-2)'}}>
                 {[
                   `${c.hrs} ម៉ោង​បង្រៀន · ${c.hrs}h training`,
-                  'ប្រឡង​សាក​ល្បង​មិន​កំណត់ · unlimited mock tests',
-                  c.inc || 'ការ​ត្រៀម​ឯ​កសារ · permit paperwork',
+                  'ប្រឡង​សាក​ល្បង​មិន​កំណត់',
+                  c.inc || 'ការ​ត្រៀម​ឯ​កសារ',
                 ].map((f,j)=>(
                   <li key={j} style={{display:'flex',gap:8,alignItems:'center'}}>
                     <Icon name="check" size={13} stroke={2}/> {f}
@@ -676,7 +676,7 @@ const BookingStepTime = () => {
         {/* time slots */}
         <div>
           <div style={{fontSize:13,fontWeight:600,marginBottom:10}}>
-            {pick.day ? `ម៉ោងទំនេរ · June ${pick.day}` : 'ជ្រើស​ថ្ងៃ​ជាមុន · Select a day first'}
+            {pick.day ? `ម៉ោងទំនេរ · June ${pick.day}` : 'ជ្រើស​ថ្ងៃ​ជាមុន'}
           </div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:8}}>
             {slots.map(h => {

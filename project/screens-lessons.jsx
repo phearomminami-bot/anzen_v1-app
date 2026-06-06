@@ -420,7 +420,7 @@ const THEORY_TEXTS = [
   },
   {
     id:'tt-26', no:'学科26', ja:'応急救護処置 Ⅱ・Ⅲ', stage:2, mins:14,
-    km:'ការសង្គ្រោះបឋម (ភាគ២-៣) · CPR', en:'First Aid (Part 2–3) · CPR',
+    km:'ការសង្គ្រោះបឋម (ភាគ២-៣)', en:'First Aid (Part 2–3) · CPR',
     body_km:`ការ​សង្គ្រោះ​ជីវិត (心肺蘇生) — អនុវត្តន៍:
 
 • ច្របាច់ទ្រូង (胸骨圧迫) — ៣០ ដង, ជម្រៅ ៥ ស.ម
@@ -1360,7 +1360,7 @@ const StageBanner = ({ stage, hours }) => {
       </div>
       <div style={{ flex:1 }}>
         <div style={{ fontSize:14, fontWeight:700, color }}>
-          {isOne ? tr('ដំណាក់កាលទី ១ · 第一段階','Stage 1 · 第一段階') : tr('ដំណាក់កាលទី ២ · 第二段階','Stage 2 · 第二段階')}
+          {isOne ? tr('ដំណាក់កាលទី ១','Stage 1 · 第一段階') : tr('ដំណាក់កាលទី ២','Stage 2 · 第二段階')}
         </div>
         <div style={{ fontSize:12, color:'var(--ink-2)', marginTop:1 }}>
           {isOne ? tr('ការបើកបរក្នុងសាលា (所内)','Driving on the school course (所内)') : tr('ការបើកបរលើផ្លូវសាធារណៈ (路上)','Driving on public roads (路上)')}
@@ -1410,9 +1410,9 @@ const LessonsScreen = ({ role }) => {
   const doneExCount = exercises.filter(e => doneExs.has(e.id)).length;
 
   const SECTIONS = [
-    { id: 'theory',    km: 'ទ្រឹស្ដី · 学科',  en: 'Theory · 学科',    icon: 'book'  },
-    { id: 'practical', km: 'អនុវត្ត · 技能',  en: 'Practical · 技能', icon: 'car'   },
-    { id: 'tests',     km: 'ការប្រឡង · 検定', en: 'Exams · 検定',     icon: 'check' },
+    { id: 'theory',    km: 'ទ្រឹស្ដី',  en: 'Theory · 学科',    icon: 'book'  },
+    { id: 'practical', km: 'អនុវត្ត',  en: 'Practical · 技能', icon: 'car'   },
+    { id: 'tests',     km: 'ការប្រឡង', en: 'Exams · 検定',     icon: 'check' },
   ];
 
   const toggleRead = id => setReadTexts(prev => {

@@ -250,7 +250,7 @@ const TextLessonForm = ({ initial, onSave, onCancel }) => {
         <AlTextarea ref={bodyEnRef} value={bodyEn} onChange={e=>setBodyEn(e.target.value)} placeholder={'Lesson content...\n\n**Key points:**\n• ...'}/>
         <div style={{display:'flex',gap:8,marginTop:6,alignItems:'center',flexWrap:'wrap'}}>
           <ImagePickerButton
-            label={tr('ដាក់​រូប · EN','Insert image · EN')}
+            label={tr('ដាក់​រូប','Insert image · EN')}
             onPick={(dataUrl) =>
               insertAtCursor(bodyEnRef, setBodyEn, bodyEn, `\n![](${dataUrl})\n`)
             }

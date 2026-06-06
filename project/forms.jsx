@@ -269,7 +269,7 @@ const FormSection = ({ title, children }) => (
   </div>
 );
 
-const FormShell = ({ children, onCancel, onSave, saveLabel = 'រក្សាទុក · Save', cancelLabel = 'បោះបង់ · Cancel' }) => (
+const FormShell = ({ children, onCancel, onSave, saveLabel = 'រក្សាទុក', cancelLabel = 'បោះបង់' }) => (
   <div style={{display:'flex',flexDirection:'column',height:'100%'}}>
     <div style={{flex:1,minHeight:0,overflow:'auto',padding:'20px 32px'}}>{children}</div>
     <div style={{
@@ -1477,7 +1477,7 @@ Use "" for any field that cannot be read clearly.`;
 
   const pwStrength = pw.length === 0 ? 0 : pw.length < 4 ? 1 : pw.length < 7 ? 2 : 3;
   const pwColors   = ['var(--border)','var(--danger)','var(--warn)','var(--good)'];
-  const pwLabels   = ['','ខ្សោយ · Weak','មធ្យម · Fair','ល្អ · Strong'];
+  const pwLabels   = ['','ខ្សោយ','មធ្យម','ល្អ'];
 
   const selectedInst = INSTRUCTORS.find(i => i.id === instId);
 
@@ -1540,7 +1540,7 @@ Use "" for any field that cannot be read clearly.`;
 
   return (
     <FormShell onCancel={onClose} onSave={save}
-      saveLabel={tr('ចុះ​ឈ្មោះ​ចូល​រៀន · Save','Save Registration')}>
+      saveLabel={tr('ចុះ​ឈ្មោះ​ចូល​រៀន','Save Registration')}>
 
       {/* ════ ID CARD SCANNER ════ */}
       <input ref={idFileRef} type="file" accept="image/*" capture="environment"
@@ -1719,24 +1719,24 @@ Use "" for any field that cannot be read clearly.`;
         <Field label={tr('លេខទូរស័ព្ទ *','Phone *')}>
           <Input placeholder="ឧ. 012345678" value={phone} onChange={e=>setPhone(e.target.value)}/>
         </Field>
-        <Field label={tr('អ៊ីមែល · Email','Email')}>
+        <Field label={tr('អ៊ីមែល','Email')}>
           <Input placeholder="name@email.com" value={email} onChange={e=>setEmail(e.target.value)}/>
         </Field>
       </Row>
       <Row>
-        <Field label={tr('ភ្នែកឆ្វេង · Left Eye','Left Eye')}>
+        <Field label={tr('ភ្នែកឆ្វេង','Left Eye')}>
           <Select value={eyeLeft} onChange={e=>setEyeLeft(e.target.value)}>
             {EYE_OPTS.map(v=><option key={v||'none'} value={v}>{v||'—'}</option>)}
           </Select>
         </Field>
-        <Field label={tr('ភ្នែកស្ដាំ · Right Eye','Right Eye')}>
+        <Field label={tr('ភ្នែកស្ដាំ','Right Eye')}>
           <Select value={eyeRight} onChange={e=>setEyeRight(e.target.value)}>
             {EYE_OPTS.map(v=><option key={v||'none'} value={v}>{v||'—'}</option>)}
           </Select>
         </Field>
       </Row>
       <Row>
-        <Field label={tr('ភ្នែកទាំងពីរ · Both Eyes','Both Eyes')}>
+        <Field label={tr('ភ្នែកទាំងពីរ','Both Eyes')}>
           <Select value={eyeBoth} onChange={e=>setEyeBoth(e.target.value)}>
             {EYE_OPTS.map(v=><option key={v||'none'} value={v}>{v||'—'}</option>)}
           </Select>
@@ -1787,7 +1787,7 @@ Use "" for any field that cannot be read clearly.`;
           display:'flex', justifyContent:'space-between', alignItems:'center',
         }}>
           <span style={{fontSize:14, color:genPw?'#fff':'var(--accent)', fontFamily:'var(--font-km)'}}>
-            {tr('ពាក្យសម្ងាត់ · Copy this:','Password · Copy this:')}
+            {tr('ពាក្យសម្ងាត់','Password · Copy this:')}
           </span>
           <span style={{fontFamily:'"JetBrains Mono",monospace', fontSize:16, fontWeight:700,
             letterSpacing:'.1em', color:genPw?'#fff':'var(--accent)'}}>
@@ -1943,7 +1943,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
   const activeVehs = VEHICLES.filter(v => v.visible !== false);
 
   return (
-    <FormShell onCancel={onClose} onSave={save} saveLabel={tr('កក់​មេរៀន · Schedule','Schedule lesson')}>
+    <FormShell onCancel={onClose} onSave={save} saveLabel={tr('កក់​មេរៀន','Schedule lesson')}>
 
       {/* ── LESSON ── */}
       <FormSection title="LESSON">
@@ -1989,7 +1989,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
                   const grp = catObj.items.filter(u => (u.stage||1) === stage && !selLessons.includes(u.id));
                   if (!grp.length) return [];
                   return [
-                    <option key={'st'+stage} value="" disabled>{stage===1 ? tr('── ដំណាក់កាល ១ · 第一段階 ──','── Stage 1 · 第一段階 ──') : tr('── ដំណាក់កាល ២ · 第二段階 ──','── Stage 2 · 第二段階 ──')}</option>,
+                    <option key={'st'+stage} value="" disabled>{stage===1 ? tr('── ដំណាក់កាល ១','── Stage 1 · 第一段階 ──') : tr('── ដំណាក់កាល ២','── Stage 2 · 第二段階 ──')}</option>,
                     ...grp.map(u => <option key={u.id} value={u.id}>{u.no ? u.no+' · ' : ''}{tr(u.km, u.en)}{u.ja ? ' · '+u.ja : ''}</option>),
                   ];
                 }),
@@ -2000,7 +2000,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
       </FormSection>
 
       {/* ── WHEN ── */}
-      <FormSection title={tr('ពេល​វេលា · WHEN','WHEN')}>
+      <FormSection title={tr('ពេល​វេលា','WHEN')}>
         {/* Multi-date chips */}
         <div style={{marginBottom:10}}>
           <div style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',marginBottom:6}}>
@@ -2056,7 +2056,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
       </FormSection>
 
       {/* ── PEOPLE ── */}
-      <FormSection title={tr('អ្នក​ពាក់​ព័ន្ធ · PEOPLE','PEOPLE')}>
+      <FormSection title={tr('អ្នក​ពាក់​ព័ន្ធ','PEOPLE')}>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
           <Field label={tr('សិស្ស','Student')}>
             <Select value={studentId} onChange={e=>setStudentId(e.target.value)}>
@@ -2081,7 +2081,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
             sub={activeVehs.length===0?tr('គ្មាន​ឡាន​ ← បន្ថែម​ក្នុង Tab Fleet','No vehicles — add in Fleet tab'):vehConflict?tr('⚠ ឡាន​ជាន់​ម៉ោង​គ្នា','⚠ Vehicle busy'):''}>
             <Select value={vehId} onChange={e=>setVehId(e.target.value)}
               style={vehConflict?{borderColor:'var(--warn)'}:{}}>
-              <option value="">{tr('ស្វ័យ​ប្រវត្តិ · Auto-assign','Auto-assign')}</option>
+              <option value="">{tr('ស្វ័យ​ប្រវត្តិ','Auto-assign')}</option>
               {activeVehs.map(v=>{
                 const busy = LESSONS.some(l=>l.veh===v.id && slotBusy(l));
                 const inWorkshop = v.status === 'Workshop';
@@ -2094,7 +2094,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
         </div>
 
         {/* Guest instructors */}
-        <Field label={tr('គ្រូ​ភ្ញៀវ · Guest instructors','Guest instructors')}
+        <Field label={tr('គ្រូ​ភ្ញៀវ','Guest instructors')}
           sub={tr('អ្នកដែល​ត្រូវបាន​Add ក៏​រវល់​ក្នុង​ម៉ោង​នេះ​ដែរ','Those added are also marked busy for this slot')}>
           <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:guests.length>0?8:0}}>
             {guests.map(gid => {
@@ -2131,7 +2131,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
       </FormSection>
 
       {/* ── LOCATION ── */}
-      <FormSection title={tr('ទីតាំង · LOCATION','LOCATION')}>
+      <FormSection title={tr('ទីតាំង','LOCATION')}>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
           <Field label={tr('ទីតាំង​ជួប','Meeting location')}>
             <Select value={pickup} onChange={e=>setPickup(e.target.value)}>
@@ -2261,18 +2261,18 @@ const NewInstructorForm = ({ onClose }) => {
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
           <Field label="ឈ្មោះ (ខ្មែរ)"><Input value={nameKm} onChange={e=>setNameKm(e.target.value)} placeholder="ស្រ៊ន ណារី"/></Field>
           <Field label="Name (EN)"><Input value={nameEn} onChange={e=>setNameEn(e.target.value)} placeholder="Sron Nary"/></Field>
-          <Field label="ទូរស័ព្ទ · Phone"><Input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+855 12 000 000"/></Field>
+          <Field label="ទូរស័ព្ទ"><Input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+855 12 000 000"/></Field>
           <Field label="Email"><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="staff@anzen.drive"/></Field>
-          <Field label="សញ្ជាតិ · Nationality"><Input value={nationality} onChange={e=>setNationality(e.target.value)} placeholder="ខ្មែរ"/></Field>
-          <Field label="ថ្ងៃ​ចូល​ធ្វើការ · Start date"><Input type="date" value={hire} onChange={e=>setHire(e.target.value)}/></Field>
+          <Field label="សញ្ជាតិ"><Input value={nationality} onChange={e=>setNationality(e.target.value)} placeholder="ខ្មែរ"/></Field>
+          <Field label="ថ្ងៃ​ចូល​ធ្វើការ"><Input type="date" value={hire} onChange={e=>setHire(e.target.value)}/></Field>
         </div>
       </FormSection>
-      <FormSection title="តួនាទី · ROLE">
+      <FormSection title="តួនាទី">
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
           <Field label={tr('មុខ​តំណែង','Title')} full>
-            <ComboInput value={roleText} onChange={setRoleText} options={instRoles.map(r=>r.km+' · '+r.en)} placeholder="e.g. គ្រូ​បង្រៀន · Instructor"/>
+            <ComboInput value={roleText} onChange={setRoleText} options={instRoles.map(r=>r.km+' · '+r.en)} placeholder="e.g. គ្រូ​បង្រៀន"/>
           </Field>
-          <Field label={tr('ថ្នាក់​ · Classes','License classes')} full>
+          <Field label={tr('ថ្នាក់​','License classes')} full>
             <div style={{display:'flex',gap:6,flexWrap:'wrap',padding:'7px 8px',border:'1px solid var(--border)',borderRadius:8,minHeight:38,alignItems:'center',background:'var(--surface)'}}>
               {['A','B','C'].map(c => (
                 <button key={c} type="button" onClick={()=>toggleCls(c)} style={{
@@ -2283,7 +2283,7 @@ const NewInstructorForm = ({ onClose }) => {
               ))}
             </div>
           </Field>
-          <Field label={tr('ភាសា · Languages','Languages')} full>
+          <Field label={tr('ភាសា','Languages')} full>
             <div style={{display:'flex',gap:6,flexWrap:'wrap',padding:'7px 8px',border:'1px solid var(--border)',borderRadius:8,minHeight:38,alignItems:'center',background:'var(--surface)'}}>
               {LANG_OPTS.map(o => (
                 <button key={o.v} type="button" onClick={()=>toggleLang(o.v)} style={{
@@ -2294,7 +2294,7 @@ const NewInstructorForm = ({ onClose }) => {
               ))}
             </div>
           </Field>
-          <Field label={tr('ម៉ោង/សប្ដាហ៍ · hrs/week','hrs/week')}>
+          <Field label={tr('ម៉ោង/សប្ដាហ៍','hrs/week')}>
             <Input type="number" value={hours} onChange={e=>setHours(e.target.value)} placeholder="40" min="0" max="60"/>
           </Field>
         </div>
@@ -2302,9 +2302,9 @@ const NewInstructorForm = ({ onClose }) => {
           {tr('អាច​បន្ថែម​តួនាទី​ថ្មី​បាន​ក្នុង Settings → Roles','Add more roles in Settings → Roles')}
         </div>
       </FormSection>
-      <FormSection title="ប្រាក់​ខែ · SALARY">
+      <FormSection title="ប្រាក់​ខែ">
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-          <Field label="ប្រភេទ · Type">
+          <Field label="ប្រភេទ">
             <Select value={sType} onChange={e=>setSType(e.target.value)}>
               <option value="monthly">ប្រចាំ​ខែ · Monthly</option>
               <option value="hourly">ប្រចាំ​ម៉ោង · Hourly</option>
@@ -2315,7 +2315,7 @@ const NewInstructorForm = ({ onClose }) => {
           </Field>
         </div>
       </FormSection>
-      <FormSection title={tr('គណនីប្រើប្រាស់ · LOGIN ACCOUNT','LOGIN ACCOUNT')}>
+      <FormSection title={tr('គណនីប្រើប្រាស់','LOGIN ACCOUNT')}>
         <div style={{padding:'12px 14px',background:'var(--accent-soft)',border:'1px solid var(--accent)',borderRadius:10,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
           <div>
             <div style={{fontSize:11,color:'var(--accent)',fontWeight:600,marginBottom:4}}>{tr('ID (Username)','ID (Username)')}</div>
@@ -2708,8 +2708,8 @@ const NewInvoiceForm = ({ onClose }) => {
   };
 
   return (
-    <FormShell onCancel={onClose} onSave={save} saveLabel="បង្កើត · Create">
-      <FormSection title="សិស្ស · STUDENT">
+    <FormShell onCancel={onClose} onSave={save} saveLabel="បង្កើត">
+      <FormSection title="សិស្ស">
         <Field label="សិស្ស">
           <Select value={studentIdx} onChange={e=>setStudentIdx(+e.target.value)}>
             {STUDENTS.map((s,i) => <option key={s.id} value={i}>{s.en} · {s.id}</option>)}
@@ -2717,7 +2717,7 @@ const NewInvoiceForm = ({ onClose }) => {
           </Select>
         </Field>
       </FormSection>
-      <FormSection title="វិក្កយបត្រ · INVOICE">
+      <FormSection title="វិក្កយបត្រ">
         <Field label={tr('ចំនួន​ទឹក​ប្រាក់ ($)','Amount ($)')}>
           <Input type="number" min="0" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="0.00"/>
         </Field>
@@ -2725,7 +2725,7 @@ const NewInvoiceForm = ({ onClose }) => {
           <Input value={desc} onChange={e=>setDesc(e.target.value)} placeholder={tr('ថ្លៃ​ការ​បណ្ដុះ​បណ្ដាល','Training fee')}/>
         </Field>
       </FormSection>
-      <FormSection title="ការ​​បង់ · PAYMENT">
+      <FormSection title="ការ​​បង់">
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
           <Field label={tr('ថ្ងៃ​កំណត់','Due date')}><Input type="date" value={due} onChange={e=>setDue(e.target.value)}/></Field>
           <Field label={tr('វិធី​សាស្ត្រ','Method')}>
@@ -2765,13 +2765,13 @@ const NewMaintenanceForm = ({ onClose }) => {
       cost:    0,
     });
     if (window.saveAllData) window.saveAllData();
-    toast?.(tr('បាន​កក់​ការ​ថែទាំ · Maintenance scheduled', 'Maintenance scheduled'), 'good');
+    toast?.(tr('បាន​កក់​ការ​ថែទាំ', 'Maintenance scheduled'), 'good');
     onClose();
   };
 
   return (
     <FormShell onCancel={onClose} onSave={save}>
-      <FormSection title="យានយន្ត · VEHICLE">
+      <FormSection title="យានយន្ត">
         <Field label={tr('ជ្រើស​យានយន្ត','Select vehicle')}>
           <Select value={vehIdx} onChange={e=>setVehIdx(+e.target.value)}>
             {VEHICLES.map((v,i) => <option key={v.id} value={i}>{v.plate} · {v.make}</option>)}
@@ -2779,7 +2779,7 @@ const NewMaintenanceForm = ({ onClose }) => {
           </Select>
         </Field>
       </FormSection>
-      <FormSection title="ការ​ងារ · WORK">
+      <FormSection title="ការ​ងារ">
         <Field label={tr('ប្រភេទ','Type')}>
           <Select value={workType} onChange={e=>setWorkType(e.target.value)}>
             <option>Oil change</option><option>Tire rotation</option><option>Brake check</option><option>Annual inspection</option><option>Other</option>
@@ -2977,21 +2977,21 @@ const NewStaffForm = ({ onClose }) => {
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
           <Field label="ឈ្មោះ (ខ្មែរ)"><Input value={nameKm} onChange={e=>setNameKm(e.target.value)} placeholder="ស្រ៊ន ណារី"/></Field>
           <Field label="Name (EN)"><Input value={nameEn} onChange={e=>setNameEn(e.target.value)} placeholder="Sron Nary"/></Field>
-          <Field label="ទូរស័ព្ទ · Phone"><Input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+855 12 000 000"/></Field>
+          <Field label="ទូរស័ព្ទ"><Input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+855 12 000 000"/></Field>
           <Field label="Email"><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="staff@anzen.drive"/></Field>
-          {isInst && <Field label="សញ្ជាតិ · Nationality"><Input value={nationality} onChange={e=>setNationality(e.target.value)} placeholder="ខ្មែរ"/></Field>}
-          <Field label="ថ្ងៃ​ចូល​ធ្វើការ · Start date" full={!isInst}><Input type="date" value={hire} onChange={e=>setHire(e.target.value)}/></Field>
+          {isInst && <Field label="សញ្ជាតិ"><Input value={nationality} onChange={e=>setNationality(e.target.value)} placeholder="ខ្មែរ"/></Field>}
+          <Field label="ថ្ងៃ​ចូល​ធ្វើការ" full={!isInst}><Input type="date" value={hire} onChange={e=>setHire(e.target.value)}/></Field>
         </div>
       </FormSection>
 
       {/* ── Role section ── */}
-      <FormSection title="តួនាទី · ROLE">
+      <FormSection title="តួនាទី">
         {isInst ? (
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
             <Field label={tr('មុខ​តំណែង','Title')} full>
-              <ComboInput value={instRoleText} onChange={setInstRoleText} options={instRoles.map(r=>r.km+' · '+r.en)} placeholder="e.g. គ្រូ​បង្រៀន · Instructor"/>
+              <ComboInput value={instRoleText} onChange={setInstRoleText} options={instRoles.map(r=>r.km+' · '+r.en)} placeholder="e.g. គ្រូ​បង្រៀន"/>
             </Field>
-            <Field label={tr('ថ្នាក់ · Classes','License classes')} full>
+            <Field label={tr('ថ្នាក់','License classes')} full>
               <div style={{display:'flex',gap:6,flexWrap:'wrap',padding:'7px 8px',border:'1px solid var(--border)',borderRadius:8,minHeight:38,alignItems:'center',background:'var(--surface)'}}>
                 {['A','B','C'].map(c => (
                   <button key={c} type="button" onClick={()=>toggleCls(c)} style={{
@@ -3002,7 +3002,7 @@ const NewStaffForm = ({ onClose }) => {
                 ))}
               </div>
             </Field>
-            <Field label={tr('ភាសា · Languages','Languages')} full>
+            <Field label={tr('ភាសា','Languages')} full>
               <div style={{display:'flex',gap:6,flexWrap:'wrap',padding:'7px 8px',border:'1px solid var(--border)',borderRadius:8,minHeight:38,alignItems:'center',background:'var(--surface)'}}>
                 {LANG_OPTS.map(o => (
                   <button key={o.v} type="button" onClick={()=>toggleLang(o.v)} style={{
@@ -3013,13 +3013,13 @@ const NewStaffForm = ({ onClose }) => {
                 ))}
               </div>
             </Field>
-            <Field label={tr('ម៉ោង/សប្ដាហ៍ · hrs/week','hrs/week')}>
+            <Field label={tr('ម៉ោង/សប្ដាហ៍','hrs/week')}>
               <Input type="number" value={hours} onChange={e=>setHours(e.target.value)} placeholder="40" min="0" max="60"/>
             </Field>
           </div>
         ) : (
           <Field label={tr('មុខ​តំណែង','Title')}>
-            <ComboInput value={staffRoleText} onChange={setStaffRoleText} options={staffRoles.map(r=>r.km+' · '+r.en)} placeholder="e.g. ស្ដីការ · Receptionist"/>
+            <ComboInput value={staffRoleText} onChange={setStaffRoleText} options={staffRoles.map(r=>r.km+' · '+r.en)} placeholder="e.g. ស្ដីការ"/>
           </Field>
         )}
         <div style={{fontSize:11,color:'var(--ink-3)',marginTop:4}}>
@@ -3028,9 +3028,9 @@ const NewStaffForm = ({ onClose }) => {
       </FormSection>
 
       {/* ── Salary ── */}
-      <FormSection title="ប្រាក់​ខែ · SALARY">
+      <FormSection title="ប្រាក់​ខែ">
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-          <Field label="ប្រភេទ · Type">
+          <Field label="ប្រភេទ">
             <Select value={sType} onChange={e=>setSType(e.target.value)}>
               <option value="monthly">ប្រចាំ​ខែ · Monthly</option>
               <option value="hourly">ប្រចាំ​ម៉ោង · Hourly</option>
@@ -3043,7 +3043,7 @@ const NewStaffForm = ({ onClose }) => {
       </FormSection>
 
       {/* ── Login credentials ── */}
-      <FormSection title={tr('គណនីប្រើប្រាស់ · LOGIN ACCOUNT','LOGIN ACCOUNT')}>
+      <FormSection title={tr('គណនីប្រើប្រាស់','LOGIN ACCOUNT')}>
         <div style={{padding:'12px 14px',background:'var(--accent-soft)',border:'1px solid var(--accent)',borderRadius:10,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
           <div>
             <div style={{fontSize:11,color:'var(--accent)',fontWeight:600,marginBottom:4}}>{tr('ID (Username)','ID (Username)')}</div>

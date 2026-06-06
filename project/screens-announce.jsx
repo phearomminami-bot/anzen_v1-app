@@ -175,7 +175,7 @@ const AnnounceScreen = ({ role = 'admin' }) => {
 
       <div style={{display:'grid',gridTemplateColumns:'1.2fr 1fr',gap:14}}>
         {/* Compose */}
-        <Card label={tr('សារ · MESSAGE','MESSAGE')}
+        <Card label={tr('សារ','MESSAGE')}
           action={<button onClick={saveTemplate} {...btnSm({color:'var(--accent)',borderColor:'var(--accent)'})}>💾 {tr('រក្សាជាគំរូ','Save as template')}</button>}>
           {/* starter templates */}
           <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:6,alignItems:'center'}}>
@@ -233,7 +233,7 @@ const AnnounceScreen = ({ role = 'admin' }) => {
         </Card>
 
         {/* Recipients */}
-        <Card label={tr('អ្នកទទួល · RECIPIENTS','RECIPIENTS')}
+        <Card label={tr('អ្នកទទួល','RECIPIENTS')}
           action={<div style={{display:'flex',gap:6}}><button onClick={selectAll} {...btnSm()}>{tr('ជ្រើសទាំងអស់','Select all')}</button><button onClick={selectNone} {...btnSm()}>{tr('សម្អាត','Clear')}</button></div>}>
           <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:10}}>
             {FILTERS.map(f=>(

@@ -432,7 +432,7 @@ const BkPending = ({ bookings, onApprove, onDecline }) => {
               <div style={{display:'flex',alignItems:'center',gap:8,color:'var(--good)'}}><Icon name="check" size={13} stroke={2.5}/> យានយន្ត​ទំនេរ · Vehicle available</div>
               <div style={{display:'flex',alignItems:'center',gap:8,color:s&&s.paid>=0.5?'var(--good)':'var(--warn)'}}>
                 <Icon name={s&&s.paid>=0.5?"check":"bell"} size={13} stroke={2.5}/>
-                {s&&s.paid>=0.5 ? 'ការ​ទូទាត់​ឲ្យ​ត្រូវ' : 'ការ​ទូទាត់​នៅ​ខ្វះ · payment behind'}
+                {s&&s.paid>=0.5 ? 'ការ​ទូទាត់​ឲ្យ​ត្រូវ' : 'ការ​ទូទាត់​នៅ​ខ្វះ'}
               </div>
             </div>
             <div style={{display:'flex',gap:8}}>
@@ -565,7 +565,7 @@ const BkAvailability = () => {
       <div style={{marginTop:14,display:'flex',gap:18,fontSize:11,color:'var(--ink-3)',alignItems:'center',flexWrap:'wrap'}}>
         {[
           {c:'#E2EFE7',       l:'ទំ​នេរ · Free — ចុច​ដើម្បី​កក់'},
-          {c:'var(--accent)', l:'បាន​កក់ · Booked'},
+          {c:'var(--accent)', l:'បាន​កក់'},
         ].map(({c,l})=>(
           <span key={l} style={{display:'flex',alignItems:'center',gap:6}}>
             <span style={{width:14,height:14,borderRadius:3,background:c,display:'inline-block',flexShrink:0}}/>

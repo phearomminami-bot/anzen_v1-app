@@ -113,7 +113,7 @@ const StudentsScreenV2 = () => {
       STUDENTS[i].paid = Math.min(1, logTotal / Math.max(1, price));
       if (window.saveAllData) window.saveAllData();
       forceUpdate();
-      toast(tr('បានចងចាំការបង់ · Payment recorded', 'Payment recorded'), 'good');
+      toast(tr('បានចងចាំការបង់', 'Payment recorded'), 'good');
     }
   };
 
@@ -410,7 +410,7 @@ const StudentsScreenV2 = () => {
         action={
           <div style={{display:'flex',gap:8}}>
             <Btn kind="ghost" size="md" icon={<Icon name="search" size={14}/>}>{tr('តម្រង','Filter')}</Btn>
-            <Btn kind="ghost" size="md" onClick={() => toast('Export មិន​ទាន់​មាន​ · Not yet implemented','warn')}>{tr('នាំចេញ','Export')}</Btn>
+            <Btn kind="ghost" size="md" onClick={() => toast('Export មិន​ទាន់​មាន​','warn')}>{tr('នាំចេញ','Export')}</Btn>
             <Btn kind="primary" size="md" icon={<Icon name="plus" size={14}/>} onClick={() => openForm('newStudent')}>{tr('ចុះឈ្មោះ​សិស្ស','Enroll')}</Btn>
           </div>
         }
@@ -523,7 +523,7 @@ const StudentsScreenV2 = () => {
             }}
             onSavePaid={(id, val) => {
               const i = STUDENTS.findIndex(s => s.id === id);
-              if (i !== -1) { STUDENTS[i].paid = val; if(window.saveAllData)window.saveAllData(); forceUpdate(); toast(tr('បានបង់ · Marked as paid'),'good'); }
+              if (i !== -1) { STUDENTS[i].paid = val; if(window.saveAllData)window.saveAllData(); forceUpdate(); toast(tr('បានបង់'),'good'); }
             }}
             onSaveBio={(id, updates) => {
               const i = STUDENTS.findIndex(s => s.id === id);
@@ -541,7 +541,7 @@ const StudentsScreenV2 = () => {
             onAddPayment={addPayment}
             onSavePaid={(id, val) => {
               const i = STUDENTS.findIndex(s => s.id === id);
-              if (i !== -1) { STUDENTS[i].paid = val; if(window.saveAllData)window.saveAllData(); forceUpdate(); toast(tr('បានបង់ · Marked as paid'),'good'); }
+              if (i !== -1) { STUDENTS[i].paid = val; if(window.saveAllData)window.saveAllData(); forceUpdate(); toast(tr('បានបង់'),'good'); }
             }}
           />
         )}
@@ -1146,14 +1146,14 @@ const StudentProfile = ({ s, onEdit, onBook, onMessage, onCall, onSaveDoc, onSav
                 <text x="80" y="78" textAnchor="middle" fontSize="32" fontWeight="700" fontFamily="Inter" letterSpacing="-1">{s.mock_avg}%</text>
               </svg>
               <div style={{fontSize:12,color:'var(--ink-2)',marginTop:4}}>
-                {s.mock_avg>=85?'រួចរាល់​សម្រាប់​ប្រឡង · Exam-ready':s.mock_avg>=70?'ស្ទើរ​រួចរាល់ · Almost ready':'ត្រូវ​ការ​ហ្វឹកហ្វឺន​​បន្ថែម · Needs more training'}
+                {s.mock_avg>=85?'រួចរាល់​សម្រាប់​ប្រឡង':s.mock_avg>=70?'ស្ទើរ​រួចរាល់':'ត្រូវ​ការ​ហ្វឹកហ្វឺន​​បន្ថែម'}
               </div>
             </div>
             <Divider/>
             <div style={{display:'flex',flexDirection:'column',gap:10,marginTop:14}}>
               {[
-                {l:'ម៉ោង​សិក្សា · Hours done', v:`${s.hours} / ${s.target}`},
-                {l:'មេរៀន · Lessons done',      v:`${s.lessons_count}`},
+                {l:'ម៉ោង​សិក្សា', v:`${s.hours} / ${s.target}`},
+                {l:'មេរៀន',      v:`${s.lessons_count}`},
                 {l:'Mock tests', v: mockHistory.length > 0 ? `${mockHistory.length} done` : 'None yet'},
               ].map(r => (
                 <div key={r.l} style={{display:'flex',justifyContent:'space-between',fontSize:12}}>
@@ -1398,7 +1398,7 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
     <div style={{padding:20}}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
         <div style={{fontSize:15,fontWeight:600}}>
-          {tr('កែ​ · Edit', 'Edit')} — {s.name} <span style={{fontSize:12,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{s.id}</span>
+          {tr('កែ​', 'Edit')} — {s.name} <span style={{fontSize:12,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{s.id}</span>
         </div>
         {confirmDel ? (
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
@@ -1415,8 +1415,8 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
 
       {secTitle(tr('ព័ត៌មាន​','PERSONAL INFO'))}
       <div {...g2}>
-        <SEField label="ឈ្មោះ​ខ្មែរ · Name KH *"><input {...inp} value={name} onChange={e=>setName(e.target.value)} placeholder="ស្រ៊ន ណារី"/></SEField>
-        <SEField label="ឈ្មោះ​អង្គ​លេស · Name EN"><input {...inp} value={en} onChange={e=>setEn(e.target.value)} placeholder="Sron Nary"/></SEField>
+        <SEField label="ឈ្មោះ​ខ្មែរ"><input {...inp} value={name} onChange={e=>setName(e.target.value)} placeholder="ស្រ៊ន ណារី"/></SEField>
+        <SEField label="ឈ្មោះ​អង្គ​លេស"><input {...inp} value={en} onChange={e=>setEn(e.target.value)} placeholder="Sron Nary"/></SEField>
         <SEField label={tr('ភេទ','Gender')}>
           <select {...sel} value={gender} onChange={e=>setGender(e.target.value)}>
             <option value="M">{tr('♂ ប្រុស','♂ Male')}</option>
@@ -2074,12 +2074,12 @@ const SLessonChecklist = ({ s, onSave }) => {
   );
 
   return (
-    <Card label={tr('បញ្ជីមេរៀន & មតិគ្រូ · LESSON CHECKLIST','LESSON CHECKLIST & INSTRUCTOR NOTES')}>
+    <Card label={tr('បញ្ជីមេរៀន & មតិគ្រូ','LESSON CHECKLIST & INSTRUCTOR NOTES')}>
       {/* section toggle */}
       <div style={{display:'flex',gap:6,marginBottom:4}}>
         {[
-          {id:'theory',    km:'ទ្រឹស្ដី · 学科', en:'Theory · 学科',    total:theory.length},
-          {id:'practical', km:'អនុវត្ត · 技能', en:'Practical · 技能', total:practical.length},
+          {id:'theory',    km:'ទ្រឹស្ដី', en:'Theory · 学科',    total:theory.length},
+          {id:'practical', km:'អនុវត្ត', en:'Practical · 技能', total:practical.length},
         ].map(t=>{
           const dn = (t.id==='theory'?theory:practical).filter(u=>prog[u.id]?.done).length;
           return (
@@ -2979,7 +2979,7 @@ const printStudyRecord = (s) => {
     : `<div class="ph-ph">រូបថត 4×6<br/>PHOTO</div>`;
 
   const addr = [s.addr_house,s.addr_street,s.addr_village,s.addr_commune,s.addr_district||s.district,s.addr_province].filter(Boolean).map(esc).join(', ') || '—';
-  const genderTxt = s.gender==='M'?'ប្រុស · M':s.gender==='F'?'ស្រី · F':'—';
+  const genderTxt = s.gender==='M'?'ប្រុស':s.gender==='F'?'ស្រី':'—';
 
   // bio rows
   const bio = (l,v) => `<tr><td class="bl">${l}</td><td class="bv">${v||'—'}</td></tr>`;
@@ -3143,21 +3143,21 @@ const printStudyRecord = (s) => {
   <div class="id-grid" style="margin-top:7px">
     <div class="id-photo">${photoCell}</div>
     <table class="bio">
-      ${bio('ឈ្មោះ · 氏名 (KH)', esc(s.name))}
-      ${bio('ឈ្មោះឡាតាំង · Name (EN)', esc(s.en))}
-      ${bio('លេខសម្គាល់ · ID', esc(s.id))}
-      ${bio('ភេទ · 性別', genderTxt)}
-      ${bio('ថ្ងៃកំណើត · 生年月日', fmtDate(s.dob) || (s.age?esc(s.age)+' ឆ្នាំ':'—'))}
-      ${bio('ប្រភេទសិស្ស · Type', esc(s.studentType||'ធម្មតា'))}
+      ${bio('ឈ្មោះ', esc(s.name))}
+      ${bio('ឈ្មោះឡាតាំង', esc(s.en))}
+      ${bio('លេខសម្គាល់', esc(s.id))}
+      ${bio('ភេទ', genderTxt)}
+      ${bio('ថ្ងៃកំណើត', fmtDate(s.dob) || (s.age?esc(s.age)+' ឆ្នាំ':'—'))}
+      ${bio('ប្រភេទសិស្ស', esc(s.studentType||'ធម្មតា'))}
     </table>
   </div>
   <table class="bio" style="margin-top:8px">
-    ${bio('សញ្ជាតិ · 国籍', esc(s.nationality))}
-    ${bio('ទូរស័ព្ទ · 電話', esc(s.phone))}
-    ${bio('ប្រភេទប័ណ្ណ · 免許種類 / Class', esc(s.cls)+' · '+esc(s.trans||'AT'))}
-    ${bio('ថ្ងៃចុះឈ្មោះ · 入校日 / Enrolled', esc(s.enrolled))}
-    ${bio('គ្រូទទួលបន្ទុក · 担当指導員', esc(s.inst))}
-    ${bio('អាសយដ្ឋាន · 住所', addr)}
+    ${bio('សញ្ជាតិ', esc(s.nationality))}
+    ${bio('ទូរស័ព្ទ', esc(s.phone))}
+    ${bio('ប្រភេទប័ណ្ណ', esc(s.cls)+' · '+esc(s.trans||'AT'))}
+    ${bio('ថ្ងៃចុះឈ្មោះ', esc(s.enrolled))}
+    ${bio('គ្រូទទួលបន្ទុក', esc(s.inst))}
+    ${bio('អាសយដ្ឋាន', addr)}
   </table>
 
   <div class="sec-h">ការត្រួតពិនិត្យសមត្ថភាព <span class="ja">適性検査 · Aptitude Test</span></div>
@@ -3170,9 +3170,9 @@ const printStudyRecord = (s) => {
 
   <div class="sec-h">ខ្លឹមសារកម្មវិធីសិក្សា <span class="ja">教習課程の概要 · Curriculum Overview</span></div>
   <table class="bio" style="margin-top:7px">
-    ${bio('ដំណាក់កាលទី១ · 第一段階', 'បើកបរក្នុងសាលា (所内) · ទ្រឹស្ដី 学科 1–10 · អនុវត្ត AT 12h / MT 15h')}
-    ${bio('ដំណាក់កាលទី២ · 第二段階', 'បើកបរលើផ្លូវ (路上) · ទ្រឹស្ដី 学科 11–26 · អនុវត្ត 19h')}
-    ${bio('ការប្រឡង · 検定', '適性検査 → 修了検定 → 仮免学科 → 卒業検定 → 本免学科')}
+    ${bio('ដំណាក់កាលទី១', 'បើកបរក្នុងសាលា (所内) · ទ្រឹស្ដី 学科 1–10 · អនុវត្ត AT 12h / MT 15h')}
+    ${bio('ដំណាក់កាលទី២', 'បើកបរលើផ្លូវ (路上) · ទ្រឹស្ដី 学科 11–26 · អនុវត្ត 19h')}
+    ${bio('ការប្រឡង', '適性検査 → 修了検定 → 仮免学科 → 卒業検定 → 本免学科')}
   </table>
   <div class="foot-note">教習原簿 · ${esc(schoolEn)} · បោះពុម្ព ${today}</div>
 </div>
@@ -3283,7 +3283,7 @@ const StPrintMenuStudents = ({ students }) => {
         }}>
           <div style={{fontSize:10,letterSpacing:'.08em',color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',textTransform:'uppercase',marginBottom:8}}>💾 PDF DOCUMENTS</div>
           <StPrintRowStudents
-            label="📘 ប្រវត្តិសិក្សា · 教習原簿 (PDF)"
+            label="📘 ប្រវត្តិសិក្សា"
             students={students}
             onPrint={(s) => { printStudyRecord(s); setOpen(false); }}
           />

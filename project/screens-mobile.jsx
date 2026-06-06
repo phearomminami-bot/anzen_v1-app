@@ -182,7 +182,7 @@ const MobileLesson = () => (
 
       <div style={{margin:'12px 16px',padding:14,background:'#fff',borderRadius:18}}>
         <div style={{fontSize:11,color:'rgba(60,60,67,.6)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.06em',marginBottom:10}}>WHAT YOU'LL PRACTICE</div>
-        {['ការប្តូរលេខក្នុងទីក្រុង · gear shifts','ការចតក្រៀតចំហៀង · parallel parking','ការប្រាស្រ័យចរាចរណ៍'].map((t,i)=>(
+        {['ការប្តូរលេខក្នុងទីក្រុង','ការចតក្រៀតចំហៀង','ការប្រាស្រ័យចរាចរណ៍'].map((t,i)=>(
           <div key={i} style={{display:'flex',gap:10,padding:'8px 0',borderTop:i?'1px solid rgba(0,0,0,.06)':'none',fontSize:12}}>
             <Icon name="check" size={14} stroke={2}/>{t}
           </div>

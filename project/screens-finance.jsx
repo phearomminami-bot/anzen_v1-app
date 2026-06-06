@@ -429,7 +429,7 @@ const FRevenueTab = ({ lang, tr, forceUpdate }) => {
       </Card>
 
       {/* Invoices */}
-      <Card label={tr('វិក្កយបត្រ · INVOICES','INVOICES')}>
+      <Card label={tr('វិក្កយបត្រ','INVOICES')}>
         {INVOICES.length===0 ? (
           <div style={{padding:'20px 0',textAlign:'center',color:'var(--ink-3)',fontSize:13}}>{tr('មិនទាន់មានវិក្កយបត្រ','No invoices yet')}</div>
         ) : INVOICES.slice().reverse().map((inv,i)=>{
@@ -979,7 +979,7 @@ const FDocumentsTab = ({ lang, tr }) => {
           'VAT 10% · Prepayment TOI 1% · Salary Tax tiered 0–20% · Annual TOI 20% · Patent Tax $99–$297/yr'
         )}<br/>
         {tr(
-          'ដំណើរការតាមរយៈ GDT eTax Portal: etax.tax.gov.kh · NSSF: nssf.gov.kh',
+          'ដំណើរការតាមរយៈ GDT eTax Portal: etax.tax.gov.kh',
           'File via GDT eTax Portal: etax.tax.gov.kh · NSSF: nssf.gov.kh'
         )}
       </div>

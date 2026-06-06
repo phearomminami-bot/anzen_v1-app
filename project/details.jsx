@@ -120,8 +120,8 @@ const LessonEditForm = ({ lesson, onSave, onCancel }) => {
 
   return (
     <FormShell onCancel={onCancel} onSave={save}
-      saveLabel={tr('រក្សា​ទុក · Save','Save')}
-      cancelLabel={tr('បោះបង់ · Cancel','Cancel')}>
+      saveLabel={tr('រក្សា​ទុក','Save')}
+      cancelLabel={tr('បោះបង់','Cancel')}>
 
       {/* ── LESSON (Theory / Practical from Tab Lessons) ── */}
       <FormSection title="LESSON">
@@ -165,7 +165,7 @@ const LessonEditForm = ({ lesson, onSave, onCancel }) => {
                   const grp = catObj.items.filter(u => (u.stage||1) === stage && !selLessons.includes(u.id));
                   if (!grp.length) return [];
                   return [
-                    <option key={'st'+stage} value="" disabled>{stage===1 ? tr('── ដំណាក់កាល ១ · 第一段階 ──','── Stage 1 · 第一段階 ──') : tr('── ដំណាក់កាល ២ · 第二段階 ──','── Stage 2 · 第二段階 ──')}</option>,
+                    <option key={'st'+stage} value="" disabled>{stage===1 ? tr('── ដំណាក់កាល ១','── Stage 1 · 第一段階 ──') : tr('── ដំណាក់កាល ២','── Stage 2 · 第二段階 ──')}</option>,
                     ...grp.map(u => <option key={u.id} value={u.id}>{u.no ? u.no+' · ' : ''}{tr(u.km, u.en)}{u.ja ? ' · '+u.ja : ''}</option>),
                   ];
                 }),
@@ -176,7 +176,7 @@ const LessonEditForm = ({ lesson, onSave, onCancel }) => {
       </FormSection>
 
       {/* ── WHEN ── */}
-      <FormSection title={tr('ពេល​វេលា · WHEN','WHEN')}>
+      <FormSection title={tr('ពេល​វេលា','WHEN')}>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10}}>
           <Field label={tr('ថ្ងៃ *','Date *')}>
             <Input type="date" value={date} onChange={e=>setDate(e.target.value)}/>
@@ -197,7 +197,7 @@ const LessonEditForm = ({ lesson, onSave, onCancel }) => {
       </FormSection>
 
       {/* ── PEOPLE ── */}
-      <FormSection title={tr('អ្នក​ពាក់​ព័ន្ធ · PEOPLE','PEOPLE')}>
+      <FormSection title={tr('អ្នក​ពាក់​ព័ន្ធ','PEOPLE')}>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
           <Field label={tr('សិស្ស','Student')}>
             <Select value={studentId} onChange={e=>setStudentId(e.target.value)}>
@@ -220,7 +220,7 @@ const LessonEditForm = ({ lesson, onSave, onCancel }) => {
             sub={vehConflict?tr('⚠ ឡាន​ជាន់​ម៉ោង​គ្នា','⚠ Vehicle busy'):''}>
             <Select value={vehId} onChange={e=>setVehId(e.target.value)}
               style={vehConflict?{borderColor:'var(--warn)'}:{}}>
-              <option value="">{tr('ស្វ័យ​ប្រវត្តិ · Auto-assign','Auto-assign')}</option>
+              <option value="">{tr('ស្វ័យ​ប្រវត្តិ','Auto-assign')}</option>
               {activeVehs.map(v=>{
                 const busy = LESSONS.some(l=>l!==lesson&&l.veh===v.id&&slotBusy(l));
                 return <option key={v.id} value={v.id}>{busy?'🔴 ':''}{v.plate} · {v.make}{busy?tr(' (ជាន់ម៉ោង)',' (busy)'):''}</option>;
@@ -229,7 +229,7 @@ const LessonEditForm = ({ lesson, onSave, onCancel }) => {
           </Field>
         </div>
         {/* Guests */}
-        <Field label={tr('គ្រូ​ភ្ញៀវ · Guest instructors','Guest instructors')}>
+        <Field label={tr('គ្រូ​ភ្ញៀវ','Guest instructors')}>
           <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:guests.length>0?8:0}}>
             {guests.map(gid=>{
               const gi = INSTRUCTORS.find(i=>i.id===gid);
@@ -262,7 +262,7 @@ const LessonEditForm = ({ lesson, onSave, onCancel }) => {
       </FormSection>
 
       {/* ── LOCATION & STATUS ── */}
-      <FormSection title={tr('ទីតាំង + ស្ថានភាព · LOCATION & STATUS','LOCATION & STATUS')}>
+      <FormSection title={tr('ទីតាំង + ស្ថានភាព','LOCATION & STATUS')}>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
           <Field label={tr('ទីតាំង​ជួប','Meeting location')}>
             <Select value={pickup} onChange={e=>setPickup(e.target.value)}>
@@ -274,11 +274,11 @@ const LessonEditForm = ({ lesson, onSave, onCancel }) => {
           <Field label={tr('ឬ បំពេញ​ដោយ​ដៃ','Or type manually')}>
             <Input value={locationText} onChange={e=>setLocationText(e.target.value)} placeholder={tr('ទីតាំង​ផ្សេង...','Custom location...')}/>
           </Field>
-          <Field label={tr('ស្ថានភាព · Status','Status')}>
+          <Field label={tr('ស្ថានភាព','Status')}>
             <Select value={status} onChange={e=>setStatus(e.target.value)}>
-              <option value="scheduled">{tr('កំណត់​ពេល · Scheduled','Scheduled')}</option>
-              <option value="done">{tr('រួច​រាល់ · Done','Done ✓')}</option>
-              <option value="cancelled">{tr('លុប​ចោល · Cancelled','Cancelled')}</option>
+              <option value="scheduled">{tr('កំណត់​ពេល','Scheduled')}</option>
+              <option value="done">{tr('រួច​រាល់','Done ✓')}</option>
+              <option value="cancelled">{tr('លុប​ចោល','Cancelled')}</option>
             </Select>
           </Field>
           <Field label={tr('ចំណាំ','Note')} full>
@@ -332,7 +332,7 @@ const LessonDetail = ({ lesson, onClose }) => {
     title: tr('លុប​ចោល​មេរៀន?', 'Cancel this lesson?'),
     body:  tr('អ្នក​ប្រាកដ​ទេ? មេរៀន​នឹង​ត្រូវ​បាន​លុប​ចោល ហើយ​សិស្ស​នឹង​ទទួល​ជូន​ដំណឹង។',
               'Are you sure? The lesson will be cancelled and the student notified.'),
-    confirmText: tr('លុប · Cancel lesson', 'Cancel lesson'), danger: true,
+    confirmText: tr('លុប', 'Cancel lesson'), danger: true,
     onConfirm: () => {
       lesson.status = 'cancelled';
       setVer(n => n+1);
@@ -357,8 +357,8 @@ const LessonDetail = ({ lesson, onClose }) => {
           <Badge tone={lesson.color==='e'?'warn':lesson.color==='c'?'neutral':lesson.color==='d'?'good':'accent'}>
             {lesson.color==='e'?'Theory JP':lesson.color==='c'?'Theory KH':lesson.color==='d'?'Practical JP':'Practical KH'}
           </Badge>
-          {isDone      && <Badge tone="good">{tr('រួច​រាល់ · Done','Done')}</Badge>}
-          {isCancelled && <Badge tone="danger">{tr('លុប​ចោល · Cancelled','Cancelled')}</Badge>}
+          {isDone      && <Badge tone="good">{tr('រួច​រាល់','Done')}</Badge>}
+          {isCancelled && <Badge tone="danger">{tr('លុប​ចោល','Cancelled')}</Badge>}
           {!isDone && !isCancelled && <Badge tone="neutral">{tr('កំណត់​ពេល','Scheduled')}</Badge>}
         </div>
         <div style={{fontSize:32,fontWeight:600,marginTop:10,letterSpacing:'-.02em',fontFamily:'var(--font-display)'}}>
@@ -499,8 +499,8 @@ const StudentProfile = ({ student, onClose }) => {
   const [acctNewPw, setAcctNewPw] = React.useState('');
   const [, forceUpdate] = React.useReducer(x => x+1, 0);
   const [sentMsgs, setSentMsgs] = React.useState([
-    {time:'ឧសភា 28 · 14:32', text:'ការ​សាកល្បង​ក្នុង​ទីក្រុង​ត្រូវ​បាន​ណាត់​នៅ​ថ្ងៃ​ច័ន្ទ 9:00 · Your city lesson is scheduled Monday 9:00 AM.', type:'reminder'},
-    {time:'ឧសភា 20 · 09:10', text:'ហ្វឹក​ហ្វឺន​ញ្ញត្តិ​​ប្រឡង​ ​​​​​ · Theory exam result: 87/100 — well done!', type:'assessment'},
+    {time:'ឧសភា 28 · 14:32', text:'ការ​សាកល្បង​ក្នុង​ទីក្រុង​ត្រូវ​បាន​ណាត់​នៅ​ថ្ងៃ​ច័ន្ទ 9:00', type:'reminder'},
+    {time:'ឧសភា 20 · 09:10', text:'ហ្វឹក​ហ្វឺន​ញ្ញត្តិ​​ប្រឡង​ ​​​​​', type:'assessment'},
   ]);
   if (!student) return null;
   const s = student;
@@ -547,13 +547,13 @@ const StudentProfile = ({ student, onClose }) => {
 
   const MSG_TEMPLATES = [
     { km:'ការ​ជូន​ដំណឹង​​មេរៀន', en:'Lesson reminder', type:'reminder',
-      text: tr('សូម​ចំណាំ​មេរៀន​​របស់​អ្នក​ · Please remember your upcoming lesson. See you soon!','Reminder: your lesson is coming up. See you soon!') },
+      text: tr('សូម​ចំណាំ​មេរៀន​​របស់​អ្នក​','Reminder: your lesson is coming up. See you soon!') },
     { km:'លទ្ធ​ផល​វាយ​តម្លៃ', en:'Assessment result', type:'assessment',
-      text: tr('លទ្ធ​ផល​វាយ​តម្លៃ​របស់​អ្នក · Assessment result is ready. Check your progress tab.','Your assessment result is ready. Check your progress tab.') },
+      text: tr('លទ្ធ​ផល​វាយ​តម្លៃ​របស់​អ្នក','Your assessment result is ready. Check your progress tab.') },
     { km:'ការ​បង់​ប្រាក់', en:'Payment due', type:'payment',
-      text: tr('ការ​​ទូទាត់​ការ​ជំពាក់​ · Your payment is due. Please settle to continue lessons.','Payment reminder: please settle your balance to continue lessons.') },
+      text: tr('ការ​​ទូទាត់​ការ​ជំពាក់​','Payment reminder: please settle your balance to continue lessons.') },
     { km:'ការ​លើក​កម្ពស់', en:'Encouragement', type:'good',
-      text: tr('ការ​ស្វែង​រក​ ​ · Great work! Keep it up — you\'re making excellent progress.','Great work! Keep it up — you\'re making excellent progress.') },
+      text: tr('ការ​ស្វែង​រក​ ​','Great work! Keep it up — you\'re making excellent progress.') },
   ];
 
   const sendMsg = (text) => {
@@ -562,7 +562,7 @@ const StudentProfile = ({ student, onClose }) => {
     const time = `${now2.getMonth()+1}/${now2.getDate()} · ${String(now2.getHours()).padStart(2,'0')}:${String(now2.getMinutes()).padStart(2,'0')}`;
     setSentMsgs(prev => [{time, text: text.trim(), type:'custom'}, ...prev]);
     setMsgText('');
-    toast(tr('បាន​ផ្ញើ​សារ · Message sent','Message sent'), 'good');
+    toast(tr('បាន​ផ្ញើ​សារ','Message sent'), 'good');
   };
 
   const saveStudentPw = () => {
@@ -606,7 +606,7 @@ const StudentProfile = ({ student, onClose }) => {
             </div>
           </div>
           <div style={{display:'flex',flexDirection:'column',gap:6}}>
-            <Btn kind="ghost" size="md" onClick={()=>toast?.('ហៅ​សិស្ស · Calling…','neutral')} icon={<Icon name="phone" size={14}/>}>ហៅ</Btn>
+            <Btn kind="ghost" size="md" onClick={()=>toast?.('ហៅ​សិស្ស','neutral')} icon={<Icon name="phone" size={14}/>}>ហៅ</Btn>
             <Btn kind="primary" size="md" onClick={()=>openForm?.('newLesson',{studentId:s.id})} icon={<Icon name="cal" size={14}/>}>{tr('កក់​','Book')}</Btn>
           </div>
         </div>
@@ -755,7 +755,7 @@ const StudentProfile = ({ student, onClose }) => {
                         {v && <div style={{fontSize:12,color:'var(--ink-2)',flex:1}}>🚗 {v.plate} · {v.make}</div>}
                         {upcoming && canEdit && (
                           <div style={{display:'flex',gap:6,marginLeft:'auto'}}>
-                            <Btn kind="ghost" size="sm" onClick={()=>toast(tr('ផ្លាស់​ប្ដូរ​ · Rescheduled','Rescheduled'),'neutral')}>{tr('ផ្លាស់​ប្ដូរ','Reschedule')}</Btn>
+                            <Btn kind="ghost" size="sm" onClick={()=>toast(tr('ផ្លាស់​ប្ដូរ​','Rescheduled'),'neutral')}>{tr('ផ្លាស់​ប្ដូរ','Reschedule')}</Btn>
                             <Btn kind="ghost" size="sm" onClick={()=>{ toast(tr('បាន​លុប​ចោល','Cancelled'),'warn'); setExpandedLesson(null); }} style={{color:'var(--danger)',borderColor:'var(--danger)'}}>{tr('លុប​ចោល','Cancel')}</Btn>
                           </div>
                         )}
@@ -859,7 +859,7 @@ const StudentProfile = ({ student, onClose }) => {
                         )}
                         {upcoming && canEdit && (
                           <div style={{display:'flex',gap:6,alignSelf:'flex-end',marginLeft:'auto'}}>
-                            <Btn kind="ghost" size="sm" onClick={()=>toast(tr('ផ្លាស់​ប្ដូរ​ · Rescheduled','Lesson rescheduled'),'neutral')}>
+                            <Btn kind="ghost" size="sm" onClick={()=>toast(tr('ផ្លាស់​ប្ដូរ​','Lesson rescheduled'),'neutral')}>
                               {tr('ផ្លាស់​ប្ដូរ','Reschedule')}
                             </Btn>
                             <Btn kind="ghost" size="sm" onClick={()=>{ toast(tr('បាន​លុប​ចោល','Cancelled'),'warn'); setExpandedLesson(null); }} style={{color:'var(--danger)',borderColor:'var(--danger)'}}>
@@ -1247,8 +1247,8 @@ const InstructorProfile = ({ instructor, onClose }) => {
         )}
 
         <div style={{marginTop:14,display:'flex',gap:8}}>
-          <Btn kind="ghost" onClick={()=>toast?.('បាន​​ផ្ញើ​សារ · Message sent','good')} icon={<Icon name="phone" size={14}/>} style={{flex:1,justifyContent:'center'}}>ហៅ</Btn>
-          <Btn kind="primary" onClick={()=>{toast?.('បាន​​រក្សា​​ទុក​ · Saved','good'); onClose();}} style={{flex:2,justifyContent:'center'}}>រក្សា​ទុក​​ការ​​ផ្លាស់​ប្ដូរ</Btn>
+          <Btn kind="ghost" onClick={()=>toast?.('បាន​​ផ្ញើ​សារ','good')} icon={<Icon name="phone" size={14}/>} style={{flex:1,justifyContent:'center'}}>ហៅ</Btn>
+          <Btn kind="primary" onClick={()=>{toast?.('បាន​​រក្សា​​ទុក​','good'); onClose();}} style={{flex:2,justifyContent:'center'}}>រក្សា​ទុក​​ការ​​ផ្លាស់​ប្ដូរ</Btn>
         </div>
       </div>
     </div>
@@ -1304,9 +1304,9 @@ const VehicleDetail = ({ vehicle, onClose }) => {
           title:'យក​យានយន្ត​ចេញ?',
           body:'យានយន្ត​នេះ​នឹង​មិន​អាច​កក់​សម្រាប់​មេរៀន​​​ថ្មី​ទេ​បន្ទាប់​ពី​ផ្លាស់​ប្ដូរ​នេះ​។',
           confirmText:'​យក​ចេញ', danger:true,
-          onConfirm: () => { toast?.('បាន​យក​​ចេញ​ · Retired','warn'); onClose(); },
+          onConfirm: () => { toast?.('បាន​យក​​ចេញ​','warn'); onClose(); },
         })} style={{flex:1,justifyContent:'center'}}>យក​ចេញ · Retire</Btn>
-        <Btn kind="primary" onClick={()=>toast?.('បាន​​​​​​កំណត់​​សកម្ម · Marked active','good')} style={{flex:2,justifyContent:'center'}}>កែប្រែ · Edit</Btn>
+        <Btn kind="primary" onClick={()=>toast?.('បាន​​​​​​កំណត់​​សកម្ម','good')} style={{flex:2,justifyContent:'center'}}>កែប្រែ · Edit</Btn>
       </div>
     </div>
   );
@@ -1318,7 +1318,7 @@ const InvoicePreview = ({ invoice, onClose }) => {
   if (!invoice) return null;
   const inv = invoice;
   const s = studentById(inv.student);
-  const printIt = () => { window.print(); toast?.('កំពុង​បោះ​ពុម្ព · Printing','neutral'); };
+  const printIt = () => { window.print(); toast?.('កំពុង​បោះ​ពុម្ព','neutral'); };
   return (
     <div style={{padding:24}}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
@@ -1377,9 +1377,9 @@ const InvoicePreview = ({ invoice, onClose }) => {
       </div>
 
       <div style={{marginTop:24,display:'flex',gap:8,paddingTop:16,borderTop:'1px solid var(--border)'}}>
-        <Btn kind="ghost" onClick={()=>toast?.('បាន​​ផ្ញើ​​​ ​​អ៊ីមែល · Emailed','good')} icon={<Icon name="phone" size={14}/>} style={{flex:1,justifyContent:'center'}}>​ផ្ញើ​អ៊ីមែល</Btn>
+        <Btn kind="ghost" onClick={()=>toast?.('បាន​​ផ្ញើ​​​ ​​អ៊ីមែល','good')} icon={<Icon name="phone" size={14}/>} style={{flex:1,justifyContent:'center'}}>​ផ្ញើ​អ៊ីមែល</Btn>
         <Btn kind="ghost" onClick={printIt} style={{flex:1,justifyContent:'center'}}>បោះ​ពុម្ព · Print</Btn>
-        <Btn kind="primary" onClick={()=>toast?.('បាន​​ទាញ​​យក · Downloaded','good')} icon={<Icon name="arrow" size={14}/>} style={{flex:1,justifyContent:'center'}}>ទាញ​យក PDF</Btn>
+        <Btn kind="primary" onClick={()=>toast?.('បាន​​ទាញ​​យក','good')} icon={<Icon name="arrow" size={14}/>} style={{flex:1,justifyContent:'center'}}>ទាញ​យក PDF</Btn>
       </div>
     </div>
   );

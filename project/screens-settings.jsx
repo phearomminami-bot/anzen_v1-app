@@ -199,7 +199,7 @@ const SettingsScreen = ({ role, fontSize = 'md', setFontSize }) => {
   return (
     <div style={{display:'flex',flexDirection:'column',gap:14}}>
       <SectionTitle
-        km={isAdmin ? 'ការគ្រប់គ្រងប្រព័ន្ធ · System settings' : 'រូបរាង · Appearance'}
+        km={isAdmin ? 'ការគ្រប់គ្រងប្រព័ន្ធ' : 'រូបរាង'}
         en={isAdmin ? 'Configure school info, branches, permissions, payments, integrations' : 'Customize your display preferences'}
         action={isAdmin && (
           <div style={{display:'flex',gap:8}}>
@@ -453,7 +453,7 @@ const AiSettings = ({ onDirty }) => {
     setTesting(false);
   };
   return (
-    <Card label={tr('បញ្ញាប្រឌិត · AI & OCR','AI & OCR')}>
+    <Card label={tr('បញ្ញាប្រឌិត','AI & OCR')}>
       <div style={{fontSize:13,color:'var(--ink-2)',marginBottom:14}}>
         {tr('បញ្ចូល Anthropic API Key ដើម្បីបើក ស្គេនអត្តសញ្ញាណប័ណ្ណ ស្វ័យប្រវត្ត នៅក្នុងការចុះឈ្មោះសិស្ស។',
             'Add an Anthropic API Key to enable automatic ID card scanning in student enrollment.')}
@@ -606,7 +606,7 @@ const Locations = ({ onDirty }) => {
       </Card>
 
       {selBranch && (
-        <Card label={tr('ផែនទី​សាខា · BRANCH MAP','BRANCH MAP')}
+        <Card label={tr('ផែនទី​សាខា','BRANCH MAP')}
           action={<button onClick={()=>window.open(openMapUrl(selBranch),'_blank')} style={{border:'1px solid var(--accent)',background:'var(--surface)',color:'var(--accent)',borderRadius:6,padding:'4px 10px',fontSize:11,fontWeight:600,cursor:'pointer'}}>↗ {tr('បើក​ក្នុង Google Maps','Open in Google Maps')}</button>}>
           <div style={{fontSize:13,fontWeight:600,marginBottom:8}}>{selBranch.name} <span style={{fontSize:11,fontWeight:400,color:'var(--ink-3)'}}>· {selBranch.addr||'—'}</span></div>
           <div style={{borderRadius:10,overflow:'hidden',border:'1px solid var(--border)',height:300,background:'var(--surface-muted)'}}>
@@ -828,7 +828,7 @@ const RolesPermissions = ({ onDirty }) => {
           <div style={{fontSize:12,color:'var(--ink-3)'}}>{roles.reduce((a,b)=>a+b.members,0)} accounts · 6 roles</div>
           <div style={{flex:1}}/>
           <Btn kind="primary" size="sm" icon={<Icon name="plus" size={13}/>}
-            onClick={()=>toast(tr('មិន​ទាន់​មាន · Coming soon','Coming soon'),'neutral')}>
+            onClick={()=>toast(tr('មិន​ទាន់​មាន','Coming soon'),'neutral')}>
             បន្ថែម​តួនាទី
           </Btn>
         </div>
@@ -1481,7 +1481,7 @@ const NotifSettings = ({ onDirty }) => {
 
   return (
     <>
-      <Card label={tr('តេលេក្រាម · TELEGRAM','TELEGRAM')}>
+      <Card label={tr('តេលេក្រាម','TELEGRAM')}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
           <div>
             <div style={{fontSize:13,fontWeight:600}}>{tr('ផ្ញើទៅ Telegram សិស្ស','Send to students\' Telegram')}</div>
@@ -1722,7 +1722,7 @@ const AppearanceSettings = ({ lang, setLang, tr, toast, fontSize, setFontSize, r
     <div style={{display:'flex',flexDirection:'column',gap:14}}>
 
       {/* Dark / Light mode */}
-      <Card label={tr('ផ្ទៃ​ខ្នង · THEME','THEME · ផ្ទៃ​ខ្នង')}>
+      <Card label={tr('ផ្ទៃ​ខ្នង','THEME · ផ្ទៃ​ខ្នង')}>
         <div style={{display:'flex',gap:10}}>
           {[
             {v:false, label:'☀️ ភ្លឺ', sub:'Light mode'},
@@ -1747,7 +1747,7 @@ const AppearanceSettings = ({ lang, setLang, tr, toast, fontSize, setFontSize, r
       </Card>
 
       {/* Language */}
-      <Card label={tr('ភាសា · LANGUAGE','LANGUAGE','言語')}>
+      <Card label={tr('ភាសា','LANGUAGE','言語')}>
         <div style={{fontSize:13,color:'var(--ink-2)',marginBottom:12}}>
           {tr('ជ្រើស​រើស​ភាសា​បង្ហាញ​សម្រាប់​ផ្ទាំង​ទាំង​អស់​នៅ​ក្នុង​​​​​ app។','Choose the interface language for all screens in the app.','アプリ全体の表示言語を選択してください。')}
         </div>
@@ -1779,7 +1779,7 @@ const AppearanceSettings = ({ lang, setLang, tr, toast, fontSize, setFontSize, r
       </Card>
 
       {/* Font size */}
-      <Card label={tr('ទំហំ​អក្សរ · FONT SIZE','FONT SIZE · ទំហំ​អក្សរ')}>
+      <Card label={tr('ទំហំ​អក្សរ','FONT SIZE · ទំហំ​អក្សរ')}>
         <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8}}>
           {FONT_SIZE_OPTIONS.map(o => {
             const active = fontSize === o.v;
@@ -1801,7 +1801,7 @@ const AppearanceSettings = ({ lang, setLang, tr, toast, fontSize, setFontSize, r
       </Card>
 
       {/* Account / avatar upload */}
-      <Card label={tr('គណនី · ACCOUNT','ACCOUNT · គណនី')}>
+      <Card label={tr('គណនី','ACCOUNT · គណនី')}>
         {role === 'instructor' ? (
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
             {/* Avatar + role badge row */}
@@ -1880,7 +1880,7 @@ const AppearanceSettings = ({ lang, setLang, tr, toast, fontSize, setFontSize, r
       </Card>
 
       {/* Notification toggles */}
-      <Card label={tr('ការ​ជូន​ដំណឹង · NOTIFICATIONS','NOTIFICATIONS · ការ​ជូន​ដំណឹង')}>
+      <Card label={tr('ការ​ជូន​ដំណឹង','NOTIFICATIONS · ការ​ជូន​ដំណឹង')}>
         {[{km:'អ៊ីមែល',en:'Email',def:true},{km:'SMS · សារ',en:'SMS',def:true},{km:'Push',en:'Push (app)',def:false}].map((p,i)=>{
           const [on, setOn] = React.useState(p.def);
           return (
@@ -1893,13 +1893,13 @@ const AppearanceSettings = ({ lang, setLang, tr, toast, fontSize, setFontSize, r
       </Card>
 
       {/* Danger zone */}
-      <Card label={tr('ឌាមីន · DANGER ZONE','DANGER ZONE')} style={{borderColor:'var(--danger)'}}>
+      <Card label={tr('ឌាមីន','DANGER ZONE')} style={{borderColor:'var(--danger)'}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
           <div>
             <div style={{fontSize:13,fontWeight:500}}>{tr('លុប​គណនី','Delete account')}</div>
             <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2}}>{tr('សកម្ម​ភាព​នេះ​មិន​អាច​ត្រឡប់​​វិញ​បាន​ទេ​។','This action cannot be undone.')}</div>
           </div>
-          <Btn kind="ghost" onClick={()=>toast(tr('មិន​ទាន់​មាន · coming soon','Coming soon'),'neutral')} style={{color:'var(--danger)',borderColor:'var(--danger)'}}>
+          <Btn kind="ghost" onClick={()=>toast(tr('មិន​ទាន់​មាន','Coming soon'),'neutral')} style={{color:'var(--danger)',borderColor:'var(--danger)'}}>
             {tr('លុប','Delete')}
           </Btn>
         </div>
@@ -1929,7 +1929,7 @@ const AuditLog = () => {
   const shown = filter==='all' ? events : events.filter(e=>e.sev===filter);
 
   return (
-    <Card label="សកម្មភាព​ប្រព័ន្ធ · SYSTEM ACTIVITY">
+    <Card label="សកម្មភាព​ប្រព័ន្ធ">
       <div style={{display:'flex',gap:6,flexWrap:'wrap',padding:'4px 0 12px'}}>
         {filters.map((c,i)=>(
           <button key={c} onClick={()=>setFilter(c)} style={{
@@ -1938,14 +1938,14 @@ const AuditLog = () => {
             color: filter===c?'var(--bg)':'var(--ink-2)',
             border:'1px solid '+(filter===c?'var(--ink)':'var(--border)'),
             borderRadius:999, fontSize:11, fontWeight:500, cursor:'pointer',
-          }}>{i===0?'ទាំងអស់ · All':c.charAt(0).toUpperCase()+c.slice(1)}</button>
+          }}>{i===0?'ទាំងអស់':c.charAt(0).toUpperCase()+c.slice(1)}</button>
         ))}
       </div>
 
       {shown.length === 0 && (
         <div style={{padding:40,textAlign:'center',color:'var(--ink-3)',fontSize:13}}>
           <div style={{fontSize:24,marginBottom:8}}>📋</div>
-          <div>{filter==='all' ? 'មិន​ទាន់​មាន​ · No activity recorded yet' : `No "${filter}" events`}</div>
+          <div>{filter==='all' ? 'មិន​ទាន់​មាន​' : `No "${filter}" events`}</div>
           <div style={{fontSize:11,marginTop:6}}>Activity will be logged here as the system is used</div>
         </div>
       )}

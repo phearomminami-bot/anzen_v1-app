@@ -341,50 +341,50 @@ const FvEmpty = ({ onAdd }) => {
 // ── Daily Vehicle Inspection (日常点検表) ─────────────────────────────────────
 const INSP_SECTIONS = [
   {
-    id:'engine', km:'ផ្នែករថយន្ត · エンジンルーム', en:'Engine Room',
+    id:'engine', km:'ផ្នែករថយន្ត', en:'Engine Room',
     items:[
-      { id:'engine_oil',    km:'ប្រេងម៉ាស៊ីន · エンジンオイル',        en:'Engine oil level'        },
-      { id:'coolant',       km:'ទឹកត្រជាក់ · 冷却水',                 en:'Coolant level'           },
-      { id:'brake_fluid',   km:'ប្រេងហ្វ្រែន · ブレーキ液',            en:'Brake fluid level'       },
-      { id:'battery',       km:'ថ្ម · バッテリ',                       en:'Battery condition'       },
-      { id:'fan_belt',      km:'ខ្សែក · ファンベルト',                  en:'Fan belt tension/damage' },
-      { id:'washer',        km:'ទឹកជម្រះកញ្ចក់ · ウォッシャー液',       en:'Washer fluid level'      },
+      { id:'engine_oil',    km:'ប្រេងម៉ាស៊ីន',        en:'Engine oil level'        },
+      { id:'coolant',       km:'ទឹកត្រជាក់',                 en:'Coolant level'           },
+      { id:'brake_fluid',   km:'ប្រេងហ្វ្រែន',            en:'Brake fluid level'       },
+      { id:'battery',       km:'ថ្ម',                       en:'Battery condition'       },
+      { id:'fan_belt',      km:'ខ្សែក',                  en:'Fan belt tension/damage' },
+      { id:'washer',        km:'ទឹកជម្រះកញ្ចក់',       en:'Washer fluid level'      },
     ],
   },
   {
-    id:'lights', km:'ភ្លើង · 灯火装置', en:'Lighting',
+    id:'lights', km:'ភ្លើង', en:'Lighting',
     items:[
-      { id:'headlight',     km:'ភ្លើងមុខ · ヘッドライト',               en:'Headlights'              },
-      { id:'brake_light',   km:'ភ្លើងហ្វ្រែន · ブレーキランプ',          en:'Brake lights'            },
-      { id:'turn_signal',   km:'ភ្លើងស្ដាំ-ឆ្វេង · ウィンカー',          en:'Turn signals'            },
-      { id:'hazard',        km:'ភ្លើងគ្រោះថ្នាក់ · ハザード',            en:'Hazard lights'           },
-      { id:'reverse_light', km:'ភ្លើងថយក្រោយ · バックランプ',            en:'Reverse lights'          },
+      { id:'headlight',     km:'ភ្លើងមុខ',               en:'Headlights'              },
+      { id:'brake_light',   km:'ភ្លើងហ្វ្រែន',          en:'Brake lights'            },
+      { id:'turn_signal',   km:'ភ្លើងស្ដាំ-ឆ្វេង',          en:'Turn signals'            },
+      { id:'hazard',        km:'ភ្លើងគ្រោះថ្នាក់',            en:'Hazard lights'           },
+      { id:'reverse_light', km:'ភ្លើងថយក្រោយ',            en:'Reverse lights'          },
     ],
   },
   {
-    id:'brakes', km:'ហ្វ្រែន · ブレーキ', en:'Brakes',
+    id:'brakes', km:'ហ្វ្រែន', en:'Brakes',
     items:[
-      { id:'brake_pedal',   km:'ក្បាល​ហ្វ្រែន · ブレーキペダル',         en:'Brake pedal play/feel'   },
-      { id:'parking_brake', km:'ហ្វ្រែនដៃ · パーキングブレーキ',         en:'Parking brake'           },
+      { id:'brake_pedal',   km:'ក្បាល​ហ្វ្រែន',         en:'Brake pedal play/feel'   },
+      { id:'parking_brake', km:'ហ្វ្រែនដៃ',         en:'Parking brake'           },
     ],
   },
   {
-    id:'tires', km:'កង់ · タイヤ', en:'Tires',
+    id:'tires', km:'កង់', en:'Tires',
     items:[
-      { id:'tire_pressure', km:'សម្ពាធកង់ · 空気圧',                   en:'Tire pressure (all 4)'   },
-      { id:'tire_wear',     km:'ស្នាម​កង់ · 溝の深さ',                  en:'Tread depth'             },
-      { id:'tire_damage',   km:'ខូចខាតកង់ · 亀裂・損傷',               en:'Cracks / damage'         },
-      { id:'wheel_nuts',    km:'គ្រាប់ចំណ្ចុះ · ホイールナット',          en:'Wheel nut tightness'     },
+      { id:'tire_pressure', km:'សម្ពាធកង់',                   en:'Tire pressure (all 4)'   },
+      { id:'tire_wear',     km:'ស្នាម​កង់',                  en:'Tread depth'             },
+      { id:'tire_damage',   km:'ខូចខាតកង់',               en:'Cracks / damage'         },
+      { id:'wheel_nuts',    km:'គ្រាប់ចំណ្ចុះ',          en:'Wheel nut tightness'     },
     ],
   },
   {
-    id:'other', km:'ផ្សេងៗ · その他', en:'Others',
+    id:'other', km:'ផ្សេងៗ', en:'Others',
     items:[
-      { id:'wipers',        km:'វីស · ワイパー',                        en:'Wiper operation'         },
-      { id:'horn',          km:'កណ្ដឹង · ホーン',                       en:'Horn'                    },
-      { id:'mirrors',       km:'កញ្ចក់ · ミラー',                       en:'Mirrors (all)'           },
-      { id:'body',          km:'ខ្លួនរថយន្ត · 車体',                   en:'Body / exterior damage'  },
-      { id:'seat_belt',     km:'ខ្សែ​ក​សុវត្ថិភាព · シートベルト',        en:'Seat belts'              },
+      { id:'wipers',        km:'វីស',                        en:'Wiper operation'         },
+      { id:'horn',          km:'កណ្ដឹង',                       en:'Horn'                    },
+      { id:'mirrors',       km:'កញ្ចក់',                       en:'Mirrors (all)'           },
+      { id:'body',          km:'ខ្លួនរថយន្ត',                   en:'Body / exterior damage'  },
+      { id:'seat_belt',     km:'ខ្សែ​ក​សុវត្ថិភាព',        en:'Seat belts'              },
     ],
   },
 ];
@@ -1139,7 +1139,7 @@ const FvInspectionLog = ({ vehicles, tr }) => {
       {/* Detail of records */}
       {records.length > 0 && (
         <div style={{display:'flex',flexDirection:'column',gap:10,marginTop:4}}>
-          <div style={{fontSize:11,fontWeight:700,letterSpacing:'.08em',color:'var(--ink-3)',textTransform:'uppercase',fontFamily:'"JetBrains Mono",monospace'}}>{tr('លម្អិត · Detail','Inspection detail')}</div>
+          <div style={{fontSize:11,fontWeight:700,letterSpacing:'.08em',color:'var(--ink-3)',textTransform:'uppercase',fontFamily:'"JetBrains Mono",monospace'}}>{tr('លម្អិត','Inspection detail')}</div>
           {records.map((rec,ri) => {
             const veh = vehicles.find(v=>v.id===rec.vehicleId);
             const c = osC(rec.overallStatus);
@@ -1380,7 +1380,7 @@ const FvCard = ({ v, onSelect, selectedId, onStatusChange, onSaveDates, onParkin
           <div>
             <div style={{color:'var(--ink-3)',fontSize:10,textTransform:'uppercase',letterSpacing:'.05em'}}>Service</div>
             <div style={{marginTop:2,fontWeight:500,color:(v.service||0)<1500&&(v.service||0)>0?'var(--warn)':'inherit'}}>
-              {(v.service||0) === 0 ? 'ឥឡូវ · Due now' : `in ${(v.service||0).toLocaleString()} km`}
+              {(v.service||0) === 0 ? 'ឥឡូវ' : `in ${(v.service||0).toLocaleString()} km`}
             </div>
           </div>
           <div>
@@ -1756,10 +1756,10 @@ const FvDetailRow = ({ v, onEdit, forceUpdate }) => {
             textTransform:'uppercase',color:'var(--ink-3)',marginBottom:8}}>DOCUMENTS</div>
           <div style={{display:'flex',flexDirection:'column',gap:6}}>
             {[
-              { k:'ឆៀក · Reg.',      d: v.reg_exp  },
-              { k:'ពន្ធផ្លូវ · Tax',   d: v.road_tax },
-              { k:'ធានារ៉ាប់រង · Ins.', d: v.ins_exp  },
-              { k:'ប្រេង · Oil',       d: v.oil_exp  },
+              { k:'ឆៀក',      d: v.reg_exp  },
+              { k:'ពន្ធផ្លូវ',   d: v.road_tax },
+              { k:'ធានារ៉ាប់រង', d: v.ins_exp  },
+              { k:'ប្រេង',       d: v.oil_exp  },
             ].map(doc => {
               const color = expColor(doc.d);
               return (
@@ -1876,7 +1876,7 @@ const FvEditPanel = ({ v, onSave, onCancel, onDelete, onSavePhoto }) => {
         )}
       </div>
 
-      {fvSecTitle('ព័ត៌មាន​ · BASIC')}
+      {fvSecTitle('ព័ត៌មាន​')}
       <div style={{marginBottom:14,display:'flex',gap:16,alignItems:'center'}}>
         <UploadPhoto id={v.id} photo={v.photo} w={140} h={88} r={8} onUpload={onSavePhoto}/>
         <div style={{fontSize:11,color:'var(--ink-3)',lineHeight:1.5}}>
@@ -2008,7 +2008,7 @@ const FvWorkOrderForm = ({ vehicles, onClose, forceUpdate }) => {
   return (
     <Card>
       <div style={{fontSize:14,fontWeight:600,marginBottom:14}}>
-        ➕ {tr('បញ្ជា​ការ​ថែទាំ​ · New work order', 'New work order')}
+        ➕ {tr('បញ្ជា​ការ​ថែទាំ​', 'New work order')}
       </div>
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
         <div>
@@ -2077,7 +2077,7 @@ const FvService = ({ vehicles, serviceLog, forceUpdate, addSvc, setAddSvc }) => 
 
       {serviceLog.length === 0 ? (
         <div style={{padding:'40px 24px',textAlign:'center',color:'var(--ink-3)',border:'1px solid var(--border)',borderRadius:10}}>
-          <div style={{fontSize:13}}>{tr('មិន​ទាន់​មាន​ការ​ងារ · No work orders yet','No work orders yet')}</div>
+          <div style={{fontSize:13}}>{tr('មិន​ទាន់​មាន​ការ​ងារ','No work orders yet')}</div>
         </div>
       ) : (
         <div style={{border:'1px solid var(--border)',borderRadius:10,overflow:'hidden'}}>
@@ -2198,7 +2198,7 @@ const FvUsage = ({ vehicles }) => {
   const maxLessons = Math.max(...vehicles.map(v => v.lessons_mo||0), 1);
   return (
     <div style={{padding:18,display:'flex',flexDirection:'column',gap:14}}>
-      <Card label="ការ​ប្រើ​ប្រាស់​ · MONTHLY LESSONS BY VEHICLE">
+      <Card label="ការ​ប្រើ​ប្រាស់​">
         {sorted.map((v, i) => (
           <div key={v.id} style={{display:'flex',alignItems:'center',gap:12,padding:'6px 0',
             borderTop:i?'1px dashed var(--border)':'none'}}>
@@ -2215,7 +2215,7 @@ const FvUsage = ({ vehicles }) => {
         ))}
       </Card>
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
-        <Card label="ប្រភេទ​ · UTILIZATION BY CLASS">
+        <Card label="ប្រភេទ​">
           {['A','B','C'].map(c => {
             const sub   = vehicles.filter(v => v.cls.startsWith(c));
             const total = sub.reduce((s,v) => s+(v.lessons_mo||0), 0);
@@ -2228,7 +2228,7 @@ const FvUsage = ({ vehicles }) => {
             ) : null;
           })}
         </Card>
-        <Card label="ការ​ចំណាយ · COSTS BY VEHICLE">
+        <Card label="ការ​ចំណាយ">
           {sorted.slice(0,6).map((v,i) => (
             <div key={v.id} style={{display:'flex',justifyContent:'space-between',
               alignItems:'center',padding:'5px 0',borderTop:i?'1px dashed var(--border)':'none',fontSize:12}}>
@@ -2272,7 +2272,7 @@ const FvIncidents = ({ vehicles, incidents, forceUpdate }) => {
         <div style={{padding:'48px',textAlign:'center',color:'var(--ink-3)',
           border:'1px solid var(--border)',borderRadius:10}}>
           <div style={{fontSize:13,color:'var(--good)',fontWeight:500}}>
-            ✓ {tr('គ្មាន​ឧប្បត្តិហេតុ · No incidents recorded','No incidents recorded')}
+            ✓ {tr('គ្មាន​ឧប្បត្តិហេតុ','No incidents recorded')}
           </div>
         </div>
       ) : (
@@ -2333,7 +2333,7 @@ const FvIncidentForm = ({ vehicles, onClose, forceUpdate }) => {
   const [desc,     setDesc]     = React.useState('');
 
   const save = () => {
-    if (!type.trim()) { toast(tr('សូម​បញ្ចូល​ប្រភេទ​ · Enter incident type', 'Enter incident type'), 'warn'); return; }
+    if (!type.trim()) { toast(tr('សូម​បញ្ចូល​ប្រភេទ​', 'Enter incident type'), 'warn'); return; }
     const id = 'IC-' + String(window.__incidentData.length + 1).padStart(3,'0');
     window.__incidentData.unshift({
       id, v: vId, date, type: type.trim(),
@@ -2353,7 +2353,7 @@ const FvIncidentForm = ({ vehicles, onClose, forceUpdate }) => {
   return (
     <Card>
       <div style={{fontSize:14,fontWeight:600,marginBottom:14}}>
-        ⚠️ {tr('រាយ​ការណ៍​ឧប្បត្តិហេតុ · Report incident','Report incident')}
+        ⚠️ {tr('រាយ​ការណ៍​ឧប្បត្តិហេតុ','Report incident')}
       </div>
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
         <div>
