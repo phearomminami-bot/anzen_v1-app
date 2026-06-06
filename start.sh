@@ -1,0 +1,96 @@
+#!/bin/bash
+# Build the self-contained HTML file by concatenating parts
+OUT="/home/claude/repo/Phlov Drive.html"
+
+cat > "$OUT" << 'HTML_HEAD'
+<!doctype html>
+<html lang="km">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ផ្លូវ · Phlov Drive Academy</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+Khmer:wght@400;500;600;700&family=Noto+Serif+Khmer:wght@400;500;600;700&family=Fraunces:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg: #FAFAF7;
+    --surface: #FFFFFF;
+    --surface-muted: #F4F2EC;
+    --border: #E6E3DC;
+    --border-strong: #C9C5BB;
+    --ink: #1A1A19;
+    --ink-2: #4A4A47;
+    --ink-3: #8A8881;
+    --accent: #2A5DB0;
+    --accent-soft: #E5EBF5;
+    --warn: #C66A2E;
+    --good: #3B7A57;
+    --danger: #B0413E;
+    --font-en: 'Inter', system-ui, sans-serif;
+    --font-km: 'Noto Sans Khmer', sans-serif;
+    --font-display: 'Inter', system-ui, sans-serif;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:var(--font-en),var(--font-km);
+    font-size:14px;line-height:1.45;
+    -webkit-font-smoothing:antialiased}
+  :lang(km),.km{font-family:var(--font-km)}
+  button{font:inherit;color:inherit}
+  ::selection{background:var(--accent-soft)}
+
+  /* photo placeholder */
+  .ph{
+    background:
+      repeating-linear-gradient(135deg,
+        rgba(0,0,0,.04) 0 6px,
+        rgba(0,0,0,.0) 6px 12px),
+      var(--surface-muted);
+    border:1px solid var(--border);
+    color:var(--ink-3);
+    display:flex;align-items:center;justify-content:center;
+    font:500 10px/1 'JetBrains Mono', monospace;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    border-radius: var(--radius-sm);
+    overflow:hidden;
+    position:relative;
+  }
+  .ph::before{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.4), transparent 40%);
+    pointer-events:none;
+  }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script>
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "accent": "#B0413E",
+    "palette": [
+      "#2A5DB0",
+      "#1A1A19",
+      "#FAFAF7"
+    ],
+    "font": "inter",
+    "nav": "sidebar",
+    "calendar": "week",
+    "role": "admin"
+  }/*EDITMODE-END*/;
+</script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+HTML_HEAD
+
+echo "Head written"

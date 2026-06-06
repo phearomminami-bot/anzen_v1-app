@@ -1,0 +1,13 @@
+{
+  "name": "anzen-telegram-bot",
+  "version": "1.0.0",
+  "description": "Telegram lesson-reminder bot for the Anzen driving-school app (zero dependencies, Node 18+).",
+  "type": "commonjs",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node anzen-telegram-bot.js",
+    "once": "node anzen-telegram-bot.js --once",
+    "dry": "DRY_RUN=1 node anzen-telegram-bot.js --once"
+  },
+  "license": "MIT"
+}
