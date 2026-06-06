@@ -151,20 +151,23 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
   const isPaint = !!hlColor;
   return (
     <Card pad={0}>
-      {/* Header row */}
+      {/* Header row — map over weekDates so single-day mobile shows correct day */}
       <div style={{display:'grid',gridTemplateColumns:`56px repeat(${weekDates.length},1fr)`,borderBottom:'1px solid var(--border)'}}>
         <div/>
-        {DAYS_KM.map((d,i)=>{
-          const date = weekDates[i] || '';
+        {weekDates.map((date, i) => {
           const isToday = date === today;
           const dayNum = date ? parseInt(date.slice(8)) : i+1;
+          const jsDay = date ? new Date(date + 'T00:00:00').getDay() : ((i+1)%7); // 0=Sun
+          const kmIdx = jsDay === 0 ? 6 : jsDay - 1; // Mon=0..Sun=6
+          const dayKm = DAYS_KM[kmIdx] || '';
+          const dayEnStr = (DAYS_EN[kmIdx] || '').toUpperCase();
           const {available} = dayAvailabilitySummary(date);
           const isSun = isSunday(date);
           return (
-            <div key={i} style={{padding:'14px 10px',borderLeft:'1px solid var(--border)',background:isToday?'var(--surface-muted)':isSun?'rgba(176,65,62,.07)':'transparent'}}>
-              <div style={{fontSize:11,color:isSun?'#b0413e':'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.05em'}}>{DAYS_EN[i].toUpperCase()}</div>
+            <div key={date||i} style={{padding:'12px 10px',borderLeft:'1px solid var(--border)',background:isToday?'var(--surface-muted)':isSun?'rgba(176,65,62,.07)':'transparent'}}>
+              <div style={{fontSize:11,color:isSun?'#b0413e':'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.05em'}}>{dayEnStr}</div>
               <div style={{fontSize:18,fontWeight:600,marginTop:2,fontFamily:'var(--font-display)',color:isToday?'var(--accent)':isSun?'#b0413e':'inherit'}}>
-                {dayNum} <span style={{fontSize:11,fontWeight:400,color:isSun?'#b0413e80':'var(--ink-3)'}}>{d}</span>
+                {dayNum} <span style={{fontSize:11,fontWeight:400,color:isSun?'#b0413e80':'var(--ink-3)'}}>{dayKm}</span>
               </div>
               {studentMode && (
                 available > 0
@@ -518,9 +521,11 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   const mobileDate = getMobileDate(dayOffset);
   const weekDates  = bp.mobile ? [mobileDate] : allWeekDates;
 
-  const baseLessons = studentMode
-    ? LESSONS.filter(l => (l.studentId === studentId || l.studentId === '—') && l.status !== 'cancelled')
-    : LESSONS;
+  const baseLessons = LESSONS.filter(l =>
+    studentMode
+      ? (l.studentId === studentId || l.studentId === '—') && l.status !== 'cancelled'
+      : l.status !== 'cancelled'
+  );
 
   const visibleLessons = !studentMode
     ? baseLessons.filter(l =>
@@ -923,8 +928,8 @@ const FleetScreen = ({ role = 'admin' }) => {
       en={`Fleet · ${totalVehs} vehicle${totalVehs !== 1 ? 's' : ''}${workshop.length > 0 ? ` · ${workshop.length} in workshop` : ''}`}
       action={
         <div style={{display:'flex',gap:8}}>
-          {role==='admin' && <Btn kind="ghost" size="md" onClick={()=>openForm('newMaintenance')} icon={<Icon name="wrench" size={14}/>}>{tr('កាលវិភាគ​ថែទាំ','Maintenance')}</Btn>}
-          {role==='admin' && <Btn kind="primary" size="md" onClick={()=>openForm('newVehicle')} icon={<Icon name="plus" size={14}/>}>{tr('បន្ថែម​យានយន្ត','Add vehicle')}</Btn>}
+          {role!=='student' && <Btn kind="ghost" size="md" onClick={()=>openForm('newMaintenance')} icon={<Icon name="wrench" size={14}/>}>{tr('កាលវិភាគ​ថែទាំ','Maintenance')}</Btn>}
+          {role!=='student' && <Btn kind="primary" size="md" onClick={()=>openForm('newVehicle')} icon={<Icon name="plus" size={14}/>}>{tr('បន្ថែម​យានយន្ត','Add vehicle')}</Btn>}
         </div>
       }
     />
@@ -1211,7 +1216,7 @@ const ProgressScreen = ({ role = 'admin', studentId }) => {
             <MenuItem onClick={()=>setRange('quarter')}>{rangeLabel.quarter}</MenuItem>
             <MenuItem onClick={()=>setRange('year')}>{rangeLabel.year}</MenuItem>
           </Dropdown>
-          {role==='admin' && <Btn kind="ghost" size="md" onClick={()=>toast(tr('កំពុង​បង្កើត PDF','Generating report.pdf'),'good')}>{tr('នាំចេញ​របាយការណ៍','Export report')}</Btn>}
+          {role!=='student' && <Btn kind="ghost" size="md" onClick={()=>toast(tr('កំពុង​បង្កើត PDF','Generating report.pdf'),'good')}>{tr('នាំចេញ​របាយការណ៍','Export report')}</Btn>}
         </div>
       }
     />
@@ -1355,8 +1360,8 @@ const BillingScreen = ({ role = 'admin', studentId }) => {
       en="Billing & payments"
       action={
         <div style={{display:'flex',gap:8}}>
-          {role==='admin' && <Btn kind="ghost" size="md" onClick={()=>toast(tr('កំពុង​ទាញ​យក invoices.csv','Downloading invoices.csv'),'good')}>{tr('នាំចេញ','Export')}</Btn>}
-          {role==='admin' && <Btn kind="primary" size="md" onClick={()=>openForm('newInvoice')} icon={<Icon name="plus" size={14}/>}>{tr('បង្កើត​វិក្កយបត្រ','New invoice')}</Btn>}
+          {role!=='student' && <Btn kind="ghost" size="md" onClick={()=>toast(tr('កំពុង​ទាញ​យក invoices.csv','Downloading invoices.csv'),'good')}>{tr('នាំចេញ','Export')}</Btn>}
+          {role!=='student' && <Btn kind="primary" size="md" onClick={()=>openForm('newInvoice')} icon={<Icon name="plus" size={14}/>}>{tr('បង្កើត​វិក្កយបត្រ','New invoice')}</Btn>}
         </div>
       }
     />
@@ -1443,7 +1448,7 @@ const BillingScreen = ({ role = 'admin', studentId }) => {
               {n:'Class A · ម៉ូតូ', p:'$110', d:'18 ម៉ោងបង្រៀន'},
               {n:'Class C · ឡានដឹកទំនិញ', p:'$320', d:'40 ម៉ោងបង្រៀន'},
             ].map((p,i)=>(
-              <div key={i} onClick={()=>role==='admin' && toast(`កែ​​​​​​ ${p.n} (coming soon)`,'neutral')} style={{display:'flex',justifyContent:'space-between',padding:'10px 12px',background:p.active?'var(--surface-muted)':'transparent',border:'1px solid var(--border)',borderRadius:8,cursor:role==='admin'?'pointer':'default'}}>
+              <div key={i} onClick={()=>role!=='student' && toast(`កែ​​​​​​ ${p.n} (coming soon)`,'neutral')} style={{display:'flex',justifyContent:'space-between',padding:'10px 12px',background:p.active?'var(--surface-muted)':'transparent',border:'1px solid var(--border)',borderRadius:8,cursor:role!=='student'?'pointer':'default'}}>
                 <div>
                   <div style={{fontSize:13,fontWeight:500}}>{p.n}</div>
                   <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2}}>{p.d}</div>

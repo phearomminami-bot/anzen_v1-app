@@ -1,209 +1,562 @@
-// nav.jsx — Sidebar, Topbar, Tabs variants
+// nav.jsx — Sidebar, Topbar, Tabs variants + UserPill
+
+// ─── Drag-reorder hook (used by all nav variants) ───
+const useDragOrder = (onReorder) => {
+  const [dragIdx, setDragIdx] = React.useState(null);
+  const [overIdx, setOverIdx] = React.useState(null);
+
+  const dragStart = (e, idx) => {
+    setDragIdx(idx);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(idx));
+  };
+  const dragOver = (e, idx) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (overIdx !== idx) setOverIdx(idx);
+  };
+  const drop = (e, idx) => {
+    e.preventDefault();
+    if (dragIdx !== null && dragIdx !== idx) onReorder?.(dragIdx, idx);
+    setDragIdx(null); setOverIdx(null);
+  };
+  const dragEnd = () => { setDragIdx(null); setOverIdx(null); };
+
+  return { dragIdx, overIdx, dragStart, dragOver, drop, dragEnd };
+};
+
+// ─── Grip handle icon ───
+const GripDots = ({ style = {} }) => (
+  <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"
+    style={{ flexShrink:0, opacity:.25, transition:'opacity .12s', cursor:'grab', ...style }}>
+    <circle cx="3" cy="3" r="1.5"/><circle cx="7" cy="3" r="1.5"/>
+    <circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/>
+    <circle cx="3" cy="11" r="1.5"/><circle cx="7" cy="11" r="1.5"/>
+  </svg>
+);
 
 const NAV_ITEMS = {
   admin: [
-    { id:'dashboard',   km:'ផ្ទាំងគ្រប់គ្រង',  en:'Dashboard',     icon:'home' },
-    { id:'students',    km:'សិស្ស',           en:'Students',      icon:'users' },
-    { id:'schedule',    km:'កាលវិភាគ',        en:'Schedule',      icon:'cal' },
-    { id:'instructors', km:'គ្រូ',            en:'Instructors',   icon:'flag' },
-    { id:'fleet',       km:'យានយន្ត',         en:'Fleet',         icon:'car' },
-    { id:'progress',    km:'វឌ្ឍនភាព',       en:'Progress',      icon:'chart' },
-    { id:'billing',     km:'វិក្កយបត្រ',      en:'Billing',       icon:'cash' },
-    { id:'public',      km:'ទំព័រសាធារណៈ',    en:'Public site',   icon:'map' },
-    { id:'booking',     km:'ការកក់',          en:'Booking flow',  icon:'book' },
-    { id:'mobile',      km:'ទូរស័ព្ទ',        en:'Mobile app',    icon:'phone' },
+    { id:'dashboard',   km:'ផ្ទាំងគ្រប់គ្រង',       en:'Dashboard',          jp:'ダッシュボード',   icon:'home' },
+    { id:'students',    km:'សិស្ស',                 en:'Students',           jp:'生徒管理',         icon:'users' },
+    { id:'lessons',     km:'មេរៀន',                 en:'Lessons',            jp:'レッスン',         icon:'book' },
+    { id:'schedule',    km:'កាលវិភាគ',              en:'Schedule',           jp:'スケジュール',     icon:'cal' },
+    { id:'instructors', km:'គ្រូ',                  en:'Instructors',        jp:'インストラクター', icon:'flag' },
+    { id:'fleet',       km:'ការគ្រប់គ្រងយានយន្ត',    en:'Vehicle management', jp:'車両管理',         icon:'car' },
+    { id:'vehicle',     km:'យានយន្ត',               en:'Vehicle',            jp:'車両',             icon:'car' },
+    { id:'progress',    km:'វឌ្ឍនភាព',              en:'Progress',           jp:'進捗',             icon:'chart' },
+    { id:'billing',     km:'វិក្កយបត្រ',             en:'Billing',            jp:'請求管理',         icon:'cash' },
+    { id:'finance',     km:'គ្រប់គ្រងហិរញ្ញវត្ថុ',   en:'Finance',            jp:'財務管理',         icon:'chart' },
+    { id:'staff',       km:'គ្រប់​គ្រង​បុគ្គលិក',    en:'Staff',              jp:'スタッフ管理',     icon:'users' },
+    { id:'announce',    km:'ការជូនដំណឹង',           en:'Announcements',      jp:'お知らせ',         icon:'bell' },
+    { id:'public',      km:'ទំព័រសាធារណៈ',           en:'Public site',        jp:'公開サイト',       icon:'map' },
+    { id:'booking',     km:'ការកក់',                en:'Booking flow',       jp:'予約',             icon:'book' },
+    { id:'mobile',      km:'ទូរស័ព្ទ',               en:'Mobile app',         jp:'モバイルアプリ',   icon:'phone' },
+    { id:'settings',    km:'ការ​កំណត់',              en:'Settings',           jp:'設定',             icon:'settings' },
   ],
   instructor: [
-    { id:'dashboard',   km:'ផ្ទាំងគ្រូ',     en:'Today',          icon:'home' },
-    { id:'schedule',    km:'កាលវិភាគខ្ញុំ',   en:'My schedule',    icon:'cal' },
-    { id:'students',    km:'សិស្សរបស់ខ្ញុំ',  en:'My students',   icon:'users' },
-    { id:'fleet',       km:'យានយន្ត',        en:'Vehicles',      icon:'car' },
-    { id:'progress',    km:'វឌ្ឍនភាព',      en:'Reports',       icon:'chart' },
-    { id:'mobile',      km:'ទូរស័ព្ទ',       en:'Mobile app',    icon:'phone' },
+    { id:'dashboard',   km:'ផ្ទាំងគ្រប់គ្រង',       en:'Dashboard',          jp:'ダッシュボード',   icon:'home' },
+    { id:'students',    km:'សិស្ស',                 en:'Students',           jp:'生徒管理',         icon:'users' },
+    { id:'lessons',     km:'មេរៀន',                 en:'Lessons',            jp:'レッスン',         icon:'book' },
+    { id:'schedule',    km:'កាលវិភាគ',              en:'Schedule',           jp:'スケジュール',     icon:'cal' },
+    { id:'instructors', km:'គ្រូ',                  en:'Instructors',        jp:'インストラクター', icon:'flag' },
+    { id:'fleet',       km:'ការគ្រប់គ្រងយានយន្ត',    en:'Vehicle management', jp:'車両管理',         icon:'car' },
+    { id:'vehicle',     km:'យានយន្ត',               en:'Vehicle',            jp:'車両',             icon:'car' },
+    { id:'progress',    km:'វឌ្ឍនភាព',              en:'Progress',           jp:'進捗',             icon:'chart' },
+    { id:'billing',     km:'វិក្កយបត្រ',             en:'Billing',            jp:'請求管理',         icon:'cash' },
+    { id:'finance',     km:'គ្រប់គ្រងហិរញ្ញវត្ថុ',   en:'Finance',            jp:'財務管理',         icon:'chart' },
+    { id:'staff',       km:'គ្រប់​គ្រង​បុគ្គលិក',    en:'Staff',              jp:'スタッフ管理',     icon:'users' },
+    { id:'announce',    km:'ការជូនដំណឹង',           en:'Announcements',      jp:'お知らせ',         icon:'bell' },
+    { id:'public',      km:'ទំព័រសាធារណៈ',           en:'Public site',        jp:'公開サイト',       icon:'map' },
+    { id:'booking',     km:'ការកក់',                en:'Booking flow',       jp:'予約',             icon:'book' },
+    { id:'mobile',      km:'ទូរស័ព្ទ',               en:'Mobile app',         jp:'モバイルアプリ',   icon:'phone' },
+    { id:'settings',    km:'ការ​កំណត់',              en:'Settings',           jp:'設定',             icon:'settings' },
   ],
   student: [
-    { id:'dashboard',   km:'ទំព័រដើម',        en:'Home',           icon:'home' },
-    { id:'schedule',    km:'មេរៀនរបស់ខ្ញុំ',  en:'My lessons',     icon:'cal' },
-    { id:'progress',    km:'វឌ្ឍនភាព',       en:'My progress',    icon:'chart' },
-    { id:'billing',     km:'ការទូទាត់',       en:'Payments',       icon:'cash' },
-    { id:'booking',     km:'កក់មេរៀន',        en:'Book lesson',    icon:'book' },
-    { id:'mobile',      km:'ទូរស័ព្ទ',        en:'Mobile app',     icon:'phone' },
+    { id:'dashboard',   km:'ទំព័រដើម',              en:'Home',               jp:'ホーム',           icon:'home' },
+    { id:'schedule',    km:'មេរៀនរបស់ខ្ញុំ',         en:'My lessons',         jp:'授業',             icon:'cal' },
+    { id:'lessons',     km:'មេរៀន',                 en:'Lessons',            jp:'レッスン',         icon:'book' },
+    { id:'progress',    km:'វឌ្ឍនភាព',              en:'My progress',        jp:'進捗',             icon:'chart' },
+    { id:'billing',     km:'ការទូទាត់',              en:'Payments',           jp:'支払い',           icon:'cash' },
+    { id:'booking',     km:'កក់មេរៀន',              en:'Book lesson',        jp:'レッスン予約',     icon:'star' },
+    { id:'mobile',      km:'ទូរស័ព្ទ',               en:'Mobile app',         jp:'モバイルアプリ',   icon:'phone' },
+    { id:'settings',    km:'ការ​កំណត់',              en:'Settings',           jp:'設定',             icon:'settings' },
   ],
 };
 
 const ROLE_LABELS = {
-  admin:      { km:'អ្នកគ្រប់គ្រង', en:'Admin', avatar:'admin' },
-  instructor: { km:'គ្រូបង្រៀន',     en:'Instructor · Mr. Vichea', avatar:'inst-1' },
-  student:    { km:'សិស្ស',          en:'Student · Sok Chantha', avatar:'port-1' },
+  admin:      { km:'អ្នកគ្រប់គ្រង', en:'Admin',       jp:'管理者' },
+  instructor: { km:'គ្រូបង្រៀន',     en:'Instructor',  jp:'講師' },
+  student:    { km:'សិស្ស',          en:'Student',     jp:'生徒' },
 };
 
+// ─── UserPill — current user + logout dropdown ───
+const UserPill = ({ role, onLogout, compact = false }) => {
+  const { toast, navigate, confirm, tr, lang } = useAppActions();
+  const u = (() => {
+    if (role === 'instructor') {
+      if (window.__loggedInInstructorData) return window.__loggedInInstructorData;
+      if (window.__loggedInInstructorId) {
+        const sf = (window.__staffData || []).find(s => s.instId === window.__loggedInInstructorId || s.id === window.__loggedInInstructorId);
+        if (sf) return { km: sf.name, en: sf.en, title: sf.roleKm ? sf.roleKm + ' · ' + sf.role : sf.role, avatar: sf.photo };
+        const inst = (typeof INSTRUCTORS !== 'undefined' ? INSTRUCTORS : []).find(i => i.id === window.__loggedInInstructorId);
+        if (inst) return { km: inst.name, en: inst.en, title: inst.role || 'Instructor', avatar: inst.photo || 'inst-1' };
+      }
+    }
+    return LOGIN_USERS[role] || LOGIN_USERS.admin;
+  })();
+  const r = ROLE_LABELS[role] || ROLE_LABELS.admin;
+  const ll = (o) => o[lang] || o.en;
+  const tt = tr || ((km, en, jp) => lang === 'jp' ? (jp || en) : lang === 'en' ? en : km);
+
+  const handleLogout = () => confirm?.({
+    title: tt('ចេញ​​ពី​​​​គណនី?','Sign out?','サインアウト？'),
+    body:  tt('អ្នក​នឹង​​ត្រូវ​ ​ចូល​គណនី​ម្ដង​ទៀត​ដើម្បី​បន្ត​ប្រើ​ប្រាស់​​​​។','You will need to sign in again to continue.','再度サインインが必要になります。'),
+    confirmText: tt('ចេញ','Sign out','サインアウト'),
+    onConfirm: () => { onLogout(); toast?.(tt('បាន​​ចេញ​ដោយ​ជោគជ័យ','Signed out','サインアウトしました'),'neutral'); },
+  });
+
+  const menu = (
+    <>
+      <MenuLabel>{ll(u)}</MenuLabel>
+      <MenuItem icon="users"    onClick={()=>navigate?.('settings')}>{tt('ប្រវត្តិ​​រូប','Profile','プロフィール')}</MenuItem>
+      <MenuItem icon="settings" onClick={()=>navigate?.('settings')}>{tt('ការ​កំណត់','Settings','設定')}</MenuItem>
+      <MenuDivider/>
+      <MenuItem icon="arrow" onClick={handleLogout} danger>{tt('ចេញ','Sign out','サインアウト')}</MenuItem>
+    </>
+  );
+
+  if (compact) {
+    return (
+      <div style={{display:'flex',alignItems:'center',gap:6,width:'100%'}}>
+        <Dropdown align="left" width={220} dropUp trigger={
+          <button style={{
+            display:'flex',alignItems:'center',gap:10,flex:1,minWidth:0,
+            background:'transparent',border:'none',padding:0,cursor:'pointer',font:'inherit',color:'inherit',
+          }}>
+            <Avatar tag={u.avatar} size={32}/>
+            <div style={{flex:1,minWidth:0,textAlign:'left'}}>
+              <div style={{fontSize:12,fontWeight:500,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{ll(u)}</div>
+              <div style={{fontSize:11,color:'var(--ink-3)'}}>{ll(r)}</div>
+            </div>
+          </button>
+        }>{menu}</Dropdown>
+        {/* Direct logout button — always visible */}
+        <button onClick={handleLogout} title={tt('ចេញ','Sign out')} style={{
+          flexShrink:0,width:30,height:30,borderRadius:8,
+          border:'1px solid var(--border)',background:'transparent',
+          display:'flex',alignItems:'center',justifyContent:'center',
+          cursor:'pointer',color:'var(--ink-3)',transition:'all .12s',
+        }}
+          onMouseEnter={e=>{e.currentTarget.style.background='var(--danger)';e.currentTarget.style.color='#fff';e.currentTarget.style.borderColor='var(--danger)';}}
+          onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color='var(--ink-3)';e.currentTarget.style.borderColor='var(--border)';}}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <Dropdown align="right" width={220} trigger={
+      <button style={{
+        display:'flex',alignItems:'center',gap:10,
+        padding:'5px 10px 5px 5px',
+        background:'var(--surface)', border:'1px solid var(--border)',
+        borderRadius:999, cursor:'pointer',font:'inherit',color:'inherit',
+      }}>
+        <Avatar tag={u.avatar} size={28}/>
+        <div style={{lineHeight:1.15,textAlign:'left'}}>
+          <div style={{fontSize:12,fontWeight:600}}>{ll(u)}</div>
+          <div style={{fontSize:10,color:'var(--ink-3)'}}>{ll(r)}</div>
+        </div>
+        <Icon name="chev" size={12} stroke={2}/>
+      </button>
+    }>{menu}</Dropdown>
+  );
+};
+
+// ─── Dark/Light toggle button ───
+const DarkToggleBtn = () => {
+  const { dark, toggleDark, lang } = useAppActions();
+  return (
+    <button
+      onClick={toggleDark}
+      title={dark
+        ? (lang==='km'?'ប្ដូរ​ទៅ​ភ្លឺ':lang==='jp'?'ライトモード':'Switch to light')
+        : (lang==='km'?'ប្ដូរ​ទៅ​ងងឹត':lang==='jp'?'ダークモード':'Switch to dark')}
+      style={{
+        width:32, height:32, borderRadius:8, flexShrink:0,
+        border:'1px solid var(--border)', background:'var(--surface-muted)',
+        display:'flex', alignItems:'center', justifyContent:'center',
+        cursor:'pointer', color:'var(--ink-2)', transition:'all .15s',
+      }}
+      onMouseEnter={e=>{e.currentTarget.style.background='var(--border)';e.currentTarget.style.color='var(--ink)';}}
+      onMouseLeave={e=>{e.currentTarget.style.background='var(--surface-muted)';e.currentTarget.style.color='var(--ink-2)';}}
+    >
+      {dark ? (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      ) : (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      )}
+    </button>
+  );
+};
+
+// ─── Mobile bottom bar ───
+const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
+  const { lang, tr } = useAppActions();
+  const ll = (o) => o[lang] || o.en;
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const quickItems = (() => {
+    const base = items.slice(0, 4);
+    const vehicleItem = items.find(i => i.id === 'vehicle');
+    if (vehicleItem && base.some(i => i.id === 'lessons')) {
+      return base.map(i => i.id === 'lessons' ? vehicleItem : i);
+    }
+    return base;
+  })();
+  const ss = window.__schoolSettings;
+  const close = () => setMenuOpen(false);
+  return (
+    <>
+      {menuOpen && (
+        <div style={{position:'fixed',inset:0,background:'var(--bg)',zIndex:200,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+          <div style={{padding:'16px 20px',display:'flex',justifyContent:'space-between',alignItems:'center',borderBottom:'1px solid var(--border)',flexShrink:0,background:'var(--surface)'}}>
+            <div style={{display:'flex',alignItems:'center',gap:10}}>
+              {ss?.logo?<img src={ss.logo} style={{width:28,height:28,borderRadius:6,objectFit:'cover'}} alt=""/>:<Logo size={28}/>}
+              <div style={{fontSize:16,fontWeight:700}}>{ss?.name||'Anzen'}</div>
+            </div>
+            <button onClick={close} style={{width:36,height:36,border:'1px solid var(--border)',background:'var(--surface-muted)',borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'var(--ink-2)'}}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
+          <nav style={{flex:1,padding:'10px 14px',overflowY:'auto'}}>
+            {items.map(it=>(
+              <button key={it.id} onClick={()=>{onGo(it.id);close();}} style={{
+                display:'flex',alignItems:'center',gap:14,width:'100%',padding:'13px 14px',marginBottom:4,
+                border:'none',background:current===it.id?'var(--surface-muted)':'transparent',
+                borderRadius:10,cursor:'pointer',fontSize:14,textAlign:'left',fontFamily:'inherit',
+                color:current===it.id?'var(--ink)':'var(--ink-2)',fontWeight:current===it.id?600:400,
+              }}>
+                <Icon name={it.icon} size={20} stroke={current===it.id?2:1.5}/>
+                {ll(it)}
+              </button>
+            ))}
+          </nav>
+          <div style={{padding:'12px 16px',borderTop:'1px solid var(--border)',flexShrink:0,paddingBottom:'calc(12px + env(safe-area-inset-bottom,0px))'}}>
+            <UserPill role={role} onLogout={()=>{close();onLogout();}} compact/>
+          </div>
+        </div>
+      )}
+      <div style={{
+        position:'fixed',bottom:0,left:0,right:0,zIndex:100,
+        background:'var(--surface)',borderTop:'1px solid var(--border)',
+        display:'flex',alignItems:'stretch',height:56,
+        paddingBottom:'env(safe-area-inset-bottom,0px)',
+      }}>
+        {quickItems.map(it=>(
+          <button key={it.id} onClick={()=>onGo(it.id)} style={{
+            flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',
+            gap:3,border:'none',background:'transparent',cursor:'pointer',padding:'6px 4px',
+            color:current===it.id?'var(--accent)':'var(--ink-3)',
+          }}>
+            <Icon name={it.icon} size={22} stroke={current===it.id?2:1.5}/>
+            <span style={{fontSize:9,fontWeight:current===it.id?600:400,letterSpacing:'.02em',maxWidth:56,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+              {ll(it)}
+            </span>
+          </button>
+        ))}
+        <button onClick={()=>setMenuOpen(true)} style={{
+          flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',
+          gap:3,border:'none',background:menuOpen?'var(--surface-muted)':'transparent',
+          cursor:'pointer',padding:'6px 4px',color:'var(--ink-3)',
+        }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+          <span style={{fontSize:9,letterSpacing:'.02em'}}>{tr('ទាំងអស់','More','すべて')}</span>
+        </button>
+      </div>
+    </>
+  );
+};
+
+// ─── Collapse chevron button ───
+const CollapseBtn = ({ collapsed, onToggle, style = {} }) => (
+  <button
+    onClick={onToggle}
+    title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+    style={{
+      width:30, height:30, borderRadius:8, flexShrink:0,
+      border:'1px solid var(--border)', background:'var(--surface-muted)',
+      display:'flex', alignItems:'center', justifyContent:'center',
+      cursor:'pointer', color:'var(--ink-3)', transition:'all .15s',
+      ...style,
+    }}
+    onMouseEnter={e=>{e.currentTarget.style.background='var(--border)';e.currentTarget.style.color='var(--ink)';}}
+    onMouseLeave={e=>{e.currentTarget.style.background='var(--surface-muted)';e.currentTarget.style.color='var(--ink-3)';}}
+  >
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      {collapsed
+        ? <><polyline points="9 18 15 12 9 6"/></>
+        : <><polyline points="15 18 9 12 15 6"/></>
+      }
+    </svg>
+  </button>
+);
+
 // ─── Sidebar variant ───
-const Sidebar = ({ items, current, onGo, role, onRole }) => (
+const Sidebar = ({ items, current, onGo, role, onLogout, onReorder, collapsed = false, onToggleCollapse }) => {
+  const { lang, settingsVersion } = useAppActions();
+  const ll = (o) => o[lang] || o.en;
+  const ss = window.__schoolSettings;
+
+  if (collapsed) {
+    return (
+      <aside style={{
+        width:56, background:'var(--surface)', borderRight:'1px solid var(--border)',
+        display:'flex', flexDirection:'column', flexShrink:0, alignItems:'center',
+        transition:'width .2s',
+      }}>
+        <button onClick={()=>onGo('dashboard')} style={{padding:'14px 0 10px',display:'flex',alignItems:'center',justifyContent:'center',width:'100%',background:'transparent',border:'none',cursor:'pointer'}}>
+          {ss?.logo?<img src={ss.logo} style={{width:26,height:26,borderRadius:6,objectFit:'cover'}} alt=""/>:<Logo size={24}/>}
+        </button>
+        {onToggleCollapse && (
+          <div style={{padding:'0 0 8px'}}>
+            <CollapseBtn collapsed={collapsed} onToggle={onToggleCollapse}/>
+          </div>
+        )}
+        <div style={{width:'100%',height:1,background:'var(--border)',flexShrink:0}}/>
+        <nav style={{flex:1,padding:'6px 4px',overflowY:'auto',width:'100%'}}>
+          {items.map(it=>(
+            <button key={it.id} onClick={()=>onGo(it.id)} title={ll(it)} style={{
+              width:'100%',height:40,display:'flex',alignItems:'center',justifyContent:'center',
+              border:'none',borderRadius:8,cursor:'pointer',marginBottom:2,
+              background:current===it.id?'var(--accent-soft)':'transparent',
+              color:current===it.id?'var(--accent)':'var(--ink-3)',
+            }}>
+              <Icon name={it.icon} size={18} stroke={current===it.id?2:1.5}/>
+            </button>
+          ))}
+        </nav>
+        <div style={{width:'100%',height:1,background:'var(--border)',flexShrink:0}}/>
+        <div style={{padding:'10px 0',display:'flex',flexDirection:'column',alignItems:'center',gap:6}}>
+          <DarkToggleBtn/>
+          <button onClick={()=>onLogout()} title="Sign out" style={{border:'none',background:'transparent',cursor:'pointer',padding:0}}>
+            <Avatar tag={(role==='instructor'?(window.__loggedInInstructorData||LOGIN_USERS.instructor):LOGIN_USERS[role])?.avatar||LOGIN_USERS[role]?.avatar} size={30}/>
+          </button>
+        </div>
+      </aside>
+    );
+  }
+
+  const drag = useDragOrder(onReorder);
+
+  return (
   <aside style={{
     width:240, background:'var(--surface)', borderRight:'1px solid var(--border)',
     display:'flex', flexDirection:'column', flexShrink:0,
+    transition:'width .2s',
   }}>
-    <div style={{padding:'18px 18px 14px',display:'flex',alignItems:'center',gap:10}}>
-      <Logo size={28}/>
-      <div style={{lineHeight:1.15}}>
-        <div style={{fontSize:14,fontWeight:600}}>ផ្លូវ Phlov</div>
-        <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.04em'}}>DRIVE ACADEMY</div>
-      </div>
-    </div>
-    <div style={{padding:'0 12px 8px'}}>
-      <RoleSwitcher role={role} onRole={onRole} compact />
+    <div style={{display:'flex',alignItems:'center',gap:0}}>
+      <button onClick={() => onGo('dashboard')} style={{
+        flex:1,minWidth:0,padding:'18px 18px 14px',display:'flex',alignItems:'center',gap:10,
+        background:'transparent',border:'none',cursor:'pointer',
+        textAlign:'left',font:'inherit',color:'inherit',
+      }}>
+        {ss?.logo
+          ? <img src={ss.logo} style={{width:28,height:28,borderRadius:6,objectFit:'cover',flexShrink:0}} alt="logo"/>
+          : <Logo size={28}/>
+        }
+        <div style={{lineHeight:1.15,minWidth:0}}>
+          <div style={{fontSize:14,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{ss?.name || 'Anzen'}</div>
+          <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.04em'}}>DRIVE ACADEMY</div>
+        </div>
+      </button>
+      {onToggleCollapse && (
+        <div style={{paddingRight:10,flexShrink:0}}>
+          <CollapseBtn collapsed={collapsed} onToggle={onToggleCollapse}/>
+        </div>
+      )}
     </div>
     <Divider/>
     <nav style={{flex:1,padding:'8px 8px',overflow:'auto'}}>
-      {items.map(it => (
-        <button key={it.id} onClick={() => onGo(it.id)} style={{
-          display:'flex',alignItems:'center',gap:10,
-          width:'100%',padding:'8px 10px',marginBottom:2,
-          border:'none', background: current===it.id ? 'var(--surface-muted)' : 'transparent',
-          color: current===it.id ? 'var(--ink)' : 'var(--ink-2)',
-          borderRadius:8, cursor:'default',
-          fontSize:13, fontWeight: current===it.id ? 500 : 400,
-          textAlign:'left',
-        }}>
-          <Icon name={it.icon} size={16} stroke={current===it.id ? 2 : 1.5}/>
-          <span style={{flex:1}}>{it.km}</span>
-          <span style={{fontSize:10,color:'var(--ink-3)',fontFamily:'var(--font-en)'}}>{it.en.toLowerCase()}</span>
-        </button>
-      ))}
+      {items.map((it, idx) => {
+        const isDragging = drag.dragIdx === idx;
+        const isOver     = drag.overIdx === idx && drag.dragIdx !== null && !isDragging;
+        const lineTop    = isOver && idx < drag.dragIdx;
+        const lineBot    = isOver && idx > drag.dragIdx;
+        return (
+          <div key={it.id} style={{position:'relative',opacity:isDragging?.4:1,transition:'opacity .1s'}}
+            draggable
+            onDragStart={e=>drag.dragStart(e,idx)}
+            onDragOver={e=>drag.dragOver(e,idx)}
+            onDrop={e=>drag.drop(e,idx)}
+            onDragEnd={drag.dragEnd}
+          >
+            {lineTop && <div style={{position:'absolute',top:0,left:8,right:8,height:2,background:'var(--accent)',borderRadius:1,zIndex:5}}/>}
+            <button onClick={() => onGo(it.id)}
+              onMouseEnter={e=>{ const g=e.currentTarget.querySelector('svg:first-child'); if(g) g.style.opacity='.7'; }}
+              onMouseLeave={e=>{ const g=e.currentTarget.querySelector('svg:first-child'); if(g) g.style.opacity='.25'; }}
+              style={{
+                display:'flex',alignItems:'center',gap:8,
+                width:'100%',padding:'8px 10px',marginBottom:2,
+                border:'none', background: current===it.id ? 'var(--surface-muted)' : 'transparent',
+                color: current===it.id ? 'var(--ink)' : 'var(--ink-2)',
+                borderRadius:8, cursor:'pointer',
+                fontSize:13, fontWeight: current===it.id ? 500 : 400,
+                textAlign:'left',
+              }}>
+              <GripDots/>
+              <Icon name={it.icon} size={16} stroke={current===it.id ? 2 : 1.5}/>
+              <span style={{flex:1}}>{ll(it)}</span>
+            </button>
+            {lineBot && <div style={{position:'absolute',bottom:0,left:8,right:8,height:2,background:'var(--accent)',borderRadius:1,zIndex:5}}/>}
+          </div>
+        );
+      })}
     </nav>
     <Divider/>
-    <div style={{padding:14,display:'flex',alignItems:'center',gap:10}}>
-      <Avatar tag="VC" size={32}/>
-      <div style={{flex:1,minWidth:0}}>
-        <div style={{fontSize:12,fontWeight:500}}>Ven Chenda</div>
-        <div style={{fontSize:11,color:'var(--ink-3)'}}>School director</div>
+    <div style={{padding:'10px 14px', display:'flex', alignItems:'center', gap:8}}>
+      <div style={{flex:1, minWidth:0}}>
+        <UserPill role={role} onLogout={onLogout} compact/>
       </div>
-      <Icon name="settings" size={16}/>
+      <DarkToggleBtn/>
     </div>
   </aside>
-);
+  );
+};
 
 // ─── Topbar variant ───
-const Topbar = ({ items, current, onGo, role, onRole }) => (
+const Topbar = ({ items, current, onGo, role, onLogout, onReorder }) => {
+  const { lang } = useAppActions();
+  const ll = (o) => o[lang] || o.en;
+  const drag = useDragOrder(onReorder);
+
+  return (
   <header style={{
     height:64, background:'var(--surface)', borderBottom:'1px solid var(--border)',
     display:'flex', alignItems:'center', padding:'0 24px', gap:24, flexShrink:0,
   }}>
-    <div style={{display:'flex',alignItems:'center',gap:10}}>
+    <button onClick={() => onGo('dashboard')} style={{
+      display:'flex',alignItems:'center',gap:10,
+      background:'transparent',border:'none',cursor:'pointer',font:'inherit',color:'inherit',
+    }}>
       <Logo size={26}/>
-      <div style={{fontSize:15,fontWeight:600}}>ផ្លូវ Phlov</div>
-    </div>
+      <div style={{fontSize:15,fontWeight:600}}>Anzen</div>
+    </button>
     <nav style={{display:'flex',alignItems:'center',gap:2,flex:1,overflow:'auto'}}>
-      {items.map(it => (
-        <button key={it.id} onClick={() => onGo(it.id)} style={{
-          display:'flex',alignItems:'center',gap:6,
-          padding:'8px 12px',
-          border:'none', background:'transparent',
-          color: current===it.id ? 'var(--ink)' : 'var(--ink-3)',
-          borderRadius:8, cursor:'default',
-          fontSize:13, fontWeight: current===it.id ? 600 : 400,
-          borderBottom: current===it.id ? '2px solid var(--accent)' : '2px solid transparent',
-          borderRadius:0,
-          height:64,
-        }}>
-          <Icon name={it.icon} size={14}/>
-          <span>{it.km}</span>
-        </button>
-      ))}
+      {items.map((it, idx) => {
+        const isDragging = drag.dragIdx === idx;
+        const isOver     = drag.overIdx === idx && drag.dragIdx !== null && !isDragging;
+        return (
+          <div key={it.id} style={{position:'relative',display:'flex',alignItems:'stretch',opacity:isDragging?.4:1,transition:'opacity .1s'}}
+            draggable
+            onDragStart={e=>drag.dragStart(e,idx)}
+            onDragOver={e=>drag.dragOver(e,idx)}
+            onDrop={e=>drag.drop(e,idx)}
+            onDragEnd={drag.dragEnd}
+          >
+            {isOver && idx < drag.dragIdx && <div style={{position:'absolute',left:0,top:8,bottom:8,width:2,background:'var(--accent)',borderRadius:1,zIndex:5}}/>}
+            <button onClick={() => onGo(it.id)} style={{
+              display:'flex',alignItems:'center',gap:5,
+              padding:'8px 10px',
+              border:'none', background:'transparent',
+              color: current===it.id ? 'var(--ink)' : 'var(--ink-3)',
+              cursor:'pointer',
+              fontSize:13, fontWeight: current===it.id ? 600 : 400,
+              borderBottom: current===it.id ? '2px solid var(--accent)' : '2px solid transparent',
+              borderRadius:0, height:64, userSelect:'none',
+            }}>
+              <GripDots style={{transform:'rotate(90deg)'}}/>
+              <Icon name={it.icon} size={14}/>
+              <span>{ll(it)}</span>
+            </button>
+            {isOver && idx > drag.dragIdx && <div style={{position:'absolute',right:0,top:8,bottom:8,width:2,background:'var(--accent)',borderRadius:1,zIndex:5}}/>}
+          </div>
+        );
+      })}
     </nav>
-    <RoleSwitcher role={role} onRole={onRole}/>
+    <DarkToggleBtn/>
+    <UserPill role={role} onLogout={onLogout}/>
   </header>
-);
+  );
+};
 
 // ─── Tabs variant ───
-const TabsBar = ({ items, current, onGo, role, onRole }) => (
+const TabsBar = ({ items, current, onGo, role, onLogout, onReorder }) => {
+  const { lang } = useAppActions();
+  const ll = (o) => o[lang] || o.en;
+  const drag = useDragOrder(onReorder);
+
+  return (
   <div style={{flexShrink:0}}>
     <header style={{
       height:56, background:'var(--surface)', borderBottom:'1px solid var(--border)',
       display:'flex', alignItems:'center', padding:'0 24px', gap:16,
     }}>
-      <Logo size={26}/>
-      <div style={{fontSize:15,fontWeight:600}}>ផ្លូវ Phlov Drive Academy</div>
+      <button onClick={() => onGo('dashboard')} style={{
+        display:'flex',alignItems:'center',gap:10,
+        background:'transparent',border:'none',cursor:'pointer',font:'inherit',color:'inherit',
+      }}>
+        <Logo size={26}/>
+        <div style={{fontSize:15,fontWeight:600}}>Anzen</div>
+      </button>
       <div style={{flex:1}}/>
-      <RoleSwitcher role={role} onRole={onRole}/>
+      <DarkToggleBtn/>
+      <UserPill role={role} onLogout={onLogout}/>
     </header>
     <div style={{
       background:'var(--surface-muted)', borderBottom:'1px solid var(--border)',
-      padding:'8px 24px', display:'flex', gap:6, overflowX:'auto',
+      padding:'8px 24px', display:'flex', gap:4, overflowX:'auto',
     }}>
-      {items.map(it => (
-        <button key={it.id} onClick={() => onGo(it.id)} style={{
-          display:'inline-flex',alignItems:'center',gap:6,
-          padding:'6px 12px',
-          border:'1px solid ' + (current===it.id ? 'var(--ink)' : 'var(--border)'),
-          background: current===it.id ? 'var(--ink)' : 'var(--surface)',
-          color: current===it.id ? 'var(--bg)' : 'var(--ink-2)',
-          borderRadius:999, cursor:'default',
-          fontSize:12, fontWeight:500, whiteSpace:'nowrap',
-        }}>
-          <Icon name={it.icon} size={13}/>
-          {it.km} · <span style={{opacity:.6,fontFamily:'var(--font-en)'}}>{it.en}</span>
-        </button>
-      ))}
+      {items.map((it, idx) => {
+        const isDragging = drag.dragIdx === idx;
+        const isOver     = drag.overIdx === idx && drag.dragIdx !== null && !isDragging;
+        return (
+          <div key={it.id} style={{position:'relative',display:'flex',opacity:isDragging?.4:1,transition:'opacity .1s'}}
+            draggable
+            onDragStart={e=>drag.dragStart(e,idx)}
+            onDragOver={e=>drag.dragOver(e,idx)}
+            onDrop={e=>drag.drop(e,idx)}
+            onDragEnd={drag.dragEnd}
+          >
+            {isOver && idx < drag.dragIdx && <div style={{position:'absolute',left:-2,top:0,bottom:0,width:2,background:'var(--accent)',borderRadius:1,zIndex:5}}/>}
+            <button onClick={() => onGo(it.id)} style={{
+              display:'inline-flex',alignItems:'center',gap:5,
+              padding:'6px 11px',
+              border:'1px solid ' + (current===it.id ? 'var(--ink)' : 'var(--border)'),
+              background: current===it.id ? 'var(--ink)' : 'var(--surface)',
+              color: current===it.id ? 'var(--bg)' : 'var(--ink-2)',
+              borderRadius:999, cursor:'pointer',
+              fontSize:12, fontWeight:500, whiteSpace:'nowrap', userSelect:'none',
+            }}>
+              <GripDots style={{
+                transform:'rotate(90deg)',
+                opacity: current===it.id ? .4 : .2,
+                filter: current===it.id ? 'invert(1)' : 'none',
+              }}/>
+              <Icon name={it.icon} size={13}/>
+              {ll(it)}
+            </button>
+            {isOver && idx > drag.dragIdx && <div style={{position:'absolute',right:-2,top:0,bottom:0,width:2,background:'var(--accent)',borderRadius:1,zIndex:5}}/>}
+          </div>
+        );
+      })}
     </div>
   </div>
-);
-
-const RoleSwitcher = ({ role, onRole, compact }) => {
-  const roles = ['admin','instructor','student'];
-  return (
-    <div style={{
-      display:'flex',padding:3,
-      background:'var(--surface-muted)',
-      border:'1px solid var(--border)',
-      borderRadius:999,
-      ...(compact ? {width:'100%'} : {}),
-    }}>
-      {roles.map(r => (
-        <button key={r} onClick={() => onRole(r)} style={{
-          flex: compact ? 1 : 'unset',
-          padding: compact ? '5px 6px' : '5px 12px',
-          border:'none',
-          background: role===r ? 'var(--surface)' : 'transparent',
-          color: role===r ? 'var(--ink)' : 'var(--ink-3)',
-          borderRadius:999, cursor:'default',
-          fontSize: compact ? 10.5 : 11,
-          fontWeight: role===r ? 600 : 500,
-          boxShadow: role===r ? '0 1px 2px rgba(0,0,0,.06)' : 'none',
-          textTransform:'capitalize',
-        }}>{r}</button>
-      ))}
-    </div>
   );
 };
 
-const TopActions = ({ role, onRole, hideRole }) => (
-  <div style={{display:'flex',alignItems:'center',gap:10}}>
-    <div style={{
-      display:'flex',alignItems:'center',gap:8,
-      padding:'6px 12px',
-      background:'var(--surface)', border:'1px solid var(--border)',
-      borderRadius:8, width:260,
-      color:'var(--ink-3)',
-    }}>
-      <Icon name="search" size={14}/>
-      <span style={{fontSize:12}}>ស្វែងរក · search students, lessons…</span>
-      <span style={{
-        marginLeft:'auto',fontSize:10,
-        fontFamily:'JetBrains Mono, monospace',
-        background:'var(--surface-muted)',
-        padding:'1px 5px',borderRadius:3,
-      }}>⌘K</span>
-    </div>
-    <Btn kind="ghost" size="sm" icon={<Icon name="bell" size={14}/>}>
-      <span style={{
-        background:'var(--accent)',color:'#fff',
-        fontSize:10,fontWeight:600,
-        padding:'1px 6px',borderRadius:999,
-      }}>3</span>
-    </Btn>
-    {!hideRole && <RoleSwitcher role={role} onRole={onRole}/>}
-  </div>
-);
-
-Object.assign(window, { NAV_ITEMS, ROLE_LABELS, Sidebar, Topbar, TabsBar, RoleSwitcher, TopActions });
+Object.assign(window, { NAV_ITEMS, ROLE_LABELS, Sidebar, Topbar, TabsBar, UserPill, DarkToggleBtn });

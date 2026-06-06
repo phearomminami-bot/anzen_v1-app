@@ -1,5 +1,14 @@
 // screens-fleet.jsx — Vehicle management (fully functional, no fake data)
 
+const shiftDay = (dateStr, delta) => {
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + delta);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
 if (!window.__vehicleData)       window.__vehicleData       = [];
 if (!window.__serviceLog)        window.__serviceLog        = [];
 if (!window.__incidentData)      window.__incidentData      = [];
@@ -61,6 +70,7 @@ const FleetScreenV2 = () => {
   const [selectedId, setSelectedId] = React.useState(null);
   const [editing,    setEditing]    = React.useState(false);
   const [addSvc,     setAddSvc]     = React.useState(false);
+  const [viewDate,   setViewDate]   = React.useState(todayStr());
 
   const vehicles   = VEHICLES;
   const serviceLog = window.__serviceLog;
@@ -265,8 +275,25 @@ const FleetScreenV2 = () => {
                     </>
                   )}
                 </div>
+                {/* Date picker for inspection view */}
+                <div style={{padding:'8px 14px', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', gap:6}}>
+                  <span style={{fontSize:12, color:'var(--ink-3)', fontFamily:'var(--font-km)', marginRight:2}}>
+                    {tr('ពិនិត្យថ្ងៃ','Inspection date')}
+                  </span>
+                  <button onClick={()=>setViewDate(shiftDay(viewDate,-1))} title={tr('ថ្ងៃមុន','Previous day')} style={{border:'1px solid var(--border)',borderRadius:6,background:'var(--surface)',cursor:'pointer',width:26,height:28,display:'flex',alignItems:'center',justifyContent:'center',color:'var(--ink-2)',fontSize:14,lineHeight:1,flexShrink:0}}>‹</button>
+                  <input type="date" value={viewDate} onChange={e=>setViewDate(e.target.value)}
+                    style={{border:'1px solid var(--border)',borderRadius:6,padding:'4px 8px',
+                    fontSize:12,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',cursor:'pointer'}}/>
+                  <button onClick={()=>setViewDate(shiftDay(viewDate,1))} title={tr('ថ្ងៃបន្ទាប់','Next day')} style={{border:'1px solid var(--border)',borderRadius:6,background:'var(--surface)',cursor:'pointer',width:26,height:28,display:'flex',alignItems:'center',justifyContent:'center',color:'var(--ink-2)',fontSize:14,lineHeight:1,flexShrink:0}}>›</button>
+                  {viewDate !== todayStr() && (
+                    <button onClick={()=>setViewDate(todayStr())} style={{
+                      fontSize:11,padding:'3px 8px',border:'1px solid var(--accent)',borderRadius:6,
+                      background:'var(--accent-soft)',color:'var(--accent)',cursor:'pointer',fontFamily:'inherit',fontWeight:600,
+                    }}>{tr('ថ្ងៃនេះ','Today')}</button>
+                  )}
+                </div>
                 {view === 'cards'
-                  ? <FvCards vehicles={filtered} onSelect={setSelectedId} selectedId={selectedId} onStatusChange={cycleStatus} onSaveDates={saveDates} onParkingChange={cycleParking}/>
+                  ? <FvCards vehicles={filtered} onSelect={setSelectedId} selectedId={selectedId} onStatusChange={cycleStatus} onSaveDates={saveDates} onParkingChange={cycleParking} viewDate={viewDate}/>
                   : <FvTable vehicles={filtered} onSelect={setSelectedId} selectedId={selectedId}/>
                 }
               </div>
@@ -379,7 +406,7 @@ const FUEL_STEPS = [
 const fuelColor = (pct) =>
   pct <= 20 ? 'var(--danger)' : pct <= 40 ? 'var(--warn)' : pct <= 65 ? '#C5A200' : 'var(--good)';
 
-const FuelGauge = ({ level, onChange }) => {
+const FuelGauge = ({ level, onChange, readOnly }) => {
   const c = fuelColor(level);
   return (
     <div style={{display:'flex',alignItems:'center',gap:10,flex:1}}>
@@ -391,11 +418,11 @@ const FuelGauge = ({ level, onChange }) => {
       </div>
       <div style={{display:'flex',gap:3,flexShrink:0}}>
         {FUEL_STEPS.map(s=>(
-          <button key={s.v} onClick={()=>onChange(s.v)} style={{
+          <button key={s.v} onClick={readOnly ? undefined : ()=>onChange(s.v)} disabled={readOnly} style={{
             padding:'3px 7px',borderRadius:5,border:`1.5px solid ${level===s.v?s.color:'var(--border)'}`,
             background:level===s.v?s.color:'var(--surface)',color:level===s.v?'#fff':'var(--ink-3)',
-            fontSize:11,fontWeight:700,cursor:'pointer',fontFamily:'"JetBrains Mono",monospace',
-            transition:'all .12s',lineHeight:1,
+            fontSize:11,fontWeight:700,cursor:readOnly?'default':'pointer',fontFamily:'"JetBrains Mono",monospace',
+            transition:'all .12s',lineHeight:1,opacity:readOnly?.7:1,
           }}>{s.label}</button>
         ))}
       </div>
@@ -424,7 +451,8 @@ const EXPENSE_TYPES = [
 ];
 
 const VehicleInspectionModal = ({ vehicle, onClose, tr }) => {
-  const { toast } = useAppActions();
+  const { toast, role } = useAppActions();
+  const bp = useBreakpoint();
   const [date,        setDate]        = React.useState(todayStr());
   const [inspector,   setInspector]   = React.useState(LOGIN_USERS?.admin?.km || LOGIN_USERS?.admin?.en || '');
   const [items,       setItems]       = React.useState(() => initInspItems());
@@ -439,6 +467,7 @@ const VehicleInspectionModal = ({ vehicle, onClose, tr }) => {
   const [showInsp,    setShowInsp]    = React.useState(true);
   const [showExp,     setShowExp]     = React.useState(false);
   const photoRef = React.useRef();
+  const readOnly = role === 'instructor' && date < todayStr();
 
   // Load existing record for this vehicle+date
   React.useEffect(() => {
@@ -496,8 +525,12 @@ const VehicleInspectionModal = ({ vehicle, onClose, tr }) => {
     // Sync expenses to __expenseLog (remove old, add new)
     if (!window.__expenseLog) window.__expenseLog = [];
     const inspKey = `insp_${vehicle.id}_${date}`;
-    window.__expenseLog = window.__expenseLog.filter(e => e.inspKey !== inspKey);
     const validExp = expenses.filter(e => parseFloat(e.amount) > 0);
+    // Only clear old log entries if user has edited expenses (has rows, even with 0 amount)
+    // If expenses is completely empty (never opened), keep existing log entries intact
+    if (expenses.length > 0) {
+      window.__expenseLog = window.__expenseLog.filter(e => e.inspKey !== inspKey);
+    }
     if (validExp.length > 0) {
       const nums = window.__expenseLog.map(e => parseInt((e.id||'').replace(/\D/g,''))).filter(n=>!isNaN(n)&&n>0);
       let nextNum = (nums.length > 0 ? Math.max(...nums) : 0) + 1;
@@ -518,6 +551,7 @@ const VehicleInspectionModal = ({ vehicle, onClose, tr }) => {
     }
 
     if (window.saveAllData) window.saveAllData();
+    if (window.__notifyVehiclesChanged) window.__notifyVehiclesChanged();
     toast(tr('បានរក្សាទុកកំណត់ត្រាពិនិត្យ ✓','Inspection saved ✓'), 'good');
     onClose();
   };
@@ -576,38 +610,41 @@ const VehicleInspectionModal = ({ vehicle, onClose, tr }) => {
     const dispEn = name.en || it.en;
     const dispKm = name.km || it.km.split(' · ')[0];
     const isEditing = editingId === it.id;
+    const btnW = bp.mobile ? 40 : 34;
+    const btnH = bp.mobile ? 32 : 27;
     return (
-      <div key={it.id} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',borderRadius:7,background:INSP_VALS[cur].bg,transition:'background .15s'}}>
+      <div key={it.id} style={{display:'flex',alignItems:'center',gap:8,padding:bp.mobile?'8px 8px':'6px 8px',borderRadius:7,background:INSP_VALS[cur].bg,transition:'background .15s'}}>
         <div style={{flex:1,minWidth:0}}>
           {isEditing ? (
-            <div style={{display:'flex',gap:6,flexWrap:'wrap'}}
+            <div style={{display:'flex',flexDirection:'column',gap:5}}
               onBlur={(e)=>{ if(!e.currentTarget.contains(e.relatedTarget)) commitRename(it.id); }}>
               <input autoFocus value={editVal.en} onChange={e=>setEditVal(p=>({...p,en:e.target.value}))}
-                onKeyDown={e=>{ if(e.key==='Enter') commitRename(it.id); if(e.key==='Escape') setEditingId(null); }}
-                placeholder="English" style={{flex:1,minWidth:100,border:'1px solid var(--accent)',borderRadius:5,padding:'3px 7px',fontSize:12,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)'}}/>
+                onKeyDown={e=>{ if(e.key==='Escape') setEditingId(null); }}
+                placeholder="English" style={{border:'1px solid var(--accent)',borderRadius:5,padding:'4px 7px',fontSize:12,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)'}}/>
               <input value={editVal.km} onChange={e=>setEditVal(p=>({...p,km:e.target.value}))}
                 onKeyDown={e=>{ if(e.key==='Enter') commitRename(it.id); if(e.key==='Escape') setEditingId(null); }}
-                placeholder="ខ្មែរ" style={{flex:1,minWidth:80,border:'1px solid var(--accent)',borderRadius:5,padding:'3px 7px',fontSize:12,fontFamily:'var(--font-km)',background:'var(--surface)',color:'var(--ink)'}}/>
+                onBlur={()=>commitRename(it.id)}
+                placeholder="ខ្មែរ" style={{border:'1px solid var(--accent)',borderRadius:5,padding:'4px 7px',fontSize:12,fontFamily:'var(--font-km)',background:'var(--surface)',color:'var(--ink)'}}/>
             </div>
           ) : (
-            <div style={{display:'flex',alignItems:'center',gap:6,cursor:'text'}} onClick={()=>startRename(it)}>
-              <span style={{fontSize:13,color:'var(--ink)',fontWeight:500}}>{dispEn}</span>
-              <span style={{fontSize:11,color:'var(--ink-3)',fontFamily:'var(--font-km)'}}>{dispKm}</span>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2" strokeLinecap="round" style={{opacity:.4,flexShrink:0}}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <div style={{display:'flex',flexDirection:bp.mobile?'column':'row',alignItems:'flex-start',gap:bp.mobile?1:6,cursor:readOnly?'default':'text'}} onClick={readOnly?undefined:()=>startRename(it)}>
+              <span style={{fontSize:13,color:'var(--ink)',fontWeight:500,lineHeight:1.3}}>{dispEn}</span>
+              <span style={{fontSize:11,color:'var(--ink-3)',fontFamily:'var(--font-km)',lineHeight:1.3}}>{dispKm}</span>
+              {!readOnly && !bp.mobile && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2" strokeLinecap="round" style={{opacity:.4,flexShrink:0,marginTop:2}}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>}
             </div>
           )}
         </div>
-        <div style={{display:'flex',gap:3,flexShrink:0}}>
+        <div style={{display:'flex',gap:4,flexShrink:0}}>
           {Object.entries(INSP_VALS).map(([k,v]) => (
-            <button key={k} onClick={()=>setItem(it.id, k)} style={{
-              width:34,height:27,borderRadius:6,border:`1.5px solid ${cur===k?v.color:'var(--border)'}`,
+            <button key={k} onClick={readOnly?undefined:()=>setItem(it.id, k)} disabled={readOnly} style={{
+              width:btnW,height:btnH,borderRadius:6,border:`1.5px solid ${cur===k?v.color:'var(--border)'}`,
               background:cur===k?v.color:'var(--surface)',color:cur===k?'#fff':'var(--ink-3)',
-              fontFamily:'"JetBrains Mono",monospace',fontWeight:700,fontSize:14,
-              cursor:'pointer',transition:'all .12s',lineHeight:1,
+              fontFamily:'"JetBrains Mono",monospace',fontWeight:700,fontSize:bp.mobile?16:14,
+              cursor:readOnly?'default':'pointer',transition:'all .12s',lineHeight:1,
             }}>{v.label}</button>
           ))}
         </div>
-        {isCustom && (
+        {isCustom && !readOnly && (
           <button onClick={()=>removeCustomItem(secId, it.id)} style={{border:'none',background:'transparent',cursor:'pointer',color:'var(--danger)',opacity:.5,padding:'2px',display:'flex',alignItems:'center',flexShrink:0}}
             title="Remove"
             onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='.5'}>
@@ -623,40 +660,77 @@ const VehicleInspectionModal = ({ vehicle, onClose, tr }) => {
       <div onClick={e=>e.stopPropagation()} style={{width:'100%',maxWidth:700,margin:'0 16px 40px',background:'var(--surface)',borderRadius:16,border:'1px solid var(--border)',boxShadow:'0 32px 80px rgba(0,0,0,.25)',overflow:'hidden'}}>
 
         {/* Header */}
-        <div style={{padding:'16px 20px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:14}}>
-          {/* Clickable photo */}
-          <div onClick={()=>photoRef.current?.click()} style={{width:56,height:40,borderRadius:8,overflow:'hidden',flexShrink:0,cursor:'pointer',position:'relative',border:'2px solid var(--border)'}}>
-            <Photo tag={vPhoto} w={56} h={40} r={0}/>
-            <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,.4)',display:'flex',alignItems:'center',justifyContent:'center',opacity:0,transition:'opacity .15s'}}
-              onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='0'}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <input ref={photoRef} type="file" accept="image/*" style={{display:'none'}} onChange={handlePhotoFile} disabled={readOnly}/>
+        {bp.mobile ? (
+          /* Mobile: title centered top, photo + info row below */
+          <div style={{padding:'12px 14px',borderBottom:'1px solid var(--border)',position:'relative'}}>
+            <button onClick={onClose} style={{position:'absolute',top:10,right:10,border:'none',background:'transparent',cursor:'pointer',padding:4,color:'var(--ink-3)',display:'flex',alignItems:'center'}}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+            <div style={{textAlign:'center',fontSize:13,fontWeight:600,color:'var(--ink)',fontFamily:'var(--font-km)',marginBottom:10,paddingRight:24}}>
+              {tr('ពិនិត្យយានយន្តប្រចាំថ្ងៃ','Daily Vehicle Inspection')}
+            </div>
+            <div style={{display:'flex',alignItems:'center',gap:10}}>
+              <div onClick={readOnly ? undefined : ()=>photoRef.current?.click()} style={{width:52,height:38,borderRadius:7,overflow:'hidden',flexShrink:0,cursor:readOnly?'default':'pointer',position:'relative',border:'2px solid var(--border)'}}>
+                <Photo tag={vPhoto} w={52} h={38} r={0}/>
+                {!readOnly && (
+                  <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,.4)',display:'flex',alignItems:'center',justifyContent:'center',opacity:0,transition:'opacity .15s'}}
+                    onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='0'}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                  </div>
+                )}
+              </div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:14,fontWeight:700,color:'var(--ink)'}}>{vehicle.make}</div>
+                <div style={{display:'flex',alignItems:'center',gap:8,marginTop:2}}>
+                  <span style={{fontSize:11,fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.06em',color:'var(--ink-2)'}}>{vehicle.plate}</span>
+                  <span style={{fontSize:20,color:osC.color,fontFamily:'"JetBrains Mono",monospace',fontWeight:700,lineHeight:1}}>{osC.label}</span>
+                </div>
+              </div>
             </div>
           </div>
-          <input ref={photoRef} type="file" accept="image/*" style={{display:'none'}} onChange={handlePhotoFile}/>
-          <div style={{flex:1,minWidth:0}}>
-            <div style={{fontSize:15,fontWeight:700}}>{vehicle.make} · {vehicle.plate}</div>
-            <div style={{fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.04em'}}>
-              {tr('ទម្រង់ពិនិត្យប្រចាំថ្ងៃ · 日常点検表','Daily Vehicle Inspection')}
+        ) : (
+          /* Desktop: horizontal layout */
+          <div style={{padding:'16px 20px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:14}}>
+            <div onClick={readOnly ? undefined : ()=>photoRef.current?.click()} style={{width:56,height:40,borderRadius:8,overflow:'hidden',flexShrink:0,cursor:readOnly?'default':'pointer',position:'relative',border:'2px solid var(--border)'}}>
+              <Photo tag={vPhoto} w={56} h={40} r={0}/>
+              {!readOnly && (
+                <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,.4)',display:'flex',alignItems:'center',justifyContent:'center',opacity:0,transition:'opacity .15s'}}
+                  onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='0'}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                </div>
+              )}
             </div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:15,fontWeight:700}}>{vehicle.make}</div>
+              <div style={{fontSize:11,color:'var(--ink-2)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.06em',marginTop:1}}>{vehicle.plate}</div>
+              <div style={{fontSize:10,color:'var(--ink-3)',fontFamily:'var(--font-km)',marginTop:2}}>
+                {tr('ពិនិត្យយានយន្តប្រចាំថ្ងៃ','Daily Vehicle Inspection')}
+              </div>
+            </div>
+            <div style={{padding:'5px 12px',borderRadius:8,background:osC.bg,color:osC.color,fontWeight:700,fontSize:18,fontFamily:'"JetBrains Mono",monospace',flexShrink:0}}>
+              {osC.label} <span style={{fontSize:11,fontWeight:600}}>{osC.en}</span>
+            </div>
+            <button onClick={onClose} style={{border:'none',background:'transparent',cursor:'pointer',padding:4,color:'var(--ink-3)',flexShrink:0,display:'flex',alignItems:'center'}}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
           </div>
-          <div style={{padding:'5px 12px',borderRadius:8,background:osC.bg,color:osC.color,fontWeight:700,fontSize:18,fontFamily:'"JetBrains Mono",monospace',flexShrink:0}}>
-            {osC.label} <span style={{fontSize:11,fontWeight:600}}>{osC.en}</span>
-          </div>
-          <button onClick={onClose} style={{border:'none',background:'transparent',cursor:'pointer',padding:4,color:'var(--ink-3)',flexShrink:0,display:'flex',alignItems:'center'}}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
-        </div>
+        )}
 
         {/* Meta row */}
         <div style={{padding:'12px 20px',borderBottom:'1px solid var(--border)',display:'flex',gap:12,flexWrap:'wrap',alignItems:'center'}}>
-          <div style={{display:'flex',alignItems:'center',gap:8,minWidth:170}}>
+          <div style={{display:'flex',alignItems:'center',gap:6,minWidth:170}}>
             <span style={{fontSize:11,color:'var(--ink-3)',whiteSpace:'nowrap'}}>{tr('ថ្ងៃ','Date')}:</span>
+            <button onClick={()=>setDate(shiftDay(date,-1))} title={tr('ថ្ងៃមុន','Previous day')} style={{border:'1px solid var(--border)',borderRadius:6,background:'var(--surface)',cursor:'pointer',width:26,height:28,display:'flex',alignItems:'center',justifyContent:'center',color:'var(--ink-2)',fontSize:14,lineHeight:1,flexShrink:0}}>‹</button>
             <input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{border:'1px solid var(--border)',borderRadius:6,padding:'5px 8px',fontSize:13,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',flex:1}}/>
+            <button onClick={()=>setDate(shiftDay(date,1))} title={tr('ថ្ងៃបន្ទាប់','Next day')} style={{border:'1px solid var(--border)',borderRadius:6,background:'var(--surface)',cursor:'pointer',width:26,height:28,display:'flex',alignItems:'center',justifyContent:'center',color:'var(--ink-2)',fontSize:14,lineHeight:1,flexShrink:0}}>›</button>
           </div>
-          <div style={{display:'flex',alignItems:'center',gap:8,flex:1,minWidth:180}}>
-            <span style={{fontSize:11,color:'var(--ink-3)',whiteSpace:'nowrap'}}>{tr('ពិនិត្យដោយ','By')}:</span>
-            <input value={inspector} onChange={e=>setInspector(e.target.value)} placeholder="Name" style={{border:'1px solid var(--border)',borderRadius:6,padding:'5px 8px',fontSize:13,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',flex:1}}/>
-          </div>
+          {!bp.mobile && (
+            <div style={{display:'flex',alignItems:'center',gap:8,flex:1,minWidth:180}}>
+              <span style={{fontSize:11,color:'var(--ink-3)',whiteSpace:'nowrap'}}>{tr('ពិនិត្យដោយ','By')}:</span>
+              <input value={inspector} onChange={readOnly?undefined:e=>setInspector(e.target.value)} readOnly={readOnly} placeholder="Name" style={{border:'1px solid var(--border)',borderRadius:6,padding:'5px 8px',fontSize:13,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',flex:1,opacity:readOnly?.7:1}}/>
+            </div>
+          )}
         </div>
 
         {/* Fuel level row */}
@@ -664,7 +738,7 @@ const VehicleInspectionModal = ({ vehicle, onClose, tr }) => {
           <span style={{fontSize:11,fontWeight:600,color:'var(--ink-3)',whiteSpace:'nowrap',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.04em'}}>
             ⛽ {tr('កំរិតសាំ','FUEL')}
           </span>
-          <FuelGauge level={fuelLevel} onChange={setFuelLevel}/>
+          <FuelGauge level={fuelLevel} onChange={setFuelLevel} readOnly={readOnly}/>
         </div>
 
         {/* Scrollable body */}
@@ -692,7 +766,7 @@ const VehicleInspectionModal = ({ vehicle, onClose, tr }) => {
                 {(customItems[sec.id]||[]).map(it => renderItem(it, sec.id, true))}
               </div>
               {/* Add item button */}
-              <button onClick={()=>addCustomItem(sec.id)} style={{
+              {!readOnly && <button onClick={()=>addCustomItem(sec.id)} style={{
                 marginTop:6,width:'100%',padding:'5px 0',border:'1px dashed var(--border)',borderRadius:7,
                 background:'transparent',color:'var(--ink-3)',cursor:'pointer',fontSize:12,fontFamily:'inherit',
                 display:'flex',alignItems:'center',justifyContent:'center',gap:5,transition:'all .12s',
@@ -702,7 +776,7 @@ const VehicleInspectionModal = ({ vehicle, onClose, tr }) => {
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 {tr('បន្ថែមការពិនិត្យ','Add item')}
-              </button>
+              </button>}
             </div>
           ))}
           </div>
@@ -721,8 +795,8 @@ const VehicleInspectionModal = ({ vehicle, onClose, tr }) => {
 
           {showExp && (
           <div style={{padding:'12px 20px 14px',display:'flex',flexDirection:'column',gap:8}}>
-            {/* Quick-add chips */}
-            <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
+            {/* Quick-add chips — hidden for read-only */}
+            {!readOnly && <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
               {EXPENSE_TYPES.map(t=>(
                 <button key={t.id} onClick={()=>addExpense(t.id)} style={{
                   padding:'4px 10px',borderRadius:20,border:'1px solid var(--border)',
@@ -737,7 +811,7 @@ const VehicleInspectionModal = ({ vehicle, onClose, tr }) => {
                   <span style={{fontFamily:'var(--font-km)'}}>{t.km}</span>
                 </button>
               ))}
-            </div>
+            </div>}
 
             {/* Expense rows */}
             {expenses.length > 0 ? (
@@ -751,21 +825,23 @@ const VehicleInspectionModal = ({ vehicle, onClose, tr }) => {
                       <input
                         type="number" min="0" step="0.01"
                         value={e.amount}
-                        onChange={ev=>updExp(e.id,'amount',ev.target.value)}
+                        onChange={readOnly?undefined:ev=>updExp(e.id,'amount',ev.target.value)}
+                        readOnly={readOnly}
                         placeholder="0.00"
                         style={{border:'none',outline:'none',background:'transparent',width:64,fontSize:13,fontFamily:'"JetBrains Mono",monospace',fontWeight:600,color:'var(--ink)'}}
                       />
                     </div>
                     <input
                       value={e.note}
-                      onChange={ev=>updExp(e.id,'note',ev.target.value)}
+                      onChange={readOnly?undefined:ev=>updExp(e.id,'note',ev.target.value)}
+                      readOnly={readOnly}
                       placeholder={tr('កំណត់សម្គាល់…','Note…')}
                       style={{flex:1,border:'1px solid var(--border)',borderRadius:6,padding:'4px 8px',fontSize:12,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',minWidth:0}}
                     />
-                    <button onClick={()=>delExp(e.id)} style={{border:'none',background:'transparent',cursor:'pointer',color:'var(--danger)',opacity:.5,padding:2,display:'flex',alignItems:'center',flexShrink:0}}
+                    {!readOnly && <button onClick={()=>delExp(e.id)} style={{border:'none',background:'transparent',cursor:'pointer',color:'var(--danger)',opacity:.5,padding:2,display:'flex',alignItems:'center',flexShrink:0}}
                       onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='.5'}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
-                    </button>
+                    </button>}
                   </div>
                 ))}
                 {expTotal > 0 && (
@@ -788,20 +864,27 @@ const VehicleInspectionModal = ({ vehicle, onClose, tr }) => {
             <div style={{fontSize:10,fontWeight:700,letterSpacing:'.08em',color:'var(--ink-3)',textTransform:'uppercase',fontFamily:'"JetBrains Mono",monospace',marginBottom:6}}>
               {tr('កំណត់សម្គាល់','Notes / Remarks')}
             </div>
-            <textarea value={notes} onChange={e=>setNotes(e.target.value)} rows={3}
+            <textarea value={notes} onChange={readOnly?undefined:e=>setNotes(e.target.value)} readOnly={readOnly} rows={3}
               placeholder={tr('ការខូចខាត ឬ ចំណាំផ្សេងៗ…','Damage, observations, or other notes…')}
-              style={{width:'100%',padding:'8px 10px',border:'1px solid var(--border)',borderRadius:8,fontSize:13,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',resize:'vertical',boxSizing:'border-box'}}/>
+              style={{width:'100%',padding:'8px 10px',border:'1px solid var(--border)',borderRadius:8,fontSize:13,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',resize:readOnly?'none':'vertical',boxSizing:'border-box',opacity:readOnly?.8:1}}/>
           </div>
         </div>
 
         {/* Footer */}
         <div style={{padding:'12px 20px',borderTop:'1px solid var(--border)',display:'flex',gap:10,justifyContent:'flex-end',background:'var(--surface-muted)'}}>
           <button onClick={onClose} style={{padding:'8px 18px',borderRadius:8,border:'1px solid var(--border)',background:'var(--surface)',cursor:'pointer',fontSize:13,fontFamily:'inherit',color:'var(--ink-2)'}}>
-            {tr('បោះបង់','Cancel')}
+            {tr('បិទ','Close')}
           </button>
-          <button onClick={handleSave} style={{padding:'8px 20px',borderRadius:8,border:'none',background:'var(--accent)',color:'#fff',cursor:'pointer',fontSize:13,fontFamily:'inherit',fontWeight:600}}>
-            {tr('រក្សាទុក ✓','Save inspection ✓')}
-          </button>
+          {readOnly ? (
+            <button onClick={()=>generateInspectionPDF([vehicle], date, vehicle.id)} style={{padding:'8px 20px',borderRadius:8,border:'none',background:'var(--ink-2)',color:'#fff',cursor:'pointer',fontSize:13,fontFamily:'inherit',fontWeight:600,display:'flex',alignItems:'center',gap:6}}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              {tr('ទាញយក PDF','Download PDF')}
+            </button>
+          ) : (
+            <button onClick={handleSave} style={{padding:'8px 20px',borderRadius:8,border:'none',background:'var(--accent)',color:'#fff',cursor:'pointer',fontSize:13,fontFamily:'inherit',fontWeight:600}}>
+              {tr('រក្សាទុក ✓','Save inspection ✓')}
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -959,7 +1042,7 @@ const FvInspectionLog = ({ vehicles, tr }) => {
   const [inspOpen, setInspOpen] = React.useState(null);
   const [, forceUp] = React.useReducer(x=>x+1,0);
 
-  const shiftDay = (dateStr, delta) => {
+  const shiftDayLocal = (dateStr, delta) => {
     const d = new Date(dateStr + 'T00:00:00');
     d.setDate(d.getDate() + delta);
     return localDateStr ? localDateStr(d) : d.toISOString().slice(0,10);
@@ -991,9 +1074,9 @@ const FvInspectionLog = ({ vehicles, tr }) => {
       <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
         <div style={{display:'flex',alignItems:'center',gap:6}}>
           <span style={{fontSize:12,color:'var(--ink-3)'}}>{tr('ថ្ងៃ','Date')}:</span>
-          <button onClick={()=>setSelDate(shiftDay(selDate,-1))} title={tr('ថ្ងៃមុន','Previous day')} style={{border:'1px solid var(--border)',borderRadius:6,background:'var(--surface)',cursor:'pointer',width:28,height:30,display:'flex',alignItems:'center',justifyContent:'center',color:'var(--ink-2)',fontSize:14,lineHeight:1}}>‹</button>
+          <button onClick={()=>setSelDate(shiftDayLocal(selDate,-1))} title={tr('ថ្ងៃមុន','Previous day')} style={{border:'1px solid var(--border)',borderRadius:6,background:'var(--surface)',cursor:'pointer',width:28,height:30,display:'flex',alignItems:'center',justifyContent:'center',color:'var(--ink-2)',fontSize:14,lineHeight:1}}>‹</button>
           <input type="date" value={selDate} onChange={e=>setSelDate(e.target.value)} style={{border:'1px solid var(--border)',borderRadius:6,padding:'5px 10px',fontSize:13,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)'}}/>
-          <button onClick={()=>setSelDate(shiftDay(selDate,1))} title={tr('ថ្ងៃបន្ទាប់','Next day')} style={{border:'1px solid var(--border)',borderRadius:6,background:'var(--surface)',cursor:'pointer',width:28,height:30,display:'flex',alignItems:'center',justifyContent:'center',color:'var(--ink-2)',fontSize:14,lineHeight:1}}>›</button>
+          <button onClick={()=>setSelDate(shiftDayLocal(selDate,1))} title={tr('ថ្ងៃបន្ទាប់','Next day')} style={{border:'1px solid var(--border)',borderRadius:6,background:'var(--surface)',cursor:'pointer',width:28,height:30,display:'flex',alignItems:'center',justifyContent:'center',color:'var(--ink-2)',fontSize:14,lineHeight:1}}>›</button>
           {selDate !== todayStr() && (
             <button onClick={()=>setSelDate(todayStr())} style={{border:'1px solid var(--accent)',borderRadius:6,background:'var(--accent-soft)',cursor:'pointer',padding:'5px 10px',fontSize:11,fontWeight:600,color:'var(--accent)',fontFamily:'inherit'}}>{tr('ថ្ងៃនេះ','Today')}</button>
           )}
@@ -1147,7 +1230,7 @@ const plateBg = (trans) => {
   return { bg:'rgba(0,0,0,.72)', color:'#FFFFFF' };
 };
 
-const FvCard = ({ v, onSelect, selectedId, onStatusChange, onSaveDates, onParkingChange }) => {
+const FvCard = ({ v, onSelect, selectedId, onStatusChange, onSaveDates, onParkingChange, viewDate }) => {
   const { tr } = useAppActions();
   const bp = useBreakpoint();
   const [editDates, setEditDates] = React.useState(false);
@@ -1181,14 +1264,15 @@ const FvCard = ({ v, onSelect, selectedId, onStatusChange, onSaveDates, onParkin
   // Latest inspection for fuel + today's status
   const allInsp = (window.__vehicleInspections||[]).filter(r=>r.vehicleId===v.id).sort((a,b)=>b.date.localeCompare(a.date));
   const latestInsp = allInsp[0] || null;
-  const todayRec = allInsp.find(r=>r.date===todayStr()) || null;
+  const selDate = viewDate || todayStr();
+  const todayRec = allInsp.find(r=>r.date===selDate) || null;
   const todayC = todayRec ? INSP_VALS[todayRec.overallStatus] : null;
   const fuel = latestInsp?.fuelLevel ?? null;
 
   // Sections with data for mobile: hide empty ones
   const hasServiceInfo = !bp.mobile || (v.service && v.service > 0) || (v.inst && v.inst !== '—');
   const hasDocs = !bp.mobile || !!(v.reg_exp || v.road_tax || v.ins_exp || v.oil_exp);
-  const photoH = bp.mobile ? 80 : 110;
+  const photoH = bp.mobile ? 100 : 110;
   const cardPad = bp.mobile ? 10 : 12;
 
   return (
@@ -1366,14 +1450,18 @@ const FvCard = ({ v, onSelect, selectedId, onStatusChange, onSaveDates, onParkin
   );
 };
 
-const FvCards = ({ vehicles, onSelect, selectedId, onStatusChange, onSaveDates, onParkingChange }) => (
-  <div style={{padding:14,display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:12}}>
-    {vehicles.map(v => (
-      <FvCard key={v.id} v={v} onSelect={onSelect} selectedId={selectedId}
-        onStatusChange={onStatusChange} onSaveDates={onSaveDates} onParkingChange={onParkingChange}/>
-    ))}
-  </div>
-);
+const FvCards = ({ vehicles, onSelect, selectedId, onStatusChange, onSaveDates, onParkingChange, viewDate }) => {
+  const bp = useBreakpoint();
+  return (
+    <div style={{padding:bp.mobile?10:14,display:'grid',gridTemplateColumns:bp.mobile?'repeat(auto-fill,minmax(160px,1fr))':'repeat(auto-fill,minmax(280px,1fr))',gap:bp.mobile?10:12}}>
+      {vehicles.map(v => (
+        <FvCard key={v.id} v={v} onSelect={onSelect} selectedId={selectedId}
+          onStatusChange={onStatusChange} onSaveDates={onSaveDates} onParkingChange={onParkingChange}
+          viewDate={viewDate}/>
+      ))}
+    </div>
+  );
+};
 
 // ── Table view ───────────────────────────────────────────────────────────────
 const FvTable = ({ vehicles, onSelect, selectedId }) => (
@@ -1434,12 +1522,94 @@ const FvTable = ({ vehicles, onSelect, selectedId }) => (
 // ── Detail row ────────────────────────────────────────────────────────────────
 const FvDetailRow = ({ v, onEdit, forceUpdate }) => {
   const { toast, tr } = useAppActions();
+  const uploadRef = React.useRef();
+  const [photoIdx, setPhotoIdx] = React.useState(0);
+  const [, rerender] = React.useReducer(x => x + 1, 0);
+
   if (!v) return null;
+
+  const getPhotos = () => {
+    if (v.photos && v.photos.length > 0) return v.photos;
+    return v.photo ? [v.photo] : [];
+  };
+  const photos = getPhotos();
+  const safeIdx = Math.min(photoIdx, Math.max(0, photos.length - 1));
+  const curPhoto = photos[safeIdx] || null;
+
+  const addPhoto = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target.result;
+      if (window.resizeImageFile) {
+        window.resizeImageFile(file, 1200, 900).then(url => commitPhoto(url));
+      } else {
+        commitPhoto(dataUrl);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+  const commitPhoto = (url) => {
+    const i = VEHICLES.findIndex(x => x.id === v.id);
+    if (i !== -1) {
+      const updated = [...getPhotos(), url];
+      VEHICLES[i].photos = updated;
+      VEHICLES[i].photo  = updated[0];
+      v.photos = updated; v.photo = updated[0];
+      if (window.saveAllData) window.saveAllData();
+    }
+    setPhotoIdx(getPhotos().length); // will point to new photo after state update
+    rerender();
+    forceUpdate();
+  };
+  const delPhoto = () => {
+    const i = VEHICLES.findIndex(x => x.id === v.id);
+    const updated = photos.filter((_, idx) => idx !== safeIdx);
+    if (i !== -1) {
+      VEHICLES[i].photos = updated;
+      VEHICLES[i].photo  = updated[0] || null;
+      v.photos = updated; v.photo = updated[0] || null;
+      if (window.saveAllData) window.saveAllData();
+    }
+    setPhotoIdx(Math.max(0, safeIdx - 1));
+    rerender(); forceUpdate();
+  };
+
   return (
     <Card pad={0}>
       {/* Header */}
       <div style={{padding:'14px 18px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
-        <Photo tag={v.photo} w={110} h={64} r={7}/>
+        {/* Photo gallery */}
+        <div style={{position:'relative',width:160,height:100,borderRadius:8,overflow:'hidden',flexShrink:0,background:'var(--surface-muted)',border:'1px solid var(--border)'}}>
+          <input ref={uploadRef} type="file" accept="image/*" style={{display:'none'}} onChange={addPhoto}/>
+          {curPhoto
+            ? <img src={curPhoto} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>
+            : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--ink-3)',fontSize:11}}>{tr('គ្មានរូប','No photo')}</div>
+          }
+          {/* Prev / Next */}
+          {safeIdx > 0 && (
+            <button onClick={()=>setPhotoIdx(safeIdx-1)} style={{position:'absolute',left:4,top:'50%',transform:'translateY(-50%)',width:22,height:22,borderRadius:'50%',border:'none',background:'rgba(0,0,0,.5)',color:'#fff',cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>‹</button>
+          )}
+          {safeIdx < photos.length - 1 && (
+            <button onClick={()=>setPhotoIdx(safeIdx+1)} style={{position:'absolute',right:4,top:'50%',transform:'translateY(-50%)',width:22,height:22,borderRadius:'50%',border:'none',background:'rgba(0,0,0,.5)',color:'#fff',cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>›</button>
+          )}
+          {/* Add button */}
+          <button onClick={()=>uploadRef.current?.click()} title={tr('បន្ថែមរូប','Add photo')} style={{position:'absolute',bottom:4,right:4,width:22,height:22,borderRadius:'50%',border:'none',background:'rgba(0,0,0,.55)',color:'#fff',cursor:'pointer',fontSize:15,display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>+</button>
+          {/* Delete button */}
+          {photos.length > 0 && (
+            <button onClick={delPhoto} title={tr('លុបរូបនេះ','Delete this photo')} style={{position:'absolute',bottom:4,left:4,width:22,height:22,borderRadius:'50%',border:'none',background:'rgba(160,0,0,.65)',color:'#fff',cursor:'pointer',fontSize:11,display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>✕</button>
+          )}
+          {/* Dot indicators */}
+          {photos.length > 1 && (
+            <div style={{position:'absolute',bottom:4,left:'50%',transform:'translateX(-50%)',display:'flex',gap:3}}>
+              {photos.map((_,i)=>(
+                <div key={i} onClick={()=>setPhotoIdx(i)} style={{width:5,height:5,borderRadius:'50%',background:i===safeIdx?'#fff':'rgba(255,255,255,.5)',cursor:'pointer'}}/>
+              ))}
+            </div>
+          )}
+        </div>
         <div style={{flex:1}}>
           <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
             <div style={{fontSize:20,fontWeight:600,fontFamily:'var(--font-display)',letterSpacing:'-.01em'}}>{v.make}</div>
@@ -2471,9 +2641,262 @@ const FvExpenses = ({ vehicles, expenseLog, forceUpdate }) => {
 
 const FleetScreen = FleetScreenV2;
 
+// ── Mobile vehicle detail — full screen with photo gallery ────────────────────
+const VehicleMobileDetail = ({ v, onClose, tr, onSaved, onStatusChange, onParkingChange }) => {
+  const [inspOpen, setInspOpen]   = React.useState(false);
+  const [photoIdx, setPhotoIdx]   = React.useState(0);
+  const [sliding, setSliding]     = React.useState(null);
+  const [editDocs, setEditDocs]   = React.useState(false);
+  const [regExp,  setRegExp]      = React.useState(v.reg_exp   || '');
+  const [roadTax, setRoadTax]     = React.useState(v.road_tax  || '');
+  const [oilExp,  setOilExp]      = React.useState(v.oil_exp   || '');
+  const [, forceUp] = React.useReducer(x=>x+1,0);
+  const uploadRef   = React.useRef(null);
+  const touchStartX = React.useRef(null);
+
+  if (!v) return null;
+
+  const saveDoc = (field, val) => {
+    const i = VEHICLES.findIndex(x => x.id === v.id);
+    if (i !== -1) VEHICLES[i][field] = val;
+    if (window.saveAllData) window.saveAllData();
+    forceUp();
+    if (onSaved) onSaved();
+  };
+
+  const getPhotos = () => {
+    if (v.photos && v.photos.length > 0) return v.photos;
+    return v.photo ? [v.photo] : [];
+  };
+  const photos   = getPhotos();
+  const safeIdx  = Math.min(photoIdx, Math.max(0, photos.length - 1));
+  const curPhoto = photos[safeIdx] || null;
+
+  const goTo = (idx) => {
+    if (idx < 0 || idx >= photos.length) return;
+    setSliding(idx > safeIdx ? 'left' : 'right');
+    setTimeout(() => { setPhotoIdx(idx); setSliding(null); }, 180);
+  };
+
+  const onTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
+  const onTouchEnd   = (e) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (dx < -50) goTo(safeIdx + 1);
+    else if (dx > 50) goTo(safeIdx - 1);
+  };
+
+  const handleAddPhoto = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    resizeImageFile(file, 1200, 800).then(dataUrl => {
+      const updated = [...getPhotos(), dataUrl];
+      v.photos = updated;
+      v.photo  = updated[0];
+      if (window.saveAllData) window.saveAllData();
+      setPhotoIdx(updated.length - 1);
+      forceUp();
+      if (onSaved) onSaved();
+    });
+  };
+
+  const handleDelPhoto = () => {
+    const updated = getPhotos().filter((_, i) => i !== safeIdx);
+    v.photos = updated;
+    v.photo  = updated[0] || null;
+    if (window.saveAllData) window.saveAllData();
+    setPhotoIdx(Math.max(0, safeIdx - 1));
+    forceUp();
+    if (onSaved) onSaved();
+  };
+
+  const allInsp    = (window.__vehicleInspections||[]).filter(r=>r.vehicleId===v.id).sort((a,b)=>b.date.localeCompare(a.date));
+  const latestInsp = allInsp[0] || null;
+  const todayRec   = allInsp.find(r=>r.date===todayStr()) || null;
+  const todayC     = todayRec ? INSP_VALS[todayRec.overallStatus] : null;
+  const fuel       = latestInsp?.fuelLevel ?? null;
+  const pc         = plateBg(v.trans);
+  const pk         = v.parking || 'school';
+  const pkCfg      = PARKING_CFG[pk] || PARKING_CFG.school;
+  const fuelLabel  = (p) => p===0?'E':p===25?'¼':p===50?'½':p===75?'¾':'F';
+  const galleryH   = Math.round(window.innerHeight * 0.42);
+
+  const dateInpStyle = {
+    flex:1,border:'1px solid var(--border)',borderRadius:7,
+    padding:'6px 8px',fontSize:13,fontFamily:'inherit',
+    background:'var(--bg)',color:'var(--ink)',minWidth:0,
+  };
+
+  return (
+    <>
+      {inspOpen && <VehicleInspectionModal vehicle={v} onClose={()=>{setInspOpen(false);forceUp();if(onSaved)onSaved();}} tr={tr}/>}
+      <input ref={uploadRef} type="file" accept="image/*" style={{display:'none'}} onChange={handleAddPhoto}/>
+
+      <div style={{position:'fixed',inset:0,zIndex:200,background:'var(--bg)',overflowY:'auto',display:'flex',flexDirection:'column'}}>
+
+        {/* ── Photo gallery ── */}
+        <div style={{position:'relative',flexShrink:0,height:galleryH,overflow:'hidden',background:'#000'}}
+          onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+          <div style={{
+            width:'100%',height:'100%',
+            transform: sliding==='left'?'translateX(-8%)':sliding==='right'?'translateX(8%)':'translateX(0)',
+            transition: sliding ? 'transform .18s ease' : 'none',
+          }}>
+            {curPhoto
+              ? <img src={curPhoto} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>
+              : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',color:'rgba(255,255,255,.3)',fontSize:48}}>🚗</div>
+            }
+          </div>
+          <div style={{position:'absolute',inset:0,background:'linear-gradient(to bottom, rgba(0,0,0,.35) 0%, transparent 40%, transparent 65%, rgba(0,0,0,.55) 100%)',pointerEvents:'none'}}/>
+
+          <button onClick={onClose} style={{position:'absolute',top:'env(safe-area-inset-top,12px)',left:14,width:36,height:36,borderRadius:'50%',border:'none',cursor:'pointer',background:'rgba(0,0,0,.5)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,lineHeight:1}}>‹</button>
+          <button onClick={()=>uploadRef.current?.click()} style={{position:'absolute',top:'env(safe-area-inset-top,12px)',right:14,width:36,height:36,borderRadius:'50%',border:'none',cursor:'pointer',background:'rgba(0,0,0,.5)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,lineHeight:1}}>+</button>
+          {photos.length > 1 && (
+            <button onClick={handleDelPhoto} style={{position:'absolute',top:'env(safe-area-inset-top,12px)',right:58,width:36,height:36,borderRadius:'50%',border:'none',cursor:'pointer',background:'rgba(180,0,0,.65)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,lineHeight:1}}>🗑</button>
+          )}
+          {safeIdx > 0 && (
+            <button onClick={()=>goTo(safeIdx-1)} style={{position:'absolute',left:8,top:'50%',transform:'translateY(-50%)',width:36,height:36,borderRadius:'50%',border:'none',cursor:'pointer',background:'rgba(0,0,0,.45)',color:'#fff',fontSize:20,display:'flex',alignItems:'center',justifyContent:'center'}}>‹</button>
+          )}
+          {safeIdx < photos.length - 1 && (
+            <button onClick={()=>goTo(safeIdx+1)} style={{position:'absolute',right:8,top:'50%',transform:'translateY(-50%)',width:36,height:36,borderRadius:'50%',border:'none',cursor:'pointer',background:'rgba(0,0,0,.45)',color:'#fff',fontSize:20,display:'flex',alignItems:'center',justifyContent:'center'}}>›</button>
+          )}
+          {photos.length > 1 && (
+            <div style={{position:'absolute',bottom:10,left:0,right:0,display:'flex',justifyContent:'center',gap:5}}>
+              {photos.map((_,i) => (
+                <div key={i} onClick={()=>goTo(i)} style={{width:i===safeIdx?18:6,height:6,borderRadius:3,background:i===safeIdx?'#fff':'rgba(255,255,255,.45)',transition:'width .2s',cursor:'pointer'}}/>
+              ))}
+            </div>
+          )}
+
+          {/* Status + plate + inspection overlays */}
+          <div style={{position:'absolute',bottom:photos.length>1?26:10,left:12,display:'flex',gap:6,flexWrap:'wrap',alignItems:'center'}}>
+            <button onClick={()=>{onStatusChange&&onStatusChange(v.id);forceUp();}} style={{
+              padding:'4px 10px',borderRadius:7,fontSize:12,fontWeight:600,border:'none',cursor:'pointer',
+              background: v.status==='Active'?'var(--good)':v.status==='Workshop'?'var(--danger)':v.status==='Service due'?'var(--warn)':'rgba(0,0,0,.55)',
+              color:'#fff',boxShadow:'0 1px 4px rgba(0,0,0,.3)',display:'flex',alignItems:'center',gap:4,
+            }}>{v.status} <svg width="7" height="5" viewBox="0 0 8 5" fill="currentColor" style={{opacity:.75}}><path d="M0 0h8L4 5z"/></svg></button>
+            <button onClick={()=>{onParkingChange&&onParkingChange(v.id);forceUp();}} style={{
+              padding:'4px 10px',borderRadius:7,fontSize:12,fontWeight:600,border:'none',cursor:'pointer',
+              background:pkCfg.bg,color:pkCfg.color,
+              boxShadow:'0 1px 4px rgba(0,0,0,.3)',display:'flex',alignItems:'center',gap:4,
+            }}>P · {pkCfg.label} <svg width="7" height="5" viewBox="0 0 8 5" fill="currentColor" style={{opacity:.75}}><path d="M0 0h8L4 5z"/></svg></button>
+            <div style={{padding:'4px 10px',borderRadius:7,background:pc.bg,color:pc.color,fontFamily:'"JetBrains Mono",monospace',fontSize:12,fontWeight:700,boxShadow:'0 1px 4px rgba(0,0,0,.3)'}}>{v.plate}</div>
+            {todayC && <div style={{padding:'3px 8px',borderRadius:7,fontSize:18,fontWeight:700,background:todayC.color,color:'#fff',fontFamily:'"JetBrains Mono",monospace',boxShadow:'0 1px 4px rgba(0,0,0,.3)',lineHeight:1}}>{todayC.label}</div>}
+          </div>
+        </div>
+
+        {/* ── Info section ── */}
+        <div style={{flex:1,padding:'16px 16px',display:'flex',flexDirection:'column',gap:14,paddingBottom:'calc(16px + env(safe-area-inset-bottom,0px))'}}>
+
+          {/* Make + sub */}
+          <div>
+            <div style={{fontSize:24,fontWeight:700,fontFamily:'var(--font-display)',letterSpacing:'-.01em',lineHeight:1.2}}>{v.make}</div>
+            <div style={{fontSize:12,color:'var(--ink-3)',marginTop:4}}>
+              {[v.year,v.cls,v.trans==='AT'?'Automatic':v.trans==='MT'?'Manual':v.trans,v.color,v.station].filter(Boolean).join(' · ')}
+            </div>
+          </div>
+
+          {/* Fuel */}
+          {fuel !== null && (
+            <div>
+              <div style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',marginBottom:7,textTransform:'uppercase',letterSpacing:'.07em',fontFamily:'"JetBrains Mono",monospace'}}>{tr('ប្រេងឥន្ធនៈ','Fuel level')}</div>
+              <div style={{display:'flex',gap:5}}>
+                {[0,25,50,75,100].map(step => {
+                  const active = fuel >= step;
+                  const col = step<=20?'var(--danger)':step<=40?'var(--warn)':step<=65?'#EAB308':'var(--good)';
+                  return (
+                    <div key={step} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
+                      <div style={{width:'100%',height:12,borderRadius:4,background:active?col:'var(--surface-muted)',border:'1px solid var(--border)'}}/>
+                      <span style={{fontSize:10,color:active?col:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',fontWeight:700}}>{fuelLabel(step)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Documents — toggle view / edit */}
+          <div>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
+              <div style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',textTransform:'uppercase',letterSpacing:'.07em',fontFamily:'"JetBrains Mono",monospace'}}>
+                {tr('ឯកសារ','Documents')}
+              </div>
+              <button onClick={()=>setEditDocs(!editDocs)} style={{
+                padding:'4px 10px',borderRadius:6,border:'1px solid var(--border)',cursor:'pointer',
+                background: editDocs ? 'var(--accent)' : 'var(--surface-muted)',
+                color: editDocs ? '#fff' : 'var(--ink-2)',
+                fontSize:12,fontWeight:600,fontFamily:'var(--font-km)',
+              }}>{editDocs ? tr('រួចរាល់','Done') : tr('កែឯកសារ','Edit docs')}</button>
+            </div>
+            {[
+              { label:tr('ឆៀក','Reg.'),                 val:regExp,  set:setRegExp,  field:'reg_exp'  },
+              { label:tr('ពន្ធផ្លូវ','Road tax'),        val:roadTax, set:setRoadTax, field:'road_tax' },
+              { label:tr('ប្ដូរប្រេងម៉ាស៊ីន','Oil change'),val:oilExp,  set:setOilExp,  field:'oil_exp'  },
+            ].map(doc => {
+              const mo = monthsUntil(doc.val);
+              const col = doc.val ? (mo < 0 ? 'var(--danger)' : mo <= 1 ? 'var(--warn)' : 'var(--ink)') : 'var(--ink-3)';
+              return (
+                <div key={doc.field} style={{display:'flex',alignItems:'center',gap:8,padding:'7px 0',borderBottom:'1px solid var(--border)'}}>
+                  <span style={{fontSize:12,color:'var(--ink-2)',minWidth:90,flexShrink:0}}>{doc.label}</span>
+                  {editDocs ? (
+                    <>
+                      <input type="date" value={doc.val} onChange={e=>{doc.set(e.target.value);saveDoc(doc.field,e.target.value);}}
+                        style={{...dateInpStyle,color:col,fontWeight:doc.val?600:400}}/>
+                      {doc.val && (
+                        <button onClick={()=>{doc.set('');saveDoc(doc.field,'');}} style={{
+                          flexShrink:0,width:28,height:28,borderRadius:'50%',border:'1px solid var(--border)',cursor:'pointer',
+                          background:'var(--surface-muted)',color:'var(--ink-3)',fontSize:15,lineHeight:1,
+                          display:'flex',alignItems:'center',justifyContent:'center',
+                        }}>×</button>
+                      )}
+                    </>
+                  ) : (
+                    <span style={{fontSize:13,fontWeight:doc.val?600:400,color:col}}>
+                      {doc.val || <span style={{color:'var(--ink-3)',fontSize:12}}>—</span>}
+                    </span>
+                  )}
+                  {doc.val && mo <= 1 && <span style={{fontSize:15,flexShrink:0,marginLeft:'auto'}}>⚠️</span>}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Monthly usage hours — computed from LESSONS */}
+          {(() => {
+            const curMo = todayStr().slice(0,7);
+            const moLessons = LESSONS.filter(l=>l.veh===v.id && l.status!=='cancelled' && (l.date||'').startsWith(curMo));
+            const hrs = moLessons.reduce((s,l)=>s+(l.len||0),0);
+            const cnt = moLessons.length;
+            if (cnt === 0) return null;
+            return (
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 14px',background:'var(--surface-muted)',borderRadius:10,border:'1px solid var(--border)'}}>
+                <span style={{fontSize:12,color:'var(--ink-2)'}}>{tr('ម៉ោងប្រើប្រាស់ខែនេះ','Usage this month')}</span>
+                <div style={{textAlign:'right'}}>
+                  <span style={{fontSize:16,fontWeight:700,fontFamily:'"JetBrains Mono",monospace'}}>{hrs}h</span>
+                  <span style={{fontSize:11,color:'var(--ink-3)',marginLeft:6}}>{cnt} {tr('មេរៀន','lessons')}</span>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Inspect button */}
+          <button onClick={()=>setInspOpen(true)} style={{
+            padding:'14px 0',borderRadius:12,border:'none',cursor:'pointer',
+            background:'var(--accent)',color:'#fff',fontSize:15,fontWeight:700,
+            fontFamily:'var(--font-km)',
+          }}>{tr('ពិនិត្យប្រចាំថ្ងៃ','Daily Inspection')}</button>
+        </div>
+      </div>
+    </>
+  );
+};
+
 // ── Public vehicle card view ──────────────────────────────────────────────────
 const VehicleScreen = () => {
   const { tr } = useAppActions();
+  const bp = useBreakpoint();
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   const [selectedId, setSelectedId] = React.useState(null);
   React.useEffect(() => {
@@ -2483,17 +2906,13 @@ const VehicleScreen = () => {
   }, []);
 
   const visible = VEHICLES.filter(v => v.visible !== false);
+  const selected = visible.find(v => v.id === selectedId) || null;
 
-  const noop = () => {};
   const saveDates = (id, dates) => {
     const i = VEHICLES.findIndex(v => v.id === id);
     if (i !== -1) Object.assign(VEHICLES[i], dates);
     if (window.saveAllData) window.saveAllData();
     forceUpdate();
-  };
-  const savePhoto = (id, dataUrl) => {
-    const i = VEHICLES.findIndex(v => v.id === id);
-    if (i !== -1) { VEHICLES[i].photo = dataUrl; if (window.saveAllData) window.saveAllData(); forceUpdate(); }
   };
   const cycleStatus = (id) => {
     const i = VEHICLES.findIndex(v => v.id === id);
@@ -2514,6 +2933,66 @@ const VehicleScreen = () => {
     forceUpdate();
   };
 
+  // ── Mobile: simple list ──────────────────────────────────────────────────────
+  if (bp.mobile) {
+    return (
+      <>
+        {selected && (
+          <VehicleMobileDetail v={selected} onClose={()=>setSelectedId(null)} tr={tr} onSaved={forceUpdate} onStatusChange={cycleStatus} onParkingChange={cycleParking}/>
+        )}
+        <div style={{display:'flex',flexDirection:'column',gap:0}}>
+          <div style={{padding:'10px 0 8px',fontSize:13,fontWeight:600,color:'var(--ink-2)'}}>
+            {tr(`យានយន្ត · ${visible.length} គ្រឿង`, `Vehicles · ${visible.length}`)}
+          </div>
+          {visible.length === 0 ? (
+            <div style={{textAlign:'center',padding:'48px 20px',color:'var(--ink-3)',fontSize:13}}>
+              {tr('មិន​ទាន់​មាន​យានយន្ត', 'No vehicles to display')}
+            </div>
+          ) : (
+            <Card pad={0}>
+              {visible.map((v, idx) => {
+                const pc = plateBg(v.trans);
+                const allInsp = (window.__vehicleInspections||[]).filter(r=>r.vehicleId===v.id).sort((a,b)=>b.date.localeCompare(a.date));
+                const todayRec = allInsp.find(r=>r.date===todayStr()) || null;
+                const todayC = todayRec ? INSP_VALS[todayRec.overallStatus] : null;
+                const docWarn = [v.reg_exp,v.road_tax,v.oil_exp].some(d=>d && monthsUntil(d)<=1);
+                return (
+                  <div key={v.id} onClick={()=>setSelectedId(v.id)} style={{
+                    display:'flex',alignItems:'center',gap:12,
+                    padding:'11px 14px',
+                    borderBottom: idx < visible.length-1 ? '1px solid var(--border)' : 'none',
+                    cursor:'pointer',
+                    background:'transparent',
+                  }}>
+                    <Photo tag={v.photo} w={60} h={44} r={6}/>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:15,fontWeight:700,lineHeight:1.2,display:'flex',alignItems:'center',gap:6}}>
+                        {v.make}
+                        {docWarn && <span style={{fontSize:14}}>⚠️</span>}
+                      </div>
+                      <div style={{marginTop:3,display:'flex',alignItems:'center',gap:6}}>
+                        <span style={{
+                          display:'inline-block',padding:'2px 7px',borderRadius:5,
+                          background:pc.bg,color:pc.color,
+                          fontFamily:'"JetBrains Mono",monospace',fontSize:11,fontWeight:700,
+                        }}>{v.plate}</span>
+                        {todayC && (
+                          <span style={{fontSize:16,color:todayC.color,fontFamily:'"JetBrains Mono",monospace',fontWeight:700,lineHeight:1}}>{todayC.label}</span>
+                        )}
+                      </div>
+                    </div>
+                    <svg width="7" height="12" viewBox="0 0 7 12" fill="none" stroke="var(--ink-3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 1l5 5-5 5"/></svg>
+                  </div>
+                );
+              })}
+            </Card>
+          )}
+        </div>
+      </>
+    );
+  }
+
+  // ── Desktop: full cards ──────────────────────────────────────────────────────
   return (
     <div style={{display:'flex',flexDirection:'column',gap:14}}>
       <SectionTitle

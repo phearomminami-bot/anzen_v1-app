@@ -1,71 +1,194 @@
 // data.jsx — fake content (bilingual KH/EN)
 
-const STUDENTS = [
-  {id:"S-1042", name:"សុខ ចាន់ថា", en:"Sok Chantha",      cls:"B (Sedan)", inst:"Mr. Vichea", hours:14, target:30, status:"In progress", next:"មិថុនា 4, 09:00", phone:"+855 12 345 678", paid:0.6, photo:"port-1"},
-  {id:"S-1043", name:"ឡុង សុភារី",  en:"Long Sophary",    cls:"B (Sedan)", inst:"Ms. Dany",   hours:22, target:30, status:"Road exam soon", next:"មិថុនា 5, 14:00", phone:"+855 17 882 401", paid:1.0, photo:"port-2"},
-  {id:"S-1044", name:"គង់ ពិសិដ្ឋ", en:"Kong Piseth",     cls:"A (Moto)",  inst:"Mr. Bora",   hours:6,  target:18, status:"New",        next:"មិថុនា 6, 07:30", phone:"+855 96 117 220", paid:0.3, photo:"port-3"},
-  {id:"S-1045", name:"ហ៊ុន ដារ៉ូ",   en:"Hun Daro",        cls:"C (Truck)", inst:"Mr. Vichea", hours:9,  target:40, status:"In progress", next:"មិថុនា 4, 16:00", phone:"+855 11 553 088", paid:0.5, photo:"port-4"},
-  {id:"S-1046", name:"ឈឹម ឡាយហ៊ាង",  en:"Chhim Layheang",  cls:"B (Sedan)", inst:"Ms. Dany",   hours:28, target:30, status:"Cleared", next:"—",          phone:"+855 78 020 111", paid:1.0, photo:"port-5"},
-  {id:"S-1047", name:"ឈិន សុវណ្ណា", en:"Chhin Sovannah",  cls:"B (Sedan)", inst:"Ms. Channa", hours:11, target:30, status:"In progress", next:"មិថុនា 7, 11:00", phone:"+855 81 779 003", paid:0.5, photo:"port-6"},
-  {id:"S-1048", name:"ប៉ែន ដារ៉ា",  en:"Pen Dara",         cls:"A (Moto)",  inst:"Mr. Bora",   hours:18, target:18, status:"Road exam soon", next:"មិថុនា 5, 10:30", phone:"+855 92 441 008", paid:1.0, photo:"port-7"},
-  {id:"S-1049", name:"យឹម សុខគន្ធា", en:"Yim Sokuntha",    cls:"B (Sedan)", inst:"Ms. Channa", hours:4,  target:30, status:"New",        next:"មិថុនា 8, 08:00", phone:"+855 70 220 552", paid:0.2, photo:"port-8"},
-  {id:"S-1050", name:"ស៊ាន ប៉ូលីន",  en:"Sean Polin",      cls:"B (Sedan)", inst:"Mr. Vichea", hours:25, target:30, status:"In progress", next:"មិថុនា 4, 13:00", phone:"+855 17 661 991", paid:0.8, photo:"port-9"},
-  {id:"S-1051", name:"ឆន សុធារ៉ា",   en:"Chan Sothera",    cls:"C (Truck)", inst:"Mr. Bora",   hours:30, target:40, status:"In progress", next:"មិថុនា 9, 15:00", phone:"+855 12 091 477", paid:0.75, photo:"port-10"},
+const CURRICULUM = [
+  {
+    id: 'stage1', km: 'ដំណាលទី១', en: 'Stage 1 — Driving Range',
+    topics: [
+      {id:'s1-01', km:'ឥរិយាបថបើកបរ និងការចូល និងចេញពីរថយន្ត',                                    en:'Driving posture, entering & exiting the vehicle'},
+      {id:'s1-02', km:'ការគ្រប់គ្រងយន្តការរថយន្ត និងប្រព័ន្ធបើកបរ',                               en:'Vehicle controls & driving systems'},
+      {id:'s1-03', km:'ការចាប់ផ្តើម និងការឈប់',                                                    en:'Starting & stopping'},
+      {id:'s1-04', km:'ការលៃតម្រូវល្បឿន',                                                         en:'Speed adjustment'},
+      {id:'s1-05', km:'ទីតាំងបើកបរ និងផ្លូវបើកបរ',                                                en:'Driving position & lane keeping'},
+      {id:'s1-06', km:'ការចាប់ផ្តើម និងការបង្កើនល្បឿនទាន់ពេលវេលា',                               en:'Timely start & acceleration'},
+      {id:'s1-07', km:'ឈប់តាមគោលដៅ',                                                             en:'Stopping at a target'},
+      {id:'s1-08', km:'បើកបរលើផ្លូវកោង',                                                          en:'Driving on curves'},
+      {id:'s1-09', km:'ឆ្លងកាត់លើជម្រាល',                                                         en:'Driving on slopes'},
+      {id:'s1-10', km:'ដកថយ',                                                                     en:'Reversing'},
+      {id:'s1-11', km:'ឆ្លងកាត់លើផ្លូវតូចចង្អៀត',                                                en:'Narrow road passage'},
+      {id:'s1-12', km:'ការជ្រើសរើសផ្លូវ និងការផ្លាស់ប្តូរទិសដៅ',                                 en:'Route selection & direction change'},
+      {id:'s1-13', km:'ការដោះស្រាយជាមួយឧបសគ្គ',                                                  en:'Dealing with obstacles'},
+      {id:'s1-14', km:'អនុវត្តតាមផ្លាកសញ្ញា និងសញ្ញាសម្គាល់ពេលកំពុងបើកបរ',                      en:'Following signs & markings while driving'},
+      {id:'s1-15', km:'បើកបរស្របតាមសញ្ញាចរាចរណ៍',                                                en:'Driving with traffic signals'},
+      {id:'s1-16', km:'ឆ្លងកាត់ផ្លូវប្រសព្វត្រង់មួយ',                                             en:'Crossing a straight intersection'},
+      {id:'s1-17', km:'ឆ្លងកាត់ផ្លូវប្រសព្វ (បត់ឆ្វេង)',                                          en:'Intersection — turning left'},
+      {id:'s1-18', km:'ឆ្លងកាត់ផ្លូវប្រសព្វ (បត់ស្តាំ)',                                          en:'Intersection — turning right'},
+      {id:'s1-19', km:'បើកបរឆ្លងកាត់ផ្លូវប្រសព្វដែលមានភាពមើលឃើញមិនល្អ',                         en:'Crossing low-visibility intersections'},
+      {id:'s1-20', km:'ឆ្លងកាត់ផ្លូវរថភ្លើងឆ្លងកាត់',                                             en:'Crossing railway level crossings'},
+      {id:'s1-21', km:'បើកបររថយន្តអូតូ',                                                          en:'Driving automatic transmission vehicles'},
+      {id:'s1-22', km:'វិធានការក្នុងអំឡុងពេលបង្កើនល្បឿន ឬចាប់ផ្តើមភ្លាមៗ (ស្វ័យប្រវត្តិ)',       en:'Procedures for sudden acceleration/start (automatic)'},
+      {id:'s1-23', km:'ការបញ្ជាក់ពីប្រសិទ្ធភាពនៃការបណ្តុះបណ្តាល (ការវាយតម្លៃ)',                   en:'Training effectiveness review (assessment)'},
+    ]
+  },
+  {
+    id: 'stage2', km: 'ដំណាលទី២', en: 'Stage 2 — Public Road',
+    topics: [
+      {id:'s2-01', km:'ការប្រុងប្រយ័ត្ន និងការរៀបចំមុនពេលបើកបរលើផ្លូវសាធារណៈ',                   en:'Precautions & preparation before public road driving'},
+      {id:'s2-02', km:'បើកបរស្របតាមលំហូរចរាចរណ៍',                                                en:'Driving with traffic flow'},
+      {id:'s2-03', km:'ទីតាំងចរាចរណ៍សមស្រប',                                                    en:'Appropriate traffic positioning'},
+      {id:'s2-04', km:'ការផ្លាស់ប្តូរវគ្គ',                                                       en:'Course change / lane changing'},
+      {id:'s2-05', km:'បើកបរស្របតាមសញ្ញា ផ្លាកសញ្ញា និងគំនូសសញ្ញា',                             en:'Following signals, signs & road markings'},
+      {id:'s2-06', km:'ចរាចរណ៍នៅចំណុចប្រសព្វ',                                                   en:'Navigating intersections'},
+      {id:'s2-07', km:'ការការពារអ្នកថ្មើរជើង និងអ្នកដទៃ',                                        en:'Protecting pedestrians & other road users'},
+      {id:'s2-08', km:'បើកបរស្របតាមស្ថានភាពផ្លូវ និងចរាចរណ៍',                                   en:'Adapting to road & traffic conditions'},
+      {id:'s2-09', km:'ការចត/ឈប់',                                                               en:'Parking & stopping'},
+      {id:'s2-10', km:'ការផ្លាស់ប្តូរទិសដៅ និងការចតរថយន្តស្របគ្នា',                              en:'Direction change & parallel parking'},
+      {id:'s2-11', km:'ការចាប់ហ្វ្រាំងភ្លាមៗ',                                                    en:'Emergency braking'},
+      {id:'s2-12', km:'ការកំណត់ផ្លូវដឹកនាំដោយខ្លួនឯង',                                           en:'Independent route navigation'},
+      {id:'s2-13', km:'ការបើកបរដោយផ្តោតលើការរំពឹងទុកគ្រោះថ្នាក់',                               en:'Hazard anticipation driving'},
+      {id:'s2-14', km:'ការបើកបរលើផ្លូវហាយវេ',                                                   en:'Highway driving'},
+      {id:'s2-15', km:'របស់របរពិសេសៗ',                                                           en:'Special situations & conditions'},
+      {id:'s2-16', km:'ការបញ្ជាក់ពីប្រសិទ្ធភាពនៃការបណ្តុះបណ្តាល (ការវាយតម្លៃ)',                   en:'Training effectiveness review (assessment)'},
+    ]
+  }
 ];
 
-const INSTRUCTORS = [
-  {id:"I-01", name:"ស៊ុំ វិច្ឆេយ្យ", en:"Sum Vichea",   role:"Senior · ជាន់ខ្ពស់", cls:["B","C"], rating:4.9, students:18, today:5, since:"2019", lang:"ខ្មែរ · EN", photo:"inst-1"},
-  {id:"I-02", name:"លី ដានី",      en:"Ly Dany",       role:"Lead · មេបង្រៀន",  cls:["B"],   rating:4.8, students:22, today:6, since:"2017", lang:"ខ្មែរ · 中文", photo:"inst-2"},
-  {id:"I-03", name:"ខ្លុត បូរ៉ា",    en:"Khlot Bora",     role:"Moto · ម៉ូតូ",      cls:["A"],   rating:4.7, students:14, today:4, since:"2021", lang:"ខ្មែរ", photo:"inst-3"},
-  {id:"I-04", name:"ផល ចាន់ណា",   en:"Phal Channa",   role:"Senior · ជាន់ខ្ពស់", cls:["B"],   rating:4.9, students:16, today:5, since:"2018", lang:"ខ្មែរ · EN", photo:"inst-4"},
-  {id:"I-05", name:"ចេង សុក្កណ្ឌ", en:"Cheng Sokkann", role:"Apprentice · ហាត់ការ", cls:["B"],   rating:4.5, students:7,  today:3, since:"2024", lang:"ខ្មែរ", photo:"inst-5"},
-];
+const CURRICULUM_DONE_DEFAULT = [];
 
-const VEHICLES = [
-  {id:"V-01", plate:"2AB-4180", make:"Toyota Vios · 2022", cls:"B (Sedan)",   km:38240, status:"Active",       service:"In 1,200 km", inst:"Mr. Vichea", photo:"car-1"},
-  {id:"V-02", plate:"2AC-9021", make:"Hyundai Accent · 2023", cls:"B (Sedan)", km:21105, status:"Active",       service:"In 4,000 km", inst:"Ms. Dany",   photo:"car-2"},
-  {id:"V-03", plate:"2AC-1144", make:"Honda Wave · 2024",   cls:"A (Moto)",    km:5680,  status:"Active",       service:"OK",          inst:"Mr. Bora",   photo:"car-3"},
-  {id:"V-04", plate:"2AB-0028", make:"Isuzu D-Max · 2021",  cls:"C (Truck)",   km:91300, status:"Service due",  service:"Today",       inst:"—",          photo:"car-4"},
-  {id:"V-05", plate:"2AC-7715", make:"Kia Picanto · 2022",  cls:"B (Sedan)",   km:44102, status:"Active",       service:"In 800 km",   inst:"Ms. Channa", photo:"car-5"},
-  {id:"V-06", plate:"2AC-2206", make:"Yamaha NMAX · 2023",  cls:"A (Moto)",    km:9402,  status:"Workshop",     service:"Brake pads",  inst:"—",          photo:"car-6"},
-];
+const STUDENTS = [];
 
-const LESSONS = [
-  // hour 7..18 ; day 0..6 (Mon..Sun)
-  {day:0, h:7,  len:1.5, who:"S-1048", inst:"I-03", veh:"V-03", type:"Practical · Yard",   color:"a"},
-  {day:0, h:9,  len:2,   who:"S-1042", inst:"I-01", veh:"V-01", type:"Practical · City",   color:"b"},
-  {day:0, h:14, len:1,   who:"—",      inst:"I-02", veh:"—",    type:"Theory · Signs",     color:"c"},
-  {day:1, h:8,  len:2,   who:"S-1043", inst:"I-02", veh:"V-02", type:"Mock road exam",     color:"d"},
-  {day:1, h:10, len:1.5, who:"S-1044", inst:"I-01", veh:"V-04", type:"Practical · Truck",  color:"a"},
-  {day:1, h:13, len:1,   who:"S-1050", inst:"I-01", veh:"V-01", type:"Practical · Night",  color:"b"},
-  {day:1, h:16, len:1.5, who:"S-1045", inst:"I-02", veh:"V-05", type:"Practical · Highway",color:"d"},
-  {day:2, h:7,  len:1,   who:"—",      inst:"I-04", veh:"—",    type:"Theory · First aid", color:"c"},
-  {day:2, h:9,  len:2,   who:"S-1047", inst:"I-03", veh:"V-06", type:"Practical · Moto",   color:"a"},
-  {day:2, h:13, len:1.5, who:"S-1046", inst:"I-02", veh:"V-02", type:"Road exam (real)",   color:"e"},
-  {day:2, h:15, len:1.5, who:"S-1051", inst:"I-03", veh:"V-04", type:"Practical · Truck",  color:"a"},
-  {day:3, h:8,  len:1,   who:"S-1049", inst:"I-04", veh:"V-05", type:"Practical · Yard",   color:"a"},
-  {day:3, h:10, len:1.5, who:"S-1042", inst:"I-01", veh:"V-01", type:"Practical · City",   color:"b"},
-  {day:3, h:14, len:2,   who:"—",      inst:"I-02", veh:"—",    type:"Group theory",       color:"c"},
-  {day:4, h:7,  len:1.5, who:"S-1048", inst:"I-03", veh:"V-03", type:"Practical · Moto",   color:"a"},
-  {day:4, h:9,  len:2,   who:"S-1050", inst:"I-01", veh:"V-01", type:"Mock road exam",     color:"d"},
-  {day:4, h:13, len:1.5, who:"S-1043", inst:"I-02", veh:"V-02", type:"Road exam (real)",   color:"e"},
-  {day:4, h:16, len:1,   who:"S-1044", inst:"I-01", veh:"V-04", type:"Practical · Truck",  color:"a"},
-  {day:5, h:8,  len:2,   who:"S-1051", inst:"I-03", veh:"V-04", type:"Practical · Highway",color:"d"},
-  {day:5, h:11, len:1,   who:"S-1047", inst:"I-03", veh:"V-06", type:"Practical · Moto",   color:"a"},
-  {day:6, h:9,  len:2,   who:"—",      inst:"I-04", veh:"—",    type:"Open garage day",    color:"c"},
-];
+const INSTRUCTORS = [];
 
-const INVOICES = [
-  {id:"INV-2026-0418", student:"S-1042", date:"មិថុនា 1", amount:180, status:"Paid",     method:"ABA"},
-  {id:"INV-2026-0419", student:"S-1044", date:"មិថុនា 1", amount:120, status:"Paid",     method:"Cash"},
-  {id:"INV-2026-0420", student:"S-1049", date:"មិថុនា 2", amount:60,  status:"Overdue",  method:"—"},
-  {id:"INV-2026-0421", student:"S-1051", date:"មិថុនា 2", amount:240, status:"Paid",     method:"ABA"},
-  {id:"INV-2026-0422", student:"S-1047", date:"មិថុនា 3", amount:90,  status:"Pending",  method:"—"},
-  {id:"INV-2026-0423", student:"S-1050", date:"មិថុនា 3", amount:160, status:"Paid",     method:"Wing"},
-  {id:"INV-2026-0424", student:"S-1045", date:"មិថុនា 3", amount:200, status:"Refunded", method:"ABA"},
-];
+const VEHICLES = [];
+
+// Lessons: date=YYYY-MM-DD, h=start hour (7-18), len=hours, studentId/instId/veh=IDs or '—'
+// status: 'scheduled' | 'done' | 'cancelled'  color: a=practical b=practical c=theory d=mock e=exam
+const LESSONS = [];
+
+const INVOICES = [];
 
 const DAYS_KM = ["ច័ន្ទ","អង្គារ","ពុធ","ព្រហស្បតិ៍","សុក្រ","សៅរ៍","អាទិត្យ"];
 const DAYS_EN = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
-Object.assign(window, { STUDENTS, INSTRUCTORS, VEHICLES, LESSONS, INVOICES, DAYS_KM, DAYS_EN });
+// ── Staff (people who work at the school — includes instructors + admin/ops) ──
+const STAFF = [];
+
+// Today's attendance (keyed by staff id). status: 'in' | 'out' | 'absent' | 'leave'
+const ATTENDANCE_TODAY = {};
+
+// Weekly attendance grid — daysPresent / expectedDays per staff this week
+const ATTENDANCE_WEEK = {};
+
+// Leave requests
+const LEAVE_REQUESTS = [];
+
+const nextLessonId = () => {
+  const nums = LESSONS.map(l => parseInt((l.id||'').replace('L-',''))).filter(n=>!isNaN(n));
+  const n = (nums.length > 0 ? Math.max(...nums) : 0) + 1;
+  return 'L-' + String(n).padStart(4,'0');
+};
+
+// ── Persistence ───────────────────────────────────────────────────────────
+const STORE_KEY = 'anzen_v1';
+
+const saveAllData = (skipCloud) => {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify({
+      v: 1,
+      STUDENTS, INSTRUCTORS, VEHICLES, LESSONS, INVOICES, STAFF, LEAVE_REQUESTS,
+      staffData:    window.__staffData        || [],
+      appData:      window.__applicationsData || [],
+      bookData:     window.__bookingData      || [],
+      maintData:    window.__maintenanceData  || [],
+      serviceLog:   window.__serviceLog       || [],
+      inspections:  window.__vehicleInspections || [],
+      inspRenames:  window.__inspRenames       || {},
+      studentColors: window.__studentColorAssign || {},
+      incidentLog:  window.__incidentData     || [],
+      expenseLog:   window.__expenseLog       || [],
+      auditLog:     window.__auditLog         || [],
+      leaveData:    window.__leaveData        || [],
+      waitlist:     window.__waitlistData     || [],
+      attendanceData: window.__attendanceData || {},
+      payrollRuns:  window.__payrollRuns      || [],
+      attToday:     ATTENDANCE_TODAY,
+      attWeek:      ATTENDANCE_WEEK,
+      settings:     window.__schoolSettings   || {},
+      staffPolicy:  window.__staffPolicy      || {},
+      currDone:     window.__curriculumDone ? [...window.__curriculumDone] : [],
+      currFeedback: window.__curriculumFeedback || {},
+    }));
+    window.__autoBackup?.();
+  } catch(e) {}
+  // Mirror the change up to Supabase when connected (debounced inside __sbSyncAll).
+  // skipCloud=true for the periodic auto-save — only user-triggered changes push to cloud.
+  if (!skipCloud) {
+    try { if (window.__sbConfigured && window.__sbConfigured()) window.__sbSyncAll && window.__sbSyncAll(); } catch(e) {}
+  }
+};
+
+// Restore saved data on startup
+(() => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+    if (!saved || saved.v !== 1) return;
+    const fill = (arr, key) => { if (saved[key]?.length) { arr.length = 0; arr.push(...saved[key]); } };
+    fill(STUDENTS,       'STUDENTS');
+    fill(INSTRUCTORS,    'INSTRUCTORS');
+    fill(VEHICLES,       'VEHICLES');
+    fill(LESSONS,        'LESSONS');
+    fill(INVOICES,       'INVOICES');
+    fill(STAFF,          'STAFF');
+    fill(LEAVE_REQUESTS, 'LEAVE_REQUESTS');
+    if (saved.staffData?.length)  window.__staffData        = saved.staffData;
+    if (saved.appData?.length)    window.__applicationsData = saved.appData;
+    if (saved.bookData?.length)   window.__bookingData      = saved.bookData;
+    if (saved.maintData?.length)   window.__maintenanceData  = saved.maintData;
+    if (saved.serviceLog?.length)  window.__serviceLog       = saved.serviceLog;
+    if (saved.inspections?.length) window.__vehicleInspections = saved.inspections;
+    if (saved.inspRenames && Object.keys(saved.inspRenames).length) window.__inspRenames = saved.inspRenames;
+    if (saved.studentColors && Object.keys(saved.studentColors).length) window.__studentColorAssign = saved.studentColors;
+    if (saved.incidentLog?.length) window.__incidentData     = saved.incidentLog;
+    if (saved.expenseLog?.length)  window.__expenseLog       = saved.expenseLog;
+    if (saved.auditLog?.length)   window.__auditLog         = saved.auditLog;
+    if (saved.leaveData?.length)  window.__leaveData        = saved.leaveData;
+    if (saved.waitlist?.length)   window.__waitlistData     = saved.waitlist;
+    if (saved.attendanceData)     window.__attendanceData   = saved.attendanceData;
+    if (saved.payrollRuns?.length) window.__payrollRuns     = saved.payrollRuns;
+    if (saved.attToday) Object.assign(ATTENDANCE_TODAY, saved.attToday);
+    if (saved.attWeek)  Object.assign(ATTENDANCE_WEEK,  saved.attWeek);
+    if (saved.settings) window.__savedSettings = saved.settings;
+    if (saved.staffPolicy && Object.keys(saved.staffPolicy).length) window.__staffPolicy = saved.staffPolicy;
+    if (saved.currDone?.length)  window.__savedCurriculumDone     = new Set(saved.currDone);
+    if (saved.currFeedback)      window.__savedCurriculumFeedback = saved.currFeedback;
+  } catch(e) {}
+})();
+
+setInterval(() => { try { saveAllData(true); } catch(e) {} }, 30000); // localStorage only — cloud sync only on user actions
+
+Object.assign(window, { STUDENTS, INSTRUCTORS, VEHICLES, LESSONS, INVOICES, DAYS_KM, DAYS_EN, STAFF, ATTENDANCE_TODAY, ATTENDANCE_WEEK, LEAVE_REQUESTS, CURRICULUM, CURRICULUM_DONE_DEFAULT, nextLessonId, saveAllData });
+
+// ── Telegram delivery (client-side via the Bot API) ─────────────────────────
+// Sends a message to a chat_id using the school's bot token (CORS-enabled API).
+window.__sendTelegram = async (chatId, text) => {
+  const tg = (window.__schoolSettings || {}).telegram || {};
+  if (!tg.enabled)        return { ok:false, err:'Telegram disabled' };
+  if (!tg.token)          return { ok:false, err:'No bot token' };
+  if (!chatId)            return { ok:false, err:'No chat ID' };
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${tg.token}/sendMessage`, {
+      method:'POST', headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ chat_id:String(chatId).trim(), text }),
+    });
+    const j = await res.json().catch(() => ({ ok:false, description:'Invalid response' }));
+    return { ok: !!j.ok, err: j.description };
+  } catch (e) { return { ok:false, err: e.message }; }
+};
+// Auto-send to a student's Telegram when auto-send is enabled
+window.__autoTelegramStudent = (studentId, text) => {
+  const tg = (window.__schoolSettings || {}).telegram || {};
+  if (!tg.enabled || !tg.autoSend) return Promise.resolve({ ok:false, err:'auto-send off' });
+  const s = (window.STUDENTS || []).find(x => x.id === studentId);
+  if (!s || !s.telegram) return Promise.resolve({ ok:false, err:'no student chat ID' });
+  return window.__sendTelegram(s.telegram, text);
+};
+

@@ -105,8 +105,10 @@ function App() {
     const f = FONT_OPTIONS[t.font] || FONT_OPTIONS.inter;
     root.style.setProperty('--font-en', f.en);
     root.style.setProperty('--font-display', f.display);
-    const sz = FONT_SIZE_OPTIONS.find(o => o.v === t.fontSize) || FONT_SIZE_OPTIONS[1];
-    root.style.setProperty('--font-size-base', sz.px + 'px');
+    // Base font for un-sized text stays constant; the font-size control scales
+    // the content area via zoom (see renderLayout) so the whole UI reflows cleanly
+    // without distorting the layout.
+    root.style.setProperty('--font-size-base', '14px');
     document.body.style.zoom = '';
   }, [t.accent, t.font, t.fontSize, t.dark]);
 
@@ -118,6 +120,17 @@ function App() {
   // Keep curriculum state mirrored to window for persistence
   React.useEffect(() => { window.__curriculumDone = curriculumDone; }, [curriculumDone]);
   React.useEffect(() => { window.__curriculumFeedback = curriculumFeedback; }, [curriculumFeedback]);
+
+  // Auto-poll Supabase every 30s when logged in + configured → cross-device sync
+  React.useEffect(() => {
+    if (!authed || !window.sb) return;
+    const poll = () => {
+      if (!window.__sbLoadAll) return;
+      window.__sbLoadAll().catch(() => {});
+    };
+    const id = setInterval(poll, 30000);
+    return () => clearInterval(id);
+  }, [authed]);
 
   // Sidebar collapse state — persisted
   const [sideCollapsed, setSideCollapsed] = React.useState(() => {
@@ -216,6 +229,14 @@ function App() {
       }
     }
     setTweak('role', r); setAuthed(true); setCurrent('dashboard'); window.__anzenStudentId = null;
+    // On local login: load from Supabase first (fill() keeps local if local has more rows),
+    // then push merged state back so Supabase is always current.
+    // __sbReady=true is set inside __sbLoadAll, enabling auto-sync for future saves.
+    if (window.__sbLoadAll) {
+      window.__sbLoadAll().then(() => {
+        if (window.__sbPushNow) window.__sbPushNow();
+      }).catch(() => {});
+    }
   };
   const loginStudent = (student) => {
     setLoggedInStudentUser(student);
@@ -396,11 +417,14 @@ function App() {
   const DetailComp = detailEntry?.Component;
 
   const renderLayout = () => {
+    // Content zoom from the font-size setting — scales the whole content area
+    // uniformly (text + spacing) with reflow, so nothing gets distorted.
+    const uiZoom = (FONT_SIZE_OPTIONS.find(o => o.v === t.fontSize) || FONT_SIZE_OPTIONS[1]).zoom;
     // Mobile: always bottom bar, no sidebar
     if (bp.mobile) {
       return (
         <div style={{display:'flex',flexDirection:'column',minHeight:'100svh',width:'100vw',background:'var(--bg)'}}>
-          <main style={{flex:1,overflow:'auto',padding:'12px 14px',paddingBottom:72}}>{screens[current]}</main>
+          <main style={{flex:1,overflow:'auto',zoom:uiZoom,padding:'12px 14px',paddingBottom:72}}>{screens[current]}</main>
           <MobileBottomBar items={items} current={current} onGo={setCurrent} role={role} onLogout={logout}/>
         </div>
       );
@@ -410,7 +434,7 @@ function App() {
       return (
         <div style={{display:'flex',height:'100vh',width:'100vw',background:'var(--bg)'}}>
           <Sidebar items={items} current={current} onGo={setCurrent} role={role} onLogout={logout} onReorder={handleNavReorder} collapsed/>
-          <main style={{flex:1,overflow:'auto',padding:'16px 20px',minWidth:0}}>{screens[current]}</main>
+          <main style={{flex:1,overflow:'auto',zoom:uiZoom,padding:'16px 20px',minWidth:0}}>{screens[current]}</main>
         </div>
       );
     }
@@ -421,7 +445,7 @@ function App() {
           <Sidebar items={items} current={current} onGo={setCurrent} role={role} onLogout={logout} onReorder={handleNavReorder} collapsed={sideCollapsed} onToggleCollapse={toggleSideCollapsed}/>
           <div style={{flex:1,display:'flex',flexDirection:'column',minWidth:0}}>
             <ContentTopbar role={role}/>
-            <main style={{flex:1,overflow:'auto',padding:'24px 28px'}}>{screens[current]}</main>
+            <main style={{flex:1,overflow:'auto',zoom:uiZoom,padding:'24px 28px'}}>{screens[current]}</main>
           </div>
         </div>
       );
@@ -430,14 +454,14 @@ function App() {
       return (
         <div style={{display:'flex',flexDirection:'column',height:'100vh',width:'100vw',background:'var(--bg)'}}>
           <Topbar items={items} current={current} onGo={setCurrent} role={role} onLogout={logout} onReorder={handleNavReorder}/>
-          <main style={{flex:1,overflow:'auto',padding:'24px 28px'}}>{screens[current]}</main>
+          <main style={{flex:1,overflow:'auto',zoom:uiZoom,padding:'24px 28px'}}>{screens[current]}</main>
         </div>
       );
     }
     return (
       <div style={{display:'flex',flexDirection:'column',height:'100vh',width:'100vw',background:'var(--bg)'}}>
         <TabsBar items={items} current={current} onGo={setCurrent} role={role} onLogout={logout} onReorder={handleNavReorder}/>
-        <main style={{flex:1,overflow:'auto',padding:'24px 28px'}}>{screens[current]}</main>
+        <main style={{flex:1,overflow:'auto',zoom:uiZoom,padding:'24px 28px'}}>{screens[current]}</main>
       </div>
     );
   };
@@ -604,12 +628,6 @@ const RealLoginCard = ({ onAuthLogin, onUseDemo }) => {
           background: busy?'var(--ink-3)':'var(--accent)', color:'#fff',
           fontSize:14,fontWeight:700,cursor: busy?'default':'pointer',fontFamily:'inherit',
         }}>{busy ? tr('កំពុង​ចូល…','Signing in…') : tr('ចូល','Sign in')}</button>
-
-        <div style={{marginTop:16,textAlign:'center'}}>
-          <button type="button" onClick={onUseDemo} style={{border:'none',background:'none',cursor:'pointer',fontSize:11,color:'var(--ink-3)',textDecoration:'underline'}}>
-            {tr('ប្រើ​របៀប Demo','Use demo mode')}
-          </button>
-        </div>
       </form>
     </div>
   );

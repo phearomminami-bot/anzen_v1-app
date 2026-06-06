@@ -7,7 +7,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Hanuman:wght@400;700&family=Noto+Sans+Khmer:wght@400;500;600;700&family=Noto+Serif+Khmer:wght@400;500;600;700&family=Fraunces:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Moul&family=Battambang:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
   :root{
@@ -26,9 +26,12 @@
     --warn: #C66A2E;
     --good: #3B7A57;
     --danger: #B0413E;
+    /* Two Khmer typefaces only — Khmer OS (body) + Khmer OS Muol (titles).
+       local() uses the installed fonts; Google Moul / Battambang are the web fallbacks. */
     --font-en: 'Inter', system-ui, sans-serif;
-    --font-km: 'Noto Sans Khmer', 'Hanuman', sans-serif;
-    --font-display: 'Inter', 'Noto Sans Khmer', system-ui, sans-serif;
+    --font-km: 'Khmer OS', 'Battambang', sans-serif;
+    --font-title: 'Khmer OS Muol', 'Moul', serif;
+    --font-display: 'Inter', 'Khmer OS Muol', 'Moul', system-ui, sans-serif;
     --radius: 10px;
     --radius-sm: 6px;
   }
@@ -149,40 +152,38 @@ window.onerror = function(msg,src,line,col,err){
 
 <script>
 window.__trRegistry = {
+  "Add Anthropic API Key in Settings → AI & OCR": "សូម​បញ្ចូល Anthropic API Key ក្នុង Settings → AI & OCR",
+  "Cannot read card data": "មិន​អាច​អាន​ Card",
+  "ID card scanned ✓": "ស្គេន​អត្តសញ្ញាណ​ប័ណ្ណ​បញ្ចប់ ✓",
+  "Scan failed:": "ស្គេន​បរាជ័យ:",
   "Name required": "ត្រូវការ​ឈ្មោះ",
   "Min 4 chars": "Password ≥ ៤ ​​តួ",
   "Passwords do not match": "Password មិន​ដូចគ្នា",
   "Save Registration": "ចុះ​ឈ្មោះ​ចូល​រៀន · Save",
+  "ID card scanned ✓ — Review the fields below": "អត្តសញ្ញាណប័ណ្ណ ✓ — ពិនិត្យព័ត៌មានខាងក្រោម",
+  "Scan ID card to auto-fill the form": "ថតអត្តសញ្ញាណប័ណ្ណ ដើម្បីបំពេញ Form ស្វ័យប្រវត្ត",
+  "Use camera to photograph ID card → AI will extract data": "ប្រើ Camera ថតអត្តសញ្ញាណប័ណ្ណ → AI នឹងយកទិន្នន័យបំពេញ",
+  "Scanning...": "កំពុង​ស្គេន...",
+  "Scan ID Card": "ស្គេន​ ID Card",
   "1": "១",
-  "Student Personal Information": "ព័ត៌មានផ្ទាល់ខ្លួនសិស្ស",
+  "ID Card Information": "ព័ត៌មានពីអត្តសញ្ញាណប័ណ្ណ",
+  "Full name (Khmer) *": "គោត្តនាម-នាម (ខ្មែរ) *",
+  "Required": "ទាមទារ",
+  "Gender *": "ភេទ *",
+  "Date of birth *": "ថ្ងៃខែឆ្នាំកំណើត *",
+  "National ID": "អត្តសញ្ញាណប័ណ្ណលេខ",
+  "Current address": "អាសយដ្ឋានបច្ចុប្បន្ន",
+  "e.g. House:15, Village..., Commune..., District..., Province...": "ឧ. ផ្ទះ:១៥ ភូមិក្បាលស្ពាន ឃុំ... ស្រុក... ខេត្ត...",
+  "2": "២",
+  "Course & Additional Information": "ព័ត៌មានវគ្គសិក្សា និងព័ត៌មានបន្ថែម",
   "Student ID": "អត្តសញ្ញាណសិស្ស (Student ID)",
   "Password": "ពាក្យ​សម្ងាត់",
   "Auto-generated from DOB ✓": "បង្កើតពីថ្ងៃខែឆ្នាំកំណើត ✓",
   "— Enter or Generate —": "— បញ្ជូល ឬ ជ្រើស Generate —",
   "--- from DOB ---": "--- ថ្ងៃខែឆ្នាំកំណើត ---",
-  "Full name (Khmer) *": "គោត្តនាម-នាម (ខ្មែរ) *",
-  "Required": "ទាមទារ",
-  "Gender *": "ភេទ *",
-  "Date of birth *": "ថ្ងៃខែឆ្នាំកំណើត *",
   "Student Type": "ប្រភេទសិស្ស",
   "Regular": "ធម្មតា",
   "Special": "ពិសេស",
-  "Phone *": "លេខទូរស័ព្ទ *",
-  "National ID": "អត្តសញ្ញាណប័ណ្ណលេខ",
-  "Email": "អ៊ីមែល",
-  "Left Eye": "ភ្នែកឆ្វេង",
-  "Right Eye": "ភ្នែកស្ដាំ",
-  "Both Eyes": "ភ្នែកទាំងពីរ",
-  "Current address *": "អាសយដ្ឋានបច្ចុប្បន្ន *",
-  "Province / Capital": "ខេត្ត/រាជធានី",
-  "Select or type...": "ជ្រើស ឬ វាយ...",
-  "District / Khan": "ស្រុក/ខណ្ឌ",
-  "Commune / Sangkat": "ឃុំ/សង្កាត់",
-  "Village": "ភូមិ",
-  "Street No.": "ផ្លូវលេខ · Street No.",
-  "House No.": "ផ្ទះ​លេខ",
-  "2": "២",
-  "Course & Schedule Information": "ព័ត៌មានវគ្គសិក្សានិងវេនវេន",
   "License type *": "ប្រភេទបណ្ណបើកបរ *",
   "--- Select license type ---": "--- សូមជ្រើសរើសប្រភេទបណ្ណ ---",
   "Transmission type *": "ប្រភេទយានយន្ត (ប្រអប់លេខ) *",
@@ -191,6 +192,13 @@ window.__trRegistry = {
   "Automatic (លេខអូតូ)": "លេខអូតូ (Automatic)",
   "Study days *": "ថ្ងៃសិក្សា *",
   "Study shift *": "វេនសិក្សា *",
+  "Phone *": "លេខទូរស័ព្ទ *",
+  "Email": "អ៊ីមែល",
+  "Left Eye": "ភ្នែកឆ្វេង",
+  "Right Eye": "ភ្នែកស្ដាំ",
+  "Both Eyes": "ភ្នែកទាំងពីរ",
+  "Instructor": "គ្រូ",
+  "--- Select instructor ---": "--- ជ្រើស​គ្រូ ---",
   "3": "៣",
   "Payment & Study Hours": "ព័ត៌មានបង់ប្រាក់ និងម៉ោងសិក្សា",
   "Payment method *": "វិធីសាស្រ្តបង់ប្រាក់ *",
@@ -229,7 +237,6 @@ window.__trRegistry = {
   "Group / not individual": "ក្រុម / មិន​ផ្ទាល់​ខ្លួន",
   "Instructor *": "គ្រូ *",
   "⚠ Instructor busy": "⚠ គ្រូ​នេះ​រវល់​ម៉ោង​នេះ",
-  "--- Select instructor ---": "--- ជ្រើស​គ្រូ ---",
   "(busy)": "(រវល់)",
   "Vehicle": "យានយន្ត",
   "No vehicles — add in Fleet tab": "គ្មាន​ឡាន​ ← បន្ថែម​ក្នុង Tab Fleet",
@@ -339,7 +346,7 @@ window.__trRegistry = {
   "Deactivate staff?": "ផ្អាក​បុគ្គលិក?",
   "This will suspend this staff member\\'s access.": "សកម្មភាព​នេះ​នឹង​ផ្អាក​ការ​ចូល​ប្រើ​ប្រាស់​របស់​បុគ្គលិក​រូប​នេះ",
   "Deactivate": "ផ្អាក",
-  "Phone": "ទូរស័ព្ទ",
+  "Phone": "លេខ​ទូរស័ព្ទ",
   "Hire date": "ថ្ងៃ​​ចូល​ធ្វើការ",
   "Date of birth": "ថ្ងៃ​​កំណើត",
   "Salary info": "ព័ត៌មាន​ប្រាក់​ខែ",
@@ -416,7 +423,6 @@ window.__trRegistry = {
   "No mock tests taken yet": "មិន​ទាន់​មាន​ការ​ប្រឡង​សាកល្បង",
   "ACCOUNT INFO": "ព័ត៌មាន​គណនី",
   "Class": "ប្រភេទ",
-  "Instructor": "គ្រូបង្រៀន",
   "Class B": "ឡានបួនកង់",
   "Class A": "ម៉ូតូ",
   "Class C": "ឡានធំ",
@@ -669,9 +675,12 @@ window.__trRegistry = {
   "MTD": "ចំណាយ",
   "Service due": "ថែទាំ",
   "Expiring docs": "ឯកសារ",
+  "Inspection date": "ពិនិត្យថ្ងៃ",
+  "Previous day": "ថ្ងៃមុន",
+  "Next day": "ថ្ងៃបន្ទាប់",
   "No vehicles yet": "មិនទាន់​មាន​យានយន្ត",
   "Inspection saved ✓": "បានរក្សាទុកកំណត់ត្រាពិនិត្យ ✓",
-  "Daily Vehicle Inspection": "ទម្រង់ពិនិត្យប្រចាំថ្ងៃ · 日常点検表",
+  "Daily Vehicle Inspection": "ពិនិត្យយានយន្តប្រចាំថ្ងៃ",
   "By": "ពិនិត្យដោយ",
   "FUEL": "កំរិតសាំ",
   "INSPECTION ITEMS": "ការពិនិត្យ",
@@ -681,13 +690,11 @@ window.__trRegistry = {
   "Tap a type above to add an expense": "ចុចប្រភេទខាងលើ ដើម្បីបន្ថែមចំណាយ",
   "Notes / Remarks": "កំណត់សម្គាល់",
   "Damage, observations, or other notes…": "ការខូចខាត ឬ ចំណាំផ្សេងៗ…",
+  "Download PDF": "ទាញយក PDF",
   "Save inspection ✓": "រក្សាទុក ✓",
-  "Previous day": "ថ្ងៃមុន",
-  "Next day": "ថ្ងៃបន្ទាប់",
   "All vehicles": "រថយន្ត​ទាំងអស់",
   "record(s)": "កំណត់ត្រា",
   "vehicles checked": "យានយន្ត​បានពិនិត្យ",
-  "Download PDF": "ទាញយក PDF",
   "Not inspected": "មិន​ទាន់​ពិនិត្យ",
   "Inspection detail": "លម្អិត · Detail",
   "Inspector": "ពិនិត្យដោយ",
@@ -696,6 +703,9 @@ window.__trRegistry = {
   "Recent inspections (all dates)": "ប្រវត្តិពិនិត្យថ្មីៗ (គ្រប់ថ្ងៃ)",
   "Click to open this date": "ចុចដើម្បីបើកថ្ងៃនេះ",
   "Inspect": "ពិនិត្យ",
+  "No photo": "គ្មានរូប",
+  "Add photo": "បន្ថែមរូប",
+  "Delete this photo": "លុបរូបនេះ",
   "Hidden from Vehicle tab": "លាក់​ចេញ​ពី Tab Vehicle",
   "Shown in Vehicle tab": "បង្ហាញ​នៅ Tab Vehicle",
   "Hidden in Vehicle ●": "លាក់ Tab Vehicle ●",
@@ -742,6 +752,14 @@ window.__trRegistry = {
   "entries": "ធាតុ",
   "All categories": "ប្រភេទ​ទាំងអស់",
   "No expenses recorded": "មិនទាន់មានចំណាយ",
+  "Fuel level": "ប្រេងឥន្ធនៈ",
+  "Edit docs": "កែឯកសារ",
+  "Reg.": "ឆៀក",
+  "Road tax": "ពន្ធផ្លូវ",
+  "Oil change": "ប្ដូរប្រេងម៉ាស៊ីន",
+  "Usage this month": "ម៉ោងប្រើប្រាស់ខែនេះ",
+  "lessons": "មេរៀន",
+  "Daily Inspection": "ពិនិត្យប្រចាំថ្ងៃ",
   "No vehicles to display": "មិន​ទាន់​មាន​យានយន្ត",
   "Toggle vehicles visible in Vehicle management": "ធ្វើ​ឲ្យ​យានយន្ត​មើលឃើញ​នៅ​ Vehicle management",
   "Payment recorded": "បានចងចាំការបង់ · Payment recorded",
@@ -794,7 +812,9 @@ window.__trRegistry = {
   "Advertisement": "ការផ្សព្វផ្សាយ",
   "Other": "ផ្សេងៗ",
   "ADDRESS": "អាសយដ្ឋាន",
+  "House No.": "ផ្ទះ​លេខ",
   "Street": "ផ្លូវ",
+  "Village": "ភូមិ",
   "Commune": "ឃុំ/សង្កាត់",
   "District": "ស្រុក/ខណ្ឌ",
   "Province": "ខេត្ត/រាជធានី",
@@ -899,7 +919,6 @@ window.__trRegistry = {
   "New booking": "កក់​ថ្មី",
   "No instructors — add in Staff tab": "គ្មាន​គ្រូ — បន្ថែម​ក្នុង Tab Staff",
   "Click to book": "ចុច​ដើម្បី​កក់​ —  '+ins.name+' '+String(h).padStart(2,'0')+':00",
-  "lessons": "មេរៀន",
   "instructors": "គ្រូ",
   "CANCEL RATE": "អត្រា​",
   "TOP REASONS": "មូលហេតុ​​ទូទៅ",
@@ -911,6 +930,15 @@ window.__trRegistry = {
   "CONTACT": "ការ​ទាក់​ទង​សាធារណៈ",
   "BUSINESS HOURS": "ម៉ោង​ធ្វើ​ការ",
   "Closed": "បិទ",
+  "AI & OCR": "បញ្ញាប្រឌិត · AI & OCR",
+  "Add an Anthropic API Key to enable automatic ID card scanning in student enrollment.": "បញ្ចូល Anthropic API Key ដើម្បីបើក ស្គេនអត្តសញ្ញាណប័ណ្ណ ស្វ័យប្រវត្ត នៅក្នុងការចុះឈ្មោះសិស្ស។",
+  "Test": "សាក",
+  "API Key saved — ID card scanning ready": "API Key បានរក្សាទុក — ស្គេន ID Card ត្រៀមប្រើ",
+  "How to use:": "របៀបប្រើ:",
+  "Go to console.anthropic.com → API Keys → Create Key": "ចូល console.anthropic.com → API Keys → Create Key",
+  "Copy the key and paste it above": "Copy key ហើយ paste នៅខាងលើ",
+  "Click Test → then Save": "ចុច Test → រួចចុច Save",
+  "In Add Student form → click \"📷 Scan ID Card\"": "ក្នុង Add Student form → ចុច \"📷 ស្គេនអត្តសញ្ញាណប័ណ្ណ\"",
   "Enter a branch name": "សូម​បញ្ចូល​ឈ្មោះ​សាខា",
   "Branch added ✓": "បាន​បន្ថែម​សាខា ✓",
   "Branch removed": "បាន​លុប​សាខា",
@@ -990,7 +1018,6 @@ window.__trRegistry = {
   "How: 1) Create a bot via @BotFather, copy the token 2) Student sends /start to the bot 3) Put their Chat ID in the student profile. Time-scheduled sends need a separate always-on bot server.": "របៀប៖ ១) បង្កើត bot ជាមួយ @BotFather យក token ២) សិស្ស​ផ្ញើ /start ទៅ bot ៣) យក Chat ID ដាក់ក្នុងប្រវត្តិសិស្ស។ ការផ្ញើតាមម៉ោងជាក់លាក់ ត្រូវការ server bot ដាច់ដោយឡែក។",
   "AUTOMATED REMINDERS": "ការ​ជូន​ដំណឹង​ស្វ័យ​ប្រវត្តិ",
   "Click to toggle channel": "ចុចដើម្បីបិទ/បើក",
-  "Test": "សាក",
   "Click \"🔔 Test\" to push a live notification to the bell above.": "ចុច \"🔔 សាក\" ដើម្បីផ្ញើការជូនដំណឹងសាកល្បងភ្លាមៗ ទៅរូបកណ្ដឹងខាងលើ។",
   "MESSAGE TEMPLATES": "គំរូ​សារ",
   "Reset": "ដក​ចេញ",
@@ -998,12 +1025,19 @@ window.__trRegistry = {
   "PREVIEW": "មើលជាមុន",
   "Variables": "អថេរ",
   "3RD-PARTY INTEGRATIONS": "សេវាកម្ម​ខាង​ក្រៅ",
+  "Cannot find account": "មិន​អាច​រក​គណនី",
+  "Please enter your name": "សូម​បំពេញ​ឈ្មោះ",
+  "Profile saved": "បានរក្សាទុក​ប្រវត្តិរូប",
   "THEME · ផ្ទៃ​ខ្នង": "ផ្ទៃ​ខ្នង · THEME",
   "LANGUAGE": "ភាសា · LANGUAGE",
   "Choose the interface language for all screens in the app.": "ជ្រើស​រើស​ភាសា​បង្ហាញ​សម្រាប់​ផ្ទាំង​ទាំង​អស់​នៅ​ក្នុង​​​​​ app។",
   "FONT SIZE · ទំហំ​អក្សរ": "ទំហំ​អក្សរ · FONT SIZE",
   "ACCOUNT · គណនី": "ទំហំ​អក្សរ​​​​ · '+o.label,'Font size · '+o.en),'good'); }} style={{\n                padding:'14px 10px', textAlign:'center',\n                background: active ? 'var(--accent-soft)' : 'var(--surface)',\n                border: '2px solid '+(active ? 'var(--accent)' : 'var(--border)'),\n                borderRadius:12, cursor:'pointer', font:'inherit', color:'inherit',\n                transition:'all .12s', display:'flex', flexDirection:'column', alignItems:'center', gap:6,\n              }}>\n                <div style={{width:36,height:36,borderRadius:10,background:active?'var(--accent)':'var(--surface-muted)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:o.px,fontWeight:700,color:active?'#fff':'var(--ink-2)',transition:'all .12s',flexShrink:0}}>A</div>\n                <div style={{fontSize:13,fontWeight:active?600:400,color:active?'var(--accent)':'var(--ink-2)'}}>{tr(o.label,o.en)}</div>\n                <div style={{fontSize:10,color:'var(--ink-3)',fontFamily:'\"JetBrains Mono\",monospace'}}>{o.px}px</div>\n              </button>\n            );\n          })}\n        </div>\n      </Card>\n\n      {/* Account / avatar upload */}\n      <Card label={tr('គណនី · ACCOUNT",
   "Click avatar to change photo": "ចុច​លើ​រូប​ភាព​ដើម្បី​ផ្លាស់ប្ដូរ",
+  "Khmer Name": "ឈ្មោះ​ខ្មែរ",
+  "Name in Khmer": "ឈ្មោះ​ជា​ភាសា​ខ្មែរ",
+  "English Name": "ឈ្មោះ​ជា​ភាសា​អង់គ្លេស",
+  "Save Profile": "រក្សា​ទុក​ប្រវត្តិ​រូប",
   "NOTIFICATIONS · ការ​ជូន​ដំណឹង": "ការ​ជូន​ដំណឹង · NOTIFICATIONS",
   "DANGER ZONE": "ឌាមីន · DANGER ZONE",
   "Delete account": "លុប​គណនី",
@@ -1180,7 +1214,6 @@ window.__trRegistry = {
   "Sign in": "ចូល​គណនី",
   "Enter your email and password": "បញ្ចូល​អ៊ីមែល និង​ពាក្យ​សម្ងាត់​របស់​អ្នក",
   "Signing in…": "កំពុង​ចូល…",
-  "Use demo mode": "ប្រើ​របៀប Demo",
   "Incorrect Student ID or password": "Student ID ឬ Password មិន​ត្រឹម​ត្រូវ",
   "Account suspended — please contact the school": "គណនីត្រូវបានផ្អាក — សូម​ទំនាក់ទំនង​គ្រឹះស្ថាន",
   "Please enter ID and password": "សូម​បំពេញ ID និង Password",
@@ -2876,7 +2909,7 @@ var Icon = ({
     home: 'M3 11l9-8 9 8M5 9.5V21h14V9.5',
     users: 'M3 20c1-4 4-6 7-6s6 2 7 6M10 8a4 4 0 108 0 4 4 0 00-8 0',
     cal: 'M4 6h16v15H4zM4 10h16M9 3v4M15 3v4',
-    car: 'M3 16h18l-2-7H5l-2 7zM6 16v2M18 16v2M7 12h10',
+    car: 'M14 16H9m10 0h3v-3.15a1 1 0 00-.84-.99L16 11l-2.7-3.6a1 1 0 00-.8-.4H5.24a2 2 0 00-1.8 1.1L2 11v5h2M4 16.5a2.5 2.5 0 105 0a2.5 2.5 0 10-5 0M14 16.5a2.5 2.5 0 105 0a2.5 2.5 0 10-5 0',
     chart: 'M4 20V8M10 20V4M16 20v-6M22 20H2',
     cash: 'M3 7h18v10H3zM12 9a3 3 0 100 6 3 3 0 000-6zM6 9v6M18 9v6',
     star: 'M12 3l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z',
@@ -3074,12 +3107,7 @@ var nextLesson = studentId => {
   return LESSONS.filter(l => l.studentId === studentId && l.date >= today && l.status === 'scheduled').sort((a, b) => a.date.localeCompare(b.date) || a.h - b.h)[0] || null;
 };
 var can = (role, action, target) => {
-  if (role === 'admin') return true;
-  if (role === 'instructor') {
-    if (action === 'view') return true;
-    if (action === 'edit' || action === 'create') return ['student', 'instructor', 'lesson'].includes(target);
-    return false;
-  }
+  if (role === 'admin' || role === 'instructor') return true;
   if (role === 'student') {
     if (action === 'view') return ['self', 'student'].includes(target);
     if (action === 'create') return target === 'booking';
@@ -3372,7 +3400,7 @@ var nextLessonId = () => {
   return 'L-' + String(n).padStart(4, '0');
 };
 var STORE_KEY = 'anzen_v1';
-var saveAllData = () => {
+var saveAllData = skipCloud => {
   try {
     localStorage.setItem(STORE_KEY, JSON.stringify({
       v: 1,
@@ -3407,9 +3435,11 @@ var saveAllData = () => {
     }));
     window.__autoBackup?.();
   } catch (e) {}
-  try {
-    if (window.__sbConfigured && window.__sbConfigured()) window.__sbSyncAll && window.__sbSyncAll();
-  } catch (e) {}
+  if (!skipCloud) {
+    try {
+      if (window.__sbConfigured && window.__sbConfigured()) window.__sbSyncAll && window.__sbSyncAll();
+    } catch (e) {}
+  }
 };
 (() => {
   try {
@@ -3453,7 +3483,7 @@ var saveAllData = () => {
 })();
 setInterval(() => {
   try {
-    saveAllData();
+    saveAllData(true);
   } catch (e) {}
 }, 30000);
 Object.assign(window, {
@@ -5501,12 +5531,7 @@ var NewStudentForm = ({
   var [eyeLeft, setEyeLeft] = React.useState('');
   var [eyeRight, setEyeRight] = React.useState('');
   var [eyeBoth, setEyeBoth] = React.useState('');
-  var [addrHouse, setAddrHouse] = React.useState('');
-  var [addrStreet, setAddrStreet] = React.useState('');
-  var [prov, setProv] = React.useState('');
-  var [dist, setDist] = React.useState('');
-  var [comm, setComm] = React.useState('');
-  var [vill, setVill] = React.useState('');
+  var [address, setAddress] = React.useState('');
   var [instId, setInstId] = React.useState('');
   var [pw, setPw] = React.useState('');
   var [pw2, setPw2] = React.useState('');
@@ -5517,6 +5542,174 @@ var NewStudentForm = ({
   var sf = window.__schoolSettings?.studentForm || {};
   var sfShifts = sf.shifts?.length ? sf.shifts : ['ព្រឹក', 'ថ្ងៃ​ត្រង់', 'រសៀល', 'យប់'];
   var sfDays = sf.days?.length ? sf.days : ['ចន្ទ-សុក្រ', 'សៅរ៍-អាទិត្យ'];
+  var [scanning, setScanning] = React.useState(false);
+  var [idPreview, setIdPreview] = React.useState(null);
+  var idFileRef = React.useRef(null);
+  var parseMRZ = (mrz1, mrz2, mrz3) => {
+    var out = {};
+    if (mrz1) {
+      var m = mrz1.replace(/\s/g, '').match(/^IDKHM(\d{9})\d/i);
+      if (m) out.natId = m[1];
+    }
+    if (mrz2 && mrz2.replace(/\s/g, '').length >= 15) {
+      var s = mrz2.replace(/\s/g, '');
+      var dob6 = s.slice(0, 6);
+      var sex = s[7];
+      var yy = parseInt(dob6.slice(0, 2), 10);
+      var yyyy = yy > 25 ? 1900 + yy : 2000 + yy;
+      if (/^\d{6}$/.test(dob6)) out.dob = `${yyyy}-${dob6.slice(2, 4)}-${dob6.slice(4, 6)}`;
+      out.gender = sex === 'M' ? 'ប្រុស' : sex === 'F' ? 'ស្រី' : '';
+    }
+    if (mrz3) {
+      var clean = mrz3.replace(/\s/g, '').replace(/<+$/, '');
+      var parts = clean.split('<<');
+      var surname = (parts[0] || '').replace(/</g, ' ').trim();
+      var given = (parts[1] || '').replace(/</g, ' ').trim();
+      out.nameEn = given ? `${surname} ${given}` : surname;
+    }
+    return out;
+  };
+  var scanIdCard = async file => {
+    if (!file) return;
+    var apiKey = window.__schoolSettings?.anthropicKey;
+    if (!apiKey) {
+      toast(tr('សូម​បញ្ចូល Anthropic API Key ក្នុង Settings → AI & OCR', 'Add Anthropic API Key in Settings → AI & OCR'), 'warn');
+      return;
+    }
+    setName('');
+    setNameEn('');
+    setDob('');
+    setGenPw(false);
+    setPw('');
+    setPw2('');
+    setGender('');
+    setNatId('');
+    setScanning(true);
+    setIdPreview(URL.createObjectURL(file));
+    try {
+      var processedBlob = await new Promise(resolve => {
+        var img = new Image();
+        var url = URL.createObjectURL(file);
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          var canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          var ctx = canvas.getContext('2d');
+          ctx.filter = 'grayscale(1) contrast(1.5) brightness(1.05)';
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob(resolve, 'image/jpeg', 0.93);
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          resolve(file);
+        };
+        img.src = url;
+      });
+      var b64 = await new Promise((res, rej) => {
+        var r = new FileReader();
+        r.onload = e => res(e.target.result.split(',')[1]);
+        r.onerror = rej;
+        r.readAsDataURL(processedBlob);
+      });
+      var prompt = `You are reading a Cambodian National ID card (អត្តសញ្ញាណប័ណ្ណជាតិ).
+The card uses "Khmer OS Muol" — a THICK, BOLD, ROUNDED font. Study carefully before reading.
+
+━━━ KHMER OS MUOL: COMMON CHARACTER CONFUSIONS ━━━
+These pairs look very similar in this bold font — read slowly:
+• ប (bɑ) vs ច (cɑ)  — ប has a round closed bottom; ច has an open hook at bottom-right
+• ណ (ṇɑ) vs ន (nɑ)  — ណ is wider with a round body; ន is narrower
+• ត (tɑ) vs ដ (dɑ)  — ត has a flat top; ដ has a subscript curl
+• រ (rɑ) vs វ (vɑ)  — រ curves left; វ has two symmetric curves
+• ភ (phɑ) vs ប (bɑ) — ភ has an extra stroke on the right
+• ហ (hɑ) vs ហ       — check vowel signs above carefully (ា ិ ី ឹ ើ ោ ...)
+• Subscripts (្ + consonant) appear BELOW the main letter: ្វ ្ម ្ន ្រ ្ល ្ស
+
+━━━ FEW-SHOT EXAMPLES (real Cambodian IDs) ━━━
+nameKm examples with their Latin equivalents:
+  "ឆាយ ភារម្យ"   → CHHAY PHEAROM   (note: ភ not ប; រ not វ; ម្យ = subscript យ)
+  "សែន ហាណាហ្វី" → SEN HANAFI      (note: ហ្វ = subscript វ under ហ)
+  "អ៊ូ សុខា"      → OU SOKHA
+  "ចាន់ ដារ៉ា"    → CHAN DARA       (note: ណ not ន)
+  "ហ៊ុន ម៉ាណែត"   → HUN MANET
+
+Address structure on Cambodian ID (top→bottom):
+  ផ្ទះ:១៥ ភូមិក្បាលស្ពាន ឃុំ... ស្រុក... ខេត្ត...
+  (House:15, Village:Kbal Spean, Commune:..., District:..., Province:...)
+
+All 25 provinces/capitals (match addrProvince to one of these exactly):
+  ភ្នំពេញ · កណ្ដាល · ព្រៃវែង · ស្វាយរៀង · ក្រចេះ · ស្ទឹងត្រែង · រតនគិរី · មណ្ឌលគិរី
+  បាត់ដំបង · ពោធ៍សាត់ · ព្រះសីហនុ · កែប · កំពត · តាកែវ · កំពង់ស្ពឺ
+  កំពង់ចាម · ត្បូងឃ្មុំ · កំពង់ធំ · កំពង់ឆ្នាំង · បន្ទាយមានជ័យ · ឧត្ដរមានជ័យ
+  ព្រះវិហារ · សៀមរាប · ប៉ៃលិន · ប្លែ (ប្រានប្រ)
+
+━━━ YOUR TASK ━━━
+STEP 1 — Copy the 3 MRZ lines EXACTLY (alphanumeric only, no spaces):
+  mrz1: line starting with "IDKHM"
+  mrz2: line starting with 6 digits
+  mrz3: line with SURNAME<<GIVENNAME
+
+STEP 2 — Read only the Khmer name:
+  nameKm: full Khmer name after "គោត្តនាមនិងនាម:"
+          cross-check: first letter should match MRZ surname initial
+
+Return ONLY this JSON (no explanation, no markdown):
+{
+  "mrz1": "",
+  "mrz2": "",
+  "mrz3": "",
+  "nameKm": ""
+}
+Use "" for any field that cannot be read clearly.`;
+      var resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 600,
+          messages: [{
+            role: 'user',
+            content: [{
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: 'image/jpeg',
+                data: b64
+              }
+            }, {
+              type: 'text',
+              text: prompt
+            }]
+          }]
+        })
+      });
+      if (!resp.ok) {
+        var e = await resp.json();
+        throw new Error(e.error?.message || 'API ' + resp.status);
+      }
+      var data = await resp.json();
+      var raw = data.content?.[0]?.text || '';
+      var m = raw.match(/\{[\s\S]*\}/);
+      if (!m) throw new Error(tr('មិន​អាច​អាន​ Card', 'Cannot read card data'));
+      var x = JSON.parse(m[0]);
+      var mrzData = parseMRZ(x.mrz1, x.mrz2, x.mrz3);
+      if (mrzData.natId) setNatId(mrzData.natId);
+      if (mrzData.dob) handleDob(mrzData.dob);
+      if (mrzData.gender) setGender(mrzData.gender);
+      if (mrzData.nameEn) setNameEn(mrzData.nameEn);
+      if (x.nameKm) setName(x.nameKm.trim());
+      toast(tr('ស្គេន​អត្តសញ្ញាណ​ប័ណ្ណ​បញ្ចប់ ✓', 'ID card scanned ✓'), 'good');
+    } catch (e) {
+      toast(tr('ស្គេន​បរាជ័យ: ', 'Scan failed: ') + e.message, 'danger');
+    } finally {
+      setScanning(false);
+    }
+  };
   var touch = f => setTouched(p => ({
     ...p,
     [f]: true
@@ -5599,25 +5792,6 @@ var NewStudentForm = ({
   var pwColors = ['var(--border)', 'var(--danger)', 'var(--warn)', 'var(--good)'];
   var pwLabels = ['', 'ខ្សោយ · Weak', 'មធ្យម · Fair', 'ល្អ · Strong'];
   var selectedInst = INSTRUCTORS.find(i => i.id === instId);
-  var provList = Object.keys(KH_ADDRESS);
-  var distList = prov ? Object.keys(KH_ADDRESS[prov] || {}) : [];
-  var commList = prov && dist ? Object.keys(KH_ADDRESS[prov]?.[dist] || {}) : [];
-  var villList = prov && dist && comm ? KH_ADDRESS[prov]?.[dist]?.[comm] || [] : [];
-  var handleProv = v => {
-    setProv(v);
-    setDist('');
-    setComm('');
-    setVill('');
-  };
-  var handleDist = v => {
-    setDist(v);
-    setComm('');
-    setVill('');
-  };
-  var handleComm = v => {
-    setComm(v);
-    setVill('');
-  };
   var err = {
     name: touched.name && !name.trim(),
     nameEn: touched.nameEn && !nameEn.trim(),
@@ -5674,13 +5848,7 @@ var NewStudentForm = ({
       age: dob ? Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 3600 * 1000)) : 24,
       dob,
       natId: natId.trim(),
-      addr_province: prov,
-      addr_district: dist,
-      addr_commune: comm,
-      addr_village: vill,
-      addr_house: addrHouse.trim(),
-      addr_street: addrStreet.trim(),
-      address: [addrHouse.trim(), addrStreet.trim(), vill, comm, dist, prov].filter(Boolean).join(', ') || '—',
+      address: address.trim() || '—',
       vehType,
       trans: vehType === 'manual' ? 'MT' : 'AT',
       shift: shift.join(', '),
@@ -5717,51 +5885,86 @@ var NewStudentForm = ({
     onCancel: onClose,
     onSave: save,
     saveLabel: tr('ចុះ​ឈ្មោះ​ចូល​រៀន · Save', 'Save Registration')
-  }, React.createElement(SEC, {
-    num: tr('១', '1'),
-    label: tr('ព័ត៌មានផ្ទាល់ខ្លួនសិស្ស', 'Student Personal Information')
-  }), React.createElement(Row, null, React.createElement(ReadField, {
-    label: tr('អត្តសញ្ញាណសិស្ស (Student ID)', 'Student ID'),
-    value: nextId,
-    mono: true
-  }), React.createElement(Field, {
-    label: tr('លេខសម្ងាត់ (Password)', 'Password'),
-    sub: dobPw ? tr('បង្កើតពីថ្ងៃខែឆ្នាំកំណើត ✓', 'Auto-generated from DOB ✓') : tr('— បញ្ជូល ឬ ជ្រើស Generate —', '— Enter or Generate —')
-  }, React.createElement("div", {
+  }, React.createElement("input", {
+    ref: idFileRef,
+    type: "file",
+    accept: "image/*",
+    capture: "environment",
     style: {
-      position: 'relative'
+      display: 'none'
+    },
+    onChange: e => {
+      scanIdCard(e.target.files?.[0]);
+      e.target.value = '';
+    }
+  }), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 12,
+      alignItems: 'center',
+      padding: '12px 14px',
+      background: idPreview ? 'var(--surface-muted)' : 'var(--accent-soft)',
+      border: '1.5px dashed var(--accent)',
+      borderRadius: 12,
+      marginBottom: 4
+    }
+  }, idPreview && React.createElement("img", {
+    src: idPreview,
+    alt: "ID",
+    style: {
+      width: 100,
+      height: 63,
+      objectFit: 'cover',
+      borderRadius: 6,
+      border: '1px solid var(--border)',
+      flexShrink: 0
+    }
+  }), React.createElement("div", {
+    style: {
+      flex: 1
     }
   }, React.createElement("div", {
     style: {
-      height: 46,
-      padding: '0 44px 0 14px',
+      fontSize: 13,
+      fontWeight: 600,
+      marginBottom: 4
+    }
+  }, idPreview ? tr('អត្តសញ្ញាណប័ណ្ណ ✓ — ពិនិត្យព័ត៌មានខាងក្រោម', 'ID card scanned ✓ — Review the fields below') : tr('ថតអត្តសញ្ញាណប័ណ្ណ ដើម្បីបំពេញ Form ស្វ័យប្រវត្ត', 'Scan ID card to auto-fill the form')), React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--ink-3)'
+    }
+  }, tr('ប្រើ Camera ថតអត្តសញ្ញាណប័ណ្ណ → AI នឹងយកទិន្នន័យបំពេញ', 'Use camera to photograph ID card → AI will extract data'))), React.createElement("button", {
+    onClick: () => idFileRef.current?.click(),
+    disabled: scanning,
+    style: {
       display: 'flex',
       alignItems: 'center',
-      border: `1.5px solid ${pw ? 'var(--border)' : 'var(--border)'}`,
-      borderRadius: 10,
-      background: 'var(--surface-muted)',
-      color: pw ? 'var(--ink)' : 'var(--ink-3)',
-      fontFamily: '"JetBrains Mono",monospace',
-      fontSize: 15,
-      letterSpacing: '.06em'
-    }
-  }, pw ? '•'.repeat(Math.min(pw.length, 10)) : tr('--- ថ្ងៃខែឆ្នាំកំណើត ---', '--- from DOB ---')), React.createElement("button", {
-    type: "button",
-    onClick: generatePw,
-    title: "Generate",
-    style: {
-      position: 'absolute',
-      right: 10,
-      top: '50%',
-      transform: 'translateY(-50%)',
+      gap: 7,
+      padding: '10px 16px',
+      background: scanning ? 'var(--surface-muted)' : 'var(--accent)',
+      color: scanning ? 'var(--ink-3)' : '#fff',
       border: 'none',
-      background: 'transparent',
-      cursor: 'pointer',
-      color: 'var(--accent)',
+      borderRadius: 9,
+      cursor: scanning ? 'wait' : 'pointer',
+      fontWeight: 600,
       fontSize: 13,
-      padding: 4
+      font: 'inherit',
+      flexShrink: 0,
+      transition: 'all .15s'
     }
-  }, "\u26A1")))), React.createElement(Row, null, React.createElement(Field, {
+  }, scanning ? React.createElement(React.Fragment, null, React.createElement("span", {
+    style: {
+      fontSize: 16
+    }
+  }, "\u23F3"), " ", tr('កំពុង​ស្គេន...', 'Scanning...')) : React.createElement(React.Fragment, null, React.createElement("span", {
+    style: {
+      fontSize: 16
+    }
+  }, "\uD83D\uDCF7"), " ", tr('ស្គេន​ ID Card', 'Scan ID Card')))), React.createElement(SEC, {
+    num: tr('១', '1'),
+    label: tr('ព័ត៌មានពីអត្តសញ្ញាណប័ណ្ណ', 'ID Card Information')
+  }), React.createElement(Row, null, React.createElement(Field, {
     label: tr('គោត្តនាម-នាម (ខ្មែរ) *', 'Full name (Khmer) *'),
     sub: err.name ? tr('ទាមទារ', 'Required') : ''
   }, React.createElement(Input, {
@@ -5822,6 +6025,79 @@ var NewStudentForm = ({
     value: dob,
     onChange: e => handleDob(e.target.value)
   }))), React.createElement(Row, null, React.createElement(Field, {
+    label: tr('អត្តសញ្ញាណប័ណ្ណលេខ', 'National ID')
+  }, React.createElement(Input, {
+    placeholder: "\u17A7. 010203045",
+    value: natId,
+    onChange: e => setNatId(e.target.value)
+  })), React.createElement("div", null)), React.createElement(Row, null, React.createElement(Field, {
+    full: true,
+    label: tr('អាសយដ្ឋានបច្ចុប្បន្ន', 'Current address')
+  }, React.createElement("textarea", {
+    value: address,
+    onChange: e => setAddress(e.target.value),
+    placeholder: tr('ឧ. ផ្ទះ:១៥ ភូមិក្បាលស្ពាន ឃុំ... ស្រុក... ខេត្ត...', 'e.g. House:15, Village..., Commune..., District..., Province...'),
+    rows: 3,
+    style: {
+      width: '100%',
+      padding: '10px 14px',
+      borderRadius: 10,
+      resize: 'vertical',
+      border: '1.5px solid var(--border)',
+      background: 'var(--surface-muted)',
+      color: 'var(--ink)',
+      fontFamily: 'var(--font-km),sans-serif',
+      fontSize: 15,
+      lineHeight: 1.6,
+      boxSizing: 'border-box',
+      outline: 'none',
+      fontWeight: 400
+    }
+  }))), React.createElement(SEC, {
+    num: tr('២', '2'),
+    label: tr('ព័ត៌មានវគ្គសិក្សា និងព័ត៌មានបន្ថែម', 'Course & Additional Information')
+  }), React.createElement(Row, null, React.createElement(ReadField, {
+    label: tr('អត្តសញ្ញាណសិស្ស (Student ID)', 'Student ID'),
+    value: nextId,
+    mono: true
+  }), React.createElement(Field, {
+    label: tr('លេខសម្ងាត់ (Password)', 'Password'),
+    sub: dobPw ? tr('បង្កើតពីថ្ងៃខែឆ្នាំកំណើត ✓', 'Auto-generated from DOB ✓') : tr('— បញ្ជូល ឬ ជ្រើស Generate —', '— Enter or Generate —')
+  }, React.createElement("div", {
+    style: {
+      position: 'relative'
+    }
+  }, React.createElement("div", {
+    style: {
+      height: 46,
+      padding: '0 44px 0 14px',
+      display: 'flex',
+      alignItems: 'center',
+      border: `1.5px solid ${pw ? 'var(--border)' : 'var(--border)'}`,
+      borderRadius: 10,
+      background: 'var(--surface-muted)',
+      color: pw ? 'var(--ink)' : 'var(--ink-3)',
+      fontFamily: '"JetBrains Mono",monospace',
+      fontSize: 15,
+      letterSpacing: '.06em'
+    }
+  }, pw ? '•'.repeat(Math.min(pw.length, 10)) : tr('--- ថ្ងៃខែឆ្នាំកំណើត ---', '--- from DOB ---')), React.createElement("button", {
+    type: "button",
+    onClick: generatePw,
+    title: "Generate",
+    style: {
+      position: 'absolute',
+      right: 10,
+      top: '50%',
+      transform: 'translateY(-50%)',
+      border: 'none',
+      background: 'transparent',
+      cursor: 'pointer',
+      color: 'var(--accent)',
+      fontSize: 13,
+      padding: 4
+    }
+  }, "\u26A1")))), React.createElement(Row, null, React.createElement(Field, {
     label: tr('ប្រភេទសិស្ស', 'Student Type')
   }, React.createElement(Select, {
     value: studentType,
@@ -5833,120 +6109,6 @@ var NewStudentForm = ({
   }, tr('ពិសេស', 'Special')), React.createElement("option", {
     value: "SSW"
   }, "SSW"))), React.createElement("div", null)), React.createElement(Row, null, React.createElement(Field, {
-    label: tr('លេខទូរស័ព្ទ *', 'Phone *')
-  }, React.createElement(Input, {
-    placeholder: "\u17A7. 012345678",
-    value: phone,
-    onChange: e => setPhone(e.target.value)
-  })), React.createElement(Field, {
-    label: tr('អត្តសញ្ញាណប័ណ្ណលេខ', 'National ID')
-  }, React.createElement(Input, {
-    placeholder: "\u17A7. 010203045",
-    value: natId,
-    onChange: e => setNatId(e.target.value)
-  }))), React.createElement(Row, null, React.createElement(Field, {
-    label: tr('អ៊ីមែល · Email', 'Email')
-  }, React.createElement(Input, {
-    placeholder: "name@email.com",
-    value: email,
-    onChange: e => setEmail(e.target.value)
-  })), React.createElement("div", null)), React.createElement(Row, null, React.createElement(Field, {
-    label: tr('ភ្នែកឆ្វេង · Left Eye', 'Left Eye')
-  }, React.createElement(Select, {
-    value: eyeLeft,
-    onChange: e => setEyeLeft(e.target.value)
-  }, EYE_OPTS.map(v => React.createElement("option", {
-    key: v || 'none',
-    value: v
-  }, v || '—')))), React.createElement(Field, {
-    label: tr('ភ្នែកស្ដាំ · Right Eye', 'Right Eye')
-  }, React.createElement(Select, {
-    value: eyeRight,
-    onChange: e => setEyeRight(e.target.value)
-  }, EYE_OPTS.map(v => React.createElement("option", {
-    key: v || 'none',
-    value: v
-  }, v || '—'))))), React.createElement(Row, null, React.createElement(Field, {
-    label: tr('ភ្នែកទាំងពីរ · Both Eyes', 'Both Eyes')
-  }, React.createElement(Select, {
-    value: eyeBoth,
-    onChange: e => setEyeBoth(e.target.value)
-  }, EYE_OPTS.map(v => React.createElement("option", {
-    key: v || 'none',
-    value: v
-  }, v || '—')))), React.createElement("div", null)), React.createElement("div", {
-    style: {
-      fontSize: 15,
-      fontWeight: 700,
-      color: 'var(--ink)',
-      fontFamily: 'var(--font-km)',
-      marginTop: 16,
-      marginBottom: 10
-    }
-  }, tr('អាសយដ្ឋានបច្ចុប្បន្ន *', 'Current address *')), React.createElement(Row, null, React.createElement(Field, {
-    label: tr('ខេត្ត/រាជធានី', 'Province / Capital')
-  }, React.createElement(Input, {
-    list: "nf-prov",
-    value: prov,
-    onChange: e => handleProv(e.target.value),
-    placeholder: tr('ជ្រើស ឬ វាយ...', 'Select or type...')
-  }), React.createElement("datalist", {
-    id: "nf-prov"
-  }, provList.map(p => React.createElement("option", {
-    key: p,
-    value: p
-  })))), React.createElement(Field, {
-    label: tr('ស្រុក/ខណ្ឌ', 'District / Khan')
-  }, React.createElement(Input, {
-    list: "nf-dist",
-    value: dist,
-    onChange: e => handleDist(e.target.value),
-    placeholder: tr('ជ្រើស ឬ វាយ...', 'Select or type...')
-  }), React.createElement("datalist", {
-    id: "nf-dist"
-  }, distList.map(d => React.createElement("option", {
-    key: d,
-    value: d
-  }))))), React.createElement(Row, null, React.createElement(Field, {
-    label: tr('ឃុំ/សង្កាត់', 'Commune / Sangkat')
-  }, React.createElement(Input, {
-    list: "nf-comm",
-    value: comm,
-    onChange: e => handleComm(e.target.value),
-    placeholder: tr('ជ្រើស ឬ វាយ...', 'Select or type...')
-  }), React.createElement("datalist", {
-    id: "nf-comm"
-  }, commList.map(c => React.createElement("option", {
-    key: c,
-    value: c
-  })))), React.createElement(Field, {
-    label: tr('ភូមិ', 'Village')
-  }, React.createElement(Input, {
-    list: "nf-vill",
-    value: vill,
-    onChange: e => setVill(e.target.value),
-    placeholder: tr('ជ្រើស ឬ វាយ...', 'Select or type...')
-  }), React.createElement("datalist", {
-    id: "nf-vill"
-  }, villList.map(v => React.createElement("option", {
-    key: v,
-    value: v
-  }))))), React.createElement(Row, null, React.createElement(Field, {
-    label: tr('ផ្លូវលេខ · Street No.', 'Street No.')
-  }, React.createElement(Input, {
-    placeholder: "\u17A7. \u1795\u17D2\u179B\u17BC\u179C 310",
-    value: addrStreet,
-    onChange: e => setAddrStreet(e.target.value)
-  })), React.createElement(Field, {
-    label: tr('ផ្ទះលេខ · House No.', 'House No.')
-  }, React.createElement(Input, {
-    placeholder: "\u17A7. 123",
-    value: addrHouse,
-    onChange: e => setAddrHouse(e.target.value)
-  }))), React.createElement(SEC, {
-    num: tr('២', '2'),
-    label: tr('ព័ត៌មានវគ្គសិក្សានិងវេនវេន', 'Course & Schedule Information')
-  }), React.createElement(Row, null, React.createElement(Field, {
     label: tr('ប្រភេទបណ្ណបើកបរ *', 'License type *')
   }, React.createElement(Select, {
     value: cls,
@@ -6030,7 +6192,53 @@ var NewStudentForm = ({
         transition: 'all .15s'
       }
     }, h);
-  })))), React.createElement(SEC, {
+  })))), React.createElement(Row, null, React.createElement(Field, {
+    label: tr('លេខទូរស័ព្ទ *', 'Phone *')
+  }, React.createElement(Input, {
+    placeholder: "\u17A7. 012345678",
+    value: phone,
+    onChange: e => setPhone(e.target.value)
+  })), React.createElement(Field, {
+    label: tr('អ៊ីមែល · Email', 'Email')
+  }, React.createElement(Input, {
+    placeholder: "name@email.com",
+    value: email,
+    onChange: e => setEmail(e.target.value)
+  }))), React.createElement(Row, null, React.createElement(Field, {
+    label: tr('ភ្នែកឆ្វេង · Left Eye', 'Left Eye')
+  }, React.createElement(Select, {
+    value: eyeLeft,
+    onChange: e => setEyeLeft(e.target.value)
+  }, EYE_OPTS.map(v => React.createElement("option", {
+    key: v || 'none',
+    value: v
+  }, v || '—')))), React.createElement(Field, {
+    label: tr('ភ្នែកស្ដាំ · Right Eye', 'Right Eye')
+  }, React.createElement(Select, {
+    value: eyeRight,
+    onChange: e => setEyeRight(e.target.value)
+  }, EYE_OPTS.map(v => React.createElement("option", {
+    key: v || 'none',
+    value: v
+  }, v || '—'))))), React.createElement(Row, null, React.createElement(Field, {
+    label: tr('ភ្នែកទាំងពីរ · Both Eyes', 'Both Eyes')
+  }, React.createElement(Select, {
+    value: eyeBoth,
+    onChange: e => setEyeBoth(e.target.value)
+  }, EYE_OPTS.map(v => React.createElement("option", {
+    key: v || 'none',
+    value: v
+  }, v || '—')))), React.createElement("div", null)), React.createElement(Row, null, React.createElement(Field, {
+    label: tr('គ្រូបង្រៀន', 'Instructor')
+  }, React.createElement(Select, {
+    value: instId,
+    onChange: e => setInstId(e.target.value)
+  }, React.createElement("option", {
+    value: ""
+  }, tr('--- ជ្រើស​គ្រូ ---', '--- Select instructor ---')), INSTRUCTORS.map(i => React.createElement("option", {
+    key: i.id,
+    value: i.id
+  }, i.name, " (", i.en, ")")))), React.createElement("div", null)), React.createElement(SEC, {
     num: tr('៣', '3'),
     label: tr('ព័ត៌មានបង់ប្រាក់ និងម៉ោងសិក្សា', 'Payment & Study Hours')
   }), React.createElement(Row, null, React.createElement(Field, {
@@ -9612,7 +9820,7 @@ var StudentProfile = ({
       marginBottom: 12
     }
   }, "\u179F\u1780\u1798\u17D2\u1798\u200B\u1797\u17B6\u1796 \xB7 TIMELINE"), (() => {
-    var sLessons = (LESSONS || []).filter(l => l.studentId === s.id).sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 5);
+    var sLessons = (LESSONS || []).filter(l => l.studentId === s.id && l.status !== 'cancelled').sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 5);
     if (sLessons.length === 0) return React.createElement("div", {
       style: {
         padding: '12px 0',
@@ -11761,13 +11969,13 @@ var NAV_ITEMS = {
     icon: 'flag'
   }, {
     id: 'fleet',
-    km: 'យានយន្ត',
+    km: 'ការគ្រប់គ្រងយានយន្ត',
     en: 'Vehicle management',
     jp: '車両管理',
     icon: 'car'
   }, {
     id: 'vehicle',
-    km: 'យានយន្ត (Card)',
+    km: 'យានយន្ត',
     en: 'Vehicle',
     jp: '車両',
     icon: 'car'
@@ -11833,23 +12041,11 @@ var NAV_ITEMS = {
     jp: 'ダッシュボード',
     icon: 'home'
   }, {
-    id: 'schedule',
-    km: 'កាលវិភាគ',
-    en: 'Schedule',
-    jp: 'スケジュール',
-    icon: 'cal'
-  }, {
     id: 'students',
     km: 'សិស្ស',
     en: 'Students',
-    jp: '生徒',
+    jp: '生徒管理',
     icon: 'users'
-  }, {
-    id: 'instructors',
-    km: 'គ្រូ',
-    en: 'Instructors',
-    jp: 'インストラクター',
-    icon: 'flag'
   }, {
     id: 'lessons',
     km: 'មេរៀន',
@@ -11857,17 +12053,71 @@ var NAV_ITEMS = {
     jp: 'レッスン',
     icon: 'book'
   }, {
+    id: 'schedule',
+    km: 'កាលវិភាគ',
+    en: 'Schedule',
+    jp: 'スケジュール',
+    icon: 'cal'
+  }, {
+    id: 'instructors',
+    km: 'គ្រូ',
+    en: 'Instructors',
+    jp: 'インストラクター',
+    icon: 'flag'
+  }, {
     id: 'fleet',
+    km: 'ការគ្រប់គ្រងយានយន្ត',
+    en: 'Vehicle management',
+    jp: '車両管理',
+    icon: 'car'
+  }, {
+    id: 'vehicle',
     km: 'យានយន្ត',
-    en: 'Vehicles',
+    en: 'Vehicle',
     jp: '車両',
     icon: 'car'
   }, {
     id: 'progress',
     km: 'វឌ្ឍនភាព',
-    en: 'Reports',
-    jp: 'レポート',
+    en: 'Progress',
+    jp: '進捗',
     icon: 'chart'
+  }, {
+    id: 'billing',
+    km: 'វិក្កយបត្រ',
+    en: 'Billing',
+    jp: '請求管理',
+    icon: 'cash'
+  }, {
+    id: 'finance',
+    km: 'គ្រប់គ្រងហិរញ្ញវត្ថុ',
+    en: 'Finance',
+    jp: '財務管理',
+    icon: 'chart'
+  }, {
+    id: 'staff',
+    km: 'គ្រប់​គ្រង​បុគ្គលិក',
+    en: 'Staff',
+    jp: 'スタッフ管理',
+    icon: 'users'
+  }, {
+    id: 'announce',
+    km: 'ការជូនដំណឹង',
+    en: 'Announcements',
+    jp: 'お知らせ',
+    icon: 'bell'
+  }, {
+    id: 'public',
+    km: 'ទំព័រសាធារណៈ',
+    en: 'Public site',
+    jp: '公開サイト',
+    icon: 'map'
+  }, {
+    id: 'booking',
+    km: 'ការកក់',
+    en: 'Booking flow',
+    jp: '予約',
+    icon: 'book'
   }, {
     id: 'mobile',
     km: 'ទូរស័ព្ទ',
@@ -12252,7 +12502,14 @@ var MobileBottomBar = ({
   } = useAppActions();
   var ll = o => o[lang] || o.en;
   var [menuOpen, setMenuOpen] = React.useState(false);
-  var quickItems = items.slice(0, 4);
+  var quickItems = (() => {
+    var base = items.slice(0, 4);
+    var vehicleItem = items.find(i => i.id === 'vehicle');
+    if (vehicleItem && base.some(i => i.id === 'lessons')) {
+      return base.map(i => i.id === 'lessons' ? vehicleItem : i);
+    }
+    return base;
+  })();
   var ss = window.__schoolSettings;
   var close = () => setMenuOpen(false);
   return React.createElement(React.Fragment, null, menuOpen && React.createElement("div", {
@@ -16218,7 +16475,7 @@ var ScheduleScreen = ({
   };
   var mobileDate = getMobileDate(dayOffset);
   var weekDates = bp.mobile ? [mobileDate] : allWeekDates;
-  var baseLessons = studentMode ? LESSONS.filter(l => (l.studentId === studentId || l.studentId === '—') && l.status !== 'cancelled') : LESSONS;
+  var baseLessons = LESSONS.filter(l => studentMode ? (l.studentId === studentId || l.studentId === '—') && l.status !== 'cancelled' : l.status !== 'cancelled');
   var visibleLessons = !studentMode ? baseLessons.filter(l => (!instFilter || l.instId === instFilter) && (!vehFilter || l.veh === vehFilter) && (!studentFilter || l.studentId === studentFilter)) : baseLessons;
   var anyFilter = instFilter || vehFilter || studentFilter;
   var weekStart = allWeekDates[0] || '';
@@ -16964,7 +17221,7 @@ var FleetScreen = ({
         display: 'flex',
         gap: 8
       }
-    }, role === 'admin' && React.createElement(Btn, {
+    }, role !== 'student' && React.createElement(Btn, {
       kind: "ghost",
       size: "md",
       onClick: () => openForm('newMaintenance'),
@@ -16972,7 +17229,7 @@ var FleetScreen = ({
         name: "wrench",
         size: 14
       })
-    }, tr('កាលវិភាគ​ថែទាំ', 'Maintenance')), role === 'admin' && React.createElement(Btn, {
+    }, tr('កាលវិភាគ​ថែទាំ', 'Maintenance')), role !== 'student' && React.createElement(Btn, {
       kind: "primary",
       size: "md",
       onClick: () => openForm('newVehicle'),
@@ -17599,7 +17856,7 @@ var ProgressScreen = ({
       onClick: () => setRange('quarter')
     }, rangeLabel.quarter), React.createElement(MenuItem, {
       onClick: () => setRange('year')
-    }, rangeLabel.year)), role === 'admin' && React.createElement(Btn, {
+    }, rangeLabel.year)), role !== 'student' && React.createElement(Btn, {
       kind: "ghost",
       size: "md",
       onClick: () => toast(tr('កំពុង​បង្កើត PDF', 'Generating report.pdf'), 'good')
@@ -17938,11 +18195,11 @@ var BillingScreen = ({
         display: 'flex',
         gap: 8
       }
-    }, role === 'admin' && React.createElement(Btn, {
+    }, role !== 'student' && React.createElement(Btn, {
       kind: "ghost",
       size: "md",
       onClick: () => toast(tr('កំពុង​ទាញ​យក invoices.csv', 'Downloading invoices.csv'), 'good')
-    }, tr('នាំចេញ', 'Export')), role === 'admin' && React.createElement(Btn, {
+    }, tr('នាំចេញ', 'Export')), role !== 'student' && React.createElement(Btn, {
       kind: "primary",
       size: "md",
       onClick: () => openForm('newInvoice'),
@@ -18179,7 +18436,7 @@ var BillingScreen = ({
     d: '40 ម៉ោងបង្រៀន'
   }].map((p, i) => React.createElement("div", {
     key: i,
-    onClick: () => role === 'admin' && toast(`កែ​​​​​​ ${p.n} (coming soon)`, 'neutral'),
+    onClick: () => role !== 'student' && toast(`កែ​​​​​​ ${p.n} (coming soon)`, 'neutral'),
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -18187,7 +18444,7 @@ var BillingScreen = ({
       background: p.active ? 'var(--surface-muted)' : 'transparent',
       border: '1px solid var(--border)',
       borderRadius: 8,
-      cursor: role === 'admin' ? 'pointer' : 'default'
+      cursor: role !== 'student' ? 'pointer' : 'default'
     }
   }, React.createElement("div", null, React.createElement("div", {
     style: {
@@ -26675,6 +26932,14 @@ Object.assign(window, {
 
 <script>
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+var shiftDay = (dateStr, delta) => {
+  var d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + delta);
+  var y = d.getFullYear();
+  var m = String(d.getMonth() + 1).padStart(2, '0');
+  var day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
 if (!window.__vehicleData) window.__vehicleData = [];
 if (!window.__serviceLog) window.__serviceLog = [];
 if (!window.__incidentData) window.__incidentData = [];
@@ -26766,6 +27031,7 @@ var FleetScreenV2 = () => {
   var [selectedId, setSelectedId] = React.useState(null);
   var [editing, setEditing] = React.useState(false);
   var [addSvc, setAddSvc] = React.useState(false);
+  var [viewDate, setViewDate] = React.useState(todayStr());
   var vehicles = VEHICLES;
   var serviceLog = window.__serviceLog;
   var incidents = window.__incidentData;
@@ -27064,13 +27330,92 @@ var FleetScreenV2 = () => {
       fontWeight: 500,
       cursor: 'pointer'
     }
-  }, s === 'all' ? 'All' : s)))), view === 'cards' ? React.createElement(FvCards, {
+  }, s === 'all' ? 'All' : s)))), React.createElement("div", {
+    style: {
+      padding: '8px 14px',
+      borderBottom: '1px solid var(--border)',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6
+    }
+  }, React.createElement("span", {
+    style: {
+      fontSize: 12,
+      color: 'var(--ink-3)',
+      fontFamily: 'var(--font-km)',
+      marginRight: 2
+    }
+  }, tr('ពិនិត្យថ្ងៃ', 'Inspection date')), React.createElement("button", {
+    onClick: () => setViewDate(shiftDay(viewDate, -1)),
+    title: tr('ថ្ងៃមុន', 'Previous day'),
+    style: {
+      border: '1px solid var(--border)',
+      borderRadius: 6,
+      background: 'var(--surface)',
+      cursor: 'pointer',
+      width: 26,
+      height: 28,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'var(--ink-2)',
+      fontSize: 14,
+      lineHeight: 1,
+      flexShrink: 0
+    }
+  }, "\u2039"), React.createElement("input", {
+    type: "date",
+    value: viewDate,
+    onChange: e => setViewDate(e.target.value),
+    style: {
+      border: '1px solid var(--border)',
+      borderRadius: 6,
+      padding: '4px 8px',
+      fontSize: 12,
+      fontFamily: 'inherit',
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      cursor: 'pointer'
+    }
+  }), React.createElement("button", {
+    onClick: () => setViewDate(shiftDay(viewDate, 1)),
+    title: tr('ថ្ងៃបន្ទាប់', 'Next day'),
+    style: {
+      border: '1px solid var(--border)',
+      borderRadius: 6,
+      background: 'var(--surface)',
+      cursor: 'pointer',
+      width: 26,
+      height: 28,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'var(--ink-2)',
+      fontSize: 14,
+      lineHeight: 1,
+      flexShrink: 0
+    }
+  }, "\u203A"), viewDate !== todayStr() && React.createElement("button", {
+    onClick: () => setViewDate(todayStr()),
+    style: {
+      fontSize: 11,
+      padding: '3px 8px',
+      border: '1px solid var(--accent)',
+      borderRadius: 6,
+      background: 'var(--accent-soft)',
+      color: 'var(--accent)',
+      cursor: 'pointer',
+      fontFamily: 'inherit',
+      fontWeight: 600
+    }
+  }, tr('ថ្ងៃនេះ', 'Today'))), view === 'cards' ? React.createElement(FvCards, {
     vehicles: filtered,
     onSelect: setSelectedId,
     selectedId: selectedId,
     onStatusChange: cycleStatus,
     onSaveDates: saveDates,
-    onParkingChange: cycleParking
+    onParkingChange: cycleParking,
+    viewDate: viewDate
   }) : React.createElement(FvTable, {
     vehicles: filtered,
     onSelect: setSelectedId,
@@ -27309,7 +27654,8 @@ var FUEL_STEPS = [{
 var fuelColor = pct => pct <= 20 ? 'var(--danger)' : pct <= 40 ? 'var(--warn)' : pct <= 65 ? '#C5A200' : 'var(--good)';
 var FuelGauge = ({
   level,
-  onChange
+  onChange,
+  readOnly
 }) => {
   var c = fuelColor(level);
   return React.createElement("div", {
@@ -27359,7 +27705,8 @@ var FuelGauge = ({
     }
   }, FUEL_STEPS.map(s => React.createElement("button", {
     key: s.v,
-    onClick: () => onChange(s.v),
+    onClick: readOnly ? undefined : () => onChange(s.v),
+    disabled: readOnly,
     style: {
       padding: '3px 7px',
       borderRadius: 5,
@@ -27368,10 +27715,11 @@ var FuelGauge = ({
       color: level === s.v ? '#fff' : 'var(--ink-3)',
       fontSize: 11,
       fontWeight: 700,
-      cursor: 'pointer',
+      cursor: readOnly ? 'default' : 'pointer',
       fontFamily: '"JetBrains Mono",monospace',
       transition: 'all .12s',
-      lineHeight: 1
+      lineHeight: 1,
+      opacity: readOnly ? .7 : 1
     }
   }, s.label))), React.createElement("span", {
     style: {
@@ -27437,8 +27785,10 @@ var VehicleInspectionModal = ({
   tr
 }) => {
   var {
-    toast
+    toast,
+    role
   } = useAppActions();
+  var bp = useBreakpoint();
   var [date, setDate] = React.useState(todayStr());
   var [inspector, setInspector] = React.useState(LOGIN_USERS?.admin?.km || LOGIN_USERS?.admin?.en || '');
   var [items, setItems] = React.useState(() => initInspItems());
@@ -27456,6 +27806,7 @@ var VehicleInspectionModal = ({
   var [showInsp, setShowInsp] = React.useState(true);
   var [showExp, setShowExp] = React.useState(false);
   var photoRef = React.useRef();
+  var readOnly = role === 'instructor' && date < todayStr();
   React.useEffect(() => {
     var rec = (window.__vehicleInspections || []).find(r => r.vehicleId === vehicle.id && r.date === date);
     if (rec) {
@@ -27530,8 +27881,10 @@ var VehicleInspectionModal = ({
     window.__vehicleInspections = arr;
     if (!window.__expenseLog) window.__expenseLog = [];
     var inspKey = `insp_${vehicle.id}_${date}`;
-    window.__expenseLog = window.__expenseLog.filter(e => e.inspKey !== inspKey);
     var validExp = expenses.filter(e => parseFloat(e.amount) > 0);
+    if (expenses.length > 0) {
+      window.__expenseLog = window.__expenseLog.filter(e => e.inspKey !== inspKey);
+    }
     if (validExp.length > 0) {
       var nums = window.__expenseLog.map(e => parseInt((e.id || '').replace(/\D/g, ''))).filter(n => !isNaN(n) && n > 0);
       var nextNum = (nums.length > 0 ? Math.max(...nums) : 0) + 1;
@@ -27560,6 +27913,7 @@ var VehicleInspectionModal = ({
       if (window.__notifyFinanceChanged) window.__notifyFinanceChanged();
     }
     if (window.saveAllData) window.saveAllData();
+    if (window.__notifyVehiclesChanged) window.__notifyVehiclesChanged();
     toast(tr('បានរក្សាទុកកំណត់ត្រាពិនិត្យ ✓', 'Inspection saved ✓'), 'good');
     onClose();
   };
@@ -27663,13 +28017,15 @@ var VehicleInspectionModal = ({
     var dispEn = name.en || it.en;
     var dispKm = name.km || it.km.split(' · ')[0];
     var isEditing = editingId === it.id;
+    var btnW = bp.mobile ? 40 : 34;
+    var btnH = bp.mobile ? 32 : 27;
     return React.createElement("div", {
       key: it.id,
       style: {
         display: 'flex',
         alignItems: 'center',
         gap: 8,
-        padding: '6px 8px',
+        padding: bp.mobile ? '8px 8px' : '6px 8px',
         borderRadius: 7,
         background: INSP_VALS[cur].bg,
         transition: 'background .15s'
@@ -27682,8 +28038,8 @@ var VehicleInspectionModal = ({
     }, isEditing ? React.createElement("div", {
       style: {
         display: 'flex',
-        gap: 6,
-        flexWrap: 'wrap'
+        flexDirection: 'column',
+        gap: 5
       },
       onBlur: e => {
         if (!e.currentTarget.contains(e.relatedTarget)) commitRename(it.id);
@@ -27696,16 +28052,13 @@ var VehicleInspectionModal = ({
         en: e.target.value
       })),
       onKeyDown: e => {
-        if (e.key === 'Enter') commitRename(it.id);
         if (e.key === 'Escape') setEditingId(null);
       },
       placeholder: "English",
       style: {
-        flex: 1,
-        minWidth: 100,
         border: '1px solid var(--accent)',
         borderRadius: 5,
-        padding: '3px 7px',
+        padding: '4px 7px',
         fontSize: 12,
         fontFamily: 'inherit',
         background: 'var(--surface)',
@@ -27721,13 +28074,12 @@ var VehicleInspectionModal = ({
         if (e.key === 'Enter') commitRename(it.id);
         if (e.key === 'Escape') setEditingId(null);
       },
+      onBlur: () => commitRename(it.id),
       placeholder: "\u1781\u17D2\u1798\u17C2\u179A",
       style: {
-        flex: 1,
-        minWidth: 80,
         border: '1px solid var(--accent)',
         borderRadius: 5,
-        padding: '3px 7px',
+        padding: '4px 7px',
         fontSize: 12,
         fontFamily: 'var(--font-km)',
         background: 'var(--surface)',
@@ -27736,24 +28088,27 @@ var VehicleInspectionModal = ({
     })) : React.createElement("div", {
       style: {
         display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-        cursor: 'text'
+        flexDirection: bp.mobile ? 'column' : 'row',
+        alignItems: 'flex-start',
+        gap: bp.mobile ? 1 : 6,
+        cursor: readOnly ? 'default' : 'text'
       },
-      onClick: () => startRename(it)
+      onClick: readOnly ? undefined : () => startRename(it)
     }, React.createElement("span", {
       style: {
         fontSize: 13,
         color: 'var(--ink)',
-        fontWeight: 500
+        fontWeight: 500,
+        lineHeight: 1.3
       }
     }, dispEn), React.createElement("span", {
       style: {
         fontSize: 11,
         color: 'var(--ink-3)',
-        fontFamily: 'var(--font-km)'
+        fontFamily: 'var(--font-km)',
+        lineHeight: 1.3
       }
-    }, dispKm), React.createElement("svg", {
+    }, dispKm), !readOnly && !bp.mobile && React.createElement("svg", {
       width: "10",
       height: "10",
       viewBox: "0 0 24 24",
@@ -27763,7 +28118,8 @@ var VehicleInspectionModal = ({
       strokeLinecap: "round",
       style: {
         opacity: .4,
-        flexShrink: 0
+        flexShrink: 0,
+        marginTop: 2
       }
     }, React.createElement("path", {
       d: "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
@@ -27772,27 +28128,28 @@ var VehicleInspectionModal = ({
     })))), React.createElement("div", {
       style: {
         display: 'flex',
-        gap: 3,
+        gap: 4,
         flexShrink: 0
       }
     }, Object.entries(INSP_VALS).map(([k, v]) => React.createElement("button", {
       key: k,
-      onClick: () => setItem(it.id, k),
+      onClick: readOnly ? undefined : () => setItem(it.id, k),
+      disabled: readOnly,
       style: {
-        width: 34,
-        height: 27,
+        width: btnW,
+        height: btnH,
         borderRadius: 6,
         border: `1.5px solid ${cur === k ? v.color : 'var(--border)'}`,
         background: cur === k ? v.color : 'var(--surface)',
         color: cur === k ? '#fff' : 'var(--ink-3)',
         fontFamily: '"JetBrains Mono",monospace',
         fontWeight: 700,
-        fontSize: 14,
-        cursor: 'pointer',
+        fontSize: bp.mobile ? 16 : 14,
+        cursor: readOnly ? 'default' : 'pointer',
         transition: 'all .12s',
         lineHeight: 1
       }
-    }, v.label))), isCustom && React.createElement("button", {
+    }, v.label))), isCustom && !readOnly && React.createElement("button", {
       onClick: () => removeCustomItem(secId, it.id),
       style: {
         border: 'none',
@@ -27845,7 +28202,139 @@ var VehicleInspectionModal = ({
       boxShadow: '0 32px 80px rgba(0,0,0,.25)',
       overflow: 'hidden'
     }
+  }, React.createElement("input", {
+    ref: photoRef,
+    type: "file",
+    accept: "image/*",
+    style: {
+      display: 'none'
+    },
+    onChange: handlePhotoFile,
+    disabled: readOnly
+  }), bp.mobile ? React.createElement("div", {
+    style: {
+      padding: '12px 14px',
+      borderBottom: '1px solid var(--border)',
+      position: 'relative'
+    }
+  }, React.createElement("button", {
+    onClick: onClose,
+    style: {
+      position: 'absolute',
+      top: 10,
+      right: 10,
+      border: 'none',
+      background: 'transparent',
+      cursor: 'pointer',
+      padding: 4,
+      color: 'var(--ink-3)',
+      display: 'flex',
+      alignItems: 'center'
+    }
+  }, React.createElement("svg", {
+    width: "16",
+    height: "16",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "2.5",
+    strokeLinecap: "round"
+  }, React.createElement("path", {
+    d: "M6 6l12 12M18 6L6 18"
+  }))), React.createElement("div", {
+    style: {
+      textAlign: 'center',
+      fontSize: 13,
+      fontWeight: 600,
+      color: 'var(--ink)',
+      fontFamily: 'var(--font-km)',
+      marginBottom: 10,
+      paddingRight: 24
+    }
+  }, tr('ពិនិត្យយានយន្តប្រចាំថ្ងៃ', 'Daily Vehicle Inspection')), React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10
+    }
   }, React.createElement("div", {
+    onClick: readOnly ? undefined : () => photoRef.current?.click(),
+    style: {
+      width: 52,
+      height: 38,
+      borderRadius: 7,
+      overflow: 'hidden',
+      flexShrink: 0,
+      cursor: readOnly ? 'default' : 'pointer',
+      position: 'relative',
+      border: '2px solid var(--border)'
+    }
+  }, React.createElement(Photo, {
+    tag: vPhoto,
+    w: 52,
+    h: 38,
+    r: 0
+  }), !readOnly && React.createElement("div", {
+    style: {
+      position: 'absolute',
+      inset: 0,
+      background: 'rgba(0,0,0,.4)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      opacity: 0,
+      transition: 'opacity .15s'
+    },
+    onMouseEnter: e => e.currentTarget.style.opacity = '1',
+    onMouseLeave: e => e.currentTarget.style.opacity = '0'
+  }, React.createElement("svg", {
+    width: "12",
+    height: "12",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "#fff",
+    strokeWidth: "2",
+    strokeLinecap: "round"
+  }, React.createElement("path", {
+    d: "M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+  }), React.createElement("circle", {
+    cx: "12",
+    cy: "13",
+    r: "4"
+  })))), React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 14,
+      fontWeight: 700,
+      color: 'var(--ink)'
+    }
+  }, vehicle.make), React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: 2
+    }
+  }, React.createElement("span", {
+    style: {
+      fontSize: 11,
+      fontFamily: '"JetBrains Mono",monospace',
+      letterSpacing: '.06em',
+      color: 'var(--ink-2)'
+    }
+  }, vehicle.plate), React.createElement("span", {
+    style: {
+      fontSize: 20,
+      color: osC.color,
+      fontFamily: '"JetBrains Mono",monospace',
+      fontWeight: 700,
+      lineHeight: 1
+    }
+  }, osC.label))))) : React.createElement("div", {
     style: {
       padding: '16px 20px',
       borderBottom: '1px solid var(--border)',
@@ -27854,14 +28343,14 @@ var VehicleInspectionModal = ({
       gap: 14
     }
   }, React.createElement("div", {
-    onClick: () => photoRef.current?.click(),
+    onClick: readOnly ? undefined : () => photoRef.current?.click(),
     style: {
       width: 56,
       height: 40,
       borderRadius: 8,
       overflow: 'hidden',
       flexShrink: 0,
-      cursor: 'pointer',
+      cursor: readOnly ? 'default' : 'pointer',
       position: 'relative',
       border: '2px solid var(--border)'
     }
@@ -27870,7 +28359,7 @@ var VehicleInspectionModal = ({
     w: 56,
     h: 40,
     r: 0
-  }), React.createElement("div", {
+  }), !readOnly && React.createElement("div", {
     style: {
       position: 'absolute',
       inset: 0,
@@ -27897,15 +28386,7 @@ var VehicleInspectionModal = ({
     cx: "12",
     cy: "13",
     r: "4"
-  })))), React.createElement("input", {
-    ref: photoRef,
-    type: "file",
-    accept: "image/*",
-    style: {
-      display: 'none'
-    },
-    onChange: handlePhotoFile
-  }), React.createElement("div", {
+  })))), React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
@@ -27915,14 +28396,22 @@ var VehicleInspectionModal = ({
       fontSize: 15,
       fontWeight: 700
     }
-  }, vehicle.make, " \xB7 ", vehicle.plate), React.createElement("div", {
+  }, vehicle.make), React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--ink-2)',
+      fontFamily: '"JetBrains Mono",monospace',
+      letterSpacing: '.06em',
+      marginTop: 1
+    }
+  }, vehicle.plate), React.createElement("div", {
     style: {
       fontSize: 10,
       color: 'var(--ink-3)',
-      fontFamily: '"JetBrains Mono",monospace',
-      letterSpacing: '.04em'
+      fontFamily: 'var(--font-km)',
+      marginTop: 2
     }
-  }, tr('ទម្រង់ពិនិត្យប្រចាំថ្ងៃ · 日常点検表', 'Daily Vehicle Inspection'))), React.createElement("div", {
+  }, tr('ពិនិត្យយានយន្តប្រចាំថ្ងៃ', 'Daily Vehicle Inspection'))), React.createElement("div", {
     style: {
       padding: '5px 12px',
       borderRadius: 8,
@@ -27973,7 +28462,7 @@ var VehicleInspectionModal = ({
     style: {
       display: 'flex',
       alignItems: 'center',
-      gap: 8,
+      gap: 6,
       minWidth: 170
     }
   }, React.createElement("span", {
@@ -27982,7 +28471,25 @@ var VehicleInspectionModal = ({
       color: 'var(--ink-3)',
       whiteSpace: 'nowrap'
     }
-  }, tr('ថ្ងៃ', 'Date'), ":"), React.createElement("input", {
+  }, tr('ថ្ងៃ', 'Date'), ":"), React.createElement("button", {
+    onClick: () => setDate(shiftDay(date, -1)),
+    title: tr('ថ្ងៃមុន', 'Previous day'),
+    style: {
+      border: '1px solid var(--border)',
+      borderRadius: 6,
+      background: 'var(--surface)',
+      cursor: 'pointer',
+      width: 26,
+      height: 28,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'var(--ink-2)',
+      fontSize: 14,
+      lineHeight: 1,
+      flexShrink: 0
+    }
+  }, "\u2039"), React.createElement("input", {
     type: "date",
     value: date,
     onChange: e => setDate(e.target.value),
@@ -27996,7 +28503,25 @@ var VehicleInspectionModal = ({
       color: 'var(--ink)',
       flex: 1
     }
-  })), React.createElement("div", {
+  }), React.createElement("button", {
+    onClick: () => setDate(shiftDay(date, 1)),
+    title: tr('ថ្ងៃបន្ទាប់', 'Next day'),
+    style: {
+      border: '1px solid var(--border)',
+      borderRadius: 6,
+      background: 'var(--surface)',
+      cursor: 'pointer',
+      width: 26,
+      height: 28,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'var(--ink-2)',
+      fontSize: 14,
+      lineHeight: 1,
+      flexShrink: 0
+    }
+  }, "\u203A")), !bp.mobile && React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -28012,7 +28537,8 @@ var VehicleInspectionModal = ({
     }
   }, tr('ពិនិត្យដោយ', 'By'), ":"), React.createElement("input", {
     value: inspector,
-    onChange: e => setInspector(e.target.value),
+    onChange: readOnly ? undefined : e => setInspector(e.target.value),
+    readOnly: readOnly,
     placeholder: "Name",
     style: {
       border: '1px solid var(--border)',
@@ -28022,7 +28548,8 @@ var VehicleInspectionModal = ({
       fontFamily: 'inherit',
       background: 'var(--surface)',
       color: 'var(--ink)',
-      flex: 1
+      flex: 1,
+      opacity: readOnly ? .7 : 1
     }
   }))), React.createElement("div", {
     style: {
@@ -28044,7 +28571,8 @@ var VehicleInspectionModal = ({
     }
   }, "\u26FD ", tr('កំរិតសាំ', 'FUEL')), React.createElement(FuelGauge, {
     level: fuelLevel,
-    onChange: setFuelLevel
+    onChange: setFuelLevel,
+    readOnly: readOnly
   })), React.createElement("div", {
     style: {
       maxHeight: '60vh',
@@ -28131,7 +28659,7 @@ var VehicleInspectionModal = ({
       flexDirection: 'column',
       gap: 4
     }
-  }, sec.items.map(it => renderItem(it, sec.id, false)), (customItems[sec.id] || []).map(it => renderItem(it, sec.id, true))), React.createElement("button", {
+  }, sec.items.map(it => renderItem(it, sec.id, false)), (customItems[sec.id] || []).map(it => renderItem(it, sec.id, true))), !readOnly && React.createElement("button", {
     onClick: () => addCustomItem(sec.id),
     style: {
       marginTop: 6,
@@ -28242,7 +28770,7 @@ var VehicleInspectionModal = ({
       flexDirection: 'column',
       gap: 8
     }
-  }, React.createElement("div", {
+  }, !readOnly && React.createElement("div", {
     style: {
       display: 'flex',
       gap: 5,
@@ -28332,7 +28860,8 @@ var VehicleInspectionModal = ({
     min: "0",
     step: "0.01",
     value: e.amount,
-    onChange: ev => updExp(e.id, 'amount', ev.target.value),
+    onChange: readOnly ? undefined : ev => updExp(e.id, 'amount', ev.target.value),
+    readOnly: readOnly,
     placeholder: "0.00",
     style: {
       border: 'none',
@@ -28346,7 +28875,8 @@ var VehicleInspectionModal = ({
     }
   })), React.createElement("input", {
     value: e.note,
-    onChange: ev => updExp(e.id, 'note', ev.target.value),
+    onChange: readOnly ? undefined : ev => updExp(e.id, 'note', ev.target.value),
+    readOnly: readOnly,
     placeholder: tr('កំណត់សម្គាល់…', 'Note…'),
     style: {
       flex: 1,
@@ -28359,7 +28889,7 @@ var VehicleInspectionModal = ({
       color: 'var(--ink)',
       minWidth: 0
     }
-  }), React.createElement("button", {
+  }), !readOnly && React.createElement("button", {
     onClick: () => delExp(e.id),
     style: {
       border: 'none',
@@ -28431,7 +28961,8 @@ var VehicleInspectionModal = ({
     }
   }, tr('កំណត់សម្គាល់', 'Notes / Remarks')), React.createElement("textarea", {
     value: notes,
-    onChange: e => setNotes(e.target.value),
+    onChange: readOnly ? undefined : e => setNotes(e.target.value),
+    readOnly: readOnly,
     rows: 3,
     placeholder: tr('ការខូចខាត ឬ ចំណាំផ្សេងៗ…', 'Damage, observations, or other notes…'),
     style: {
@@ -28443,8 +28974,9 @@ var VehicleInspectionModal = ({
       fontFamily: 'inherit',
       background: 'var(--surface)',
       color: 'var(--ink)',
-      resize: 'vertical',
-      boxSizing: 'border-box'
+      resize: readOnly ? 'none' : 'vertical',
+      boxSizing: 'border-box',
+      opacity: readOnly ? .8 : 1
     }
   }))), React.createElement("div", {
     style: {
@@ -28467,7 +28999,40 @@ var VehicleInspectionModal = ({
       fontFamily: 'inherit',
       color: 'var(--ink-2)'
     }
-  }, tr('បោះបង់', 'Cancel')), React.createElement("button", {
+  }, tr('បិទ', 'Close')), readOnly ? React.createElement("button", {
+    onClick: () => generateInspectionPDF([vehicle], date, vehicle.id),
+    style: {
+      padding: '8px 20px',
+      borderRadius: 8,
+      border: 'none',
+      background: 'var(--ink-2)',
+      color: '#fff',
+      cursor: 'pointer',
+      fontSize: 13,
+      fontFamily: 'inherit',
+      fontWeight: 600,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6
+    }
+  }, React.createElement("svg", {
+    width: "13",
+    height: "13",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "2",
+    strokeLinecap: "round"
+  }, React.createElement("path", {
+    d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+  }), React.createElement("polyline", {
+    points: "7 10 12 15 17 10"
+  }), React.createElement("line", {
+    x1: "12",
+    y1: "15",
+    x2: "12",
+    y2: "3"
+  })), tr('ទាញយក PDF', 'Download PDF')) : React.createElement("button", {
     onClick: handleSave,
     style: {
       padding: '8px 20px',
@@ -28619,7 +29184,7 @@ var FvInspectionLog = ({
   var [selVeh, setSelVeh] = React.useState('all');
   var [inspOpen, setInspOpen] = React.useState(null);
   var [, forceUp] = React.useReducer(x => x + 1, 0);
-  var shiftDay = (dateStr, delta) => {
+  var shiftDayLocal = (dateStr, delta) => {
     var d = new Date(dateStr + 'T00:00:00');
     d.setDate(d.getDate() + delta);
     return localDateStr ? localDateStr(d) : d.toISOString().slice(0, 10);
@@ -28667,7 +29232,7 @@ var FvInspectionLog = ({
       color: 'var(--ink-3)'
     }
   }, tr('ថ្ងៃ', 'Date'), ":"), React.createElement("button", {
-    onClick: () => setSelDate(shiftDay(selDate, -1)),
+    onClick: () => setSelDate(shiftDayLocal(selDate, -1)),
     title: tr('ថ្ងៃមុន', 'Previous day'),
     style: {
       border: '1px solid var(--border)',
@@ -28697,7 +29262,7 @@ var FvInspectionLog = ({
       color: 'var(--ink)'
     }
   }), React.createElement("button", {
-    onClick: () => setSelDate(shiftDay(selDate, 1)),
+    onClick: () => setSelDate(shiftDayLocal(selDate, 1)),
     title: tr('ថ្ងៃបន្ទាប់', 'Next day'),
     style: {
       border: '1px solid var(--border)',
@@ -29106,7 +29671,8 @@ var FvCard = ({
   selectedId,
   onStatusChange,
   onSaveDates,
-  onParkingChange
+  onParkingChange,
+  viewDate
 }) => {
   var {
     tr
@@ -29152,7 +29718,8 @@ var FvCard = ({
   };
   var allInsp = (window.__vehicleInspections || []).filter(r => r.vehicleId === v.id).sort((a, b) => b.date.localeCompare(a.date));
   var latestInsp = allInsp[0] || null;
-  var todayRec = allInsp.find(r => r.date === todayStr()) || null;
+  var selDate = viewDate || todayStr();
+  var todayRec = allInsp.find(r => r.date === selDate) || null;
   var todayC = todayRec ? INSP_VALS[todayRec.overallStatus] : null;
   var fuel = latestInsp?.fuelLevel ?? null;
   var hasServiceInfo = !bp.mobile || v.service && v.service > 0 || v.inst && v.inst !== '—';
@@ -29573,7 +30140,8 @@ var FvCards = ({
   selectedId,
   onStatusChange,
   onSaveDates,
-  onParkingChange
+  onParkingChange,
+  viewDate
 }) => {
   var bp = useBreakpoint();
   return React.createElement("div", {
@@ -29590,7 +30158,8 @@ var FvCards = ({
     selectedId: selectedId,
     onStatusChange: onStatusChange,
     onSaveDates: onSaveDates,
-    onParkingChange: onParkingChange
+    onParkingChange: onParkingChange,
+    viewDate: viewDate
   })));
 };
 var FvTable = ({
@@ -29721,7 +30290,60 @@ var FvDetailRow = ({
     toast,
     tr
   } = useAppActions();
+  var uploadRef = React.useRef();
+  var [photoIdx, setPhotoIdx] = React.useState(0);
+  var [, rerender] = React.useReducer(x => x + 1, 0);
   if (!v) return null;
+  var getPhotos = () => {
+    if (v.photos && v.photos.length > 0) return v.photos;
+    return v.photo ? [v.photo] : [];
+  };
+  var photos = getPhotos();
+  var safeIdx = Math.min(photoIdx, Math.max(0, photos.length - 1));
+  var curPhoto = photos[safeIdx] || null;
+  var addPhoto = e => {
+    var file = e.target.files?.[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = ev => {
+      var dataUrl = ev.target.result;
+      if (window.resizeImageFile) {
+        window.resizeImageFile(file, 1200, 900).then(url => commitPhoto(url));
+      } else {
+        commitPhoto(dataUrl);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+  var commitPhoto = url => {
+    var i = VEHICLES.findIndex(x => x.id === v.id);
+    if (i !== -1) {
+      var updated = [...getPhotos(), url];
+      VEHICLES[i].photos = updated;
+      VEHICLES[i].photo = updated[0];
+      v.photos = updated;
+      v.photo = updated[0];
+      if (window.saveAllData) window.saveAllData();
+    }
+    setPhotoIdx(getPhotos().length);
+    rerender();
+    forceUpdate();
+  };
+  var delPhoto = () => {
+    var i = VEHICLES.findIndex(x => x.id === v.id);
+    var updated = photos.filter((_, idx) => idx !== safeIdx);
+    if (i !== -1) {
+      VEHICLES[i].photos = updated;
+      VEHICLES[i].photo = updated[0] || null;
+      v.photos = updated;
+      v.photo = updated[0] || null;
+      if (window.saveAllData) window.saveAllData();
+    }
+    setPhotoIdx(Math.max(0, safeIdx - 1));
+    rerender();
+    forceUpdate();
+  };
   return React.createElement(Card, {
     pad: 0
   }, React.createElement("div", {
@@ -29733,12 +30355,143 @@ var FvDetailRow = ({
       gap: 14,
       flexWrap: 'wrap'
     }
-  }, React.createElement(Photo, {
-    tag: v.photo,
-    w: 110,
-    h: 64,
-    r: 7
-  }), React.createElement("div", {
+  }, React.createElement("div", {
+    style: {
+      position: 'relative',
+      width: 160,
+      height: 100,
+      borderRadius: 8,
+      overflow: 'hidden',
+      flexShrink: 0,
+      background: 'var(--surface-muted)',
+      border: '1px solid var(--border)'
+    }
+  }, React.createElement("input", {
+    ref: uploadRef,
+    type: "file",
+    accept: "image/*",
+    style: {
+      display: 'none'
+    },
+    onChange: addPhoto
+  }), curPhoto ? React.createElement("img", {
+    src: curPhoto,
+    style: {
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover',
+      display: 'block'
+    }
+  }) : React.createElement("div", {
+    style: {
+      width: '100%',
+      height: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'var(--ink-3)',
+      fontSize: 11
+    }
+  }, tr('គ្មានរូប', 'No photo')), safeIdx > 0 && React.createElement("button", {
+    onClick: () => setPhotoIdx(safeIdx - 1),
+    style: {
+      position: 'absolute',
+      left: 4,
+      top: '50%',
+      transform: 'translateY(-50%)',
+      width: 22,
+      height: 22,
+      borderRadius: '50%',
+      border: 'none',
+      background: 'rgba(0,0,0,.5)',
+      color: '#fff',
+      cursor: 'pointer',
+      fontSize: 13,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      lineHeight: 1
+    }
+  }, "\u2039"), safeIdx < photos.length - 1 && React.createElement("button", {
+    onClick: () => setPhotoIdx(safeIdx + 1),
+    style: {
+      position: 'absolute',
+      right: 4,
+      top: '50%',
+      transform: 'translateY(-50%)',
+      width: 22,
+      height: 22,
+      borderRadius: '50%',
+      border: 'none',
+      background: 'rgba(0,0,0,.5)',
+      color: '#fff',
+      cursor: 'pointer',
+      fontSize: 13,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      lineHeight: 1
+    }
+  }, "\u203A"), React.createElement("button", {
+    onClick: () => uploadRef.current?.click(),
+    title: tr('បន្ថែមរូប', 'Add photo'),
+    style: {
+      position: 'absolute',
+      bottom: 4,
+      right: 4,
+      width: 22,
+      height: 22,
+      borderRadius: '50%',
+      border: 'none',
+      background: 'rgba(0,0,0,.55)',
+      color: '#fff',
+      cursor: 'pointer',
+      fontSize: 15,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      lineHeight: 1
+    }
+  }, "+"), photos.length > 0 && React.createElement("button", {
+    onClick: delPhoto,
+    title: tr('លុបរូបនេះ', 'Delete this photo'),
+    style: {
+      position: 'absolute',
+      bottom: 4,
+      left: 4,
+      width: 22,
+      height: 22,
+      borderRadius: '50%',
+      border: 'none',
+      background: 'rgba(160,0,0,.65)',
+      color: '#fff',
+      cursor: 'pointer',
+      fontSize: 11,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      lineHeight: 1
+    }
+  }, "\u2715"), photos.length > 1 && React.createElement("div", {
+    style: {
+      position: 'absolute',
+      bottom: 4,
+      left: '50%',
+      transform: 'translateX(-50%)',
+      display: 'flex',
+      gap: 3
+    }
+  }, photos.map((_, i) => React.createElement("div", {
+    key: i,
+    onClick: () => setPhotoIdx(i),
+    style: {
+      width: 5,
+      height: 5,
+      borderRadius: '50%',
+      background: i === safeIdx ? '#fff' : 'rgba(255,255,255,.5)',
+      cursor: 'pointer'
+    }
+  })))), React.createElement("div", {
     style: {
       flex: 1
     }
@@ -31778,10 +32531,612 @@ var FvExpenses = ({
   }, fmtAmt(filtered.reduce((s, e) => s + (e.amount || 0), 0)))))));
 };
 var FleetScreen = FleetScreenV2;
+var VehicleMobileDetail = ({
+  v,
+  onClose,
+  tr,
+  onSaved,
+  onStatusChange,
+  onParkingChange
+}) => {
+  var [inspOpen, setInspOpen] = React.useState(false);
+  var [photoIdx, setPhotoIdx] = React.useState(0);
+  var [sliding, setSliding] = React.useState(null);
+  var [editDocs, setEditDocs] = React.useState(false);
+  var [regExp, setRegExp] = React.useState(v.reg_exp || '');
+  var [roadTax, setRoadTax] = React.useState(v.road_tax || '');
+  var [oilExp, setOilExp] = React.useState(v.oil_exp || '');
+  var [, forceUp] = React.useReducer(x => x + 1, 0);
+  var uploadRef = React.useRef(null);
+  var touchStartX = React.useRef(null);
+  if (!v) return null;
+  var saveDoc = (field, val) => {
+    var i = VEHICLES.findIndex(x => x.id === v.id);
+    if (i !== -1) VEHICLES[i][field] = val;
+    if (window.saveAllData) window.saveAllData();
+    forceUp();
+    if (onSaved) onSaved();
+  };
+  var getPhotos = () => {
+    if (v.photos && v.photos.length > 0) return v.photos;
+    return v.photo ? [v.photo] : [];
+  };
+  var photos = getPhotos();
+  var safeIdx = Math.min(photoIdx, Math.max(0, photos.length - 1));
+  var curPhoto = photos[safeIdx] || null;
+  var goTo = idx => {
+    if (idx < 0 || idx >= photos.length) return;
+    setSliding(idx > safeIdx ? 'left' : 'right');
+    setTimeout(() => {
+      setPhotoIdx(idx);
+      setSliding(null);
+    }, 180);
+  };
+  var onTouchStart = e => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  var onTouchEnd = e => {
+    if (touchStartX.current === null) return;
+    var dx = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (dx < -50) goTo(safeIdx + 1);else if (dx > 50) goTo(safeIdx - 1);
+  };
+  var handleAddPhoto = e => {
+    var file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    resizeImageFile(file, 1200, 800).then(dataUrl => {
+      var updated = [...getPhotos(), dataUrl];
+      v.photos = updated;
+      v.photo = updated[0];
+      if (window.saveAllData) window.saveAllData();
+      setPhotoIdx(updated.length - 1);
+      forceUp();
+      if (onSaved) onSaved();
+    });
+  };
+  var handleDelPhoto = () => {
+    var updated = getPhotos().filter((_, i) => i !== safeIdx);
+    v.photos = updated;
+    v.photo = updated[0] || null;
+    if (window.saveAllData) window.saveAllData();
+    setPhotoIdx(Math.max(0, safeIdx - 1));
+    forceUp();
+    if (onSaved) onSaved();
+  };
+  var allInsp = (window.__vehicleInspections || []).filter(r => r.vehicleId === v.id).sort((a, b) => b.date.localeCompare(a.date));
+  var latestInsp = allInsp[0] || null;
+  var todayRec = allInsp.find(r => r.date === todayStr()) || null;
+  var todayC = todayRec ? INSP_VALS[todayRec.overallStatus] : null;
+  var fuel = latestInsp?.fuelLevel ?? null;
+  var pc = plateBg(v.trans);
+  var pk = v.parking || 'school';
+  var pkCfg = PARKING_CFG[pk] || PARKING_CFG.school;
+  var fuelLabel = p => p === 0 ? 'E' : p === 25 ? '¼' : p === 50 ? '½' : p === 75 ? '¾' : 'F';
+  var galleryH = Math.round(window.innerHeight * 0.42);
+  var dateInpStyle = {
+    flex: 1,
+    border: '1px solid var(--border)',
+    borderRadius: 7,
+    padding: '6px 8px',
+    fontSize: 13,
+    fontFamily: 'inherit',
+    background: 'var(--bg)',
+    color: 'var(--ink)',
+    minWidth: 0
+  };
+  return React.createElement(React.Fragment, null, inspOpen && React.createElement(VehicleInspectionModal, {
+    vehicle: v,
+    onClose: () => {
+      setInspOpen(false);
+      forceUp();
+      if (onSaved) onSaved();
+    },
+    tr: tr
+  }), React.createElement("input", {
+    ref: uploadRef,
+    type: "file",
+    accept: "image/*",
+    style: {
+      display: 'none'
+    },
+    onChange: handleAddPhoto
+  }), React.createElement("div", {
+    style: {
+      position: 'fixed',
+      inset: 0,
+      zIndex: 200,
+      background: 'var(--bg)',
+      overflowY: 'auto',
+      display: 'flex',
+      flexDirection: 'column'
+    }
+  }, React.createElement("div", {
+    style: {
+      position: 'relative',
+      flexShrink: 0,
+      height: galleryH,
+      overflow: 'hidden',
+      background: '#000'
+    },
+    onTouchStart: onTouchStart,
+    onTouchEnd: onTouchEnd
+  }, React.createElement("div", {
+    style: {
+      width: '100%',
+      height: '100%',
+      transform: sliding === 'left' ? 'translateX(-8%)' : sliding === 'right' ? 'translateX(8%)' : 'translateX(0)',
+      transition: sliding ? 'transform .18s ease' : 'none'
+    }
+  }, curPhoto ? React.createElement("img", {
+    src: curPhoto,
+    style: {
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover',
+      display: 'block'
+    }
+  }) : React.createElement("div", {
+    style: {
+      width: '100%',
+      height: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'rgba(255,255,255,.3)',
+      fontSize: 48
+    }
+  }, "\uD83D\uDE97")), React.createElement("div", {
+    style: {
+      position: 'absolute',
+      inset: 0,
+      background: 'linear-gradient(to bottom, rgba(0,0,0,.35) 0%, transparent 40%, transparent 65%, rgba(0,0,0,.55) 100%)',
+      pointerEvents: 'none'
+    }
+  }), React.createElement("button", {
+    onClick: onClose,
+    style: {
+      position: 'absolute',
+      top: 'env(safe-area-inset-top,12px)',
+      left: 14,
+      width: 36,
+      height: 36,
+      borderRadius: '50%',
+      border: 'none',
+      cursor: 'pointer',
+      background: 'rgba(0,0,0,.5)',
+      color: '#fff',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: 20,
+      lineHeight: 1
+    }
+  }, "\u2039"), React.createElement("button", {
+    onClick: () => uploadRef.current?.click(),
+    style: {
+      position: 'absolute',
+      top: 'env(safe-area-inset-top,12px)',
+      right: 14,
+      width: 36,
+      height: 36,
+      borderRadius: '50%',
+      border: 'none',
+      cursor: 'pointer',
+      background: 'rgba(0,0,0,.5)',
+      color: '#fff',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: 20,
+      lineHeight: 1
+    }
+  }, "+"), photos.length > 1 && React.createElement("button", {
+    onClick: handleDelPhoto,
+    style: {
+      position: 'absolute',
+      top: 'env(safe-area-inset-top,12px)',
+      right: 58,
+      width: 36,
+      height: 36,
+      borderRadius: '50%',
+      border: 'none',
+      cursor: 'pointer',
+      background: 'rgba(180,0,0,.65)',
+      color: '#fff',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: 16,
+      lineHeight: 1
+    }
+  }, "\uD83D\uDDD1"), safeIdx > 0 && React.createElement("button", {
+    onClick: () => goTo(safeIdx - 1),
+    style: {
+      position: 'absolute',
+      left: 8,
+      top: '50%',
+      transform: 'translateY(-50%)',
+      width: 36,
+      height: 36,
+      borderRadius: '50%',
+      border: 'none',
+      cursor: 'pointer',
+      background: 'rgba(0,0,0,.45)',
+      color: '#fff',
+      fontSize: 20,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }
+  }, "\u2039"), safeIdx < photos.length - 1 && React.createElement("button", {
+    onClick: () => goTo(safeIdx + 1),
+    style: {
+      position: 'absolute',
+      right: 8,
+      top: '50%',
+      transform: 'translateY(-50%)',
+      width: 36,
+      height: 36,
+      borderRadius: '50%',
+      border: 'none',
+      cursor: 'pointer',
+      background: 'rgba(0,0,0,.45)',
+      color: '#fff',
+      fontSize: 20,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }
+  }, "\u203A"), photos.length > 1 && React.createElement("div", {
+    style: {
+      position: 'absolute',
+      bottom: 10,
+      left: 0,
+      right: 0,
+      display: 'flex',
+      justifyContent: 'center',
+      gap: 5
+    }
+  }, photos.map((_, i) => React.createElement("div", {
+    key: i,
+    onClick: () => goTo(i),
+    style: {
+      width: i === safeIdx ? 18 : 6,
+      height: 6,
+      borderRadius: 3,
+      background: i === safeIdx ? '#fff' : 'rgba(255,255,255,.45)',
+      transition: 'width .2s',
+      cursor: 'pointer'
+    }
+  }))), React.createElement("div", {
+    style: {
+      position: 'absolute',
+      bottom: photos.length > 1 ? 26 : 10,
+      left: 12,
+      display: 'flex',
+      gap: 6,
+      flexWrap: 'wrap',
+      alignItems: 'center'
+    }
+  }, React.createElement("button", {
+    onClick: () => {
+      onStatusChange && onStatusChange(v.id);
+      forceUp();
+    },
+    style: {
+      padding: '4px 10px',
+      borderRadius: 7,
+      fontSize: 12,
+      fontWeight: 600,
+      border: 'none',
+      cursor: 'pointer',
+      background: v.status === 'Active' ? 'var(--good)' : v.status === 'Workshop' ? 'var(--danger)' : v.status === 'Service due' ? 'var(--warn)' : 'rgba(0,0,0,.55)',
+      color: '#fff',
+      boxShadow: '0 1px 4px rgba(0,0,0,.3)',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 4
+    }
+  }, v.status, " ", React.createElement("svg", {
+    width: "7",
+    height: "5",
+    viewBox: "0 0 8 5",
+    fill: "currentColor",
+    style: {
+      opacity: .75
+    }
+  }, React.createElement("path", {
+    d: "M0 0h8L4 5z"
+  }))), React.createElement("button", {
+    onClick: () => {
+      onParkingChange && onParkingChange(v.id);
+      forceUp();
+    },
+    style: {
+      padding: '4px 10px',
+      borderRadius: 7,
+      fontSize: 12,
+      fontWeight: 600,
+      border: 'none',
+      cursor: 'pointer',
+      background: pkCfg.bg,
+      color: pkCfg.color,
+      boxShadow: '0 1px 4px rgba(0,0,0,.3)',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 4
+    }
+  }, "P \xB7 ", pkCfg.label, " ", React.createElement("svg", {
+    width: "7",
+    height: "5",
+    viewBox: "0 0 8 5",
+    fill: "currentColor",
+    style: {
+      opacity: .75
+    }
+  }, React.createElement("path", {
+    d: "M0 0h8L4 5z"
+  }))), React.createElement("div", {
+    style: {
+      padding: '4px 10px',
+      borderRadius: 7,
+      background: pc.bg,
+      color: pc.color,
+      fontFamily: '"JetBrains Mono",monospace',
+      fontSize: 12,
+      fontWeight: 700,
+      boxShadow: '0 1px 4px rgba(0,0,0,.3)'
+    }
+  }, v.plate), todayC && React.createElement("div", {
+    style: {
+      padding: '3px 8px',
+      borderRadius: 7,
+      fontSize: 18,
+      fontWeight: 700,
+      background: todayC.color,
+      color: '#fff',
+      fontFamily: '"JetBrains Mono",monospace',
+      boxShadow: '0 1px 4px rgba(0,0,0,.3)',
+      lineHeight: 1
+    }
+  }, todayC.label))), React.createElement("div", {
+    style: {
+      flex: 1,
+      padding: '16px 16px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 14,
+      paddingBottom: 'calc(16px + env(safe-area-inset-bottom,0px))'
+    }
+  }, React.createElement("div", null, React.createElement("div", {
+    style: {
+      fontSize: 24,
+      fontWeight: 700,
+      fontFamily: 'var(--font-display)',
+      letterSpacing: '-.01em',
+      lineHeight: 1.2
+    }
+  }, v.make), React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'var(--ink-3)',
+      marginTop: 4
+    }
+  }, [v.year, v.cls, v.trans === 'AT' ? 'Automatic' : v.trans === 'MT' ? 'Manual' : v.trans, v.color, v.station].filter(Boolean).join(' · '))), fuel !== null && React.createElement("div", null, React.createElement("div", {
+    style: {
+      fontSize: 11,
+      fontWeight: 600,
+      color: 'var(--ink-2)',
+      marginBottom: 7,
+      textTransform: 'uppercase',
+      letterSpacing: '.07em',
+      fontFamily: '"JetBrains Mono",monospace'
+    }
+  }, tr('ប្រេងឥន្ធនៈ', 'Fuel level')), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 5
+    }
+  }, [0, 25, 50, 75, 100].map(step => {
+    var active = fuel >= step;
+    var col = step <= 20 ? 'var(--danger)' : step <= 40 ? 'var(--warn)' : step <= 65 ? '#EAB308' : 'var(--good)';
+    return React.createElement("div", {
+      key: step,
+      style: {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 3
+      }
+    }, React.createElement("div", {
+      style: {
+        width: '100%',
+        height: 12,
+        borderRadius: 4,
+        background: active ? col : 'var(--surface-muted)',
+        border: '1px solid var(--border)'
+      }
+    }), React.createElement("span", {
+      style: {
+        fontSize: 10,
+        color: active ? col : 'var(--ink-3)',
+        fontFamily: '"JetBrains Mono",monospace',
+        fontWeight: 700
+      }
+    }, fuelLabel(step)));
+  }))), React.createElement("div", null, React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 8
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 11,
+      fontWeight: 600,
+      color: 'var(--ink-2)',
+      textTransform: 'uppercase',
+      letterSpacing: '.07em',
+      fontFamily: '"JetBrains Mono",monospace'
+    }
+  }, tr('ឯកសារ', 'Documents')), React.createElement("button", {
+    onClick: () => setEditDocs(!editDocs),
+    style: {
+      padding: '4px 10px',
+      borderRadius: 6,
+      border: '1px solid var(--border)',
+      cursor: 'pointer',
+      background: editDocs ? 'var(--accent)' : 'var(--surface-muted)',
+      color: editDocs ? '#fff' : 'var(--ink-2)',
+      fontSize: 12,
+      fontWeight: 600,
+      fontFamily: 'var(--font-km)'
+    }
+  }, editDocs ? tr('រួចរាល់', 'Done') : tr('កែឯកសារ', 'Edit docs'))), [{
+    label: tr('ឆៀក', 'Reg.'),
+    val: regExp,
+    set: setRegExp,
+    field: 'reg_exp'
+  }, {
+    label: tr('ពន្ធផ្លូវ', 'Road tax'),
+    val: roadTax,
+    set: setRoadTax,
+    field: 'road_tax'
+  }, {
+    label: tr('ប្ដូរប្រេងម៉ាស៊ីន', 'Oil change'),
+    val: oilExp,
+    set: setOilExp,
+    field: 'oil_exp'
+  }].map(doc => {
+    var mo = monthsUntil(doc.val);
+    var col = doc.val ? mo < 0 ? 'var(--danger)' : mo <= 1 ? 'var(--warn)' : 'var(--ink)' : 'var(--ink-3)';
+    return React.createElement("div", {
+      key: doc.field,
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '7px 0',
+        borderBottom: '1px solid var(--border)'
+      }
+    }, React.createElement("span", {
+      style: {
+        fontSize: 12,
+        color: 'var(--ink-2)',
+        minWidth: 90,
+        flexShrink: 0
+      }
+    }, doc.label), editDocs ? React.createElement(React.Fragment, null, React.createElement("input", {
+      type: "date",
+      value: doc.val,
+      onChange: e => {
+        doc.set(e.target.value);
+        saveDoc(doc.field, e.target.value);
+      },
+      style: {
+        ...dateInpStyle,
+        color: col,
+        fontWeight: doc.val ? 600 : 400
+      }
+    }), doc.val && React.createElement("button", {
+      onClick: () => {
+        doc.set('');
+        saveDoc(doc.field, '');
+      },
+      style: {
+        flexShrink: 0,
+        width: 28,
+        height: 28,
+        borderRadius: '50%',
+        border: '1px solid var(--border)',
+        cursor: 'pointer',
+        background: 'var(--surface-muted)',
+        color: 'var(--ink-3)',
+        fontSize: 15,
+        lineHeight: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }
+    }, "\xD7")) : React.createElement("span", {
+      style: {
+        fontSize: 13,
+        fontWeight: doc.val ? 600 : 400,
+        color: col
+      }
+    }, doc.val || React.createElement("span", {
+      style: {
+        color: 'var(--ink-3)',
+        fontSize: 12
+      }
+    }, "\u2014")), doc.val && mo <= 1 && React.createElement("span", {
+      style: {
+        fontSize: 15,
+        flexShrink: 0,
+        marginLeft: 'auto'
+      }
+    }, "\u26A0\uFE0F"));
+  })), (() => {
+    var curMo = todayStr().slice(0, 7);
+    var moLessons = LESSONS.filter(l => l.veh === v.id && l.status !== 'cancelled' && (l.date || '').startsWith(curMo));
+    var hrs = moLessons.reduce((s, l) => s + (l.len || 0), 0);
+    var cnt = moLessons.length;
+    if (cnt === 0) return null;
+    return React.createElement("div", {
+      style: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '10px 14px',
+        background: 'var(--surface-muted)',
+        borderRadius: 10,
+        border: '1px solid var(--border)'
+      }
+    }, React.createElement("span", {
+      style: {
+        fontSize: 12,
+        color: 'var(--ink-2)'
+      }
+    }, tr('ម៉ោងប្រើប្រាស់ខែនេះ', 'Usage this month')), React.createElement("div", {
+      style: {
+        textAlign: 'right'
+      }
+    }, React.createElement("span", {
+      style: {
+        fontSize: 16,
+        fontWeight: 700,
+        fontFamily: '"JetBrains Mono",monospace'
+      }
+    }, hrs, "h"), React.createElement("span", {
+      style: {
+        fontSize: 11,
+        color: 'var(--ink-3)',
+        marginLeft: 6
+      }
+    }, cnt, " ", tr('មេរៀន', 'lessons'))));
+  })(), React.createElement("button", {
+    onClick: () => setInspOpen(true),
+    style: {
+      padding: '14px 0',
+      borderRadius: 12,
+      border: 'none',
+      cursor: 'pointer',
+      background: 'var(--accent)',
+      color: '#fff',
+      fontSize: 15,
+      fontWeight: 700,
+      fontFamily: 'var(--font-km)'
+    }
+  }, tr('ពិនិត្យប្រចាំថ្ងៃ', 'Daily Inspection')))));
+};
 var VehicleScreen = () => {
   var {
     tr
   } = useAppActions();
+  var bp = useBreakpoint();
   var [, forceUpdate] = React.useReducer(x => x + 1, 0);
   var [selectedId, setSelectedId] = React.useState(null);
   React.useEffect(() => {
@@ -31792,20 +33147,12 @@ var VehicleScreen = () => {
     };
   }, []);
   var visible = VEHICLES.filter(v => v.visible !== false);
-  var noop = () => {};
+  var selected = visible.find(v => v.id === selectedId) || null;
   var saveDates = (id, dates) => {
     var i = VEHICLES.findIndex(v => v.id === id);
     if (i !== -1) Object.assign(VEHICLES[i], dates);
     if (window.saveAllData) window.saveAllData();
     forceUpdate();
-  };
-  var savePhoto = (id, dataUrl) => {
-    var i = VEHICLES.findIndex(v => v.id === id);
-    if (i !== -1) {
-      VEHICLES[i].photo = dataUrl;
-      if (window.saveAllData) window.saveAllData();
-      forceUpdate();
-    }
   };
   var cycleStatus = id => {
     var i = VEHICLES.findIndex(v => v.id === id);
@@ -31825,6 +33172,117 @@ var VehicleScreen = () => {
     if (window.saveAllData) window.saveAllData();
     forceUpdate();
   };
+  if (bp.mobile) {
+    return React.createElement(React.Fragment, null, selected && React.createElement(VehicleMobileDetail, {
+      v: selected,
+      onClose: () => setSelectedId(null),
+      tr: tr,
+      onSaved: forceUpdate,
+      onStatusChange: cycleStatus,
+      onParkingChange: cycleParking
+    }), React.createElement("div", {
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 0
+      }
+    }, React.createElement("div", {
+      style: {
+        padding: '10px 0 8px',
+        fontSize: 13,
+        fontWeight: 600,
+        color: 'var(--ink-2)'
+      }
+    }, tr(`យានយន្ត · ${visible.length} គ្រឿង`, `Vehicles · ${visible.length}`)), visible.length === 0 ? React.createElement("div", {
+      style: {
+        textAlign: 'center',
+        padding: '48px 20px',
+        color: 'var(--ink-3)',
+        fontSize: 13
+      }
+    }, tr('មិន​ទាន់​មាន​យានយន្ត', 'No vehicles to display')) : React.createElement(Card, {
+      pad: 0
+    }, visible.map((v, idx) => {
+      var pc = plateBg(v.trans);
+      var allInsp = (window.__vehicleInspections || []).filter(r => r.vehicleId === v.id).sort((a, b) => b.date.localeCompare(a.date));
+      var todayRec = allInsp.find(r => r.date === todayStr()) || null;
+      var todayC = todayRec ? INSP_VALS[todayRec.overallStatus] : null;
+      var docWarn = [v.reg_exp, v.road_tax, v.oil_exp].some(d => d && monthsUntil(d) <= 1);
+      return React.createElement("div", {
+        key: v.id,
+        onClick: () => setSelectedId(v.id),
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          padding: '11px 14px',
+          borderBottom: idx < visible.length - 1 ? '1px solid var(--border)' : 'none',
+          cursor: 'pointer',
+          background: 'transparent'
+        }
+      }, React.createElement(Photo, {
+        tag: v.photo,
+        w: 60,
+        h: 44,
+        r: 6
+      }), React.createElement("div", {
+        style: {
+          flex: 1,
+          minWidth: 0
+        }
+      }, React.createElement("div", {
+        style: {
+          fontSize: 15,
+          fontWeight: 700,
+          lineHeight: 1.2,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6
+        }
+      }, v.make, docWarn && React.createElement("span", {
+        style: {
+          fontSize: 14
+        }
+      }, "\u26A0\uFE0F")), React.createElement("div", {
+        style: {
+          marginTop: 3,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6
+        }
+      }, React.createElement("span", {
+        style: {
+          display: 'inline-block',
+          padding: '2px 7px',
+          borderRadius: 5,
+          background: pc.bg,
+          color: pc.color,
+          fontFamily: '"JetBrains Mono",monospace',
+          fontSize: 11,
+          fontWeight: 700
+        }
+      }, v.plate), todayC && React.createElement("span", {
+        style: {
+          fontSize: 16,
+          color: todayC.color,
+          fontFamily: '"JetBrains Mono",monospace',
+          fontWeight: 700,
+          lineHeight: 1
+        }
+      }, todayC.label))), React.createElement("svg", {
+        width: "7",
+        height: "12",
+        viewBox: "0 0 7 12",
+        fill: "none",
+        stroke: "var(--ink-3)",
+        strokeWidth: "1.5",
+        strokeLinecap: "round",
+        strokeLinejoin: "round"
+      }, React.createElement("path", {
+        d: "M1 1l5 5-5 5"
+      })));
+    }))));
+  }
   return React.createElement("div", {
     style: {
       display: 'flex',
@@ -44996,6 +46454,12 @@ var SettingsScreen = ({
     icon: 'plus',
     adminOnly: true
   }, {
+    id: 'ai',
+    km: 'AI & OCR',
+    en: 'AI & OCR',
+    icon: 'settings',
+    adminOnly: true
+  }, {
     id: 'appear',
     km: 'រូបរាង',
     en: 'Appearance',
@@ -45193,7 +46657,9 @@ var SettingsScreen = ({
     onDirty: markDirty
   }), tab === 'notify' && React.createElement(NotifSettings, {
     onDirty: markDirty
-  }), tab === 'integ' && React.createElement(Integrations, null), tab === 'appear' && React.createElement(AppearanceSettings, {
+  }), tab === 'integ' && React.createElement(Integrations, null), tab === 'ai' && React.createElement(AiSettings, {
+    onDirty: markDirty
+  }), tab === 'appear' && React.createElement(AppearanceSettings, {
     lang: lang,
     setLang: setLang,
     tr: tr,
@@ -45487,6 +46953,139 @@ var SchoolInfo = ({
       }
     }, h.open ? calcHours(h.start, h.end) : '—'));
   }))));
+};
+var AiSettings = ({
+  onDirty
+}) => {
+  var {
+    tr
+  } = useAppActions();
+  var ss = window.__schoolSettings;
+  var [key, setKey] = React.useState(ss.anthropicKey || '');
+  var [show, setShow] = React.useState(false);
+  var [testing, setTesting] = React.useState(false);
+  var save = () => {
+    ss.anthropicKey = key.trim();
+    onDirty();
+    if (window.saveAllData) window.saveAllData();
+  };
+  var testKey = async () => {
+    if (!key.trim()) return;
+    setTesting(true);
+    try {
+      var r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': key.trim(),
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 10,
+          messages: [{
+            role: 'user',
+            content: 'Hi'
+          }]
+        })
+      });
+      if (r.ok) {
+        ss.anthropicKey = key.trim();
+        onDirty();
+        if (window.saveAllData) window.saveAllData();
+      } else {
+        var e = await r.json();
+        alert('Error: ' + (e.error?.message || r.status));
+      }
+    } catch (e) {
+      alert('Connection error: ' + e.message);
+    }
+    setTesting(false);
+  };
+  return React.createElement(Card, {
+    label: tr('បញ្ញាប្រឌិត · AI & OCR', 'AI & OCR')
+  }, React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: 'var(--ink-2)',
+      marginBottom: 14
+    }
+  }, tr('បញ្ចូល Anthropic API Key ដើម្បីបើក ស្គេនអត្តសញ្ញាណប័ណ្ណ ស្វ័យប្រវត្ត នៅក្នុងការចុះឈ្មោះសិស្ស។', 'Add an Anthropic API Key to enable automatic ID card scanning in student enrollment.')), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      alignItems: 'center'
+    }
+  }, React.createElement("div", {
+    style: {
+      flex: 1,
+      position: 'relative'
+    }
+  }, React.createElement("input", {
+    value: key,
+    onChange: e => setKey(e.target.value),
+    type: show ? 'text' : 'password',
+    placeholder: "sk-ant-api03-...",
+    style: {
+      width: '100%',
+      padding: '9px 40px 9px 12px',
+      border: '1px solid var(--border)',
+      borderRadius: 8,
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      font: 'inherit',
+      fontSize: 13,
+      boxSizing: 'border-box',
+      fontFamily: '"JetBrains Mono",monospace'
+    }
+  }), React.createElement("button", {
+    onClick: () => setShow(s => !s),
+    style: {
+      position: 'absolute',
+      right: 10,
+      top: '50%',
+      transform: 'translateY(-50%)',
+      border: 'none',
+      background: 'transparent',
+      cursor: 'pointer',
+      fontSize: 14,
+      color: 'var(--ink-3)',
+      padding: 2
+    }
+  }, show ? '🙈' : '👁')), React.createElement(Btn, {
+    kind: "ghost",
+    onClick: save
+  }, tr('រក្សា', 'Save')), React.createElement(Btn, {
+    kind: "primary",
+    onClick: testKey,
+    disabled: !key.trim() || testing
+  }, testing ? '⏳' : tr('សាកល្បង', 'Test'))), ss.anthropicKey && React.createElement("div", {
+    style: {
+      marginTop: 10,
+      fontSize: 11,
+      color: 'var(--ok)',
+      fontWeight: 500
+    }
+  }, "\u2713 ", tr('API Key បានរក្សាទុក — ស្គេន ID Card ត្រៀមប្រើ', 'API Key saved — ID card scanning ready')), React.createElement("div", {
+    style: {
+      marginTop: 14,
+      padding: 12,
+      background: 'var(--surface-muted)',
+      borderRadius: 8,
+      fontSize: 11,
+      color: 'var(--ink-3)'
+    }
+  }, React.createElement("div", {
+    style: {
+      fontWeight: 600,
+      marginBottom: 4
+    }
+  }, tr('របៀបប្រើ:', 'How to use:')), React.createElement("div", null, "1. ", tr('ចូល console.anthropic.com → API Keys → Create Key', 'Go to console.anthropic.com → API Keys → Create Key')), React.createElement("div", null, "2. ", tr('Copy key ហើយ paste នៅខាងលើ', 'Copy the key and paste it above')), React.createElement("div", null, "3. ", tr('ចុច Test → រួចចុច Save', 'Click Test → then Save')), React.createElement("div", {
+    style: {
+      marginTop: 6
+    }
+  }, "4. ", tr('ក្នុង Add Student form → ចុច "📷 ស្គេនអត្តសញ្ញាណប័ណ្ណ"', 'In Add Student form → click "📷 Scan ID Card"'))));
 };
 var calcHours = (start, end) => {
   var [sh, sm] = start.split(':').map(Number);
@@ -48413,30 +50012,97 @@ var AppearanceSettings = ({
   dark,
   toggleDark
 }) => {
+  var getInstData = () => {
+    if (window.__loggedInInstructorData) return window.__loggedInInstructorData;
+    if (window.__loggedInInstructorId) {
+      var sf = (window.__staffData || []).find(s => s.instId === window.__loggedInInstructorId || s.id === window.__loggedInInstructorId);
+      if (sf) return {
+        km: sf.name,
+        en: sf.en,
+        title: sf.roleKm ? sf.roleKm + ' · ' + sf.role : sf.role,
+        avatar: sf.photo
+      };
+      var inst = (typeof INSTRUCTORS !== 'undefined' ? INSTRUCTORS : []).find(i => i.id === window.__loggedInInstructorId);
+      if (inst) return {
+        km: inst.name,
+        en: inst.en,
+        title: inst.role || 'Instructor',
+        avatar: inst.photo || 'inst-1'
+      };
+    }
+    return null;
+  };
   var u = (() => {
     if (role === 'instructor') {
-      if (window.__loggedInInstructorData) return window.__loggedInInstructorData;
-      if (window.__loggedInInstructorId) {
-        var sf = (window.__staffData || []).find(s => s.instId === window.__loggedInInstructorId || s.id === window.__loggedInInstructorId);
-        if (sf) return {
-          km: sf.name,
-          en: sf.en,
-          title: sf.roleKm ? sf.roleKm + ' · ' + sf.role : sf.role,
-          avatar: sf.photo
-        };
-        var inst = (typeof INSTRUCTORS !== 'undefined' ? INSTRUCTORS : []).find(i => i.id === window.__loggedInInstructorId);
-        if (inst) return {
-          km: inst.name,
-          en: inst.en,
-          title: inst.role || 'Instructor',
-          avatar: inst.photo || 'inst-1'
-        };
-      }
+      var d = getInstData();
+      if (d) return d;
     }
     return LOGIN_USERS[role] || LOGIN_USERS.admin;
   })();
   var avatarRef = React.useRef(null);
   var [avatarSrc, setAvatarSrc] = React.useState(null);
+  var [nameKm, setNameKm] = React.useState(() => u.km || '');
+  var [nameEn, setNameEn] = React.useState(() => u.en || '');
+  var [phone, setPhone] = React.useState(() => {
+    if (!window.__loggedInInstructorId) return '';
+    var lid = window.__loggedInInstructorId;
+    var sf = (window.__staffData || []).find(s => s.instId === lid || s.id === lid);
+    var inst = (typeof INSTRUCTORS !== 'undefined' ? INSTRUCTORS : []).find(i => i.id === lid);
+    var p = sf?.phone || inst?.phone || '';
+    return p === '—' ? '' : p || '';
+  });
+  var [email, setEmail] = React.useState(() => {
+    if (!window.__loggedInInstructorId) return '';
+    var lid = window.__loggedInInstructorId;
+    var sf = (window.__staffData || []).find(s => s.instId === lid || s.id === lid);
+    var inst = (typeof INSTRUCTORS !== 'undefined' ? INSTRUCTORS : []).find(i => i.id === lid);
+    var e = sf?.email || inst?.email || '';
+    return e === '—' ? '' : e || '';
+  });
+  var [, forceUpdate] = React.useReducer(x => x + 1, 0);
+  var saveProfile = () => {
+    var lid = window.__loggedInInstructorId;
+    if (!lid) {
+      toast(tr('មិន​អាច​រក​គណនី', 'Cannot find account'), 'warn');
+      return;
+    }
+    var nm = nameKm.trim() || nameEn.trim();
+    var ne = nameEn.trim() || nameKm.trim();
+    if (!ne) {
+      toast(tr('សូម​បំពេញ​ឈ្មោះ', 'Please enter your name'), 'warn');
+      return;
+    }
+    var ph = phone.trim() || '—';
+    var em = email.trim() || '—';
+    var inst = (typeof INSTRUCTORS !== 'undefined' ? INSTRUCTORS : []).find(i => i.id === lid);
+    if (inst) {
+      inst.name = nm;
+      inst.en = ne;
+      inst.phone = ph;
+      inst.email = em;
+      if (avatarSrc) inst.photo = avatarSrc;
+    }
+    var sf = (window.__staffData || []).find(s => s.instId === lid || s.id === lid);
+    if (sf) {
+      sf.name = nm;
+      sf.en = ne;
+      sf.phone = ph;
+      sf.email = em;
+      if (avatarSrc) sf.photo = avatarSrc;
+    }
+    var title = sf ? sf.roleKm ? sf.roleKm + ' · ' + sf.role : sf.role : inst?.role || 'Instructor';
+    var newData = {
+      km: nm,
+      en: ne,
+      title,
+      avatar: avatarSrc || inst?.photo || sf?.photo || 'inst-1'
+    };
+    window.__loggedInInstructorData = newData;
+    LOGIN_USERS.instructor = newData;
+    if (window.saveAllData) window.saveAllData();
+    forceUpdate();
+    toast(tr('បានរក្សាទុក​ប្រវត្តិរូប', 'Profile saved'), 'good');
+  };
   var handleAvatar = e => {
     var file = e.target.files?.[0];
     if (!file) return;
@@ -48652,7 +50318,202 @@ var AppearanceSettings = ({
     }, o.px, "px"));
   }))), React.createElement(Card, {
     label: tr('គណនី · ACCOUNT', 'ACCOUNT · គណនី')
+  }, role === 'instructor' ? React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 14
+    }
   }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 14
+    }
+  }, React.createElement("div", {
+    style: {
+      position: 'relative',
+      cursor: 'pointer'
+    },
+    onClick: () => avatarRef.current?.click()
+  }, avatarSrc ? React.createElement("img", {
+    src: avatarSrc,
+    style: {
+      width: 64,
+      height: 64,
+      borderRadius: 999,
+      objectFit: 'cover',
+      border: '2px solid var(--border)'
+    },
+    alt: "avatar"
+  }) : React.createElement(Avatar, {
+    tag: u.avatar,
+    size: 64
+  }), React.createElement("div", {
+    style: {
+      position: 'absolute',
+      bottom: -2,
+      right: -2,
+      width: 22,
+      height: 22,
+      borderRadius: 999,
+      background: 'var(--ink)',
+      border: '2px solid var(--surface)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }
+  }, React.createElement("svg", {
+    width: "11",
+    height: "11",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "#fff",
+    strokeWidth: "2.5",
+    strokeLinecap: "round"
+  }, React.createElement("path", {
+    d: "M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+  }), React.createElement("circle", {
+    cx: "12",
+    cy: "13",
+    r: "4"
+  })))), React.createElement("input", {
+    ref: avatarRef,
+    type: "file",
+    accept: "image/*",
+    style: {
+      display: 'none'
+    },
+    onChange: handleAvatar
+  }), React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, React.createElement(Badge, {
+    tone: "accent"
+  }, tr('គ្រូ', 'Instructor')), React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--ink-3)',
+      marginTop: 6
+    }
+  }, tr('ចុច​លើ​រូប​ភាព​ដើម្បី​ផ្លាស់ប្ដូរ​រូបថត', 'Click avatar to change photo')))), React.createElement(Divider, null), React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 12
+    }
+  }, React.createElement("div", null, React.createElement("div", {
+    style: {
+      fontSize: 11,
+      fontWeight: 600,
+      color: 'var(--ink-3)',
+      marginBottom: 5,
+      textTransform: 'uppercase',
+      letterSpacing: '.06em'
+    }
+  }, tr('ឈ្មោះ​ខ្មែរ', 'Khmer Name')), React.createElement("input", {
+    value: nameKm,
+    onChange: e => setNameKm(e.target.value),
+    placeholder: tr('ឈ្មោះ​ជា​ភាសា​ខ្មែរ', 'Name in Khmer'),
+    style: {
+      width: '100%',
+      padding: '9px 11px',
+      border: '1px solid var(--border)',
+      borderRadius: 8,
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      font: 'inherit',
+      fontSize: 13,
+      boxSizing: 'border-box'
+    }
+  })), React.createElement("div", null, React.createElement("div", {
+    style: {
+      fontSize: 11,
+      fontWeight: 600,
+      color: 'var(--ink-3)',
+      marginBottom: 5,
+      textTransform: 'uppercase',
+      letterSpacing: '.06em'
+    }
+  }, tr('ឈ្មោះ​ជា​ភាសា​អង់គ្លេស', 'English Name')), React.createElement("input", {
+    value: nameEn,
+    onChange: e => setNameEn(e.target.value),
+    placeholder: "Name in English",
+    style: {
+      width: '100%',
+      padding: '9px 11px',
+      border: '1px solid var(--border)',
+      borderRadius: 8,
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      font: 'inherit',
+      fontSize: 13,
+      boxSizing: 'border-box'
+    }
+  })), React.createElement("div", null, React.createElement("div", {
+    style: {
+      fontSize: 11,
+      fontWeight: 600,
+      color: 'var(--ink-3)',
+      marginBottom: 5,
+      textTransform: 'uppercase',
+      letterSpacing: '.06em'
+    }
+  }, tr('លេខ​ទូរស័ព្ទ', 'Phone')), React.createElement("input", {
+    value: phone,
+    onChange: e => setPhone(e.target.value),
+    placeholder: "0XX XXX XXX",
+    type: "tel",
+    style: {
+      width: '100%',
+      padding: '9px 11px',
+      border: '1px solid var(--border)',
+      borderRadius: 8,
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      font: 'inherit',
+      fontSize: 13,
+      boxSizing: 'border-box'
+    }
+  })), React.createElement("div", null, React.createElement("div", {
+    style: {
+      fontSize: 11,
+      fontWeight: 600,
+      color: 'var(--ink-3)',
+      marginBottom: 5,
+      textTransform: 'uppercase',
+      letterSpacing: '.06em'
+    }
+  }, tr('អ៊ីម៉ែល', 'Email')), React.createElement("input", {
+    value: email,
+    onChange: e => setEmail(e.target.value),
+    placeholder: "email@example.com",
+    type: "email",
+    style: {
+      width: '100%',
+      padding: '9px 11px',
+      border: '1px solid var(--border)',
+      borderRadius: 8,
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      font: 'inherit',
+      fontSize: 13,
+      boxSizing: 'border-box'
+    }
+  }))), React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'flex-end',
+      marginTop: 4
+    }
+  }, React.createElement(Btn, {
+    kind: "primary",
+    onClick: saveProfile
+  }, React.createElement(Icon, {
+    name: "check",
+    size: 14
+  }), " ", tr('រក្សា​ទុក​ប្រវត្តិ​រូប', 'Save Profile')))) : React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -55268,40 +57129,74 @@ Object.assign(window, {
   var todayISO = () => new Date().toISOString().slice(0, 10);
   window.__sbReady = false;
   window.__sbSyncEnabled = true;
-  window.__sbLoadAll = async () => {
-    if (!window.sb) return false;
-    var pull = async t => {
-      try {
-        var {
-          data,
-          error
-        } = await window.sb.from(t).select('*');
-        if (error) {
-          console.error('[Anzen] load ' + t + ':', error.message);
-          return null;
-        }
-        return data || [];
-      } catch (e) {
-        console.error('[Anzen] load ' + t, e);
+  window.__sbHasPendingSync = false;
+  var lastIds = null;
+  var snapshotIds = () => {
+    lastIds = {
+      vehicles: new Set((window.VEHICLES || []).map(v => v.id).filter(Boolean)),
+      students: new Set((window.STUDENTS || []).map(s => s.id).filter(Boolean)),
+      lessons: new Set((window.LESSONS || []).map(l => l.id).filter(Boolean)),
+      invoices: new Set((window.INVOICES || []).map(i => i.id).filter(Boolean))
+    };
+  };
+  var contentSnap = {};
+  var takeContentSnap = () => {
+    var snap = (t, arr) => {
+      contentSnap[t] = new Map((arr || []).filter(r => r.id).map(r => [String(r.id), JSON.stringify(r)]));
+    };
+    snap('vehicles', window.VEHICLES || []);
+    snap('students', window.STUDENTS || []);
+    snap('lessons', window.LESSONS || []);
+    snap('invoices', window.INVOICES || []);
+    snap('instructors', window.INSTRUCTORS || []);
+    snap('staff', window.__staffData || []);
+  };
+  var pull = async t => {
+    try {
+      var {
+        data,
+        error
+      } = await window.sb.from(t).select('*');
+      if (error) {
+        console.error('[Anzen] load ' + t + ':', error.message);
         return null;
       }
-    };
-    var fill = (arr, rows) => {
-      if (rows && rows.length) {
-        arr.length = 0;
-        rows.forEach(r => arr.push(rowObj(r)));
-      }
-    };
+      return data || [];
+    } catch (e) {
+      console.error('[Anzen] load ' + t, e);
+      return null;
+    }
+  };
+  var fill = (arr, rows, initialLoad) => {
+    if (!rows) return;
+    var cloudMap = {};
+    rows.forEach(r => {
+      var o = rowObj(r);
+      if (o.id) cloudMap[o.id] = o;
+    });
+    for (var i = arr.length - 1; i >= 0; i--) {
+      var id = arr[i].id;
+      if (!id) continue;
+      if (cloudMap[id]) {
+        arr[i] = cloudMap[id];
+        delete cloudMap[id];
+      } else if (!initialLoad) arr.splice(i, 1);
+    }
+    Object.values(cloudMap).forEach(o => arr.push(o));
+  };
+  window.__sbLoadAll = async isInitialLoad => {
+    if (!window.sb) return false;
+    var initial = isInitialLoad === true || !window.__sbReady;
     var [stu, ins, veh, les, inv, stf] = await Promise.all(['students', 'instructors', 'vehicles', 'lessons', 'invoices', 'staff'].map(pull));
-    fill(window.INSTRUCTORS, ins);
-    fill(window.VEHICLES, veh);
-    fill(window.STUDENTS, stu);
-    fill(window.LESSONS, les);
-    fill(window.INVOICES, inv);
-    fill(window.STAFF, stf);
+    fill(window.INSTRUCTORS, ins, initial);
+    fill(window.VEHICLES, veh, initial);
+    fill(window.STUDENTS, stu, initial);
+    fill(window.LESSONS, les, initial);
+    fill(window.INVOICES, inv, initial);
+    fill(window.STAFF, stf, initial);
     if (stf && stf.length) window.__staffData = stf.map(rowObj);
     var insp = await pull('vehicle_inspections');
-    if (insp && insp.length) window.__vehicleInspections = insp.map(rowObj);
+    if (insp) window.__vehicleInspections = insp.map(rowObj);
     var att = await pull('attendance');
     if (att && att.length) {
       var m = {};
@@ -55318,12 +57213,15 @@ Object.assign(window, {
       } = await window.sb.from('school_settings').select('data').eq('id', 1).single();
       if (ss && ss.data && Object.keys(ss.data).length) window.__schoolSettings = Object.assign({}, window.__schoolSettings || {}, ss.data);
     } catch (e) {}
+    snapshotIds();
+    takeContentSnap();
     window.__sbReady = true;
     refreshUI();
+    if (window.__sbSubscribe) window.__sbSubscribe();
     return true;
   };
   function refreshUI() {
-    ['__notifyStudentsChanged', '__notifyInstructorsChanged', '__notifyLessonsChanged', '__notifyStaffChanged', '__notifySettingsChanged', '__notifyLessonsLibChanged'].forEach(h => {
+    ['__notifyStudentsChanged', '__notifyInstructorsChanged', '__notifyLessonsChanged', '__notifyStaffChanged', '__notifySettingsChanged', '__notifyLessonsLibChanged', '__notifyVehiclesChanged'].forEach(h => {
       try {
         window[h] && window[h]();
       } catch (e) {}
@@ -55352,11 +57250,44 @@ Object.assign(window, {
       if (key && lib[key]) lib[key].push(rowObj(r));
     });
   }
-  var timer = null;
+  var rtTimer = null;
+  function scheduleRealtimeReload() {
+    clearTimeout(rtTimer);
+    rtTimer = setTimeout(() => {
+      if (window.__sbHasPendingSync) {
+        rtTimer = setTimeout(() => {
+          window.__sbLoadAll && window.__sbLoadAll().catch(() => {});
+        }, 1500);
+        return;
+      }
+      window.__sbLoadAll && window.__sbLoadAll().catch(() => {});
+    }, 500);
+  }
+  window.__sbSubscribe = function () {
+    if (!window.sb || window.__sbSubscribed) return;
+    window.__sbSubscribed = true;
+    var TABLES = ['vehicles', 'students', 'instructors', 'lessons', 'invoices', 'staff', 'vehicle_inspections'];
+    TABLES.forEach(table => {
+      try {
+        window.sb.channel('anzen-rt-' + table).on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table
+        }, scheduleRealtimeReload).subscribe(status => {
+          if (status === 'SUBSCRIBED') console.log('[Anzen] RT:', table);
+        });
+      } catch (e) {
+        console.warn('[Anzen] RT subscribe failed:', table, e);
+      }
+    });
+  };
+  var syncTimer = null;
   window.__sbSyncAll = function () {
     if (!window.sb || !window.__sbReady || !window.__sbSyncEnabled) return;
-    clearTimeout(timer);
-    timer = setTimeout(() => {
+    window.__sbHasPendingSync = true;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => {
+      window.__sbHasPendingSync = false;
       doSync();
     }, 1200);
   };
@@ -55365,13 +57296,41 @@ Object.assign(window, {
       ok: false,
       error: 'not-configured'
     };
-    clearTimeout(timer);
+    window.__sbHasPendingSync = false;
+    clearTimeout(syncTimer);
     return await doSync();
   };
   async function doSync() {
     if (!window.sb) return {
       ok: false
     };
+    var vehicles = (window.VEHICLES || []).slice();
+    var students = (window.STUDENTS || []).slice();
+    var lessons = (window.LESSONS || []).slice();
+    var invoices = (window.INVOICES || []).slice();
+    var instructors = (window.INSTRUCTORS || []).slice();
+    var staff = (window.__staffData || []).slice();
+    var inspections = (window.__vehicleInspections || []).slice();
+    var lib = window.__lessonsLib || {};
+    var ad = window.__attendanceData || {};
+    var settings = window.__schoolSettings || {};
+    var base = {};
+    Object.entries(contentSnap).forEach(([k, v]) => {
+      base[k] = new Map(v);
+    });
+    var changed = (table, rows) => {
+      var b = base[table];
+      if (!b) return rows;
+      return rows.filter(r => {
+        if (!r.id) return true;
+        var prev = b.get(String(r.id));
+        return !prev || prev !== JSON.stringify(r);
+      });
+    };
+    var vIds = new Set(vehicles.map(v => v.id).filter(Boolean));
+    var sIds = new Set(students.map(s => s.id).filter(Boolean));
+    var lIds = new Set(lessons.map(l => l.id).filter(Boolean));
+    var iIds = new Set(invoices.map(i => i.id).filter(Boolean));
     var firstErr = null;
     var up = async (t, rows, onConflict) => {
       if (!rows || !rows.length) return;
@@ -55387,10 +57346,36 @@ Object.assign(window, {
         }
       } catch (e) {
         console.error('[Anzen] sync ' + t, e);
-        firstErr = firstErr || t + ': ' + (e.message || e);
+        firstErr = firstErr || String(e);
       }
     };
-    await up('instructors', (window.INSTRUCTORS || []).map(s => ({
+    var del = async (table, currentIds) => {
+      if (!lastIds || !lastIds[table]) return;
+      var removed = [];
+      lastIds[table].forEach(id => {
+        if (!currentIds.has(id)) removed.push(id);
+      });
+      if (!removed.length) return;
+      try {
+        var {
+          error
+        } = await window.sb.from(table).delete().in('id', removed);
+        if (error) console.warn('[Anzen] delete ' + table + ':', error.message);else console.log('[Anzen] deleted from ' + table + ':', removed);
+      } catch (e) {
+        console.warn('[Anzen] delete', table, e);
+      }
+    };
+    await del('vehicles', vIds);
+    await del('students', sIds);
+    await del('lessons', lIds);
+    await del('invoices', iIds);
+    var cVeh = changed('vehicles', vehicles);
+    var cStu = changed('students', students);
+    var cLes = changed('lessons', lessons);
+    var cInv = changed('invoices', invoices);
+    var cIns = changed('instructors', instructors);
+    var cStf = changed('staff', staff);
+    if (cIns.length) await up('instructors', cIns.map(s => ({
       id: s.id,
       name: s.name,
       en: s.en,
@@ -55398,13 +57383,13 @@ Object.assign(window, {
       email: nz(s.email),
       extra: blob(s)
     })));
-    await up('vehicles', (window.VEHICLES || []).map(v => ({
+    if (cVeh.length) await up('vehicles', cVeh.map(v => ({
       id: v.id,
       plate: v.plate,
       status: v.status,
       extra: blob(v)
     })));
-    await up('students', (window.STUDENTS || []).map(s => ({
+    if (cStu.length) await up('students', cStu.map(s => ({
       id: s.id,
       name: s.name,
       en: s.en,
@@ -55414,7 +57399,7 @@ Object.assign(window, {
       email: nz(s.email),
       extra: blob(s)
     })));
-    await up('lessons', (window.LESSONS || []).map(l => ({
+    if (cLes.length) await up('lessons', cLes.map(l => ({
       id: l.id,
       date: toDate(l.date) || todayISO(),
       h: l.h,
@@ -55425,7 +57410,7 @@ Object.assign(window, {
       status: l.status,
       extra: blob(l)
     })));
-    await up('invoices', (window.INVOICES || []).map(i => ({
+    if (cInv.length) await up('invoices', cInv.map(i => ({
       id: i.id,
       student_id: nz(i.sId),
       amount: i.amount || 0,
@@ -55434,13 +57419,14 @@ Object.assign(window, {
       due: toDate(i.due),
       extra: blob(i)
     })));
-    await up('staff', (window.__staffData || []).map(s => ({
+    if (cStf.length) await up('staff', cStf.map(s => ({
       id: s.id,
       name: s.name,
       en: s.en,
       extra: blob(s)
     })));
-    var lib = window.__lessonsLib || {};
+    var skipped = [!cVeh.length && 'vehicles', !cStu.length && 'students', !cLes.length && 'lessons', !cInv.length && 'invoices', !cIns.length && 'instructors', !cStf.length && 'staff'].filter(Boolean);
+    if (skipped.length) console.log('[Anzen] sync skipped (unchanged):', skipped.join(', '));
     var lc = [];
     var pushLib = (key, track, kind) => (lib[key] || []).forEach((it, idx) => lc.push({
       code: String(it.id || it.ytId || track + '-' + kind + '-' + idx),
@@ -55459,8 +57445,8 @@ Object.assign(window, {
     pushLib('practicalTexts', 'practical', 'text');
     pushLib('practicalVideos', 'practical', 'video');
     pushLib('practicalExercises', 'practical', 'exercise');
-    await up('lesson_content', lc, 'code');
-    await up('vehicle_inspections', (window.__vehicleInspections || []).map(r => ({
+    if (lc.length) await up('lesson_content', lc, 'code');
+    await up('vehicle_inspections', inspections.map(r => ({
       vehicle_id: nz(r.vehicleId),
       date: toDate(r.date) || todayISO(),
       inspector: r.inspector,
@@ -55473,7 +57459,6 @@ Object.assign(window, {
       extra: blob(r)
     })), 'vehicle_id,date');
     var attRows = [];
-    var ad = window.__attendanceData || {};
     Object.keys(ad).forEach(date => {
       var day = ad[date] || {};
       Object.keys(day).forEach(emp => {
@@ -55484,15 +57469,31 @@ Object.assign(window, {
         });
       });
     });
-    await up('attendance', attRows, 'date,emp_id');
+    if (attRows.length) await up('attendance', attRows, 'date,emp_id');
     try {
       await window.sb.from('school_settings').upsert({
         id: 1,
-        data: blob(window.__schoolSettings || {})
+        data: blob(settings)
       });
     } catch (e) {
       console.error('[Anzen] sync settings', e);
     }
+    lastIds = {
+      vehicles: vIds,
+      students: sIds,
+      lessons: lIds,
+      invoices: iIds
+    };
+    var updateSnap = (t, pushed) => pushed.forEach(r => {
+      if (!contentSnap[t]) contentSnap[t] = new Map();
+      contentSnap[t].set(String(r.id), JSON.stringify(r));
+    });
+    updateSnap('vehicles', cVeh);
+    updateSnap('students', cStu);
+    updateSnap('lessons', cLes);
+    updateSnap('invoices', cInv);
+    updateSnap('instructors', cIns);
+    updateSnap('staff', cStf);
     return {
       ok: !firstErr,
       error: firstErr
@@ -55727,8 +57728,7 @@ function App() {
     var f = FONT_OPTIONS[t.font] || FONT_OPTIONS.inter;
     root.style.setProperty('--font-en', f.en);
     root.style.setProperty('--font-display', f.display);
-    var sz = FONT_SIZE_OPTIONS.find(o => o.v === t.fontSize) || FONT_SIZE_OPTIONS[1];
-    root.style.setProperty('--font-size-base', sz.px + 'px');
+    root.style.setProperty('--font-size-base', '14px');
     document.body.style.zoom = '';
   }, [t.accent, t.font, t.fontSize, t.dark]);
   var role = t.role || 'admin';
@@ -55742,6 +57742,15 @@ function App() {
   React.useEffect(() => {
     window.__curriculumFeedback = curriculumFeedback;
   }, [curriculumFeedback]);
+  React.useEffect(() => {
+    if (!authed || !window.sb) return;
+    var poll = () => {
+      if (!window.__sbLoadAll) return;
+      window.__sbLoadAll().catch(() => {});
+    };
+    var id = setInterval(poll, 30000);
+    return () => clearInterval(id);
+  }, [authed]);
   var [sideCollapsed, setSideCollapsed] = React.useState(() => {
     try {
       return localStorage.getItem('anzen_side_collapsed') === '1';
@@ -55862,6 +57871,11 @@ function App() {
     setAuthed(true);
     setCurrent('dashboard');
     window.__anzenStudentId = null;
+    if (window.__sbLoadAll) {
+      window.__sbLoadAll().then(() => {
+        if (window.__sbPushNow) window.__sbPushNow();
+      }).catch(() => {});
+    }
   };
   var loginStudent = student => {
     setLoggedInStudentUser(student);
@@ -56095,6 +58109,7 @@ function App() {
   var detailTitle = detail && detailEntry ? detailEntry.titleFn(detail.data) : null;
   var DetailComp = detailEntry?.Component;
   var renderLayout = () => {
+    var uiZoom = (FONT_SIZE_OPTIONS.find(o => o.v === t.fontSize) || FONT_SIZE_OPTIONS[1]).zoom;
     if (bp.mobile) {
       return React.createElement("div", {
         style: {
@@ -56108,6 +58123,7 @@ function App() {
         style: {
           flex: 1,
           overflow: 'auto',
+          zoom: uiZoom,
           padding: '12px 14px',
           paddingBottom: 72
         }
@@ -56139,6 +58155,7 @@ function App() {
         style: {
           flex: 1,
           overflow: 'auto',
+          zoom: uiZoom,
           padding: '16px 20px',
           minWidth: 0
         }
@@ -56174,6 +58191,7 @@ function App() {
         style: {
           flex: 1,
           overflow: 'auto',
+          zoom: uiZoom,
           padding: '24px 28px'
         }
       }, screens[current])));
@@ -56198,6 +58216,7 @@ function App() {
         style: {
           flex: 1,
           overflow: 'auto',
+          zoom: uiZoom,
           padding: '24px 28px'
         }
       }, screens[current]));
@@ -56221,6 +58240,7 @@ function App() {
       style: {
         flex: 1,
         overflow: 'auto',
+        zoom: uiZoom,
         padding: '24px 28px'
       }
     }, screens[current]));
@@ -56547,23 +58567,7 @@ var RealLoginCard = ({
       cursor: busy ? 'default' : 'pointer',
       fontFamily: 'inherit'
     }
-  }, busy ? tr('កំពុង​ចូល…', 'Signing in…') : tr('ចូល', 'Sign in')), React.createElement("div", {
-    style: {
-      marginTop: 16,
-      textAlign: 'center'
-    }
-  }, React.createElement("button", {
-    type: "button",
-    onClick: onUseDemo,
-    style: {
-      border: 'none',
-      background: 'none',
-      cursor: 'pointer',
-      fontSize: 11,
-      color: 'var(--ink-3)',
-      textDecoration: 'underline'
-    }
-  }, tr('ប្រើ​របៀប Demo', 'Use demo mode')))));
+  }, busy ? tr('កំពុង​ចូល…', 'Signing in…') : tr('ចូល', 'Sign in'))));
 };
 var LoginScreen = ({
   onLogin,
