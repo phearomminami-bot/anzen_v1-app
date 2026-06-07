@@ -671,8 +671,8 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
     const isToday = mobileDate === today;
     const dd   = mobileDate.slice(8,10);
     const yyyy = mobileDate.slice(0,4);
-    const dowKm = ['អា','ច','អ','ព','ព្រ','សុ','ស'][d.getDay()];
-    const dowEn = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+    const dowKm = ['អាទិត្យ','ច័ន្ទ','អង្គារ','ពុធ','ព្រហស្បតិ៍','សុក្រ','សៅរ៍'][d.getDay()];
+    const dowEn = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()];
     const monKm = KM_MONTHS[d.getMonth()];
     const monEn = (EN_MONTHS[d.getMonth()] || '').slice(0,3);
     const label = tr(`${dowKm} - ${dd}/${monKm}/${yyyy}`, `${dowEn} - ${dd}/${monEn}/${yyyy}`);

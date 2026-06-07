@@ -16858,8 +16858,8 @@ var ScheduleScreen = ({
     var isToday = mobileDate === today;
     var dd = mobileDate.slice(8, 10);
     var yyyy = mobileDate.slice(0, 4);
-    var dowKm = ['អា', 'ច', 'អ', 'ព', 'ព្រ', 'សុ', 'ស'][d.getDay()];
-    var dowEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()];
+    var dowKm = ['អាទិត្យ', 'ច័ន្ទ', 'អង្គារ', 'ពុធ', 'ព្រហស្បតិ៍', 'សុក្រ', 'សៅរ៍'][d.getDay()];
+    var dowEn = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getDay()];
     var monKm = KM_MONTHS[d.getMonth()];
     var monEn = (EN_MONTHS[d.getMonth()] || '').slice(0, 3);
     var label = tr(`${dowKm} - ${dd}/${monKm}/${yyyy}`, `${dowEn} - ${dd}/${monEn}/${yyyy}`);
