@@ -796,9 +796,10 @@ window.__trRegistry = {
   "Payment progress": "ការបង់ប្រាក់",
   "Payment log": "ប្រវត្តិ​បង់",
   "Completion": "បញ្ចប់",
-  "Exam apply": "ស្នើរប្រឡង",
+  "Exam apply": "ស្នើរ​ប្រឡង",
   "Result": "លទ្ធផល",
   "Hours": "ម៉ោង",
+  "Tap to toggle status": "ចុច​ដើម្បី​ប្ដូរ​ស្ថានភាព",
   "Missing": "មិន​ទាន់",
   "Lesson": "មេរៀន",
   "Book new lesson": "ណាត់​មេរៀន​ថ្មី",
@@ -810,7 +811,7 @@ window.__trRegistry = {
   "Next lesson": "មេរៀន​​",
   "EXAM READINESS": "ការ​ត្រៀម​ប្រឡង",
   "DOCUMENTS": "ឯកសារ",
-  "STUDY HISTORY": "ប្រវត្តិ​សិក្សា",
+  "STUDY HISTORY": "ប្រវត្តិសិក្សា",
   "Score must be 0–100": "ពិន្ទុត្រូវ 0–100",
   "No": "ទេ",
   "Delete student": "លុបសិស្ស",
@@ -851,6 +852,11 @@ window.__trRegistry = {
   "Parking": "ចត​",
   "City": "ទីក្រុង",
   "Add score": "បន្ថែម​",
+  "Study start": "ចាប់​ផ្ដើម",
+  "Study end": "បញ្ចប់",
+  "Exam result": "លទ្ធផល​ប្រឡង",
+  "Pass": "ជាប់",
+  "Fail": "ធ្លាក់",
   "Learner permit": "អនុញ្ញាត​សិក្សា",
   "ID card": "អត្តសញ្ញាណប័ណ្ណ",
   "Medical cert.": "វិញ្ញាបនបត្រ​វេជ្ជសាស្ត្រ",
@@ -858,8 +864,6 @@ window.__trRegistry = {
   "Select a student from the directory": "ជ្រើសសិស្ស​",
   "Manual": "លេខ​ដៃ",
   "Auto": "លេខ​អូតូ",
-  "Study start": "ចាប់​ផ្ដើម",
-  "Study end": "បញ្ចប់",
   "Tuition": "ថ្លៃបង្រៀន",
   "EXAM": "ការ​ប្រឡង",
   "Apply date": "ដាក់​ពាក្យ",
@@ -34477,7 +34481,13 @@ var StudentsScreenV2 = () => {
         id: "docs",
         km: "\u17AF\u1780\u179F\u17B6\u179A\u179F\u17B7\u179F\u17D2\u179F",
         en: "Documents"
-      }, [{
+      }, React.createElement("div", {
+        style: {
+          fontSize: 11,
+          color: 'var(--ink-3)',
+          marginBottom: 6
+        }
+      }, tr('ចុច​ដើម្បី​ប្ដូរ​ស្ថានភាព', 'Tap to toggle status')), [{
         key: 'permit',
         km: 'ប័ណ្ណ​អនុញ្ញាត',
         en: "Learner's permit"
@@ -34495,12 +34505,21 @@ var StudentsScreenV2 = () => {
         en: 'Photo 4×6'
       }].map(d => React.createElement("div", {
         key: d.key,
+        onClick: () => {
+          var i = STUDENTS.findIndex(x => x.id === s.id);
+          if (i !== -1) {
+            STUDENTS[i][d.key] = s[d.key] ? 0 : 1;
+            if (window.saveAllData) window.saveAllData();
+            forceUpdate();
+          }
+        },
         style: {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '7px 0',
-          borderBottom: '1px solid var(--border)'
+          padding: '9px 0',
+          borderBottom: '1px solid var(--border)',
+          cursor: 'pointer'
         }
       }, React.createElement("span", {
         style: {
@@ -34511,9 +34530,14 @@ var StudentsScreenV2 = () => {
         style: {
           fontSize: 13,
           fontWeight: 600,
+          padding: '2px 10px',
+          borderRadius: 6,
+          background: s[d.key] ? 'color-mix(in srgb,var(--good) 14%,transparent)' : 'var(--surface-muted)',
           color: s[d.key] ? 'var(--good)' : 'var(--ink-3)'
         }
-      }, s[d.key] ? '✓ ' + tr('មាន', 'Done') : tr('មិន​ទាន់', 'Missing'))))), React.createElement(CvSection, {
+      }, s[d.key] ? '✓ ' + tr('មាន', 'Done') : tr('មិន​ទាន់', 'Missing')))), React.createElement(SchoolDocs, {
+        student: s
+      })), React.createElement(CvSection, {
         id: "lessons",
         km: "\u1794\u1789\u17D2\u1787\u17B8\u1798\u17C1\u179A\u17C0\u1793 \u1793\u17B7\u1784 \u1798\u178F\u17B7\u1782\u17D2\u179A\u17BC",
         en: "Lessons & Comments"
@@ -36749,6 +36773,11 @@ var StudentEditPanel = ({
   var [idDoc, setIdDoc] = React.useState(!!s.id_doc);
   var [medical, setMedical] = React.useState(!!s.medical);
   var [photoId, setPhotoId] = React.useState(!!s.photo_id);
+  var [studyStart, setStudyStart] = React.useState(s.study_start || '');
+  var [studyEnd, setStudyEnd] = React.useState(s.study_end || '');
+  var [examApply, setExamApply] = React.useState(s.exam_apply || '');
+  var [examDate, setExamDate] = React.useState(s.exam_date || '');
+  var [examResult, setExamResult] = React.useState(s.exam_result || '');
   var [confirmDel, setConfirmDel] = React.useState(false);
   var addMockScore = () => {
     var v = parseInt(mockNew);
@@ -36818,11 +36847,11 @@ var StudentEditPanel = ({
       id_doc: idDoc ? 1 : 0,
       medical: medical ? 1 : 0,
       photo_id: photoId ? 1 : 0,
-      study_start: s.study_start,
-      study_end: s.study_end,
-      exam_apply: s.exam_apply,
-      exam_date: s.exam_date,
-      exam_result: s.exam_result,
+      study_start: studyStart,
+      study_end: studyEnd,
+      exam_apply: examApply,
+      exam_date: examDate,
+      exam_result: examResult,
       exam_resits: s.exam_resits || []
     });
   };
@@ -37292,7 +37321,42 @@ var StudentEditPanel = ({
     kind: "ghost",
     size: "sm",
     onClick: addMockScore
-  }, "+ ", tr('បន្ថែម​', 'Add score')))), secTitle(tr('ឯកសារ', 'DOCUMENTS')), React.createElement("div", {
+  }, "+ ", tr('បន្ថែម​', 'Add score')))), secTitle(tr('ប្រវត្តិសិក្សា', 'STUDY HISTORY')), React.createElement("div", g2, React.createElement(SEField, {
+    label: tr('ចាប់ផ្ដើមសិក្សា', 'Study start')
+  }, React.createElement("input", _extends({}, inp, {
+    type: "date",
+    value: studyStart,
+    onChange: e => setStudyStart(e.target.value)
+  }))), React.createElement(SEField, {
+    label: tr('បញ្ចប់សិក្សា', 'Study end')
+  }, React.createElement("input", _extends({}, inp, {
+    type: "date",
+    value: studyEnd,
+    onChange: e => setStudyEnd(e.target.value)
+  }))), React.createElement(SEField, {
+    label: tr('ស្នើរ​ប្រឡង', 'Exam apply')
+  }, React.createElement("input", _extends({}, inp, {
+    type: "date",
+    value: examApply,
+    onChange: e => setExamApply(e.target.value)
+  }))), React.createElement(SEField, {
+    label: tr('ថ្ងៃ​ប្រឡង', 'Exam date')
+  }, React.createElement("input", _extends({}, inp, {
+    type: "date",
+    value: examDate,
+    onChange: e => setExamDate(e.target.value)
+  }))), React.createElement(SEField, {
+    label: tr('លទ្ធផល​ប្រឡង', 'Exam result')
+  }, React.createElement("select", _extends({}, sel, {
+    value: examResult,
+    onChange: e => setExamResult(e.target.value)
+  }), React.createElement("option", {
+    value: ""
+  }, "\u2014 ", tr('មិន​ទាន់', 'Pending'), " \u2014"), React.createElement("option", {
+    value: "pass"
+  }, tr('ជាប់', 'Pass')), React.createElement("option", {
+    value: "fail"
+  }, tr('ធ្លាក់', 'Fail'))))), secTitle(tr('ឯកសារ', 'DOCUMENTS')), React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',

@@ -331,20 +331,27 @@ const StudentsScreenV2 = () => {
 
           {/* Section 4: Documents */}
           <CvSection id="docs" km="ឯកសារសិស្ស" en="Documents">
+            <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:6}}>{tr('ចុច​ដើម្បី​ប្ដូរ​ស្ថានភាព','Tap to toggle status')}</div>
             {[
               {key:'permit',   km:'ប័ណ្ណ​អនុញ្ញាត',       en:"Learner's permit"},
               {key:'id_doc',   km:'អត្តសញ្ញាណ​ប័ណ្ណ',     en:'National ID'},
               {key:'medical',  km:'វេជ្ជ​បណ្ណ',            en:'Medical cert.'},
               {key:'photo_id', km:'រូប​ថត 4×6',             en:'Photo 4×6'},
             ].map(d => (
-              <div key={d.key} style={{display:'flex',alignItems:'center',justifyContent:'space-between',
-                padding:'7px 0',borderBottom:'1px solid var(--border)'}}>
+              <div key={d.key}
+                onClick={() => { const i = STUDENTS.findIndex(x=>x.id===s.id); if(i!==-1){ STUDENTS[i][d.key] = s[d.key]?0:1; if(window.saveAllData) window.saveAllData(); forceUpdate(); } }}
+                style={{display:'flex',alignItems:'center',justifyContent:'space-between',
+                padding:'9px 0',borderBottom:'1px solid var(--border)',cursor:'pointer'}}>
                 <span style={{fontSize:13,color:'var(--ink-2)'}}>{tr(d.km, d.en)}</span>
-                <span style={{fontSize:13,fontWeight:600,color: s[d.key] ? 'var(--good)' : 'var(--ink-3)'}}>
+                <span style={{fontSize:13,fontWeight:600,padding:'2px 10px',borderRadius:6,
+                  background: s[d.key] ? 'color-mix(in srgb,var(--good) 14%,transparent)' : 'var(--surface-muted)',
+                  color: s[d.key] ? 'var(--good)' : 'var(--ink-3)'}}>
                   {s[d.key] ? '✓ '+tr('មាន','Done') : tr('មិន​ទាន់','Missing')}
                 </span>
               </div>
             ))}
+            {/* Upload actual files (image/PDF) */}
+            <SchoolDocs student={s}/>
           </CvSection>
 
           {/* Section 5: Lessons & comments */}
@@ -1340,6 +1347,13 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
   const [medical, setMedical] = React.useState(!!s.medical);
   const [photoId, setPhotoId] = React.useState(!!s.photo_id);
 
+  // Study history
+  const [studyStart, setStudyStart] = React.useState(s.study_start || '');
+  const [studyEnd,   setStudyEnd]   = React.useState(s.study_end   || '');
+  const [examApply,  setExamApply]  = React.useState(s.exam_apply  || '');
+  const [examDate,   setExamDate]   = React.useState(s.exam_date   || '');
+  const [examResult, setExamResult] = React.useState(s.exam_result || '');
+
   const [confirmDel, setConfirmDel] = React.useState(false);
 
   const addMockScore = () => {
@@ -1405,11 +1419,11 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
       id_doc:   idDoc   ? 1 : 0,
       medical:  medical ? 1 : 0,
       photo_id: photoId ? 1 : 0,
-      study_start: s.study_start,
-      study_end:   s.study_end,
-      exam_apply:  s.exam_apply,
-      exam_date:   s.exam_date,
-      exam_result: s.exam_result,
+      study_start: studyStart,
+      study_end:   studyEnd,
+      exam_apply:  examApply,
+      exam_date:   examDate,
+      exam_result: examResult,
       exam_resits: s.exam_resits || [],
     });
   };
@@ -1589,6 +1603,21 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
             onKeyDown={e=>e.key==='Enter'&&addMockScore()} placeholder="0–100" min="0" max="100"/>
           <Btn kind="ghost" size="sm" onClick={addMockScore}>+ {tr('បន្ថែម​','Add score')}</Btn>
         </div>
+      </div>
+
+      {secTitle(tr('ប្រវត្តិសិក្សា','STUDY HISTORY'))}
+      <div {...g2}>
+        <SEField label={tr('ចាប់ផ្ដើមសិក្សា','Study start')}><input {...inp} type="date" value={studyStart} onChange={e=>setStudyStart(e.target.value)}/></SEField>
+        <SEField label={tr('បញ្ចប់សិក្សា','Study end')}><input {...inp} type="date" value={studyEnd} onChange={e=>setStudyEnd(e.target.value)}/></SEField>
+        <SEField label={tr('ស្នើរ​ប្រឡង','Exam apply')}><input {...inp} type="date" value={examApply} onChange={e=>setExamApply(e.target.value)}/></SEField>
+        <SEField label={tr('ថ្ងៃ​ប្រឡង','Exam date')}><input {...inp} type="date" value={examDate} onChange={e=>setExamDate(e.target.value)}/></SEField>
+        <SEField label={tr('លទ្ធផល​ប្រឡង','Exam result')}>
+          <select {...sel} value={examResult} onChange={e=>setExamResult(e.target.value)}>
+            <option value="">— {tr('មិន​ទាន់','Pending')} —</option>
+            <option value="pass">{tr('ជាប់','Pass')}</option>
+            <option value="fail">{tr('ធ្លាក់','Fail')}</option>
+          </select>
+        </SEField>
       </div>
 
       {secTitle(tr('ឯកសារ','DOCUMENTS'))}
