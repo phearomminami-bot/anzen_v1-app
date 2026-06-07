@@ -2604,6 +2604,86 @@ const DOC_TYPES = [
   { k:'other',       km:'ផ្សេងៗ',          en:'Other',        icon:'book'  },
 ];
 
+// ── Print: Request to certify driver license for use abroad (A4 portrait) ────
+// Official Khmer letter; placeholders are filled per-student.
+const printLicenseAbroadRequest = (s) => {
+  if (!s) return;
+  const esc = (x) => String(x == null ? '' : x).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+  const blank = (w) => `<span class="blank" style="min-width:${w||90}px"></span>`;
+  const v = (x, w) => (x && String(x).trim()) ? esc(x) : blank(w);
+  // Honorific (ងារ): female → នាងខ្ញុំ, male → ខ្ញុំបាទ
+  const honor = s.gender === 'F' ? 'នាងខ្ញុំ' : 'ខ្ញុំបាទ';
+  const genderTxt = s.gender === 'F' ? 'ស្រី' : s.gender === 'M' ? 'ប្រុស' : '';
+  const dob = (s.dob && /^\d{4}-\d{2}-\d{2}/.test(s.dob)) ? s.dob : '';
+  const bDay = dob ? dob.slice(8,10) : '';
+  const bMonth = dob ? dob.slice(5,7) : '';
+  const bYear = dob ? dob.slice(0,4) : '';
+  const addr = [
+    s.addr_house   && 'ផ្ទះលេខ ' + s.addr_house,
+    s.addr_street  && 'ផ្លូវ ' + s.addr_street,
+    s.addr_village && 'ភូមិ' + s.addr_village,
+    s.addr_commune && 'ឃុំ/សង្កាត់ ' + s.addr_commune,
+    (s.addr_district || s.district) && 'ស្រុក/ខណ្ឌ ' + (s.addr_district || s.district),
+    s.addr_province && 'ខេត្ត/រាជធានី ' + s.addr_province,
+  ].filter(Boolean).join(' ');
+  const name = s.name || s.en || '';
+  const w = window.open('', '_blank', 'width=900,height=1100');
+  if (!w) return;
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Khmer:wght@400;600;700&family=Noto+Sans+Khmer:wght@400;600;700&family=Moul&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<title>លិខិតស្នើសុំបញ្ជាក់បណ្ណបើកបរ</title>
+<style>
+  @page { size: A4 portrait; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background:#e8e8e8; font-family:'Noto Serif Khmer', serif; }
+  .pdf-bar { position:fixed; top:0; left:0; right:0; z-index:999; background:#1a1a19; color:#fff; display:flex; align-items:center; gap:14px; padding:10px 24px; font-family:'Noto Sans Khmer','Inter',sans-serif; }
+  .pdf-bar button { background:#2a5db0; color:#fff; border:none; border-radius:6px; padding:8px 20px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .pdf-bar .t { font-size:13px; font-weight:600; }
+  .sheet { width:210mm; min-height:297mm; margin:60px auto 30px; background:#fff; padding:24mm 22mm; box-shadow:0 6px 30px rgba(0,0,0,.18); font-size:15px; line-height:2.1; color:#111; }
+  .moul { font-family:'Moul','Noto Serif Khmer',serif; }
+  .center { text-align:center; }
+  .title { font-size:18px; font-weight:700; }
+  .sub   { font-size:15px; font-weight:700; }
+  .blank { display:inline-block; border-bottom:1px dotted #333; vertical-align:bottom; }
+  .p { text-indent:48px; margin:14px 0; text-align:justify; }
+  .strong { font-weight:700; }
+  .sign { margin-top:26px; text-align:right; line-height:2.3; }
+  .signname { margin-top:46px; text-align:right; font-weight:700; padding-right:24px; }
+  .attach { margin-top:34px; font-size:14px; line-height:2; }
+  @media print { body { background:#fff; } .pdf-bar { display:none; } .sheet { margin:0; box-shadow:none; width:auto; min-height:auto; } }
+</style></head><body>
+<div class="pdf-bar"><span class="t">លិខិតស្នើសុំបញ្ជាក់បណ្ណបើកបរ · ${esc(name)}</span><button onclick="window.print()">🖨 បោះពុម្ព / រក្សាជា PDF</button></div>
+<div class="sheet">
+  <div class="center moul title">ព្រះរាជាណាចក្រកម្ពុជា</div>
+  <div class="center moul sub">ជាតិ&nbsp;&nbsp;សាសនា&nbsp;&nbsp;ព្រះមហាក្សត្រ</div>
+  <div style="height:18px"></div>
+
+  <div class="p">${honor}ឈ្មោះ៖ <span class="strong">${v(name,140)}</span> ភេទ ${v(genderTxt,40)} កើតថ្ងៃទី${v(bDay,34)} ខែ${v(bMonth,34)} ឆ្នាំ${v(bYear,54)} ជនជាតិ ខ្មែរ កាន់អត្តសញ្ញាណប័ណ្ណសញ្ជាតិខ្មែរ លេខ ${v(s.natId,120)} អាស័យដ្ឋាន៖ ${v(addr,220)} ។</div>
+
+  <div class="center sub" style="margin-top:8px">សូមគោរពជូន</div>
+  <div class="center sub">លោកប្រធានមន្ទីរសាធារណការ និង ដឹកជញ្ជូន${v(s.exam_location,120)}</div>
+
+  <div class="p"><span class="strong">កម្មវត្ថុ ៖</span> សំណើសុំបញ្ជាក់ភាពត្រឹមត្រូវលើបណ្ណបើកបរយានយន្តរបស់${honor} លេខ ${v(s.license_no,120)}។</div>
+
+  <div class="p">សេចក្ដីដូចមានសរសេរក្នុងកម្មវត្ថុខាងលើ ${honor}សូមគោរពជូន <span class="strong">លោកប្រធានមន្ទីរ</span> មេត្ដាជ្រាបៈ ដោយ${honor}ត្រូវទៅធ្វើការនៅក្រៅប្រទេស ហើយត្រូវការបញ្ជាក់ភាពត្រឹមត្រូវលើបណ្ណបើកបរយានយន្តរបស់${honor} លេខ ${v(s.license_no,120)} ដើម្បីយកទៅប្រើប្រាស់នៅក្រៅប្រទេសបាន។</div>
+
+  <div class="p">អាស្រ័យដូចបានជម្រាបជូនខាងលើ សូម <span class="strong">លោកប្រធានមន្ទីរ</span> មេត្ដាពិនិត្យ និងជួយសម្រួលដោយក្ដីអនុគ្រោះ។</div>
+
+  <div class="p">សូម <span class="strong">លោកប្រធានមន្ទីរ</span> មេត្ដាទទួលនូវការគោរពដ៏ខ្ពង់ខ្ពស់ពី${honor}។</div>
+
+  <div class="sign">ថ្ងៃ ${blank(40)} ខែ ${blank(40)} ឆ្នាំ ${blank(50)} ព.ស ${blank(70)}<br/>
+    ធ្វើនៅ${blank(70)}ថ្ងៃទី${blank(36)}ខែ${blank(36)}ឆ្នាំ${blank(50)}<br/>
+    <span class="strong">ស្នាមមេដៃស្ដាំ</span></div>
+  <div class="signname">${v(name,140)}</div>
+
+  <div class="attach">សូមជូនភ្ជាប់មកជាមួយនូវ ៖<br/>
+    - ច្បាប់ចម្លងបណ្ណបើកបរ ${blank(60)} ១ច្បាប់<br/>
+    - ច្បាប់ចម្លងអត្តសញ្ញាណប័ណ្ណ ${blank(60)} ១ច្បាប់</div>
+</div>
+</body></html>`);
+  w.document.close();
+};
+
 const SchoolDocs = ({ student }) => {
   const { toast, tr } = useAppActions();
   const bp = useBreakpoint();
@@ -2702,6 +2782,13 @@ const SchoolDocs = ({ student }) => {
         </div>
         <Btn kind="primary" size="sm" icon={<Icon name="plus" size={13}/>} onClick={() => setAdding(v => !v)}>
           {tr('បន្ថែម','Add')}
+        </Btn>
+      </div>
+
+      {/* Generate official A4 letters from student data */}
+      <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:14}}>
+        <Btn kind="ghost" size="sm" icon={<Icon name="book" size={13}/>} onClick={() => printLicenseAbroadRequest(student)}>
+          {tr('លិខិតស្នើសុំបញ្ជាក់បណ្ណបើកបរ (A4)','License certification letter (A4)')}
         </Btn>
       </div>
 
