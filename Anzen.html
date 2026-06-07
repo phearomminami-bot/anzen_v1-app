@@ -3131,8 +3131,8 @@ var can = (role, action, target) => {
 };
 var useBreakpoint = () => {
   var get = () => ({
-    mobile: window.innerWidth < 700,
-    tablet: window.innerWidth >= 700 && window.innerWidth < 1100
+    mobile: window.innerWidth < 1100,
+    tablet: false
   });
   var [bp, setBp] = React.useState(get);
   React.useEffect(() => {
