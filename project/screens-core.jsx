@@ -1,10 +1,12 @@
 // screens-core.jsx — Dashboard (role-aware)
 
-const LESSON_TYPE_LABEL = { a:'Practical KH', b:'Practical KH', c:'Theory KH', d:'Practical JP', e:'Theory JP' };
+// P = Practical (អនុវត្តន៍), T = Theory (ទ្រឹស្ដី); KH/JP = language track.
+const LESSON_TYPE_LABEL = { a:'P KH', b:'P KH', c:'T KH', d:'P JP', e:'T JP' };
+const LESSON_TYPE_FULL  = { a:'Practical KH', b:'Practical KH', c:'Theory KH', d:'Practical JP', e:'Theory JP' };
 const LessonBadge = ({ color }) => {
   const c = (typeof LESSON_COLORS !== 'undefined' ? LESSON_COLORS : {})[color] || { bg:'var(--accent-soft)', fg:'var(--accent)', bd:'var(--accent)' };
   return (
-    <span style={{
+    <span title={LESSON_TYPE_FULL[color] || 'Lesson'} style={{
       fontSize:10,fontWeight:700,padding:'2px 7px',borderRadius:5,whiteSpace:'nowrap',flexShrink:0,
       background:c.bg, color:c.fg, border:`1px solid ${c.bd}`,
       fontFamily:'"JetBrains Mono",monospace',

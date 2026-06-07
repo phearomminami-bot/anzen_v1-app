@@ -13456,6 +13456,13 @@ Object.assign(window, {
 
 <script>
 var LESSON_TYPE_LABEL = {
+  a: 'P KH',
+  b: 'P KH',
+  c: 'T KH',
+  d: 'P JP',
+  e: 'T JP'
+};
+var LESSON_TYPE_FULL = {
   a: 'Practical KH',
   b: 'Practical KH',
   c: 'Theory KH',
@@ -13471,6 +13478,7 @@ var LessonBadge = ({
     bd: 'var(--accent)'
   };
   return React.createElement("span", {
+    title: LESSON_TYPE_FULL[color] || 'Lesson',
     style: {
       fontSize: 10,
       fontWeight: 700,
