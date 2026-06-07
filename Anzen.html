@@ -481,6 +481,7 @@ window.__trRegistry = {
   "Graduated": "បានបញ្ចប់",
   "Edit note": "កែ​ចំណាំ",
   "New note": "ចំណាំ​ថ្មី",
+  "Time": "ម៉ោង",
   "e.g. Teacher meeting at 2pm": "ឧ. ប្រជុំគ្រូ ម៉ោង ២ រសៀល",
   "Maintenance": "កាលវិភាគ​ថែទាំ",
   "Add vehicle": "បន្ថែមរថយន្ត",
@@ -16583,13 +16584,16 @@ var ScheduleScreen = ({
       setNoteModal(null);
       return;
     }
+    var time = noteModal.time || '';
     if (noteModal.id) saveNotes(notes.map(n => n.id === noteModal.id ? {
       ...n,
       date: noteModal.date,
+      time,
       text
     } : n));else saveNotes([...notes, {
       id: 'N' + Date.now(),
       date: noteModal.date,
+      time,
       text
     }]);
     setNoteModal(null);
@@ -16780,6 +16784,7 @@ var ScheduleScreen = ({
       size: "md",
       onClick: () => setNoteModal({
         date: mobileDate,
+        time: '09:00',
         text: ''
       }),
       icon: React.createElement(Icon, {
@@ -16872,6 +16877,7 @@ var ScheduleScreen = ({
       size: "md",
       onClick: () => setNoteModal({
         date: allWeekDates[0] || today,
+        time: '09:00',
         text: ''
       }),
       icon: React.createElement(Icon, {
@@ -17122,7 +17128,8 @@ var ScheduleScreen = ({
     }
   }, tr('លុប​ highlight​ ទាំង​អស់', 'Clear all highlights'))), !studentMode && (() => {
     var visSet = new Set(weekDates);
-    var visNotes = notes.filter(n => visSet.has(n.date)).sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+    var sortKey = n => n.date + ' ' + (n.time || '99:99');
+    var visNotes = notes.filter(n => visSet.has(n.date)).sort((a, b) => sortKey(a) < sortKey(b) ? -1 : sortKey(a) > sortKey(b) ? 1 : 0);
     if (visNotes.length === 0) return null;
     return React.createElement("div", {
       style: {
@@ -17165,9 +17172,10 @@ var ScheduleScreen = ({
         color: 'var(--accent)',
         fontFamily: '"JetBrains Mono",monospace',
         flexShrink: 0,
-        marginTop: 1
+        marginTop: 1,
+        whiteSpace: 'nowrap'
       }
-    }, n.date.slice(5)), React.createElement("span", {
+    }, n.date.slice(5), n.time ? ' · ' + n.time : ''), React.createElement("span", {
       style: {
         flex: 1,
         minWidth: 0,
@@ -17180,6 +17188,7 @@ var ScheduleScreen = ({
       onClick: () => setNoteModal({
         id: n.id,
         date: n.date,
+        time: n.time || '',
         text: n.text
       }),
       title: tr('កែ', 'Edit'),
@@ -17305,7 +17314,13 @@ var ScheduleScreen = ({
       fontSize: 16,
       fontWeight: 700
     }
-  }, noteModal.id ? tr('កែ​ចំណាំ', 'Edit note') : tr('ចំណាំ​ថ្មី', 'New note')), React.createElement("div", null, React.createElement("label", {
+  }, noteModal.id ? tr('កែ​ចំណាំ', 'Edit note') : tr('ចំណាំ​ថ្មី', 'New note')), React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 130px',
+      gap: 10
+    }
+  }, React.createElement("div", null, React.createElement("label", {
     style: {
       fontSize: 11,
       fontWeight: 600,
@@ -17333,6 +17348,34 @@ var ScheduleScreen = ({
       colorScheme: 'light dark'
     }
   })), React.createElement("div", null, React.createElement("label", {
+    style: {
+      fontSize: 11,
+      fontWeight: 600,
+      color: 'var(--ink-2)',
+      display: 'block',
+      marginBottom: 5
+    }
+  }, tr('ម៉ោង', 'Time')), React.createElement("input", {
+    type: "time",
+    value: noteModal.time || '',
+    onChange: e => setNoteModal(m => ({
+      ...m,
+      time: e.target.value
+    })),
+    style: {
+      width: '100%',
+      padding: '9px 12px',
+      border: '1.5px solid var(--border)',
+      borderRadius: 8,
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      font: 'inherit',
+      fontSize: 13,
+      boxSizing: 'border-box',
+      colorScheme: 'light dark',
+      fontFamily: '"JetBrains Mono",monospace'
+    }
+  }))), React.createElement("div", null, React.createElement("label", {
     style: {
       fontSize: 11,
       fontWeight: 600,

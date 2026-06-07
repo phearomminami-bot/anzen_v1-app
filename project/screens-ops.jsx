@@ -494,7 +494,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   const [notes, setNotes] = React.useState(() => {
     try { return JSON.parse(localStorage.getItem('anzen_sched_notes') || '[]'); } catch { return []; }
   });
-  const [noteModal, setNoteModal] = React.useState(null); // null | { id?, date, text }
+  const [noteModal, setNoteModal] = React.useState(null); // null | { id?, date, time, text }
   const saveNotes = (next) => {
     setNotes(next);
     try { localStorage.setItem('anzen_sched_notes', JSON.stringify(next)); } catch {}
@@ -503,8 +503,9 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   const submitNote = () => {
     const text = (noteModal?.text || '').trim();
     if (!text) { setNoteModal(null); return; }
-    if (noteModal.id) saveNotes(notes.map(n => n.id === noteModal.id ? { ...n, date: noteModal.date, text } : n));
-    else              saveNotes([...notes, { id: 'N' + Date.now(), date: noteModal.date, text }]);
+    const time = noteModal.time || '';
+    if (noteModal.id) saveNotes(notes.map(n => n.id === noteModal.id ? { ...n, date: noteModal.date, time, text } : n));
+    else              saveNotes([...notes, { id: 'N' + Date.now(), date: noteModal.date, time, text }]);
     setNoteModal(null);
   };
   const removeNote = (id) => saveNotes(notes.filter(n => n.id !== id));
@@ -615,7 +616,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
         en={`${studentMode?'My Schedule':'Schedule'} · ${labelEn}`}
         action={bp.mobile ? (
           <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',justifyContent:'flex-end'}}>
-            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:mobileDate,text:''})} icon={<Icon name="bell" size={14}/>}>{tr('ចំណាំ','Note')}</Btn>}
+            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:mobileDate,time:'09:00',text:''})} icon={<Icon name="bell" size={14}/>}>{tr('ចំណាំ','Note')}</Btn>}
             <Btn kind="ghost" size="md" onClick={()=>generateSchedulePDF({lessons:visibleLessons,weekDates:allWeekDates,viewType:'week',labelEn,instFilter,vehFilter,studentFilter})} icon={<Icon name="download" size={14}/>}>{tr('PDF','PDF')}</Btn>
             {can(role,'create','lesson') && <Btn kind="primary" size="md" onClick={()=>openForm('newLesson',{date:mobileDate})} icon={<Icon name="plus" size={14}/>}>{tr('+ មេរៀន','+ Lesson')}</Btn>}
           </div>
@@ -635,7 +636,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(0)}>{tr('ថ្ងៃ​នេះ','Today')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(o=>o+1)}>{tr('បន្ទាប់ ▶','Next ▶')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>generateSchedulePDF({lessons:visibleLessons,weekDates:allWeekDates,viewType:v,labelEn,instFilter,vehFilter,studentFilter})} icon={<Icon name="download" size={14}/>}>{tr('PDF','PDF')}</Btn>
-            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:allWeekDates[0]||today,text:''})} icon={<Icon name="bell" size={14}/>}>{tr('+ ចំណាំ','+ Note')}</Btn>}
+            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:allWeekDates[0]||today,time:'09:00',text:''})} icon={<Icon name="bell" size={14}/>}>{tr('+ ចំណាំ','+ Note')}</Btn>}
             {can(role,'create','lesson') && <Btn kind="primary" size="md" onClick={()=>openForm('newLesson')} icon={<Icon name="plus" size={14}/>}>{tr('មេរៀន​ថ្មី','New lesson')}</Btn>}
           </div>
         )}
@@ -756,7 +757,8 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
       {/* Pinned notes for the visible date(s) */}
       {!studentMode && (() => {
         const visSet = new Set(weekDates);
-        const visNotes = notes.filter(n => visSet.has(n.date)).sort((a,b)=> a.date<b.date?-1: a.date>b.date?1:0);
+        const sortKey = n => n.date + ' ' + (n.time || '99:99');
+        const visNotes = notes.filter(n => visSet.has(n.date)).sort((a,b)=> sortKey(a)<sortKey(b)?-1: sortKey(a)>sortKey(b)?1:0);
         if (visNotes.length === 0) return null;
         return (
           <div style={{background:'rgba(250,204,21,.12)',border:'1px solid rgba(250,204,21,.5)',borderRadius:10,padding:'10px 12px'}}>
@@ -766,9 +768,11 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
             <div style={{display:'flex',flexDirection:'column',gap:6}}>
               {visNotes.map(n => (
                 <div key={n.id} style={{display:'flex',alignItems:'flex-start',gap:8,background:'var(--surface)',border:'1px solid var(--border)',borderRadius:8,padding:'8px 10px'}}>
-                  <span style={{fontSize:11,fontWeight:700,color:'var(--accent)',fontFamily:'"JetBrains Mono",monospace',flexShrink:0,marginTop:1}}>{n.date.slice(5)}</span>
+                  <span style={{fontSize:11,fontWeight:700,color:'var(--accent)',fontFamily:'"JetBrains Mono",monospace',flexShrink:0,marginTop:1,whiteSpace:'nowrap'}}>
+                    {n.date.slice(5)}{n.time ? ' · ' + n.time : ''}
+                  </span>
                   <span style={{flex:1,minWidth:0,fontSize:13,color:'var(--ink)',whiteSpace:'pre-wrap',wordBreak:'break-word'}}>{n.text}</span>
-                  <button onClick={()=>setNoteModal({id:n.id,date:n.date,text:n.text})} title={tr('កែ','Edit')} style={{border:'none',background:'none',cursor:'pointer',color:'var(--ink-3)',fontSize:13,padding:'0 2px',flexShrink:0}}>✎</button>
+                  <button onClick={()=>setNoteModal({id:n.id,date:n.date,time:n.time||'',text:n.text})} title={tr('កែ','Edit')} style={{border:'none',background:'none',cursor:'pointer',color:'var(--ink-3)',fontSize:13,padding:'0 2px',flexShrink:0}}>✎</button>
                   <button onClick={()=>removeNote(n.id)} title={tr('លុប','Delete')} style={{border:'none',background:'none',cursor:'pointer',color:'var(--danger)',fontSize:15,lineHeight:1,padding:'0 2px',flexShrink:0}}>×</button>
                 </div>
               ))}
@@ -817,10 +821,17 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
         <Modal open onClose={()=>setNoteModal(null)} width={420}>
           <div style={{padding:20,display:'flex',flexDirection:'column',gap:14}}>
             <div style={{fontSize:16,fontWeight:700}}>{noteModal.id ? tr('កែ​ចំណាំ','Edit note') : tr('ចំណាំ​ថ្មី','New note')}</div>
-            <div>
-              <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5}}>{tr('កាល​បរិច្ឆេទ','Date')}</label>
-              <input type="date" value={noteModal.date} onChange={e=>setNoteModal(m=>({...m,date:e.target.value}))}
-                style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',colorScheme:'light dark'}}/>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 130px',gap:10}}>
+              <div>
+                <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5}}>{tr('កាល​បរិច្ឆេទ','Date')}</label>
+                <input type="date" value={noteModal.date} onChange={e=>setNoteModal(m=>({...m,date:e.target.value}))}
+                  style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',colorScheme:'light dark'}}/>
+              </div>
+              <div>
+                <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5}}>{tr('ម៉ោង','Time')}</label>
+                <input type="time" value={noteModal.time || ''} onChange={e=>setNoteModal(m=>({...m,time:e.target.value}))}
+                  style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',colorScheme:'light dark',fontFamily:'"JetBrains Mono",monospace'}}/>
+              </div>
             </div>
             <div>
               <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5}}>{tr('អត្ថបទ','Note')}</label>
