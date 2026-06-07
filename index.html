@@ -786,6 +786,7 @@ window.__trRegistry = {
   "Student removed": "បានលុបសិស្ស",
   "Exam": "នឹងប្រឡង",
   "Back": "ត្រឡប់",
+  "Edit details": "កែ​ព័ត៌មាន",
   "Age": "អាយុ",
   "y": "ឆ្នាំ",
   "Trans.": "ប្រអប់លេខ",
@@ -33963,6 +33964,7 @@ var StudentsScreenV2 = () => {
   var [selectedId, setSelectedId] = React.useState(STUDENTS[0]?.id);
   var [editing, setEditing] = React.useState(false);
   var [mobileProfileId, setMobileProfileId] = React.useState(null);
+  var [mobileEdit, setMobileEdit] = React.useState(false);
   var [openSections, setOpenSections] = React.useState({
     bio: true
   });
@@ -34174,6 +34176,57 @@ var StudentsScreenV2 = () => {
         setMobileProfileId(null);
         return null;
       }
+      if (mobileEdit) {
+        return React.createElement("div", {
+          style: {
+            display: 'flex',
+            flexDirection: 'column'
+          }
+        }, React.createElement("div", {
+          style: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            marginBottom: 14
+          }
+        }, React.createElement("button", {
+          onClick: () => setMobileEdit(false),
+          style: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
+            padding: '7px 12px',
+            borderRadius: 8,
+            border: '1px solid var(--border)',
+            background: 'var(--surface)',
+            cursor: 'pointer',
+            fontSize: 13,
+            fontWeight: 500,
+            color: 'var(--ink-2)',
+            flexShrink: 0
+          }
+        }, "\u2190 ", tr('ត្រឡប់', 'Back')), React.createElement("div", {
+          style: {
+            flex: 1,
+            fontSize: 14,
+            fontWeight: 700,
+            fontFamily: 'var(--font-km)'
+          }
+        }, tr('កែ​ព័ត៌មាន', 'Edit details'))), React.createElement(StudentEditPanel, {
+          key: s.id,
+          s: s,
+          onSave: u => {
+            saveStudent(u);
+            setMobileEdit(false);
+          },
+          onCancel: () => setMobileEdit(false),
+          onDelete: id => {
+            deleteStudent(id);
+            setMobileEdit(false);
+            setMobileProfileId(null);
+          }
+        }));
+      }
       var inst = instById(s.instId);
       var pct = s.target > 0 ? Math.min(100, Math.round(s.hours / s.target * 100)) : 0;
       var price = studentPrice(s);
@@ -34210,6 +34263,7 @@ var StudentsScreenV2 = () => {
       }, "\u2190 ", tr('ត្រឡប់', 'Back')), React.createElement("div", {
         style: {
           flex: 1,
+          minWidth: 0,
           fontSize: 14,
           fontWeight: 700,
           fontFamily: 'var(--font-km)',
@@ -34217,7 +34271,15 @@ var StudentsScreenV2 = () => {
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap'
         }
-      }, lang === 'km' ? s.name : s.en || s.name)), React.createElement(CvSection, {
+      }, lang === 'km' ? s.name : s.en || s.name), React.createElement(Btn, {
+        kind: "primary",
+        size: "sm",
+        icon: React.createElement(Icon, {
+          name: "users",
+          size: 13
+        }),
+        onClick: () => setMobileEdit(true)
+      }, tr('កែ', 'Edit'))), React.createElement(CvSection, {
         id: "bio",
         km: "\u179A\u17BC\u1794\u1790\u178F \u1793\u17B7\u1784 \u1794\u17D2\u179A\u179C\u178F\u17D2\u178F\u17B7\u179A\u17BC\u1794\u179F\u1784\u17D2\u1781\u17C1\u1794",
         en: "Photo & Bio"
@@ -36644,6 +36706,7 @@ var StudentEditPanel = ({
     tr,
     toast
   } = useAppActions();
+  var bp = useBreakpoint();
   var [name, setName] = React.useState(s.name || '');
   var [en, setEn] = React.useState(s.en || '');
   var [gender, setGender] = React.useState(s.gender || 'M');
@@ -36800,7 +36863,7 @@ var StudentEditPanel = ({
   var g3 = {
     style: {
       display: 'grid',
-      gridTemplateColumns: '1fr 1fr 1fr',
+      gridTemplateColumns: bp.mobile ? '1fr 1fr' : '1fr 1fr 1fr',
       gap: 10,
       marginBottom: 12
     }

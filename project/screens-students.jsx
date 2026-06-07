@@ -74,6 +74,7 @@ const StudentsScreenV2 = () => {
   const [selectedId, setSelectedId] = React.useState(STUDENTS[0]?.id);
   const [editing, setEditing] = React.useState(false);
   const [mobileProfileId, setMobileProfileId] = React.useState(null);
+  const [mobileEdit, setMobileEdit] = React.useState(false);
   const [openSections, setOpenSections] = React.useState({bio:true});
 
   React.useEffect(() => {
@@ -211,6 +212,29 @@ const StudentsScreenV2 = () => {
     if (mobileProfileId) {
       const s = allStudents.find(x => x.id === mobileProfileId);
       if (!s) { setMobileProfileId(null); return null; }
+
+      // Edit mode — full edit form on mobile
+      if (mobileEdit) {
+        return (
+          <div style={{display:'flex',flexDirection:'column'}}>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
+              <button onClick={()=>setMobileEdit(false)} style={{
+                display:'flex',alignItems:'center',gap:5,padding:'7px 12px',
+                borderRadius:8,border:'1px solid var(--border)',background:'var(--surface)',
+                cursor:'pointer',fontSize:13,fontWeight:500,color:'var(--ink-2)',flexShrink:0,
+              }}>← {tr('ត្រឡប់','Back')}</button>
+              <div style={{flex:1,fontSize:14,fontWeight:700,fontFamily:'var(--font-km)'}}>
+                {tr('កែ​ព័ត៌មាន','Edit details')}
+              </div>
+            </div>
+            <StudentEditPanel key={s.id} s={s}
+              onSave={(u)=>{ saveStudent(u); setMobileEdit(false); }}
+              onCancel={()=>setMobileEdit(false)}
+              onDelete={(id)=>{ deleteStudent(id); setMobileEdit(false); setMobileProfileId(null); }}/>
+          </div>
+        );
+      }
+
       const inst = instById(s.instId);
       const pct = s.target > 0 ? Math.min(100, Math.round((s.hours / s.target) * 100)) : 0;
       const price = studentPrice(s);
@@ -226,10 +250,13 @@ const StudentsScreenV2 = () => {
               borderRadius:8,border:'1px solid var(--border)',background:'var(--surface)',
               cursor:'pointer',fontSize:13,fontWeight:500,color:'var(--ink-2)',flexShrink:0,
             }}>← {tr('ត្រឡប់','Back')}</button>
-            <div style={{flex:1,fontSize:14,fontWeight:700,fontFamily:'var(--font-km)',
+            <div style={{flex:1,minWidth:0,fontSize:14,fontWeight:700,fontFamily:'var(--font-km)',
               overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
               {lang==='km' ? s.name : (s.en || s.name)}
             </div>
+            <Btn kind="primary" size="sm" icon={<Icon name="users" size={13}/>} onClick={()=>setMobileEdit(true)}>
+              {tr('កែ','Edit')}
+            </Btn>
           </div>
 
           {/* Section 1: Photo & bio */}
@@ -1264,6 +1291,7 @@ const SEDocChk = ({label, checked, onChange}) => (
 // ── Edit panel ───────────────────────────────────────────────────────────────
 const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
   const { tr, toast } = useAppActions();
+  const bp = useBreakpoint();
 
   const [name,    setName]    = React.useState(s.name    || '');
   const [en,      setEn]      = React.useState(s.en      || '');
@@ -1389,7 +1417,7 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
   const inp = {style:{width:'100%',padding:'7px 10px',border:'1px solid var(--border)',borderRadius:6,fontSize:13,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',boxSizing:'border-box'}};
   const sel = {style:{width:'100%',padding:'7px 10px',border:'1px solid var(--border)',borderRadius:6,fontSize:13,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',boxSizing:'border-box'}};
   const g2 = {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:12}};
-  const g3 = {style:{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10,marginBottom:12}};
+  const g3 = {style:{display:'grid',gridTemplateColumns:bp.mobile?'1fr 1fr':'1fr 1fr 1fr',gap:10,marginBottom:12}};
   const secTitle = (t) => (
     <div style={{font:'600 10px/1 "JetBrains Mono",monospace',letterSpacing:'.08em',textTransform:'uppercase',color:'var(--ink-3)',margin:'18px 0 10px'}}>{t}</div>
   );
