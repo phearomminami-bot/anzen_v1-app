@@ -15970,7 +15970,16 @@ var ScheduleWeek = ({
     }
   }, String(h).padStart(2, '0'), ":00"))), weekDates.map((date, dayIdx) => {
     var dayLessons = lessons.filter(l => l.date === date && l.status !== 'cancelled');
-    var layout = computeLayout(dayLessons);
+    var dayNotes = notes.filter(n => n.date === date && n.time).map(n => {
+      var [hh, mm] = n.time.split(':').map(Number);
+      return {
+        ...n,
+        h: hh + (mm || 0) / 60,
+        len: 1,
+        _note: true
+      };
+    }).filter(n => n.h >= 7 && n.h < 19);
+    var layout = computeLayout([...dayLessons, ...dayNotes]);
     var isSun = isSunday(date);
     return React.createElement("div", {
       key: dayIdx,
@@ -16186,11 +16195,16 @@ var ScheduleWeek = ({
           fontFamily: '"JetBrains Mono",monospace'
         }
       }, v.plate)));
-    }), notes.filter(n => n.date === date && n.time).map(n => {
-      var [hh, mm] = n.time.split(':').map(Number);
-      var startHour = hh + (mm || 0) / 60;
-      if (startHour < 7 || startHour >= 19) return null;
-      var top = (startHour - 7) * 48 + 1;
+    }), dayNotes.map(n => {
+      var top = (n.h - 7) * 48 + 1;
+      var {
+        col,
+        total
+      } = layout.get(n) || {
+        col: 0,
+        total: 1
+      };
+      var pct = 100 / total;
       var invitedNames = (n.invited || []).map(id => {
         var i = INSTRUCTORS.find(x => x.id === id);
         return i ? i.en || i.name : null;
@@ -16205,8 +16219,8 @@ var ScheduleWeek = ({
         style: {
           position: 'absolute',
           top,
-          left: 3,
-          width: 'calc(100% - 6px)',
+          left: `calc(${col * pct}% + 4px)`,
+          width: `calc(${pct}% - 8px)`,
           minHeight: 22,
           background: 'rgba(250,204,21,.22)',
           border: '1px solid rgba(202,138,4,.6)',
@@ -16214,7 +16228,7 @@ var ScheduleWeek = ({
           borderRadius: 6,
           padding: '3px 6px',
           overflow: 'hidden',
-          zIndex: 6,
+          zIndex: 3,
           fontSize: 10.5,
           textAlign: 'left',
           cursor: 'pointer',

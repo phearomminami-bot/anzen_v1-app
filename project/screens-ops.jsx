@@ -191,7 +191,14 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
         {/* Day columns */}
         {weekDates.map((date,dayIdx)=>{
           const dayLessons = lessons.filter(l => l.date === date && l.status !== 'cancelled');
-          const layout = computeLayout(dayLessons);
+          // Timed notes join the same overlap layout as lessons, so a note and a
+          // lesson at the same time sit side by side instead of covering each
+          // other. Give notes a 1-hour span for the overlap math.
+          const dayNotes = notes.filter(n => n.date === date && n.time).map(n => {
+            const [hh,mm] = n.time.split(':').map(Number);
+            return { ...n, h: hh + (mm||0)/60, len: 1, _note: true };
+          }).filter(n => n.h >= 7 && n.h < 19);
+          const layout = computeLayout([...dayLessons, ...dayNotes]);
           const isSun = isSunday(date);
           return (
             <div key={dayIdx} style={{position:'relative',borderLeft:'1px solid var(--border)',background:date===today?'rgba(42,93,176,.02)':isSun?'rgba(176,65,62,.04)':'transparent'}}>
@@ -283,20 +290,23 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                   </button>
                 );
               })}
-              {/* Note blocks — pinned reminders rendered in the grid at their time */}
-              {notes.filter(n => n.date === date && n.time).map(n => {
-                const [hh,mm] = n.time.split(':').map(Number);
-                const startHour = hh + (mm||0)/60;
-                if (startHour < 7 || startHour >= 19) return null;
-                const top = (startHour - 7) * 48 + 1;
+              {/* Note blocks — share the grid's column layout so they never
+                  cover a lesson at the same time */}
+              {dayNotes.map(n => {
+                const top = (n.h - 7) * 48 + 1;
+                const { col, total } = layout.get(n) || { col:0, total:1 };
+                const pct = 100 / total;
                 const invitedNames = (n.invited||[]).map(id=>{ const i=INSTRUCTORS.find(x=>x.id===id); return i?(i.en||i.name):null; }).filter(Boolean);
                 return (
                   <button key={n.id} onClick={e=>{ e.stopPropagation(); onNoteClick ? onNoteClick(n) : null; }}
                     title={`${n.time} · ${n.text}`}
                     style={{
-                      position:'absolute', top, left:3, width:'calc(100% - 6px)', minHeight:22,
+                      position:'absolute', top,
+                      left:`calc(${col * pct}% + 4px)`,
+                      width:`calc(${pct}% - 8px)`,
+                      minHeight:22,
                       background:'rgba(250,204,21,.22)', border:'1px solid rgba(202,138,4,.6)', borderLeft:'3px solid #ca8a04',
-                      borderRadius:6, padding:'3px 6px', overflow:'hidden', zIndex:6,
+                      borderRadius:6, padding:'3px 6px', overflow:'hidden', zIndex:3,
                       fontSize:10.5, textAlign:'left', cursor:'pointer', font:'inherit', color:'var(--ink)', boxSizing:'border-box',
                     }}>
                     <div style={{display:'flex',alignItems:'center',gap:4,minWidth:0}}>
