@@ -534,14 +534,25 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   };
 
   // Short notes / reminders pinned to a date (e.g. ប្រជុំគ្រូ · teacher meeting).
+  // Notes live in school settings so they sync to the cloud and are shared with
+  // all users (not just this device). Fall back to / migrate any older
+  // device-local notes saved before sharing existed.
   const [notes, setNotes] = React.useState(() => {
-    try { return JSON.parse(localStorage.getItem('anzen_sched_notes') || '[]'); } catch { return []; }
+    const ss = window.__schoolSettings;
+    if (ss && Array.isArray(ss.scheduleNotes)) return ss.scheduleNotes;
+    let local = [];
+    try { local = JSON.parse(localStorage.getItem('anzen_sched_notes') || '[]'); } catch {}
+    if (ss && local.length) ss.scheduleNotes = local;   // migrate once
+    return local;
   });
   const [noteModal, setNoteModal] = React.useState(null); // null | { id?, date, time, text, author, invited:[] }
   const saveNotes = (next) => {
     setNotes(next);
-    try { localStorage.setItem('anzen_sched_notes', JSON.stringify(next)); } catch {}
     window.__scheduleNotes = next;
+    if (!window.__schoolSettings) window.__schoolSettings = {};
+    window.__schoolSettings.scheduleNotes = next;        // part of the synced settings blob
+    try { localStorage.setItem('anzen_sched_notes', JSON.stringify(next)); } catch {}
+    if (window.saveAllData) window.saveAllData();         // persist + push to cloud (shared)
   };
   const submitNote = () => {
     const text = (noteModal?.text || '').trim();
@@ -559,6 +570,12 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   });
 
   React.useEffect(()=>{ if(view) setV(view); }, [view]);
+  // When data reloads (cloud sync / realtime), refresh notes from the shared
+  // settings so notes added by other users appear here too.
+  React.useEffect(() => {
+    const fromSettings = window.__schoolSettings && window.__schoolSettings.scheduleNotes;
+    if (Array.isArray(fromSettings) && fromSettings !== notes) setNotes(fromSettings);
+  }, [ver]);
   React.useEffect(()=>{
     window.__notifyLessonsChanged     = () => setVer(n => n+1);
     window.__notifyInstructorsChanged = () => setVer(n => n+1);

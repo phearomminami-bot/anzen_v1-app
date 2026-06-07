@@ -16678,19 +16678,25 @@ var ScheduleScreen = ({
     });
   };
   var [notes, setNotes] = React.useState(() => {
+    var ss = window.__schoolSettings;
+    if (ss && Array.isArray(ss.scheduleNotes)) return ss.scheduleNotes;
+    var local = [];
     try {
-      return JSON.parse(localStorage.getItem('anzen_sched_notes') || '[]');
-    } catch {
-      return [];
-    }
+      local = JSON.parse(localStorage.getItem('anzen_sched_notes') || '[]');
+    } catch {}
+    if (ss && local.length) ss.scheduleNotes = local;
+    return local;
   });
   var [noteModal, setNoteModal] = React.useState(null);
   var saveNotes = next => {
     setNotes(next);
+    window.__scheduleNotes = next;
+    if (!window.__schoolSettings) window.__schoolSettings = {};
+    window.__schoolSettings.scheduleNotes = next;
     try {
       localStorage.setItem('anzen_sched_notes', JSON.stringify(next));
     } catch {}
-    window.__scheduleNotes = next;
+    if (window.saveAllData) window.saveAllData();
   };
   var submitNote = () => {
     var text = (noteModal?.text || '').trim();
@@ -16727,6 +16733,10 @@ var ScheduleScreen = ({
   React.useEffect(() => {
     if (view) setV(view);
   }, [view]);
+  React.useEffect(() => {
+    var fromSettings = window.__schoolSettings && window.__schoolSettings.scheduleNotes;
+    if (Array.isArray(fromSettings) && fromSettings !== notes) setNotes(fromSettings);
+  }, [ver]);
   React.useEffect(() => {
     window.__notifyLessonsChanged = () => setVer(n => n + 1);
     window.__notifyInstructorsChanged = () => setVer(n => n + 1);
