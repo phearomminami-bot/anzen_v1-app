@@ -2704,6 +2704,7 @@ const FleetScreen = FleetScreenV2;
 
 // ── Mobile vehicle detail — full screen with photo gallery ────────────────────
 const VehicleMobileDetail = ({ v, onClose, tr, onSaved, onStatusChange, onParkingChange }) => {
+  useBackHandler(true, onClose);
   const [inspOpen, setInspOpen]   = React.useState(false);
   const [photoIdx, setPhotoIdx]   = React.useState(0);
   const [sliding, setSliding]     = React.useState(null);

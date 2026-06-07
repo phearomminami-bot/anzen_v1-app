@@ -383,33 +383,55 @@ const useBreakpoint = () => {
   return bp;
 };
 
-// ── Edge-swipe-to-go-back gesture (native-app feel on mobile) ──────────────
-// Swipe right starting from the left ~28px of the screen → calls onBack().
-// Pass a falsy onBack to disable (e.g. when no sub-view is open).
-const useEdgeSwipeBack = (onBack) => {
+// ── Global "back" stack + edge-swipe gesture (native-app feel) ─────────────
+if (typeof window !== 'undefined' && !window.__backStack) window.__backStack = [];
+
+// Register a back handler while `active`. Edge-swipe (or runAppBack) calls the
+// most-recently-registered one, so nested overlays close in order.
+const useBackHandler = (active, fn) => {
+  const ref = React.useRef(fn);
+  ref.current = fn;
   React.useEffect(() => {
-    if (!onBack) return;
-    let sx = null, sy = null, t = 0;
+    if (!active) return;
+    const entry = { run: () => { try { ref.current && ref.current(); } catch (e) {} } };
+    window.__backStack.push(entry);
+    return () => {
+      const i = window.__backStack.indexOf(entry);
+      if (i !== -1) window.__backStack.splice(i, 1);
+    };
+  }, [active]);
+};
+
+const runAppBack = () => {
+  const s = window.__backStack || [];
+  if (s.length) { s[s.length - 1].run(); return true; }
+  return false;
+};
+
+// Install the global edge-swipe detector once (call in the App root).
+// Swipe right from the LEFT edge OR left from the RIGHT edge → back.
+const useEdgeSwipeBack = () => {
+  React.useEffect(() => {
+    let sx = null, sy = null, t = 0, fromRight = false;
     const onStart = (e) => {
-      const x = e.touches[0].clientX;
-      if (x <= 28) { sx = x; sy = e.touches[0].clientY; t = Date.now(); }
-      else sx = null;
+      if (e.touches.length !== 1) { sx = null; return; }
+      const x = e.touches[0].clientX, w = window.innerWidth;
+      if (x <= 28)        { sx = x; fromRight = false; }
+      else if (x >= w-28) { sx = x; fromRight = true;  }
+      else { sx = null; return; }
+      sy = e.touches[0].clientY; t = Date.now();
     };
     const onEnd = (e) => {
       if (sx === null) return;
       const dx = e.changedTouches[0].clientX - sx;
       const dy = Math.abs(e.changedTouches[0].clientY - sy);
-      const dt = Date.now() - t;
-      sx = null;
-      if (dx > 70 && dy < 55 && dt < 600) onBack();
+      const dt = Date.now() - t; sx = null;
+      if (dy < 55 && dt < 600 && ((!fromRight && dx > 70) || (fromRight && dx < -70))) runAppBack();
     };
     window.addEventListener('touchstart', onStart, { passive: true });
     window.addEventListener('touchend', onEnd, { passive: true });
-    return () => {
-      window.removeEventListener('touchstart', onStart);
-      window.removeEventListener('touchend', onEnd);
-    };
-  }, [onBack]);
+    return () => { window.removeEventListener('touchstart', onStart); window.removeEventListener('touchend', onEnd); };
+  }, []);
 };
 
 // ── Auto-backup via File System Access API (Chrome/Edge) ──────────────────

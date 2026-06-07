@@ -3157,19 +3157,59 @@ var useBreakpoint = () => {
   }, []);
   return bp;
 };
-var useEdgeSwipeBack = onBack => {
+if (typeof window !== 'undefined' && !window.__backStack) window.__backStack = [];
+var useBackHandler = (active, fn) => {
+  var ref = React.useRef(fn);
+  ref.current = fn;
   React.useEffect(() => {
-    if (!onBack) return;
+    if (!active) return;
+    var entry = {
+      run: () => {
+        try {
+          ref.current && ref.current();
+        } catch (e) {}
+      }
+    };
+    window.__backStack.push(entry);
+    return () => {
+      var i = window.__backStack.indexOf(entry);
+      if (i !== -1) window.__backStack.splice(i, 1);
+    };
+  }, [active]);
+};
+var runAppBack = () => {
+  var s = window.__backStack || [];
+  if (s.length) {
+    s[s.length - 1].run();
+    return true;
+  }
+  return false;
+};
+var useEdgeSwipeBack = () => {
+  React.useEffect(() => {
     var sx = null,
       sy = null,
-      t = 0;
+      t = 0,
+      fromRight = false;
     var onStart = e => {
-      var x = e.touches[0].clientX;
+      if (e.touches.length !== 1) {
+        sx = null;
+        return;
+      }
+      var x = e.touches[0].clientX,
+        w = window.innerWidth;
       if (x <= 28) {
         sx = x;
-        sy = e.touches[0].clientY;
-        t = Date.now();
-      } else sx = null;
+        fromRight = false;
+      } else if (x >= w - 28) {
+        sx = x;
+        fromRight = true;
+      } else {
+        sx = null;
+        return;
+      }
+      sy = e.touches[0].clientY;
+      t = Date.now();
     };
     var onEnd = e => {
       if (sx === null) return;
@@ -3177,7 +3217,7 @@ var useEdgeSwipeBack = onBack => {
       var dy = Math.abs(e.changedTouches[0].clientY - sy);
       var dt = Date.now() - t;
       sx = null;
-      if (dx > 70 && dy < 55 && dt < 600) onBack();
+      if (dy < 55 && dt < 600 && (!fromRight && dx > 70 || fromRight && dx < -70)) runAppBack();
     };
     window.addEventListener('touchstart', onStart, {
       passive: true
@@ -3189,7 +3229,7 @@ var useEdgeSwipeBack = onBack => {
       window.removeEventListener('touchstart', onStart);
       window.removeEventListener('touchend', onEnd);
     };
-  }, [onBack]);
+  }, []);
 };
 var _abOpenDB = () => new Promise((res, rej) => {
   var r = indexedDB.open('anzen_ab', 1);
@@ -3628,6 +3668,7 @@ var Modal = ({
   children,
   width = 520
 }) => {
+  useBackHandler(!!open, () => onClose?.());
   React.useEffect(() => {
     if (!open) return;
     var onKey = e => {
@@ -3674,6 +3715,7 @@ var FormModal = ({
   width = 640,
   dark = false
 }) => {
+  useBackHandler(!!open, () => onClose?.());
   React.useEffect(() => {
     if (!open) return;
     var onKey = e => {
@@ -3788,6 +3830,7 @@ var Drawer = ({
   title,
   subtitle
 }) => {
+  useBackHandler(!!open, () => onClose?.());
   React.useEffect(() => {
     if (!open) return;
     var onKey = e => {
@@ -33053,6 +33096,7 @@ var VehicleMobileDetail = ({
   onStatusChange,
   onParkingChange
 }) => {
+  useBackHandler(true, onClose);
   var [inspOpen, setInspOpen] = React.useState(false);
   var [photoIdx, setPhotoIdx] = React.useState(0);
   var [sliding, setSliding] = React.useState(null);
@@ -34015,7 +34059,7 @@ var StudentsScreenV2 = () => {
   var mobileBack = React.useCallback(() => {
     if (mobileEdit) setMobileEdit(false);else if (mobileProfileId) setMobileProfileId(null);
   }, [mobileEdit, mobileProfileId]);
-  useEdgeSwipeBack(bp.mobile && (mobileEdit || mobileProfileId) ? mobileBack : null);
+  useBackHandler(bp.mobile && (mobileEdit || mobileProfileId), mobileBack);
   React.useEffect(() => {
     window.__notifyStudentsChanged = forceUpdate;
     return () => {
@@ -58626,6 +58670,7 @@ var DETAILS = {
 function App() {
   var [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   var bp = useBreakpoint();
+  useEdgeSwipeBack();
   var [authed, setAuthed] = React.useState(false);
   var [current, setCurrent] = React.useState('dashboard');
   var [drawer, setDrawer] = React.useState(null);

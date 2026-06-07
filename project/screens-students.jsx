@@ -82,7 +82,7 @@ const StudentsScreenV2 = () => {
     if (mobileEdit) setMobileEdit(false);
     else if (mobileProfileId) setMobileProfileId(null);
   }, [mobileEdit, mobileProfileId]);
-  useEdgeSwipeBack(bp.mobile && (mobileEdit || mobileProfileId) ? mobileBack : null);
+  useBackHandler(bp.mobile && (mobileEdit || mobileProfileId), mobileBack);
 
   React.useEffect(() => {
     window.__notifyStudentsChanged = forceUpdate;

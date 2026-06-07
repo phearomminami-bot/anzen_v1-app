@@ -83,6 +83,7 @@ const DETAILS = {
 function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const bp = useBreakpoint();
+  useEdgeSwipeBack();   // global: swipe from either screen edge → back
   const [authed, setAuthed] = React.useState(false);
   const [current, setCurrent] = React.useState('dashboard');
   const [drawer, setDrawer] = React.useState(null);

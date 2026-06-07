@@ -3,6 +3,7 @@
 
 // ── Modal — center overlay ─────────────────────────────────────────────────
 const Modal = ({ open, onClose, children, width = 520 }) => {
+  useBackHandler(!!open, () => onClose?.());
   React.useEffect(() => {
     if (!open) return;
     const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
@@ -30,6 +31,7 @@ const Modal = ({ open, onClose, children, width = 520 }) => {
 
 // ── FormModal — centered form dialog with header ────────────────────────────
 const FormModal = ({ open, onClose, title, subtitle, children, width = 640, dark = false }) => {
+  useBackHandler(!!open, () => onClose?.());
   React.useEffect(() => {
     if (!open) return;
     const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
@@ -97,6 +99,7 @@ const FormModal = ({ open, onClose, title, subtitle, children, width = 640, dark
 
 // ── Drawer — slide in from right (bottom sheet on mobile) ─────────────────
 const Drawer = ({ open, onClose, children, width = 520, title, subtitle }) => {
+  useBackHandler(!!open, () => onClose?.());
   React.useEffect(() => {
     if (!open) return;
     const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
