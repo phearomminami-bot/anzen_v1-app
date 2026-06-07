@@ -144,11 +144,13 @@ const computeLayout = (dayLessons) => {
 };
 
 // ── Week view ──
-const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], highlights = {}, onHighlight, hlColor = '' }) => {
+const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], highlights = {}, onHighlight, hlColor = '', notes = [], onSlotClick, onNoteClick }) => {
   const { openDetail, openForm } = useAppActions();
   const hours = Array.from({length:12}, (_,i)=> i+7); // 7..18
   const today = todayStr();
   const isPaint = !!hlColor;
+  // Slot click: use the chooser (lesson/note) if provided, else open lesson form.
+  const onSlot = (date, h) => { if (onSlotClick) onSlotClick(date, h); else openForm('newLesson',{date,hour:h}); };
   return (
     <Card pad={0}>
       {/* Header row — map over weekDates so single-day mobile shows correct day */}
@@ -199,7 +201,7 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                 if (!studentMode) {
                   return (
                     <div key={h}
-                      onClick={()=>{ if(isPaint) onHighlight?.(date,h); else openForm('newLesson',{date,hour:h}); }}
+                      onClick={()=>{ if(isPaint) onHighlight?.(date,h); else onSlot(date,h); }}
                       style={{height:48,borderBottom:'1px solid var(--border)',cursor:isPaint?'crosshair':'pointer',background:hlBg||'transparent',transition:'background .1s'}}
                       onMouseEnter={e=>{ e.currentTarget.style.background = hlBg ? (isPaint?'rgba(0,0,0,.08)':hlBg) : isPaint?hlColor:'rgba(42,93,176,.05)'; }}
                       onMouseLeave={e=>{ e.currentTarget.style.background = hlBg||'transparent'; }}
@@ -276,6 +278,34 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                     {height >= 60 && v?.plate && (
                       <div style={{marginTop:2}}>
                         <span style={{fontSize:9,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{v.plate}</span>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+              {/* Note blocks — pinned reminders rendered in the grid at their time */}
+              {notes.filter(n => n.date === date && n.time).map(n => {
+                const [hh,mm] = n.time.split(':').map(Number);
+                const startHour = hh + (mm||0)/60;
+                if (startHour < 7 || startHour >= 19) return null;
+                const top = (startHour - 7) * 48 + 1;
+                const invitedNames = (n.invited||[]).map(id=>{ const i=INSTRUCTORS.find(x=>x.id===id); return i?(i.en||i.name):null; }).filter(Boolean);
+                return (
+                  <button key={n.id} onClick={e=>{ e.stopPropagation(); onNoteClick ? onNoteClick(n) : null; }}
+                    title={`${n.time} · ${n.text}`}
+                    style={{
+                      position:'absolute', top, left:3, width:'calc(100% - 6px)', minHeight:22,
+                      background:'rgba(250,204,21,.22)', border:'1px solid rgba(202,138,4,.6)', borderLeft:'3px solid #ca8a04',
+                      borderRadius:6, padding:'3px 6px', overflow:'hidden', zIndex:6,
+                      fontSize:10.5, textAlign:'left', cursor:'pointer', font:'inherit', color:'var(--ink)', boxSizing:'border-box',
+                    }}>
+                    <div style={{display:'flex',alignItems:'center',gap:4,minWidth:0}}>
+                      <span style={{flexShrink:0}}>📌</span>
+                      <span style={{fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',minWidth:0}}>{n.text}</span>
+                    </div>
+                    {invitedNames.length > 0 && (
+                      <div style={{fontSize:9,color:'#92700a',fontStyle:'italic',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+                        👥 {invitedNames.join(' · ')}
                       </div>
                     )}
                   </button>
@@ -589,7 +619,17 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
     { k:'b', bg:'rgba(59,130,246,.28)' },
     { k:'p', bg:'rgba(168,85,247,.28)' },
   ];
-  const viewProps = { lessons:visibleLessons, studentMode, weekDates, highlights, onHighlight:handleHighlight, hlColor:activeColor };
+  // Notes visible in the current view (for both the grid blocks and the card)
+  const noteSortKey = n => n.date + ' ' + (n.time || '99:99');
+  const visNoteSet = new Set(weekDates);
+  const visNotes = notes.filter(n => visNoteSet.has(n.date)).sort((a,b)=> noteSortKey(a)<noteSortKey(b)?-1: noteSortKey(a)>noteSortKey(b)?1:0);
+  // Click a time slot → open the create modal defaulting to the lesson tab,
+  // pre-filled with that slot's date+hour (switchable to a note).
+  const openSlot = (date, hour) => setNoteModal({ mode:'lesson', date, hour, time:String(hour).padStart(2,'0')+':00', text:'', author:meName, invited:[] });
+  const editNote = (n) => setNoteModal({ id:n.id, date:n.date, time:n.time||'', text:n.text, author:n.author, invited:n.invited||[] });
+
+  const viewProps = { lessons:visibleLessons, studentMode, weekDates, highlights, onHighlight:handleHighlight, hlColor:activeColor,
+    notes:visNotes, onSlotClick: studentMode ? null : openSlot, onNoteClick: editNote };
 
   const selStyle = {
     padding:'6px 10px',border:'1px solid var(--border)',borderRadius:7,
@@ -764,9 +804,6 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
 
       {/* Pinned notes for the visible date(s) */}
       {!studentMode && (() => {
-        const visSet = new Set(weekDates);
-        const sortKey = n => n.date + ' ' + (n.time || '99:99');
-        const visNotes = notes.filter(n => visSet.has(n.date)).sort((a,b)=> sortKey(a)<sortKey(b)?-1: sortKey(a)>sortKey(b)?1:0);
         if (visNotes.length === 0) return null;
         return (
           <div style={{background:'rgba(250,204,21,.12)',border:'1px solid rgba(250,204,21,.5)',borderRadius:10,padding:'10px 12px'}}>
@@ -791,7 +828,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
                       )}
                     </div>
                   </div>
-                  <button onClick={()=>setNoteModal({id:n.id,date:n.date,time:n.time||'',text:n.text,author:n.author,invited:n.invited||[]})} title={tr('កែ','Edit')} style={{border:'none',background:'none',cursor:'pointer',color:'var(--ink-3)',fontSize:13,padding:'0 2px',flexShrink:0}}>✎</button>
+                  <button onClick={()=>editNote(n)} title={tr('កែ','Edit')} style={{border:'none',background:'none',cursor:'pointer',color:'var(--ink-3)',fontSize:13,padding:'0 2px',flexShrink:0}}>✎</button>
                   <button onClick={()=>removeNote(n.id)} title={tr('លុប','Delete')} style={{border:'none',background:'none',cursor:'pointer',color:'var(--danger)',fontSize:15,lineHeight:1,padding:'0 2px',flexShrink:0}}>×</button>
                 </div>
               ))}
@@ -839,7 +876,38 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
       {noteModal && (
         <Modal open onClose={()=>setNoteModal(null)} width={420}>
           <div style={{padding:20,display:'flex',flexDirection:'column',gap:14}}>
-            <div style={{fontSize:16,fontWeight:700}}>{noteModal.id ? tr('កែ​ចំណាំ','Edit note') : tr('ចំណាំ​ថ្មី','New note')}</div>
+            <div style={{fontSize:16,fontWeight:700}}>
+              {noteModal.id ? tr('កែ​ចំណាំ','Edit note') : noteModal.mode ? tr('បន្ថែម​នៅ​ម៉ោង​នេះ','Add at this time') : tr('ចំណាំ​ថ្មី','New note')}
+            </div>
+
+            {/* Lesson / Note toggle — only when creating from a time slot */}
+            {noteModal.mode && !noteModal.id && (
+              <div style={{display:'flex',background:'var(--surface-muted)',borderRadius:9,padding:3,gap:3}}>
+                {[{k:'lesson',km:'មេរៀន',en:'Lesson',icon:'plus'},{k:'note',km:'ចំណាំ',en:'Note',icon:'bell'}].map(t=>(
+                  <button key={t.k} onClick={()=>setNoteModal(m=>({...m,mode:t.k}))} style={{
+                    flex:1,padding:'8px 10px',border:'none',borderRadius:7,cursor:'pointer',fontSize:13,fontWeight:600,
+                    display:'flex',alignItems:'center',justifyContent:'center',gap:6,
+                    background: noteModal.mode===t.k ? 'var(--surface)' : 'transparent',
+                    color: noteModal.mode===t.k ? 'var(--accent)' : 'var(--ink-3)',
+                    boxShadow: noteModal.mode===t.k ? '0 1px 3px rgba(0,0,0,.12)' : 'none',
+                  }}><Icon name={t.icon} size={13}/>{tr(t.km,t.en)}</button>
+                ))}
+              </div>
+            )}
+
+            {noteModal.mode === 'lesson' ? (
+              <div style={{display:'flex',flexDirection:'column',gap:14}}>
+                <div style={{fontSize:13,color:'var(--ink-2)',background:'var(--surface-muted)',borderRadius:8,padding:'11px 13px',fontFamily:'"JetBrains Mono",monospace'}}>
+                  📅 {noteModal.date}　🕒 {noteModal.time}
+                </div>
+                <Btn kind="primary" size="lg" icon={<Icon name="plus" size={15}/>} style={{justifyContent:'center'}}
+                  onClick={()=>{ const d=noteModal.date, h=noteModal.hour; setNoteModal(null); openForm('newLesson',{date:d,hour:h}); }}>
+                  {tr('កក់​មេរៀន​ថ្មី','Book new lesson')}
+                </Btn>
+                <Btn kind="ghost" size="md" onClick={()=>setNoteModal(null)} style={{justifyContent:'center'}}>{tr('បោះបង់','Cancel')}</Btn>
+              </div>
+            ) : (
+            <>
             <div style={{display:'grid',gridTemplateColumns:'1fr 130px',gap:10}}>
               <div>
                 <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5}}>{tr('កាល​បរិច្ឆេទ','Date')}</label>
@@ -898,6 +966,8 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
                 <Btn kind="primary" size="md" onClick={submitNote}>{tr('រក្សាទុក','Save')}</Btn>
               </div>
             </div>
+            </>
+            )}
           </div>
         </Modal>
       )}

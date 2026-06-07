@@ -481,7 +481,9 @@ window.__trRegistry = {
   "Student colours": "ពណ៌សិស្ស",
   "Graduated": "បានបញ្ចប់",
   "Edit note": "កែ​ចំណាំ",
+  "Add at this time": "បន្ថែម​នៅ​ម៉ោង​នេះ",
   "New note": "ចំណាំ​ថ្មី",
+  "Book new lesson": "ណាត់​មេរៀន​ថ្មី",
   "Time": "ម៉ោង",
   "e.g. Teacher meeting at 2pm": "ឧ. ប្រជុំគ្រូ ម៉ោង ២ រសៀល",
   "Invite instructors": "អញ្ជើញ​គ្រូ",
@@ -811,7 +813,6 @@ window.__trRegistry = {
   "Tap to toggle status": "ចុច​ដើម្បី​ប្ដូរ​ស្ថានភាព",
   "Missing": "មិន​ទាន់",
   "Lesson": "មេរៀន",
-  "Book new lesson": "ណាត់​មេរៀន​ថ្មី",
   "Enroll": "ចុះ​ឈ្មោះ​",
   "Filter": "តម្រង",
   "Avg mock": "មធ្យម",
@@ -15869,7 +15870,10 @@ var ScheduleWeek = ({
   weekDates = [],
   highlights = {},
   onHighlight,
-  hlColor = ''
+  hlColor = '',
+  notes = [],
+  onSlotClick,
+  onNoteClick
 }) => {
   var {
     openDetail,
@@ -15880,6 +15884,12 @@ var ScheduleWeek = ({
   }, (_, i) => i + 7);
   var today = todayStr();
   var isPaint = !!hlColor;
+  var onSlot = (date, h) => {
+    if (onSlotClick) onSlotClick(date, h);else openForm('newLesson', {
+      date,
+      hour: h
+    });
+  };
   return React.createElement(Card, {
     pad: 0
   }, React.createElement("div", {
@@ -15976,10 +15986,7 @@ var ScheduleWeek = ({
         return React.createElement("div", {
           key: h,
           onClick: () => {
-            if (isPaint) onHighlight?.(date, h);else openForm('newLesson', {
-              date,
-              hour: h
-            });
+            if (isPaint) onHighlight?.(date, h);else onSlot(date, h);
           },
           style: {
             height: 48,
@@ -16179,6 +16186,71 @@ var ScheduleWeek = ({
           fontFamily: '"JetBrains Mono",monospace'
         }
       }, v.plate)));
+    }), notes.filter(n => n.date === date && n.time).map(n => {
+      var [hh, mm] = n.time.split(':').map(Number);
+      var startHour = hh + (mm || 0) / 60;
+      if (startHour < 7 || startHour >= 19) return null;
+      var top = (startHour - 7) * 48 + 1;
+      var invitedNames = (n.invited || []).map(id => {
+        var i = INSTRUCTORS.find(x => x.id === id);
+        return i ? i.en || i.name : null;
+      }).filter(Boolean);
+      return React.createElement("button", {
+        key: n.id,
+        onClick: e => {
+          e.stopPropagation();
+          onNoteClick ? onNoteClick(n) : null;
+        },
+        title: `${n.time} · ${n.text}`,
+        style: {
+          position: 'absolute',
+          top,
+          left: 3,
+          width: 'calc(100% - 6px)',
+          minHeight: 22,
+          background: 'rgba(250,204,21,.22)',
+          border: '1px solid rgba(202,138,4,.6)',
+          borderLeft: '3px solid #ca8a04',
+          borderRadius: 6,
+          padding: '3px 6px',
+          overflow: 'hidden',
+          zIndex: 6,
+          fontSize: 10.5,
+          textAlign: 'left',
+          cursor: 'pointer',
+          font: 'inherit',
+          color: 'var(--ink)',
+          boxSizing: 'border-box'
+        }
+      }, React.createElement("div", {
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
+          minWidth: 0
+        }
+      }, React.createElement("span", {
+        style: {
+          flexShrink: 0
+        }
+      }, "\uD83D\uDCCC"), React.createElement("span", {
+        style: {
+          fontWeight: 600,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          minWidth: 0
+        }
+      }, n.text)), invitedNames.length > 0 && React.createElement("div", {
+        style: {
+          fontSize: 9,
+          color: '#92700a',
+          fontStyle: 'italic',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }
+      }, "\uD83D\uDC65 ", invitedNames.join(' · ')));
     }));
   })));
 };
@@ -16681,13 +16753,36 @@ var ScheduleScreen = ({
     k: 'p',
     bg: 'rgba(168,85,247,.28)'
   }];
+  var noteSortKey = n => n.date + ' ' + (n.time || '99:99');
+  var visNoteSet = new Set(weekDates);
+  var visNotes = notes.filter(n => visNoteSet.has(n.date)).sort((a, b) => noteSortKey(a) < noteSortKey(b) ? -1 : noteSortKey(a) > noteSortKey(b) ? 1 : 0);
+  var openSlot = (date, hour) => setNoteModal({
+    mode: 'lesson',
+    date,
+    hour,
+    time: String(hour).padStart(2, '0') + ':00',
+    text: '',
+    author: meName,
+    invited: []
+  });
+  var editNote = n => setNoteModal({
+    id: n.id,
+    date: n.date,
+    time: n.time || '',
+    text: n.text,
+    author: n.author,
+    invited: n.invited || []
+  });
   var viewProps = {
     lessons: visibleLessons,
     studentMode,
     weekDates,
     highlights,
     onHighlight: handleHighlight,
-    hlColor: activeColor
+    hlColor: activeColor,
+    notes: visNotes,
+    onSlotClick: studentMode ? null : openSlot,
+    onNoteClick: editNote
   };
   var selStyle = {
     padding: '6px 10px',
@@ -17149,9 +17244,6 @@ var ScheduleScreen = ({
       marginLeft: 'auto'
     }
   }, tr('លុប​ highlight​ ទាំង​អស់', 'Clear all highlights'))), !studentMode && (() => {
-    var visSet = new Set(weekDates);
-    var sortKey = n => n.date + ' ' + (n.time || '99:99');
-    var visNotes = notes.filter(n => visSet.has(n.date)).sort((a, b) => sortKey(a) < sortKey(b) ? -1 : sortKey(a) > sortKey(b) ? 1 : 0);
     if (visNotes.length === 0) return null;
     return React.createElement("div", {
       style: {
@@ -17235,14 +17327,7 @@ var ScheduleScreen = ({
       var i = INSTRUCTORS.find(x => x.id === id);
       return i ? lang === 'km' ? i.name : i.en || i.name : null;
     }).filter(Boolean).join(', ')))), React.createElement("button", {
-      onClick: () => setNoteModal({
-        id: n.id,
-        date: n.date,
-        time: n.time || '',
-        text: n.text,
-        author: n.author,
-        invited: n.invited || []
-      }),
+      onClick: () => editNote(n),
       title: tr('កែ', 'Edit'),
       style: {
         border: 'none',
@@ -17366,7 +17451,91 @@ var ScheduleScreen = ({
       fontSize: 16,
       fontWeight: 700
     }
-  }, noteModal.id ? tr('កែ​ចំណាំ', 'Edit note') : tr('ចំណាំ​ថ្មី', 'New note')), React.createElement("div", {
+  }, noteModal.id ? tr('កែ​ចំណាំ', 'Edit note') : noteModal.mode ? tr('បន្ថែម​នៅ​ម៉ោង​នេះ', 'Add at this time') : tr('ចំណាំ​ថ្មី', 'New note')), noteModal.mode && !noteModal.id && React.createElement("div", {
+    style: {
+      display: 'flex',
+      background: 'var(--surface-muted)',
+      borderRadius: 9,
+      padding: 3,
+      gap: 3
+    }
+  }, [{
+    k: 'lesson',
+    km: 'មេរៀន',
+    en: 'Lesson',
+    icon: 'plus'
+  }, {
+    k: 'note',
+    km: 'ចំណាំ',
+    en: 'Note',
+    icon: 'bell'
+  }].map(t => React.createElement("button", {
+    key: t.k,
+    onClick: () => setNoteModal(m => ({
+      ...m,
+      mode: t.k
+    })),
+    style: {
+      flex: 1,
+      padding: '8px 10px',
+      border: 'none',
+      borderRadius: 7,
+      cursor: 'pointer',
+      fontSize: 13,
+      fontWeight: 600,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      background: noteModal.mode === t.k ? 'var(--surface)' : 'transparent',
+      color: noteModal.mode === t.k ? 'var(--accent)' : 'var(--ink-3)',
+      boxShadow: noteModal.mode === t.k ? '0 1px 3px rgba(0,0,0,.12)' : 'none'
+    }
+  }, React.createElement(Icon, {
+    name: t.icon,
+    size: 13
+  }), tr(t.km, t.en)))), noteModal.mode === 'lesson' ? React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 14
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: 'var(--ink-2)',
+      background: 'var(--surface-muted)',
+      borderRadius: 8,
+      padding: '11px 13px',
+      fontFamily: '"JetBrains Mono",monospace'
+    }
+  }, "\uD83D\uDCC5 ", noteModal.date, "\u3000\uD83D\uDD52 ", noteModal.time), React.createElement(Btn, {
+    kind: "primary",
+    size: "lg",
+    icon: React.createElement(Icon, {
+      name: "plus",
+      size: 15
+    }),
+    style: {
+      justifyContent: 'center'
+    },
+    onClick: () => {
+      var d = noteModal.date,
+        h = noteModal.hour;
+      setNoteModal(null);
+      openForm('newLesson', {
+        date: d,
+        hour: h
+      });
+    }
+  }, tr('កក់​មេរៀន​ថ្មី', 'Book new lesson')), React.createElement(Btn, {
+    kind: "ghost",
+    size: "md",
+    onClick: () => setNoteModal(null),
+    style: {
+      justifyContent: 'center'
+    }
+  }, tr('បោះបង់', 'Cancel'))) : React.createElement(React.Fragment, null, React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 130px',
@@ -17556,7 +17725,7 @@ var ScheduleScreen = ({
     kind: "primary",
     size: "md",
     onClick: submitNote
-  }, tr('រក្សាទុក', 'Save')))))));
+  }, tr('រក្សាទុក', 'Save'))))))));
 };
 var generateSchedulePDF = ({
   lessons,
