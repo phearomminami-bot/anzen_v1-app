@@ -1262,6 +1262,7 @@ const NewStudentForm = ({ onClose }) => {
   const [phone,   setPhone]   = React.useState('');
   const [email,   setEmail]   = React.useState('');
   const [licenseNo, setLicenseNo] = React.useState('');
+  const [examLoc, setExamLoc] = React.useState('');
   const [eyeLeft,  setEyeLeft]  = React.useState('');
   const [eyeRight, setEyeRight] = React.useState('');
   const [eyeBoth,  setEyeBoth]  = React.useState('');
@@ -1510,6 +1511,7 @@ Use "" for any field that cannot be read clearly.`;
       phone: phone.trim() || '—',
       email: email.trim(),
       license_no: licenseNo.trim(),
+      exam_location: examLoc.trim(),
       eye_left: eyeLeft, eye_right: eyeRight, eye_both: eyeBoth,
       paid: 0,
       photo: 'port-' + ((STUDENTS.length % 10) + 1),
@@ -1729,7 +1731,9 @@ Use "" for any field that cannot be read clearly.`;
         <Field label={tr('លេខ​បណ្ណ​បើកបរ · License No.','Driver license No.')}>
           <Input placeholder={tr('ឧ. 01234567','e.g. 01234567')} value={licenseNo} onChange={e=>setLicenseNo(e.target.value)}/>
         </Field>
-        <div/>
+        <Field label={tr('ទីតាំង​ប្រឡង · Exam location','Exam location')}>
+          <Input placeholder={tr('ឧ. ភ្នំពេញ','e.g. Phnom Penh')} value={examLoc} onChange={e=>setExamLoc(e.target.value)}/>
+        </Field>
       </Row>
       <Row>
         <Field label={tr('ភ្នែកឆ្វេង','Left Eye')}>

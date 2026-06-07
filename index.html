@@ -213,6 +213,8 @@ window.__trRegistry = {
   "Email": "អ៊ីមែល",
   "Driver license No.": "លេខ​បណ្ណ​បើកបរ",
   "e.g. 01234567": "ឧ. 01234567",
+  "Exam location": "ទីតាំង​ប្រឡង",
+  "e.g. Phnom Penh": "ឧ. ភ្នំពេញ",
   "Left Eye": "ភ្នែកឆ្វេង",
   "Right Eye": "ភ្នែកស្ដាំ",
   "Both Eyes": "ភ្នែកទាំងពីរ",
@@ -987,7 +989,6 @@ window.__trRegistry = {
   "BRANCHES": "សាខា",
   "Add branch": "បន្ថែម​សាខា",
   "Branch name": "ឈ្មោះ​សាខា",
-  "e.g. Phnom Penh": "ឧ. ភ្នំពេញ",
   "Planned": "គ្រោង​នឹង​បើក",
   "Street, commune, city": "ផ្លូវ ឃុំ/សង្កាត់ ខេត្ត/ក្រុង",
   "Google Maps link": "តំណ Google Maps",
@@ -5648,6 +5649,7 @@ var NewStudentForm = ({
   var [phone, setPhone] = React.useState('');
   var [email, setEmail] = React.useState('');
   var [licenseNo, setLicenseNo] = React.useState('');
+  var [examLoc, setExamLoc] = React.useState('');
   var [eyeLeft, setEyeLeft] = React.useState('');
   var [eyeRight, setEyeRight] = React.useState('');
   var [eyeBoth, setEyeBoth] = React.useState('');
@@ -5959,6 +5961,7 @@ Use "" for any field that cannot be read clearly.`;
       phone: phone.trim() || '—',
       email: email.trim(),
       license_no: licenseNo.trim(),
+      exam_location: examLoc.trim(),
       eye_left: eyeLeft,
       eye_right: eyeRight,
       eye_both: eyeBoth,
@@ -6331,7 +6334,13 @@ Use "" for any field that cannot be read clearly.`;
     placeholder: tr('ឧ. 01234567', 'e.g. 01234567'),
     value: licenseNo,
     onChange: e => setLicenseNo(e.target.value)
-  })), React.createElement("div", null)), React.createElement(Row, null, React.createElement(Field, {
+  })), React.createElement(Field, {
+    label: tr('ទីតាំង​ប្រឡង · Exam location', 'Exam location')
+  }, React.createElement(Input, {
+    placeholder: tr('ឧ. ភ្នំពេញ', 'e.g. Phnom Penh'),
+    value: examLoc,
+    onChange: e => setExamLoc(e.target.value)
+  }))), React.createElement(Row, null, React.createElement(Field, {
     label: tr('ភ្នែកឆ្វេង', 'Left Eye')
   }, React.createElement(Select, {
     value: eyeLeft,
@@ -35062,6 +35071,9 @@ var StudentsScreenV2 = () => {
       }), React.createElement(InfoPair, {
         label: tr('លេខ​បណ្ណ​បើកបរ', 'License No.'),
         val: s.license_no
+      }), React.createElement(InfoPair, {
+        label: tr('ទីតាំង​ប្រឡង', 'Exam location'),
+        val: s.exam_location
       }))), React.createElement(CvSection, {
         id: "payment",
         km: "\u1785\u17BB\u17C7\u1788\u17D2\u1798\u17C4\u17C7 \u1793\u17B7\u1784 \u1780\u17B6\u1794\u1784\u17CB\u1794\u17D2\u179A\u17B6\u1780\u17CB",
@@ -36246,6 +36258,7 @@ var BiographyCard = ({
   var [phone, setPhone] = React.useState(s.phone || '');
   var [telegram, setTelegram] = React.useState(s.telegram || '');
   var [licenseNo, setLicenseNo] = React.useState(s.license_no || '');
+  var [examLoc, setExamLoc] = React.useState(s.exam_location || '');
   var [eyeLeft, setEyeLeft] = React.useState(s.eye_left || '');
   var [eyeRight, setEyeRight] = React.useState(s.eye_right || '');
   var [eyeBoth, setEyeBoth] = React.useState(s.eye_both || '');
@@ -36269,6 +36282,7 @@ var BiographyCard = ({
     setPhone(s.phone || '');
     setTelegram(s.telegram || '');
     setLicenseNo(s.license_no || '');
+    setExamLoc(s.exam_location || '');
     setEyeLeft(s.eye_left || '');
     setEyeRight(s.eye_right || '');
     setEyeBoth(s.eye_both || '');
@@ -36293,6 +36307,7 @@ var BiographyCard = ({
     setPhone(s.phone || '');
     setTelegram(s.telegram || '');
     setLicenseNo(s.license_no || '');
+    setExamLoc(s.exam_location || '');
     setEyeLeft(s.eye_left || '');
     setEyeRight(s.eye_right || '');
     setEyeBoth(s.eye_both || '');
@@ -36317,6 +36332,7 @@ var BiographyCard = ({
       phone: phone.trim(),
       telegram: telegram.trim(),
       license_no: licenseNo.trim(),
+      exam_location: examLoc.trim(),
       eye_left: eyeLeft,
       eye_right: eyeRight,
       eye_both: eyeBoth,
@@ -36462,7 +36478,11 @@ var BiographyCard = ({
     value: licenseNo,
     onChange: e => setLicenseNo(e.target.value),
     placeholder: "01234567"
-  }))), React.createElement("div", null)), React.createElement("div", {
+  }))), React.createElement("div", null, React.createElement(Lbl, null, "\u1791\u17B8\u178F\u17B6\u17C6\u1784\u200B\u1794\u17D2\u179A\u17A1\u1784 \xB7 Exam location"), React.createElement("input", _extends({}, inp, {
+    value: examLoc,
+    onChange: e => setExamLoc(e.target.value),
+    placeholder: "\u1797\u17D2\u1793\u17C6\u1796\u17C1\u1789"
+  })))), React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr 1fr',
@@ -36576,6 +36596,9 @@ var BiographyCard = ({
   }, {
     l: 'លេខ​បណ្ណ​បើកបរ',
     v: s.license_no || '—'
+  }, {
+    l: 'ទីតាំង​ប្រឡង',
+    v: s.exam_location || '—'
   }, {
     l: 'ភ្នែកឆ្វេង',
     v: s.eye_left || '—'
@@ -37466,6 +37489,7 @@ var StudentEditPanel = ({
   var [telegram, setTelegram] = React.useState(s.telegram || '');
   var [email, setEmail] = React.useState(s.email || '');
   var [licenseNo, setLicenseNo] = React.useState(s.license_no || '');
+  var [examLoc, setExamLoc] = React.useState(s.exam_location || '');
   var [nationality, setNationality] = React.useState(s.nationality || 'ខ្មែរ');
   var [eyeLeft, setEyeLeft] = React.useState(s.eye_left || '');
   var [eyeRight, setEyeRight] = React.useState(s.eye_right || '');
@@ -37539,6 +37563,7 @@ var StudentEditPanel = ({
       telegram: telegram.trim(),
       email: email.trim(),
       license_no: licenseNo.trim(),
+      exam_location: examLoc.trim(),
       nationality: nationality.trim(),
       eye_left: eyeLeft,
       eye_right: eyeRight,
@@ -37750,6 +37775,12 @@ var StudentEditPanel = ({
     value: licenseNo,
     onChange: e => setLicenseNo(e.target.value),
     placeholder: tr('ឧ. 01234567', 'e.g. 01234567')
+  }))), React.createElement(SEField, {
+    label: tr('ទីតាំង​ប្រឡង', 'Exam location')
+  }, React.createElement("input", _extends({}, inp, {
+    value: examLoc,
+    onChange: e => setExamLoc(e.target.value),
+    placeholder: tr('ឧ. ភ្នំពេញ', 'e.g. Phnom Penh')
   })))), secTitle(tr('ប្រវត្តិ', 'BIOGRAPHY')), React.createElement("div", g3, React.createElement(SEField, {
     label: tr('ភ្នែកឆ្វេង', 'Left Eye')
   }, React.createElement("select", _extends({}, sel, {
