@@ -36889,16 +36889,16 @@ var StudentEditPanel = ({
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
-      gap: 10,
-      marginBottom: 12
+      gap: bp.mobile ? '14px 16px' : 10,
+      marginBottom: bp.mobile ? 14 : 12
     }
   };
   var g3 = {
     style: {
       display: 'grid',
       gridTemplateColumns: bp.mobile ? '1fr 1fr' : '1fr 1fr 1fr',
-      gap: 10,
-      marginBottom: 12
+      gap: bp.mobile ? '14px 16px' : 10,
+      marginBottom: bp.mobile ? 14 : 12
     }
   };
   var secTitle = t => React.createElement("div", {
