@@ -142,7 +142,14 @@ window.onerror = function(msg,src,line,col,err){
 
 <!-- ⚙️ Supabase backend — paste your project credentials below to enable real login.
      Leave the YOUR-… placeholders to keep running in offline/demo mode. -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script>
+  /* Fallback: if the primary CDN didn't deliver the library, pull it from a
+     second CDN synchronously so the real (Supabase) login still works. */
+  if (!(window.supabase && window.supabase.createClient)) {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>');
+  }
+</script>
 <script>
   window.__ANZEN_SUPABASE = {
     url:     'https://lnpaxsaxweshxoicvhec.supabase.co',          // Project URL  (Settings → API)
@@ -182,15 +189,8 @@ window.__trRegistry = {
   "— Enter or Generate —": "— បញ្ជូល ឬ ជ្រើស Generate —",
   "--- from DOB ---": "--- ថ្ងៃខែឆ្នាំកំណើត ---",
   "Student Type": "ប្រភេទសិស្ស",
-  "Regular — Cambodian license": "ធម្មតា — បណ្ណបើកបរកម្ពុជា",
-  "Special — extra hrs / foreign": "ពិសេស — ម៉ោងច្រើន / បរទេស",
-  "SSW — Japan driving": "SSW — បើកបរនៅជប៉ុន",
-  "AT 10h+3h theory=$200 · MT 13h+3h theory=$230 · Exam fee +$27": "អូតូ ១០ម៉ោង+៣ម៉ោងទ្រឹស្ដី=$200 · លេខដៃ ១៣ម៉ោង+៣ម៉ោងទ្រឹស្ដី=$230 · ថ្លៃប្រឡង+$27",
-  "Must complete Regular (Type 1) first": "ត្រូវបញ្ចប់ Type 1 (ធម្មតា) ជាមុនសិន",
-  "Will follow Japanese standard curriculum": "រៀនតាមស្តង់ដាជប៉ុន (Japanese curriculum)",
-  "Reason": "មូល​ហេតុ",
-  "Foreign student": "ជនបរទេស",
-  "Needs extra hours": "ត្រូវការម៉ោងបន្ថែម",
+  "Regular": "ធម្មតា",
+  "Special": "ពិសេស",
   "License type *": "ប្រភេទបណ្ណបើកបរ *",
   "--- Select license type ---": "--- សូមជ្រើសរើសប្រភេទបណ្ណ ---",
   "Transmission type *": "ប្រភេទយានយន្ត (ប្រអប់លេខ) *",
@@ -438,7 +438,7 @@ window.__trRegistry = {
   "Add student": "បន្ថែម​សិស្ស",
   "Click \"Add student\" to enroll the first student.": "ចុច​ \"បន្ថែម​សិស្ស\" ដើម្បី​ចុះ​ឈ្មោះ​សិស្ស​ដំបូង​",
   "Add first student": "បន្ថែម​សិស្ស​ដំបូង",
-  "Progress": "ដំណើរការ",
+  "Progress": "វឌ្ឍនភាព",
   "No students match this filter": "គ្មាន​សិស្ស​ស្រប​នឹង​តម្រង",
   "Call": "ហៅ",
   "Enrolled": "ចុះ​ឈ្មោះ​",
@@ -512,7 +512,7 @@ window.__trRegistry = {
   "Mock avg · trend": "ប្រឡង​សាក · ទិស",
   "Exam date": "ថ្ងៃ​ប្រឡង",
   "Total invoices": "វិក្កយបត្រ​សរុប",
-  "Paid": "បង់រួច",
+  "Paid": "ទូទាត់​",
   "Outstanding": "មិន​ទាន់​ទូទាត់",
   "due": "ត្រូវ​ទូទាត់",
   "My invoices": "វិក្កយបត្រ​របស់​ខ្ញុំ",
@@ -676,6 +676,7 @@ window.__trRegistry = {
   "Maternity": "ច្បាប់​សម្រាល",
   "From": "ពី",
   "To": "ដល់",
+  "Reason": "មូល​ហេតុ",
   "Vehicle removed": "បានលុបយានយន្ត",
   "Exporting…": "នាំចេញ…",
   "Work order": "បញ្ជាការងារ",
@@ -794,8 +795,6 @@ window.__trRegistry = {
   "Filter": "តម្រង",
   "Avg mock": "មធ្យម",
   "🎓 Passed": "🎓 ជាប់ប្រឡង",
-  "Regular": "ធម្មតា",
-  "Special": "ពិសេស",
   "In progress':'neutral": "បានបង់'),'good'); }\n            }}\n          />\n        )}\n        {tab==='progress' && <StudentsProgress students={selected ? [selected] : []} onView={goToProfile} onSave={saveStudentProgress}/>}\n        {tab==='messages' && <StudentMessages activeStudentId={selectedId} students={allStudents}/>}\n        {tab==='docs'     && <StudentDocs students={selected ? [selected] : []} onToggleDoc={(id,field,val) => {\n          const i = STUDENTS.findIndex(s => s.id === id);\n          if (i !== -1) { STUDENTS[i][field] = val; if(window.saveAllData)window.saveAllData(); forceUpdate(); }\n        }}/>}\n      </Card>\n    </div>\n  );\n};\n\nconst studentStatusTone = (s) => ({\n  'New':'accent",
   "Next lesson": "មេរៀន​​",
   "EXAM READINESS": "ការ​ត្រៀម​ប្រឡង",
@@ -846,15 +845,11 @@ window.__trRegistry = {
   "Medical cert.": "វិញ្ញាបនបត្រ​វេជ្ជសាស្ត្រ",
   "Photo 4×6": "រូប​ថត",
   "Select a student from the directory": "ជ្រើសសិស្ស​",
-  "SSW student has no license yet — must complete Regular (Type 1) first": "សិស្ស SSW នេះមិនទាន់មានបណ្ណបើកបរ — ត្រូវចុះឈ្មោះ Type 1 (ធម្មតា) ជាមុន",
-  "Foreign student — additional services apply": "ជនបរទេស — ផ្ដល់ការបំរើសេវាបន្ថែម",
-  "Needs extra hours — flexible schedule": "ត្រូវការម៉ោងបន្ថែម — សម្រួលកាលវិភាគ",
   "Manual": "លេខ​ដៃ",
   "Auto": "លេខ​អូតូ",
   "Study start": "ចាប់​ផ្ដើម",
   "Study end": "បញ្ចប់",
   "Tuition": "ថ្លៃបង្រៀន",
-  "Exam fee": "ថ្លៃ​ប្រឡង",
   "EXAM": "ការ​ប្រឡង",
   "Apply date": "ដាក់​ពាក្យ",
   "Enrollment pipeline": "ដំណើរការ​ចូលរៀន",
@@ -5537,8 +5532,6 @@ var NewStudentForm = ({
   var [dob, setDob] = React.useState('');
   var [natId, setNatId] = React.useState('');
   var [studentType, setStudentType] = React.useState('ធម្មតា');
-  var [hasLicense, setHasLicense] = React.useState(null);
-  var [specialReason, setSpecialReason] = React.useState('foreign');
   var [cls, setCls] = React.useState('B');
   var [vehType, setVehType] = React.useState('');
   var [shift, setShift] = React.useState([]);
@@ -5872,10 +5865,7 @@ Use "" for any field that cannot be read clearly.`;
       days: days.join(', '),
       fee: courseFee,
       regDate,
-      studentType,
-      hasLicense: studentType === 'SSW' ? hasLicense : null,
-      specialReason: studentType === 'ពិសេស' ? specialReason : '',
-      examFee: studentType === 'ធម្មតា' ? 27 : 0
+      studentType
     });
     if (window.__notifyStudentsChanged) window.__notifyStudentsChanged();
     if (window.saveAllData) window.saveAllData();
@@ -6121,79 +6111,14 @@ Use "" for any field that cannot be read clearly.`;
     label: tr('ប្រភេទសិស្ស', 'Student Type')
   }, React.createElement(Select, {
     value: studentType,
-    onChange: e => {
-      setStudentType(e.target.value);
-      setHasLicense(null);
-    }
+    onChange: e => setStudentType(e.target.value)
   }, React.createElement("option", {
     value: "\u1792\u1798\u17D2\u1798\u178F\u17B6"
-  }, tr('ធម្មតា — បណ្ណបើកបរកម្ពុជា', 'Regular — Cambodian license')), React.createElement("option", {
+  }, tr('ធម្មតា', 'Regular')), React.createElement("option", {
     value: "\u1796\u17B7\u179F\u17C1\u179F"
-  }, tr('ពិសេស — ម៉ោងច្រើន / បរទេស', 'Special — extra hrs / foreign')), React.createElement("option", {
+  }, tr('ពិសេស', 'Special')), React.createElement("option", {
     value: "SSW"
-  }, tr('SSW — បើកបរនៅជប៉ុន', 'SSW — Japan driving'))), studentType === 'ធម្មតា' && React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: 'var(--ink-3)',
-      marginTop: 4,
-      lineHeight: 1.5
-    }
-  }, tr('អូតូ ១០ម៉ោង+៣ម៉ោងទ្រឹស្ដី=$200 · លេខដៃ ១៣ម៉ោង+៣ម៉ោងទ្រឹស្ដី=$230 · ថ្លៃប្រឡង+$27', 'AT 10h+3h theory=$200 · MT 13h+3h theory=$230 · Exam fee +$27')), studentType === 'SSW' && React.createElement("div", {
-    style: {
-      marginTop: 6,
-      display: 'flex',
-      gap: 14
-    }
-  }, [{
-    v: true,
-    km: 'មានបណ្ណស្រាប់',
-    en: 'Has license'
-  }, {
-    v: false,
-    km: 'គ្មានបណ្ណ',
-    en: 'No license'
-  }].map(opt => React.createElement("label", {
-    key: String(opt.v),
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: 5,
-      fontSize: 12,
-      cursor: 'pointer'
-    }
-  }, React.createElement("input", {
-    type: "radio",
-    name: "hasLic",
-    checked: hasLicense === opt.v,
-    onChange: () => setHasLicense(opt.v),
-    style: {
-      accentColor: 'var(--accent)'
-    }
-  }), tr(opt.km, opt.en)))), studentType === 'SSW' && hasLicense === false && React.createElement("div", {
-    style: {
-      fontSize: 11,
-      color: 'var(--warn)',
-      marginTop: 4,
-      padding: '5px 8px',
-      background: 'rgba(255,160,0,.08)',
-      borderRadius: 6
-    }
-  }, "\u26A0 ", tr('ត្រូវបញ្ចប់ Type 1 (ធម្មតា) ជាមុនសិន', 'Must complete Regular (Type 1) first')), studentType === 'SSW' && hasLicense === true && React.createElement("div", {
-    style: {
-      fontSize: 11,
-      color: 'var(--good)',
-      marginTop: 4
-    }
-  }, "\u2713 ", tr('រៀនតាមស្តង់ដាជប៉ុន (Japanese curriculum)', 'Will follow Japanese standard curriculum'))), React.createElement(Field, {
-    label: studentType === 'ពិសេស' ? tr('មូលហេតុ', 'Reason') : ' '
-  }, studentType === 'ពិសេស' ? React.createElement(Select, {
-    value: specialReason,
-    onChange: e => setSpecialReason(e.target.value)
-  }, React.createElement("option", {
-    value: "foreign"
-  }, tr('ជនបរទេស', 'Foreign student')), React.createElement("option", {
-    value: "extra_hours"
-  }, tr('ត្រូវការម៉ោងបន្ថែម', 'Needs extra hours'))) : React.createElement("div", null))), React.createElement(Row, null, React.createElement(Field, {
+  }, "SSW"))), React.createElement("div", null)), React.createElement(Row, null, React.createElement(Field, {
     label: tr('ប្រភេទបណ្ណបើកបរ *', 'License type *')
   }, React.createElement(Select, {
     value: cls,
@@ -21426,12 +21351,12 @@ var VideoLessonForm = ({
     km: "\u1785\u17C6\u178E\u1784\u1787\u17BE\u1784 \xB7 \u17A2\u1784\u17CB\u1782\u17D2\u179B\u17C1\u179F",
     en: "Title \xB7 English",
     full: false
-  }, React.createElement(AlInput, {
+  }, React.createElement(TrBadge, {
+    show: trBusy
+  }), React.createElement(AlInput, {
     value: en,
     onChange: e => setEn(e.target.value),
     placeholder: "e.g. Parallel Parking"
-  }), React.createElement(TrBadge, {
-    show: trBusy
   })), React.createElement(AlField, {
     km: "YouTube ID \u17AC URL",
     en: "YouTube ID or full URL"
@@ -33992,10 +33917,7 @@ var extendStudent = s => {
     practice_done: Array.isArray(s.practice_done) ? s.practice_done : Array(pracCount).fill(false),
     extra_done: Array.isArray(s.extra_done) ? s.extra_done : [],
     theory_jp_done: Array.isArray(s.theory_jp_done) ? s.theory_jp_done : [],
-    practice_jp_done: Array.isArray(s.practice_jp_done) ? s.practice_jp_done : [],
-    hasLicense: s.hasLicense !== undefined ? s.hasLicense : null,
-    specialReason: s.specialReason || '',
-    examFee: s.examFee !== undefined ? s.examFee : s.studentType === 'ធម្មតា' ? 27 : 0
+    practice_jp_done: Array.isArray(s.practice_jp_done) ? s.practice_jp_done : []
   };
 };
 var studentPrice = s => {
@@ -37391,66 +37313,6 @@ var StudentEnrollmentDetail = ({
       textAlign: 'right'
     }
   }, v || '—'));
-  var STEPS_NORMAL = [{
-    id: 'reg',
-    km: 'ចុះ​ឈ្មោះ',
-    en: 'Enrolled',
-    check: s => !!(s.regDate || s.enrolled)
-  }, {
-    id: 'pay',
-    km: 'បង់​លុយ',
-    en: 'Paid',
-    check: s => (s.paid || 0) >= 1
-  }, {
-    id: 'schedule',
-    km: 'កំណត់​ម៉ោង',
-    en: 'Scheduled',
-    check: s => !!s.study_start
-  }, {
-    id: 'apply',
-    km: 'ដាក់​ពាក្យ​ប្រឡង',
-    en: 'Exam applied',
-    check: s => !!s.exam_apply
-  }, {
-    id: 'exam',
-    km: 'ប្រឡង',
-    en: 'Exam done',
-    check: s => !!s.exam_date
-  }, {
-    id: 'license',
-    km: 'ទទួល​បណ្ណ',
-    en: 'Got license',
-    check: s => s.exam_result === 'pass'
-  }];
-  var STEPS_SSW = [{
-    id: 'reg',
-    km: 'ចុះ​ឈ្មោះ',
-    en: 'Enrolled',
-    check: s => !!(s.regDate || s.enrolled)
-  }, {
-    id: 'pay',
-    km: 'បង់​លុយ',
-    en: 'Paid',
-    check: s => (s.paid || 0) >= 1
-  }, {
-    id: 'schedule',
-    km: 'កំណត់​ម៉ោង',
-    en: 'Scheduled',
-    check: s => !!s.study_start
-  }, {
-    id: 'done',
-    km: 'រៀន​ចប់',
-    en: 'Training done',
-    check: s => (s.hours || 0) >= (s.target || Infinity)
-  }, {
-    id: 'cert',
-    km: 'ទទួល​វិញ្ញា',
-    en: 'Certificate',
-    check: s => s.exam_result === 'pass'
-  }];
-  var isSSWwithLic = s.studentType === 'SSW' && s.hasLicense === true;
-  var steps = isSSWwithLic ? STEPS_SSW : STEPS_NORMAL;
-  var doneCount = steps.filter(st => st.check(s)).length;
   return React.createElement("div", {
     style: {
       padding: 18
@@ -37460,9 +37322,9 @@ var StudentEnrollmentDetail = ({
       display: 'flex',
       alignItems: 'center',
       gap: 14,
-      paddingBottom: 14,
+      paddingBottom: 16,
       borderBottom: '1px solid var(--border)',
-      marginBottom: 14
+      marginBottom: 18
     }
   }, React.createElement(Avatar, {
     tag: s.photo,
@@ -37493,107 +37355,15 @@ var StudentEnrollmentDetail = ({
     }
   }, React.createElement(Badge, {
     tone: studentStatusTone(s.status)
-  }, s.status), s.studentType && React.createElement(StTypeTag, {
-    type: s.studentType
-  }), s.inst && React.createElement(Badge, {
+  }, s.status), s.inst && React.createElement(Badge, {
     tone: "neutral"
   }, "\uD83D\uDC68\u200D\uD83C\uDFEB ", s.inst), (s.paid || 0) >= 1 && React.createElement(Badge, {
     tone: "good"
-  }, "\u2713 ", tr('បង់រួច', 'Paid')))), React.createElement(Btn, {
+  }, "\u2713 Paid"))), React.createElement(Btn, {
     kind: "ghost",
     size: "sm",
     onClick: onEdit
-  }, tr('កែ​', 'Edit'))), s.studentType === 'SSW' && s.hasLicense === false && React.createElement("div", {
-    style: {
-      background: 'rgba(255,160,0,.1)',
-      border: '1px solid rgba(255,160,0,.4)',
-      borderRadius: 8,
-      padding: '8px 12px',
-      marginBottom: 12,
-      fontSize: 12,
-      color: '#8a5c00'
-    }
-  }, "\u26A0 ", tr('សិស្ស SSW នេះមិនទាន់មានបណ្ណបើកបរ — ត្រូវចុះឈ្មោះ Type 1 (ធម្មតា) ជាមុន', 'SSW student has no license yet — must complete Regular (Type 1) first')), s.studentType === 'ពិសេស' && React.createElement("div", {
-    style: {
-      background: 'rgba(142,82,35,.08)',
-      border: '1px solid rgba(142,82,35,.2)',
-      borderRadius: 8,
-      padding: '8px 12px',
-      marginBottom: 12,
-      fontSize: 12,
-      color: '#8E5223'
-    }
-  }, s.specialReason === 'foreign' ? `🌏 ${tr('ជនបរទេស — ផ្ដល់ការបំរើសេវាបន្ថែម', 'Foreign student — additional services apply')}` : `⏱ ${tr('ត្រូវការម៉ោងបន្ថែម — សម្រួលកាលវិភាគ', 'Needs extra hours — flexible schedule')}`), React.createElement("div", {
-    style: {
-      background: 'var(--surface-muted)',
-      borderRadius: 10,
-      padding: '14px 10px 10px',
-      marginBottom: 14
-    }
-  }, React.createElement("div", {
-    style: {
-      fontSize: 11,
-      fontWeight: 600,
-      color: 'var(--ink-3)',
-      marginBottom: 10,
-      textTransform: 'uppercase',
-      letterSpacing: '.04em'
-    }
-  }, tr('ដំណើរការ', 'Progress'), " \xB7 ", doneCount, "/", steps.length), React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'flex-start'
-    }
-  }, steps.map((st, i) => {
-    var done = st.check(s);
-    var active = !done && i === doneCount;
-    var clr = done ? 'var(--good)' : active ? 'var(--accent)' : 'var(--border)';
-    return React.createElement(React.Fragment, {
-      key: st.id
-    }, React.createElement("div", {
-      style: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        flex: 1,
-        minWidth: 0
-      }
-    }, React.createElement("div", {
-      style: {
-        width: 26,
-        height: 26,
-        borderRadius: '50%',
-        background: done ? 'var(--good)' : active ? 'var(--accent)' : 'var(--surface)',
-        border: `2px solid ${clr}`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: done || active ? '#fff' : 'var(--ink-3)',
-        fontSize: done ? 13 : 10,
-        fontWeight: 700,
-        flexShrink: 0
-      }
-    }, done ? '✓' : i + 1), React.createElement("div", {
-      style: {
-        fontSize: 9,
-        marginTop: 4,
-        textAlign: 'center',
-        lineHeight: 1.3,
-        color: done ? 'var(--good)' : active ? 'var(--accent)' : 'var(--ink-3)',
-        maxWidth: 54,
-        wordBreak: 'break-word'
-      }
-    }, tr(st.km, st.en))), i < steps.length - 1 && React.createElement("div", {
-      style: {
-        flex: 0,
-        width: 16,
-        height: 2,
-        flexShrink: 0,
-        marginTop: 12,
-        background: done ? 'var(--good)' : 'var(--border)'
-      }
-    }));
-  }))), React.createElement("div", {
+  }, tr('កែ​', 'Edit'))), React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
@@ -37625,9 +37395,6 @@ var StudentEnrollmentDetail = ({
   }), React.createElement(ERow, {
     k: tr('ថ្លៃ​សិក្សា', 'Tuition'),
     v: `$${price}`
-  }), s.examFee > 0 && React.createElement(ERow, {
-    k: tr('ថ្លៃ​ប្រឡង', 'Exam fee'),
-    v: `$${s.examFee}`
   })), (s.exam_apply || s.exam_date || s.exam_result) && React.createElement(Card, {
     label: tr('ការ​ប្រឡង', 'EXAM')
   }, React.createElement(ERow, {
@@ -42436,9 +42203,7 @@ var PublicScreen = () => {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'flex-end',
-      marginBottom: 28,
-      gap: 12,
-      flexWrap: 'wrap'
+      marginBottom: 28
     }
   }, React.createElement("div", null, React.createElement("div", {
     style: {
@@ -42573,9 +42338,7 @@ var PublicScreen = () => {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'flex-end',
-      marginBottom: 24,
-      gap: 12,
-      flexWrap: 'wrap'
+      marginBottom: 24
     }
   }, React.createElement("div", null, React.createElement("div", {
     style: {
@@ -42601,10 +42364,10 @@ var PublicScreen = () => {
   }, "\u1782\u17D2\u179A\u17BC\u1791\u17B6\u17C6\u1784\u17A2\u179F\u17CB\u179A\u1794\u179F\u17CB\u1799\u17BE\u1784\u1798\u17B6\u1793\u179C\u17B7\u1789\u17D2\u1789\u17B6\u1794\u1793\u1794\u178F\u17D2\u179A \u1793\u17B7\u1784\u1794\u1791\u1796\u17B7\u179F\u17C4\u1792\u1793\u17CD\u1785\u17D2\u179A\u17BE\u1793\u1787\u17B6\u1784 \u17E5\u1786\u17D2\u1793\u17B6\u17C6\u17D4")), React.createElement("div", {
     style: {
       display: 'grid',
-      gridTemplateColumns: `repeat(${bp.mobile ? 2 : Math.min(INSTRUCTORS.length, 5)},1fr)`,
+      gridTemplateColumns: `repeat(${Math.min(INSTRUCTORS.length, 5)},1fr)`,
       gap: 12
     }
-  }, INSTRUCTORS.slice(0, bp.mobile ? 4 : 5).map(i => React.createElement("div", {
+  }, INSTRUCTORS.slice(0, 5).map(i => React.createElement("div", {
     key: i.id,
     style: {
       textAlign: 'left'

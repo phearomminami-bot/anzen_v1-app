@@ -212,7 +212,14 @@ window.onerror = function(msg,src,line,col,err){
 
 <!-- ⚙️ Supabase backend — paste your project credentials below to enable real login.
      Leave the YOUR-… placeholders to keep running in offline/demo mode. -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script>
+  /* Fallback: if the primary CDN didn't deliver the library, pull it from a
+     second CDN synchronously so the real (Supabase) login still works. */
+  if (!(window.supabase && window.supabase.createClient)) {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\\/script>');
+  }
+</script>
 <script>
   window.__ANZEN_SUPABASE = {
     url:     'https://lnpaxsaxweshxoicvhec.supabase.co',          // Project URL  (Settings → API)
