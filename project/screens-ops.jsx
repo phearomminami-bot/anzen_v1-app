@@ -812,8 +812,10 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
         </div>
       )}
 
-      {/* Pinned notes for the visible date(s) */}
-      {!studentMode && (() => {
+      {/* Pinned notes summary — only for month/agenda views, which have no time
+          grid. In the week grid (and on mobile) notes already appear as blocks
+          inside the grid, so the summary card is redundant and hidden. */}
+      {!studentMode && !bp.mobile && v !== 'week' && (() => {
         if (visNotes.length === 0) return null;
         return (
           <div style={{background:'rgba(250,204,21,.12)',border:'1px solid rgba(250,204,21,.5)',borderRadius:10,padding:'10px 12px'}}>

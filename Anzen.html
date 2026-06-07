@@ -17257,7 +17257,7 @@ var ScheduleScreen = ({
       cursor: 'pointer',
       marginLeft: 'auto'
     }
-  }, tr('លុប​ highlight​ ទាំង​អស់', 'Clear all highlights'))), !studentMode && (() => {
+  }, tr('លុប​ highlight​ ទាំង​អស់', 'Clear all highlights'))), !studentMode && !bp.mobile && v !== 'week' && (() => {
     if (visNotes.length === 0) return null;
     return React.createElement("div", {
       style: {
