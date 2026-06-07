@@ -13393,14 +13393,19 @@ var DashboardAdmin = () => {
   var clsA = STUDENTS.filter(s => s.cls && s.cls.startsWith('A')).length;
   var clsC = STUDENTS.filter(s => s.cls && s.cls.startsWith('C')).length;
   var maxCls = Math.max(clsA, clsB, clsC, 1);
+  var vehKey = raw => {
+    if (!raw || raw === '—') return null;
+    var v = VEHICLES.find(x => x.id === raw || x.plate === raw);
+    return v ? v.id : String(raw).trim();
+  };
   var activeLessons = todayLessons.filter(l => nowHour >= l.h && nowHour < l.h + (l.len || 1));
   var activeInstIds = [...new Set(activeLessons.map(l => l.instId).filter(Boolean))];
-  var activeVehIds = [...new Set(activeLessons.map(l => l.veh).filter(Boolean))];
+  var activeVehIds = [...new Set(activeLessons.map(l => vehKey(l.veh)).filter(Boolean))];
   var todayInstIds = [...new Set(todayLessons.map(l => l.instId).filter(Boolean))];
-  var todayVehIds = [...new Set(todayLessons.map(l => l.veh).filter(Boolean))];
+  var todayVehIds = [...new Set(todayLessons.map(l => vehKey(l.veh)).filter(Boolean))];
   var todayStudIds = [...new Set(todayLessons.map(l => l.studentId).filter(Boolean))];
   var tmrwInstIds = [...new Set(tomorrowLessons.map(l => l.instId).filter(Boolean))];
-  var tmrwVehIds = [...new Set(tomorrowLessons.map(l => l.veh).filter(Boolean))];
+  var tmrwVehIds = [...new Set(tomorrowLessons.map(l => vehKey(l.veh)).filter(Boolean))];
   var tmrwStudIds = [...new Set(tomorrowLessons.map(l => l.studentId).filter(Boolean))];
   var alerts = [...serviceVeh.map(v => ({
     tone: 'warn',

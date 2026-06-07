@@ -54,17 +54,26 @@ const DashboardAdmin = () => {
   const clsC = STUDENTS.filter(s => s.cls && s.cls.startsWith('C')).length;
   const maxCls = Math.max(clsA, clsB, clsC, 1);
 
+  // Map any lesson's vehicle ref (id OR plate) to a single canonical vehicle id,
+  // so a vehicle used for several lessons in a day counts only ONCE. Excludes
+  // '—'/empty (lessons with no vehicle).
+  const vehKey = (raw) => {
+    if (!raw || raw === '—') return null;
+    const v = VEHICLES.find(x => x.id === raw || x.plate === raw);
+    return v ? v.id : String(raw).trim();
+  };
+
   // Currently-training: lessons whose time window covers the current hour
   const activeLessons = todayLessons.filter(l => nowHour >= l.h && nowHour < l.h + (l.len || 1));
   const activeInstIds = [...new Set(activeLessons.map(l => l.instId).filter(Boolean))];
-  const activeVehIds  = [...new Set(activeLessons.map(l => l.veh).filter(Boolean))];
+  const activeVehIds  = [...new Set(activeLessons.map(l => vehKey(l.veh)).filter(Boolean))];
 
   // Today / Tomorrow at-a-glance totals
   const todayInstIds    = [...new Set(todayLessons.map(l => l.instId).filter(Boolean))];
-  const todayVehIds     = [...new Set(todayLessons.map(l => l.veh).filter(Boolean))];
+  const todayVehIds     = [...new Set(todayLessons.map(l => vehKey(l.veh)).filter(Boolean))];
   const todayStudIds    = [...new Set(todayLessons.map(l => l.studentId).filter(Boolean))];
   const tmrwInstIds     = [...new Set(tomorrowLessons.map(l => l.instId).filter(Boolean))];
-  const tmrwVehIds      = [...new Set(tomorrowLessons.map(l => l.veh).filter(Boolean))];
+  const tmrwVehIds      = [...new Set(tomorrowLessons.map(l => vehKey(l.veh)).filter(Boolean))];
   const tmrwStudIds     = [...new Set(tomorrowLessons.map(l => l.studentId).filter(Boolean))];
 
   // Dynamic alerts
