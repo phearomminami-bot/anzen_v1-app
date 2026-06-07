@@ -47350,7 +47350,7 @@ var SettingsScreen = ({
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
       saveTimer.current = null;
-      if (window.saveAllData) window.saveAllData();
+      if (window.saveAllData) window.saveAllData(true);
     }, 700);
   };
   React.useEffect(() => () => flushSave(), []);

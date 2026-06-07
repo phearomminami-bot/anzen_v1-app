@@ -146,6 +146,10 @@ const SettingsScreen = ({ role, fontSize = 'md', setFontSize }) => {
   // Debounced auto-save: saveAllData() serializes the WHOLE dataset (students,
   // lessons, base64 logo…), which can take 50–150ms. Running it on every
   // keystroke froze typing in Settings fields. Coalesce writes instead.
+  // The debounced auto-save writes localStorage only (skipCloud=true) — pushing
+  // to Supabase on every keystroke-batch is the documented anti-pattern in
+  // data.jsx ("only user-triggered changes push to cloud"). Cloud sync happens
+  // on the explicit Save button (flushSave) and when leaving Settings.
   const saveTimer = React.useRef(null);
   const flushSave = () => {
     if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
@@ -153,7 +157,7 @@ const SettingsScreen = ({ role, fontSize = 'md', setFontSize }) => {
   };
   const queueSave = () => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => { saveTimer.current = null; if (window.saveAllData) window.saveAllData(); }, 700);
+    saveTimer.current = setTimeout(() => { saveTimer.current = null; if (window.saveAllData) window.saveAllData(true); }, 700);
   };
   // Persist any pending edit when leaving Settings.
   React.useEffect(() => () => flushSave(), []);
