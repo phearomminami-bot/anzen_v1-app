@@ -2532,23 +2532,62 @@ const SchoolDocs = ({ student }) => {
   const [newTitle, setNewTitle] = React.useState('');
   const [newNote, setNewNote] = React.useState('');
   const [newDate, setNewDate] = React.useState(new Date().toISOString().slice(0,10));
+  const [newFile, setNewFile] = React.useState(null);   // {data,name,type}
+  const fileRef = React.useRef(null);
 
   const docs = student.schoolDocs || [];
 
+  // Pick an image or PDF → store as a data URL (images are compressed).
+  const onPickFile = (e) => {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    if (!f) return;
+    if (f.type === 'application/pdf' && f.size > 8*1024*1024) {
+      toast(tr('ឯកសារ PDF ធំពេក (អតិបរមា 8MB)','PDF too large (max 8MB)'), 'warn'); return;
+    }
+    const fill = (dataUrl) => {
+      setNewFile({ data: dataUrl, name: f.name, type: f.type });
+      setNewTitle(t => t.trim() ? t : f.name.replace(/\.[^.]+$/, ''));
+    };
+    if (f.type.startsWith('image/') && window.resizeImageFile) {
+      window.resizeImageFile(f, 1600, 1600).then(fill).catch(() => {
+        const r = new FileReader(); r.onload = () => fill(r.result); r.readAsDataURL(f);
+      });
+    } else {
+      const r = new FileReader(); r.onload = () => fill(r.result); r.readAsDataURL(f);
+    }
+  };
+
+  // Open an attached file (image/PDF) reliably in a new tab via a Blob URL.
+  const viewDoc = (d) => {
+    const src = d.file; if (!src) return;
+    try {
+      const [meta, b64] = src.split(',');
+      const mime = (meta.match(/data:(.*?);/) || [])[1] || d.fileType || 'application/octet-stream';
+      const bin = atob(b64), arr = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      const url = URL.createObjectURL(new Blob([arr], { type: mime }));
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (e) { window.open(src, '_blank'); }
+  };
+
   const addDoc = () => {
-    if (!newTitle.trim()) { toast(tr('សូមបំពេញឈ្មោះឯកសារ','Enter document title'), 'warn'); return; }
+    if (!newTitle.trim() && !newFile) { toast(tr('សូមបំពេញឈ្មោះ ឬ ភ្ជាប់ឯកសារ','Enter a title or attach a file'), 'warn'); return; }
     if (!student.schoolDocs) student.schoolDocs = [];
     student.schoolDocs.push({
       id: 'doc-' + Date.now(),
       type: newType,
-      title: newTitle.trim(),
+      title: (newTitle.trim() || (newFile && newFile.name) || 'Document'),
       date: newDate,
       note: newNote.trim(),
+      file:     newFile ? newFile.data : undefined,
+      fileName: newFile ? newFile.name : undefined,
+      fileType: newFile ? newFile.type : undefined,
     });
     if (window.saveAllData) window.saveAllData();
     setAdding(false);
-    setNewTitle('');
-    setNewNote('');
+    setNewTitle(''); setNewNote(''); setNewFile(null);
     forceUpdate();
     toast(tr('បានបន្ថែមឯកសារ','Document added'), 'good');
   };
@@ -2611,8 +2650,24 @@ const SchoolDocs = ({ student }) => {
             <div style={{fontSize:11,color:'var(--ink-2)',marginBottom:4}}>{tr('កំណត់ចំណាំ','Note')}</div>
             <input {...inp} value={newNote} onChange={e => setNewNote(e.target.value)} placeholder={tr('ផ្សេងៗ…','Optional note…')}/>
           </div>
+          {/* File upload — image or PDF */}
+          <div>
+            <div style={{fontSize:11,color:'var(--ink-2)',marginBottom:4}}>{tr('ឯកសារ (រូបភាព ឬ PDF)','File (image or PDF)')}</div>
+            <input ref={fileRef} type="file" accept="image/*,application/pdf" style={{display:'none'}} onChange={onPickFile}/>
+            {newFile ? (
+              <div style={{display:'flex',alignItems:'center',gap:8,padding:'7px 10px',border:'1px solid var(--border)',borderRadius:6,background:'var(--surface)',fontSize:12}}>
+                <Icon name={newFile.type==='application/pdf'?'book':'star'} size={14}/>
+                <span style={{flex:1,minWidth:0,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{newFile.name}</span>
+                <button onClick={()=>setNewFile(null)} title={tr('ដក​ចេញ','Remove')} style={{border:'none',background:'none',cursor:'pointer',color:'var(--ink-3)',fontSize:14,lineHeight:1}}>✕</button>
+              </div>
+            ) : (
+              <Btn kind="ghost" size="sm" onClick={()=>fileRef.current?.click()} icon={<Icon name="plus" size={12}/>}>
+                {tr('ភ្ជាប់ រូប / PDF','Attach image / PDF')}
+              </Btn>
+            )}
+          </div>
           <div style={{display:'flex',gap:8,justifyContent:'flex-end'}}>
-            <Btn kind="ghost" size="sm" onClick={() => setAdding(false)}>{tr('បោះបង់','Cancel')}</Btn>
+            <Btn kind="ghost" size="sm" onClick={() => { setAdding(false); setNewFile(null); }}>{tr('បោះបង់','Cancel')}</Btn>
             <Btn kind="primary" size="sm" onClick={addDoc}>{tr('រក្សាទុក','Save')}</Btn>
           </div>
         </div>
@@ -2687,6 +2742,16 @@ const SchoolDocs = ({ student }) => {
                       <path d="M7 1v8M4 6l3 3 3-3M2 10v2a1 1 0 001 1h8a1 1 0 001-1v-2"/>
                     </svg>
                     PDF
+                  </button>
+                )}
+                {/* View attached file (image/PDF) */}
+                {d.file && (
+                  <button onClick={() => viewDoc(d)} style={{
+                    background:'var(--accent-soft)',border:'1px solid var(--accent)',
+                    cursor:'pointer',padding:'4px 10px',borderRadius:6,flexShrink:0,
+                    display:'flex',alignItems:'center',gap:5,color:'var(--accent)',fontSize:11,fontWeight:600,
+                  }} title={tr('មើល​ឯកសារ','View file')}>
+                    <Icon name="search" size={12}/> {tr('មើល','View')}
                   </button>
                 )}
                 {/* Delete */}
