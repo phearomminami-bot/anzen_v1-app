@@ -39486,6 +39486,7 @@ var SchoolDocs = ({
     toast,
     tr
   } = useAppActions();
+  var bp = useBreakpoint();
   var [, forceUpdate] = React.useReducer(x => x + 1, 0);
   var [adding, setAdding] = React.useState(false);
   var [newType, setNewType] = React.useState('license');
@@ -39768,18 +39769,7 @@ var SchoolDocs = ({
   }, docs.slice().reverse().map(d => {
     var tm = typeMeta(d.type);
     var isInv = d.type === 'invoice';
-    return React.createElement("div", {
-      key: d.id,
-      style: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        padding: '11px 14px',
-        borderRadius: 9,
-        border: '1px solid var(--border)',
-        background: 'var(--surface)'
-      }
-    }, React.createElement("div", {
+    var iconBox = React.createElement("div", {
       style: {
         width: 36,
         height: 36,
@@ -39794,7 +39784,8 @@ var SchoolDocs = ({
       name: tm.icon,
       size: 16,
       color: isInv ? 'var(--good)' : 'var(--accent)'
-    })), React.createElement("div", {
+    }));
+    var info = React.createElement("div", {
       style: {
         flex: 1,
         minWidth: 0
@@ -39803,9 +39794,12 @@ var SchoolDocs = ({
       style: {
         fontSize: 13,
         fontWeight: 600,
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
+        lineHeight: 1.35,
+        ...(bp.mobile ? {} : {
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        })
       }
     }, d.title), React.createElement("div", {
       style: {
@@ -39824,7 +39818,8 @@ var SchoolDocs = ({
       style: {
         fontStyle: 'italic'
       }
-    }, d.note))), isInv && d.amount && React.createElement("div", {
+    }, d.note)));
+    var actions = React.createElement(React.Fragment, null, isInv && d.amount && React.createElement("div", {
       style: {
         padding: '4px 10px',
         borderRadius: 6,
@@ -39921,6 +39916,44 @@ var SchoolDocs = ({
       strokeLinecap: "round",
       fill: "none"
     }))));
+    if (bp.mobile) return React.createElement("div", {
+      key: d.id,
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+        padding: '11px 14px',
+        borderRadius: 9,
+        border: '1px solid var(--border)',
+        background: 'var(--surface)'
+      }
+    }, React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 12,
+        alignItems: 'flex-start'
+      }
+    }, iconBox, info), React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        gap: 8,
+        flexWrap: 'wrap'
+      }
+    }, actions));
+    return React.createElement("div", {
+      key: d.id,
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        padding: '11px 14px',
+        borderRadius: 9,
+        border: '1px solid var(--border)',
+        background: 'var(--surface)'
+      }
+    }, iconBox, info, actions);
   })));
 };
 var printCertificate = s => {

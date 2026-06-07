@@ -2583,6 +2583,7 @@ const DOC_TYPES = [
 
 const SchoolDocs = ({ student }) => {
   const { toast, tr } = useAppActions();
+  const bp = useBreakpoint();
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   const [adding, setAdding] = React.useState(false);
   const [newType, setNewType] = React.useState('license');
@@ -2744,83 +2745,54 @@ const SchoolDocs = ({ student }) => {
           {docs.slice().reverse().map(d => {
             const tm = typeMeta(d.type);
             const isInv = d.type === 'invoice';
-            return (
-              <div key={d.id} style={{
-                display:'flex',alignItems:'center',gap:12,
-                padding:'11px 14px',borderRadius:9,
-                border:'1px solid var(--border)',
-                background:'var(--surface)',
-              }}>
-                {/* Icon */}
-                <div style={{
-                  width:36,height:36,borderRadius:8,flexShrink:0,
-                  display:'flex',alignItems:'center',justifyContent:'center',
-                  background: isInv ? 'var(--good)18' : 'var(--accent-soft)',
-                }}>
-                  <Icon name={tm.icon} size={16} color={isInv ? 'var(--good)' : 'var(--accent)'}/>
+            const iconBox = (
+              <div style={{width:36,height:36,borderRadius:8,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',background: isInv ? 'var(--good)18' : 'var(--accent-soft)'}}>
+                <Icon name={tm.icon} size={16} color={isInv ? 'var(--good)' : 'var(--accent)'}/>
+              </div>
+            );
+            const info = (
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13,fontWeight:600,lineHeight:1.35,...(bp.mobile?{}:{whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'})}}>{d.title}</div>
+                <div style={{fontSize:11,color:'var(--ink-3)',marginTop:1,display:'flex',gap:8,flexWrap:'wrap'}}>
+                  <span>{tm.km} · {tm.en}</span>
+                  {d.date && <span style={{fontFamily:'"JetBrains Mono",monospace'}}>{d.date}</span>}
+                  {d.note && <span style={{fontStyle:'italic'}}>{d.note}</span>}
                 </div>
-                {/* Info */}
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:13,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{d.title}</div>
-                  <div style={{fontSize:11,color:'var(--ink-3)',marginTop:1,display:'flex',gap:8,flexWrap:'wrap'}}>
-                    <span>{tm.km} · {tm.en}</span>
-                    {d.date && <span style={{fontFamily:'"JetBrains Mono",monospace'}}>{d.date}</span>}
-                    {d.note && <span style={{fontStyle:'italic'}}>{d.note}</span>}
-                  </div>
-                </div>
-                {/* Amount badge for invoices */}
+              </div>
+            );
+            const actions = (
+              <>
                 {isInv && d.amount && (
-                  <div style={{
-                    padding:'4px 10px',borderRadius:6,fontSize:12,fontWeight:700,
-                    background:'var(--good)18',color:'var(--good)',
-                    border:'1px solid var(--good)40',whiteSpace:'nowrap',flexShrink:0,
-                    fontFamily:'"JetBrains Mono",monospace',
-                  }}>
-                    ${d.amount}
-                  </div>
+                  <div style={{padding:'4px 10px',borderRadius:6,fontSize:12,fontWeight:700,background:'var(--good)18',color:'var(--good)',border:'1px solid var(--good)40',whiteSpace:'nowrap',flexShrink:0,fontFamily:'"JetBrains Mono",monospace'}}>${d.amount}</div>
                 )}
-                {/* Status badge */}
                 {d.status && (
-                  <div style={{
-                    padding:'3px 8px',borderRadius:5,fontSize:11,fontWeight:600,flexShrink:0,
-                    background: d.status==='Paid'?'var(--good)':'var(--warn)',
-                    color:'#fff',
-                  }}>{d.status}</div>
+                  <div style={{padding:'3px 8px',borderRadius:5,fontSize:11,fontWeight:600,flexShrink:0,background: d.status==='Paid'?'var(--good)':'var(--warn)',color:'#fff'}}>{d.status}</div>
                 )}
-                {/* Download PDF — only for invoices */}
                 {d.type === 'invoice' && (
-                  <button onClick={() => printStudentInvoiceDoc(d, student)} style={{
-                    background:'var(--accent-soft)',border:'1px solid var(--accent)',
-                    cursor:'pointer',padding:'4px 10px',borderRadius:6,flexShrink:0,
-                    display:'flex',alignItems:'center',gap:5,
-                    color:'var(--accent)',fontSize:11,fontWeight:600,
-                  }} title={tr('ទាញយក PDF','Download PDF')}>
-                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <path d="M7 1v8M4 6l3 3 3-3M2 10v2a1 1 0 001 1h8a1 1 0 001-1v-2"/>
-                    </svg>
+                  <button onClick={() => printStudentInvoiceDoc(d, student)} style={{background:'var(--accent-soft)',border:'1px solid var(--accent)',cursor:'pointer',padding:'4px 10px',borderRadius:6,flexShrink:0,display:'flex',alignItems:'center',gap:5,color:'var(--accent)',fontSize:11,fontWeight:600}} title={tr('ទាញយក PDF','Download PDF')}>
+                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M7 1v8M4 6l3 3 3-3M2 10v2a1 1 0 001 1h8a1 1 0 001-1v-2"/></svg>
                     PDF
                   </button>
                 )}
-                {/* View attached file (image/PDF) */}
                 {d.file && (
-                  <button onClick={() => viewDoc(d)} style={{
-                    background:'var(--accent-soft)',border:'1px solid var(--accent)',
-                    cursor:'pointer',padding:'4px 10px',borderRadius:6,flexShrink:0,
-                    display:'flex',alignItems:'center',gap:5,color:'var(--accent)',fontSize:11,fontWeight:600,
-                  }} title={tr('មើល​ឯកសារ','View file')}>
+                  <button onClick={() => viewDoc(d)} style={{background:'var(--accent-soft)',border:'1px solid var(--accent)',cursor:'pointer',padding:'4px 10px',borderRadius:6,flexShrink:0,display:'flex',alignItems:'center',gap:5,color:'var(--accent)',fontSize:11,fontWeight:600}} title={tr('មើល​ឯកសារ','View file')}>
                     <Icon name="search" size={12}/> {tr('មើល','View')}
                   </button>
                 )}
-                {/* Delete */}
-                <button onClick={() => removeDoc(d.id)} style={{
-                  background:'none',border:'none',cursor:'pointer',padding:'4px',
-                  color:'var(--ink-3)',borderRadius:5,flexShrink:0,
-                  display:'flex',alignItems:'center',justifyContent:'center',
-                }} title={tr('លុប','Remove')}>
-                  <svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor">
-                    <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/>
-                  </svg>
+                <button onClick={() => removeDoc(d.id)} style={{background:'none',border:'none',cursor:'pointer',padding:'4px',color:'var(--ink-3)',borderRadius:5,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}} title={tr('លុប','Remove')}>
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/></svg>
                 </button>
+              </>
+            );
+            if (bp.mobile) return (
+              <div key={d.id} style={{display:'flex',flexDirection:'column',gap:10,padding:'11px 14px',borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)'}}>
+                <div style={{display:'flex',gap:12,alignItems:'flex-start'}}>{iconBox}{info}</div>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'flex-end',gap:8,flexWrap:'wrap'}}>{actions}</div>
+              </div>
+            );
+            return (
+              <div key={d.id} style={{display:'flex',alignItems:'center',gap:12,padding:'11px 14px',borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)'}}>
+                {iconBox}{info}{actions}
               </div>
             );
           })}
