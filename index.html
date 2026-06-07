@@ -471,12 +471,12 @@ window.__trRegistry = {
   "No lessons scheduled": "គ្មាន​មេរៀន",
   "Available slots": "ម៉ោង​ដែល​អាច​កក់​បាន",
   "Admin": "នាយក",
-  "PDF": "PDF",
-  "+ Lesson": "+ មេរៀន",
   "◀ Prev": "◀ មុន",
   "Next ▶": "បន្ទាប់ ▶",
+  "PDF": "PDF",
   "+ Note": "+ ចំណាំ",
   "New lesson": "មេរៀន​ថ្មី",
+  "Lesson": "មេរៀន",
   "All": "ទាំងអស់",
   "Clear": "សម្អាត",
   "Stop": "ឈប់",
@@ -817,7 +817,6 @@ window.__trRegistry = {
   "Hours": "ម៉ោង",
   "Tap to toggle status": "ចុច​ដើម្បី​ប្ដូរ​ស្ថានភាព",
   "Missing": "មិន​ទាន់",
-  "Lesson": "មេរៀន",
   "Enroll": "ចុះ​ឈ្មោះ​",
   "Filter": "តម្រង",
   "Avg mock": "មធ្យម",
@@ -16856,9 +16855,14 @@ var ScheduleScreen = ({
   } : selStyle;
   var MobileDayNav = () => {
     var d = new Date(mobileDate + 'T00:00:00');
-    var dayName = tr(KM_MONTHS[d.getMonth()], EN_MONTHS[d.getMonth()]);
     var isToday = mobileDate === today;
-    var dayOfWeek = ['អា', 'ច', 'អ', 'ព', 'ព្រ', 'សុ', 'ស'][d.getDay()];
+    var dd = mobileDate.slice(8, 10);
+    var yyyy = mobileDate.slice(0, 4);
+    var dowKm = ['អា', 'ច', 'អ', 'ព', 'ព្រ', 'សុ', 'ស'][d.getDay()];
+    var dowEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()];
+    var monKm = KM_MONTHS[d.getMonth()];
+    var monEn = (EN_MONTHS[d.getMonth()] || '').slice(0, 3);
+    var label = tr(`${dowKm} - ${dd}/${monKm}/${yyyy}`, `${dowEn} - ${dd}/${monEn}/${yyyy}`);
     return React.createElement("div", {
       style: {
         display: 'flex',
@@ -16893,14 +16897,7 @@ var ScheduleScreen = ({
         color: 'var(--ink)',
         fontFamily: 'var(--font-km)'
       }
-    }, dayOfWeek, " \xB7 ", parseInt(mobileDate.slice(8)), " ", dayName), isToday && React.createElement("div", {
-      style: {
-        fontSize: 10,
-        color: 'var(--good)',
-        fontWeight: 600,
-        marginTop: 1
-      }
-    }, "\u1790\u17D2\u1784\u17C3\u200B\u1793\u17C1\u17C7 \xB7 Today")), React.createElement("button", {
+    }, label)), React.createElement("button", {
       onClick: () => {
         setDayOffset(0);
       },
@@ -16935,57 +16932,9 @@ var ScheduleScreen = ({
       gap: 14
     }
   }, React.createElement(SectionTitle, {
-    km: `កាលវិភាគ · ${labelKm}`,
-    en: `${studentMode ? 'My Schedule' : 'Schedule'} · ${labelEn}`,
-    action: bp.mobile ? React.createElement("div", {
-      style: {
-        display: 'flex',
-        gap: 8,
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        justifyContent: 'flex-end'
-      }
-    }, !studentMode && React.createElement(Btn, {
-      kind: "ghost",
-      size: "md",
-      onClick: () => setNoteModal({
-        date: mobileDate,
-        time: '09:00',
-        text: '',
-        author: meName,
-        invited: []
-      }),
-      icon: React.createElement(Icon, {
-        name: "bell",
-        size: 14
-      })
-    }, tr('ចំណាំ', 'Note')), React.createElement(Btn, {
-      kind: "ghost",
-      size: "md",
-      onClick: () => generateSchedulePDF({
-        lessons: visibleLessons,
-        weekDates: allWeekDates,
-        viewType: 'week',
-        labelEn,
-        instFilter,
-        vehFilter,
-        studentFilter
-      }),
-      icon: React.createElement(Icon, {
-        name: "download",
-        size: 14
-      })
-    }, tr('PDF', 'PDF')), can(role, 'create', 'lesson') && React.createElement(Btn, {
-      kind: "primary",
-      size: "md",
-      onClick: () => openForm('newLesson', {
-        date: mobileDate
-      }),
-      icon: React.createElement(Icon, {
-        name: "plus",
-        size: 14
-      })
-    }, tr('+ មេរៀន', '+ Lesson'))) : React.createElement("div", {
+    km: bp.mobile ? 'កាលវិភាគ' : `កាលវិភាគ · ${labelKm}`,
+    en: bp.mobile ? studentMode ? 'My Schedule' : 'Schedule' : `${studentMode ? 'My Schedule' : 'Schedule'} · ${labelEn}`,
+    action: bp.mobile ? null : React.createElement("div", {
       style: {
         display: 'flex',
         gap: 8,
@@ -17063,7 +17012,57 @@ var ScheduleScreen = ({
         size: 14
       })
     }, tr('មេរៀន​ថ្មី', 'New lesson')))
-  }), bp.mobile && React.createElement(MobileDayNav, null), !studentMode && !instructorMode && !bp.mobile && React.createElement("div", {
+  }), bp.mobile && React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      alignItems: 'center'
+    }
+  }, !studentMode && React.createElement(Btn, {
+    kind: "ghost",
+    size: "md",
+    onClick: () => setNoteModal({
+      date: mobileDate,
+      time: '09:00',
+      text: '',
+      author: meName,
+      invited: []
+    }),
+    icon: React.createElement(Icon, {
+      name: "bell",
+      size: 14
+    })
+  }, tr('ចំណាំ', 'Note')), React.createElement(Btn, {
+    kind: "ghost",
+    size: "md",
+    onClick: () => generateSchedulePDF({
+      lessons: visibleLessons,
+      weekDates: allWeekDates,
+      viewType: 'week',
+      labelEn,
+      instFilter,
+      vehFilter,
+      studentFilter
+    }),
+    icon: React.createElement(Icon, {
+      name: "download",
+      size: 14
+    })
+  }, tr('PDF', 'PDF')), can(role, 'create', 'lesson') && React.createElement(Btn, {
+    kind: "primary",
+    size: "md",
+    style: {
+      flex: 1,
+      justifyContent: 'center'
+    },
+    onClick: () => openForm('newLesson', {
+      date: mobileDate
+    }),
+    icon: React.createElement(Icon, {
+      name: "plus",
+      size: 14
+    })
+  }, tr('មេរៀន', 'Lesson'))), bp.mobile && React.createElement(MobileDayNav, null), !studentMode && !instructorMode && !bp.mobile && React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,

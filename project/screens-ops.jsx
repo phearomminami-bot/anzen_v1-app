@@ -668,15 +668,19 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   // Mobile: day navigation bar
   const MobileDayNav = () => {
     const d = new Date(mobileDate + 'T00:00:00');
-    const dayName = tr(KM_MONTHS[d.getMonth()], EN_MONTHS[d.getMonth()]);
     const isToday = mobileDate === today;
-    const dayOfWeek = ['អា','ច','អ','ព','ព្រ','សុ','ស'][d.getDay()];
+    const dd   = mobileDate.slice(8,10);
+    const yyyy = mobileDate.slice(0,4);
+    const dowKm = ['អា','ច','អ','ព','ព្រ','សុ','ស'][d.getDay()];
+    const dowEn = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+    const monKm = KM_MONTHS[d.getMonth()];
+    const monEn = (EN_MONTHS[d.getMonth()] || '').slice(0,3);
+    const label = tr(`${dowKm} - ${dd}/${monKm}/${yyyy}`, `${dowEn} - ${dd}/${monEn}/${yyyy}`);
     return (
       <div style={{display:'flex',alignItems:'center',gap:8,background:'var(--surface)',border:'1px solid var(--border)',borderRadius:10,padding:'8px 10px'}}>
         <button onClick={()=>setDayOffset(o=>o-1)} style={{padding:'6px 12px',borderRadius:7,border:'1px solid var(--border)',background:'var(--surface-muted)',cursor:'pointer',fontSize:14,fontWeight:600,color:'var(--ink-2)'}}>◀</button>
         <div style={{flex:1,textAlign:'center'}}>
-          <div style={{fontSize:13,fontWeight:700,color:'var(--ink)',fontFamily:'var(--font-km)'}}>{dayOfWeek} · {parseInt(mobileDate.slice(8))} {dayName}</div>
-          {isToday && <div style={{fontSize:10,color:'var(--good)',fontWeight:600,marginTop:1}}>ថ្ងៃ​នេះ · Today</div>}
+          <div style={{fontSize:13,fontWeight:700,color:'var(--ink)',fontFamily:'var(--font-km)'}}>{label}</div>
         </div>
         <button onClick={()=>{ setDayOffset(0); }} style={{padding:'5px 10px',borderRadius:7,border:'1px solid var(--border)',background:isToday?'var(--accent)':'var(--surface-muted)',color:isToday?'#fff':'var(--ink-2)',cursor:'pointer',fontSize:11,fontWeight:600}}>ថ្ងៃ​នេះ</button>
         <button onClick={()=>setDayOffset(o=>o+1)} style={{padding:'6px 12px',borderRadius:7,border:'1px solid var(--border)',background:'var(--surface-muted)',cursor:'pointer',fontSize:14,fontWeight:600,color:'var(--ink-2)'}}>▶</button>
@@ -687,15 +691,9 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   return (
     <div style={{display:'flex',flexDirection:'column',gap:14}}>
       <SectionTitle
-        km={`កាលវិភាគ · ${labelKm}`}
-        en={`${studentMode?'My Schedule':'Schedule'} · ${labelEn}`}
-        action={bp.mobile ? (
-          <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',justifyContent:'flex-end'}}>
-            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:mobileDate,time:'09:00',text:'',author:meName,invited:[]})} icon={<Icon name="bell" size={14}/>}>{tr('ចំណាំ','Note')}</Btn>}
-            <Btn kind="ghost" size="md" onClick={()=>generateSchedulePDF({lessons:visibleLessons,weekDates:allWeekDates,viewType:'week',labelEn,instFilter,vehFilter,studentFilter})} icon={<Icon name="download" size={14}/>}>{tr('PDF','PDF')}</Btn>
-            {can(role,'create','lesson') && <Btn kind="primary" size="md" onClick={()=>openForm('newLesson',{date:mobileDate})} icon={<Icon name="plus" size={14}/>}>{tr('+ មេរៀន','+ Lesson')}</Btn>}
-          </div>
-        ) : (
+        km={bp.mobile ? 'កាលវិភាគ' : `កាលវិភាគ · ${labelKm}`}
+        en={bp.mobile ? (studentMode?'My Schedule':'Schedule') : `${studentMode?'My Schedule':'Schedule'} · ${labelEn}`}
+        action={bp.mobile ? null : (
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
             <div style={{display:'flex',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:8,padding:2}}>
               {['week','month','agenda'].map(k => (
@@ -716,6 +714,15 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
           </div>
         )}
       />
+
+      {/* Mobile: action buttons in one row (Note · PDF · Lesson) */}
+      {bp.mobile && (
+        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:mobileDate,time:'09:00',text:'',author:meName,invited:[]})} icon={<Icon name="bell" size={14}/>}>{tr('ចំណាំ','Note')}</Btn>}
+          <Btn kind="ghost" size="md" onClick={()=>generateSchedulePDF({lessons:visibleLessons,weekDates:allWeekDates,viewType:'week',labelEn,instFilter,vehFilter,studentFilter})} icon={<Icon name="download" size={14}/>}>{tr('PDF','PDF')}</Btn>
+          {can(role,'create','lesson') && <Btn kind="primary" size="md" style={{flex:1,justifyContent:'center'}} onClick={()=>openForm('newLesson',{date:mobileDate})} icon={<Icon name="plus" size={14}/>}>{tr('មេរៀន','Lesson')}</Btn>}
+        </div>
+      )}
 
       {/* Mobile: day nav bar */}
       {bp.mobile && <MobileDayNav/>}
