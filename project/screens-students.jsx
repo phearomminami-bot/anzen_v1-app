@@ -1431,10 +1431,11 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
     });
   };
 
-  const inp = {style:{width:'100%',padding:'7px 10px',border:'1px solid var(--border)',borderRadius:6,fontSize:13,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',boxSizing:'border-box'}};
-  const sel = {style:{width:'100%',padding:'7px 10px',border:'1px solid var(--border)',borderRadius:6,fontSize:13,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',boxSizing:'border-box'}};
-  const g2 = {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:bp.mobile?'14px 16px':10,marginBottom:bp.mobile?14:12}};
-  const g3 = {style:{display:'grid',gridTemplateColumns:bp.mobile?'1fr 1fr':'1fr 1fr 1fr',gap:bp.mobile?'14px 16px':10,marginBottom:bp.mobile?14:12}};
+  const inp = {style:{width:'100%',minWidth:0,padding:'7px 10px',border:'1px solid var(--border)',borderRadius:6,fontSize:13,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',boxSizing:'border-box'}};
+  const sel = {style:{width:'100%',minWidth:0,padding:'7px 10px',border:'1px solid var(--border)',borderRadius:6,fontSize:13,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',boxSizing:'border-box'}};
+  // On mobile, one field per row (g2) — guarantees date boxes never touch.
+  const g2 = {style:{display:'grid',gridTemplateColumns:bp.mobile?'1fr':'1fr 1fr',gap:12,marginBottom:12}};
+  const g3 = {style:{display:'grid',gridTemplateColumns:bp.mobile?'1fr 1fr':'1fr 1fr 1fr',gap:bp.mobile?'12px 14px':10,marginBottom:12}};
   const secTitle = (t) => (
     <div style={{font:'600 10px/1 "JetBrains Mono",monospace',letterSpacing:'.08em',textTransform:'uppercase',color:'var(--ink-3)',margin:'18px 0 10px'}}>{t}</div>
   );
