@@ -77,6 +77,13 @@ const StudentsScreenV2 = () => {
   const [mobileEdit, setMobileEdit] = React.useState(false);
   const [openSections, setOpenSections] = React.useState({bio:true});
 
+  // Swipe from the left edge → go back (edit → profile → list)
+  const mobileBack = React.useCallback(() => {
+    if (mobileEdit) setMobileEdit(false);
+    else if (mobileProfileId) setMobileProfileId(null);
+  }, [mobileEdit, mobileProfileId]);
+  useEdgeSwipeBack(bp.mobile && (mobileEdit || mobileProfileId) ? mobileBack : null);
+
   React.useEffect(() => {
     window.__notifyStudentsChanged = forceUpdate;
     return () => { delete window.__notifyStudentsChanged; };

@@ -383,6 +383,35 @@ const useBreakpoint = () => {
   return bp;
 };
 
+// ── Edge-swipe-to-go-back gesture (native-app feel on mobile) ──────────────
+// Swipe right starting from the left ~28px of the screen → calls onBack().
+// Pass a falsy onBack to disable (e.g. when no sub-view is open).
+const useEdgeSwipeBack = (onBack) => {
+  React.useEffect(() => {
+    if (!onBack) return;
+    let sx = null, sy = null, t = 0;
+    const onStart = (e) => {
+      const x = e.touches[0].clientX;
+      if (x <= 28) { sx = x; sy = e.touches[0].clientY; t = Date.now(); }
+      else sx = null;
+    };
+    const onEnd = (e) => {
+      if (sx === null) return;
+      const dx = e.changedTouches[0].clientX - sx;
+      const dy = Math.abs(e.changedTouches[0].clientY - sy);
+      const dt = Date.now() - t;
+      sx = null;
+      if (dx > 70 && dy < 55 && dt < 600) onBack();
+    };
+    window.addEventListener('touchstart', onStart, { passive: true });
+    window.addEventListener('touchend', onEnd, { passive: true });
+    return () => {
+      window.removeEventListener('touchstart', onStart);
+      window.removeEventListener('touchend', onEnd);
+    };
+  }, [onBack]);
+};
+
 // ── Auto-backup via File System Access API (Chrome/Edge) ──────────────────
 const _abOpenDB = () => new Promise((res, rej) => {
   const r = indexedDB.open('anzen_ab', 1);

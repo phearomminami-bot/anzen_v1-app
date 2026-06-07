@@ -3157,6 +3157,40 @@ var useBreakpoint = () => {
   }, []);
   return bp;
 };
+var useEdgeSwipeBack = onBack => {
+  React.useEffect(() => {
+    if (!onBack) return;
+    var sx = null,
+      sy = null,
+      t = 0;
+    var onStart = e => {
+      var x = e.touches[0].clientX;
+      if (x <= 28) {
+        sx = x;
+        sy = e.touches[0].clientY;
+        t = Date.now();
+      } else sx = null;
+    };
+    var onEnd = e => {
+      if (sx === null) return;
+      var dx = e.changedTouches[0].clientX - sx;
+      var dy = Math.abs(e.changedTouches[0].clientY - sy);
+      var dt = Date.now() - t;
+      sx = null;
+      if (dx > 70 && dy < 55 && dt < 600) onBack();
+    };
+    window.addEventListener('touchstart', onStart, {
+      passive: true
+    });
+    window.addEventListener('touchend', onEnd, {
+      passive: true
+    });
+    return () => {
+      window.removeEventListener('touchstart', onStart);
+      window.removeEventListener('touchend', onEnd);
+    };
+  }, [onBack]);
+};
 var _abOpenDB = () => new Promise((res, rej) => {
   var r = indexedDB.open('anzen_ab', 1);
   r.onupgradeneeded = e => e.target.result.createObjectStore('h');
@@ -33978,6 +34012,10 @@ var StudentsScreenV2 = () => {
   var [openSections, setOpenSections] = React.useState({
     bio: true
   });
+  var mobileBack = React.useCallback(() => {
+    if (mobileEdit) setMobileEdit(false);else if (mobileProfileId) setMobileProfileId(null);
+  }, [mobileEdit, mobileProfileId]);
+  useEdgeSwipeBack(bp.mobile && (mobileEdit || mobileProfileId) ? mobileBack : null);
   React.useEffect(() => {
     window.__notifyStudentsChanged = forceUpdate;
     return () => {
