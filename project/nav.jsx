@@ -232,14 +232,11 @@ const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
     <>
       {menuOpen && (
         <div style={{position:'fixed',inset:0,background:'var(--bg)',zIndex:200,display:'flex',flexDirection:'column',overflow:'hidden'}}>
-          <div style={{padding:'16px 20px',display:'flex',justifyContent:'space-between',alignItems:'center',borderBottom:'1px solid var(--border)',flexShrink:0,background:'var(--surface)'}}>
+          <div style={{padding:'16px 20px',display:'flex',alignItems:'center',borderBottom:'1px solid var(--border)',flexShrink:0,background:'var(--surface)'}}>
             <div style={{display:'flex',alignItems:'center',gap:10}}>
               {ss?.logo?<img src={ss.logo} style={{width:28,height:28,borderRadius:6,objectFit:'cover'}} alt=""/>:<Logo size={28}/>}
               <div style={{fontSize:16,fontWeight:700}}>{ss?.name||'Anzen'}</div>
             </div>
-            <button onClick={close} style={{width:36,height:36,border:'1px solid var(--border)',background:'var(--surface-muted)',borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'var(--ink-2)'}}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
-            </button>
           </div>
           <nav style={{flex:1,padding:'10px 14px',overflowY:'auto'}}>
             {items.map(it=>(
@@ -254,8 +251,12 @@ const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
               </button>
             ))}
           </nav>
-          <div style={{padding:'12px 16px',borderTop:'1px solid var(--border)',flexShrink:0,paddingBottom:'calc(12px + env(safe-area-inset-bottom,0px))'}}>
+          <div style={{padding:'12px 16px',borderTop:'1px solid var(--border)',flexShrink:0,paddingBottom:'calc(12px + env(safe-area-inset-bottom,0px))',display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}>
             <UserPill role={role} onLogout={()=>{close();onLogout();}} compact/>
+            <button onClick={close} style={{display:'flex',alignItems:'center',gap:8,padding:'10px 18px',border:'1px solid var(--border)',background:'var(--surface-muted)',borderRadius:12,cursor:'pointer',color:'var(--ink-2)',fontSize:14,fontWeight:600,fontFamily:'inherit',flexShrink:0}}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              {tr('បិទ','Close')}
+            </button>
           </div>
         </div>
       )}
