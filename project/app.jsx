@@ -419,7 +419,7 @@ function App() {
     if (bp.mobile) {
       return (
         <div style={{display:'flex',flexDirection:'column',minHeight:'100svh',width:'100vw',background:'var(--bg)'}}>
-          <main style={{flex:1,overflow:'auto',padding:'12px 14px',paddingBottom:72}}>{screens[current]}</main>
+          <main style={{flex:1,overflow:'auto',padding:'12px 14px',paddingBottom:'calc(72px + env(safe-area-inset-bottom,0px))'}}>{screens[current]}</main>
           <MobileBottomBar items={items} current={current} onGo={setCurrent} role={role} onLogout={logout}/>
         </div>
       );
