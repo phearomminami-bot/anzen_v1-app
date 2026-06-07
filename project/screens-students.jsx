@@ -288,6 +288,7 @@ const StudentsScreenV2 = () => {
               <InfoPair label={tr('គ្រូ','Instructor')} val={inst?.name || inst?.en}/>
               <InfoPair label={tr('ប្រអប់លេខ','Trans.')} val={s.trans}/>
               <InfoPair label={tr('ស្ថានភាព','Status')} val={s.status}/>
+              <InfoPair label={tr('លេខ​បណ្ណ​បើកបរ','License No.')} val={s.license_no}/>
             </div>
           </CvSection>
 
@@ -799,6 +800,7 @@ const BiographyCard = ({ s, onSave }) => {
   const [nationality, setNationality] = React.useState(s.nationality   || 'ខ្មែរ');
   const [phone,       setPhone]       = React.useState(s.phone         || '');
   const [telegram,    setTelegram]    = React.useState(s.telegram      || '');
+  const [licenseNo,   setLicenseNo]   = React.useState(s.license_no    || '');
   const [eyeLeft,     setEyeLeft]     = React.useState(s.eye_left      || '');
   const [eyeRight,    setEyeRight]    = React.useState(s.eye_right     || '');
   const [eyeBoth,     setEyeBoth]     = React.useState(s.eye_both      || '');
@@ -818,7 +820,7 @@ const BiographyCard = ({ s, onSave }) => {
     if (editing) return;
     setName(s.name || ''); setEn(s.en || ''); setGender(s.gender || 'M');
     setAge(String(s.age || '')); setNationality(s.nationality || 'ខ្មែរ');
-    setPhone(s.phone || ''); setTelegram(s.telegram || ''); setEyeLeft(s.eye_left || ''); setEyeRight(s.eye_right || ''); setEyeBoth(s.eye_both || ''); setGlasses(s.glasses || 'មិនពាក់');
+    setPhone(s.phone || ''); setTelegram(s.telegram || ''); setLicenseNo(s.license_no || ''); setEyeLeft(s.eye_left || ''); setEyeRight(s.eye_right || ''); setEyeBoth(s.eye_both || ''); setGlasses(s.glasses || 'មិនពាក់');
     setAddrHouse(s.addr_house || ''); setAddrStreet(s.addr_street || '');
     setAddrVillage(s.addr_village || ''); setAddrCommune(s.addr_commune || '');
     setAddrDist(s.addr_district || s.district || ''); setAddrProv(s.addr_province || '');
@@ -829,7 +831,7 @@ const BiographyCard = ({ s, onSave }) => {
     setEditing(false);
     setName(s.name || ''); setEn(s.en || ''); setGender(s.gender || 'M');
     setAge(String(s.age || '')); setNationality(s.nationality || 'ខ្មែរ');
-    setPhone(s.phone || ''); setTelegram(s.telegram || ''); setEyeLeft(s.eye_left || ''); setEyeRight(s.eye_right || ''); setEyeBoth(s.eye_both || ''); setGlasses(s.glasses || 'មិនពាក់');
+    setPhone(s.phone || ''); setTelegram(s.telegram || ''); setLicenseNo(s.license_no || ''); setEyeLeft(s.eye_left || ''); setEyeRight(s.eye_right || ''); setEyeBoth(s.eye_both || ''); setGlasses(s.glasses || 'មិនពាក់');
     setAddrHouse(s.addr_house || ''); setAddrStreet(s.addr_street || '');
     setAddrVillage(s.addr_village || ''); setAddrCommune(s.addr_commune || '');
     setAddrDist(s.addr_district || s.district || ''); setAddrProv(s.addr_province || '');
@@ -840,7 +842,7 @@ const BiographyCard = ({ s, onSave }) => {
     onSave(s.id, {
       name: name.trim() || s.name, en: en.trim(), gender,
       age: parseInt(age) || s.age || 24, nationality: nationality.trim(),
-      phone: phone.trim(), telegram: telegram.trim(), eye_left: eyeLeft, eye_right: eyeRight, eye_both: eyeBoth, glasses,
+      phone: phone.trim(), telegram: telegram.trim(), license_no: licenseNo.trim(), eye_left: eyeLeft, eye_right: eyeRight, eye_both: eyeBoth, glasses,
       addr_house: addrHouse.trim(), addr_street: addrStreet.trim(),
       addr_village: addrVillage.trim(), addr_commune: addrCommune.trim(),
       addr_district: addrDist.trim(), addr_province: addrProv.trim(),
@@ -890,7 +892,7 @@ const BiographyCard = ({ s, onSave }) => {
         <div {...g2}>
           <div><Lbl>លេខ​ទូរស័ព្ទ · Phone</Lbl><input {...inp} value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+855 12 000 000"/></div>
           <div><Lbl>Telegram Chat ID</Lbl><input {...inp} value={telegram} onChange={e=>setTelegram(e.target.value)} placeholder="123456789"/></div>
-          <div/>
+          <div><Lbl>លេខ​បណ្ណ​បើកបរ · License No.</Lbl><input {...inp} value={licenseNo} onChange={e=>setLicenseNo(e.target.value)} placeholder="01234567"/></div>
           <div/>
         </div>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:8}}>
@@ -965,6 +967,7 @@ const BiographyCard = ({ s, onSave }) => {
     {l:'ជនជាតិ',         v: s.nationality                              || '—'},
     {l:'លេខ​ទូរស័ព្ទ',    v: s.phone                                   || '—'},
     {l:'Telegram',       v: s.telegram                                || '—'},
+    {l:'លេខ​បណ្ណ​បើកបរ',  v: s.license_no                              || '—'},
     {l:'ភ្នែកឆ្វេង',     v: s.eye_left                                || '—'},
     {l:'ភ្នែកស្ដាំ',      v: s.eye_right                               || '—'},
     {l:'ភ្នែកទាំងពីរ',    v: s.eye_both                                || '—'},
@@ -1317,6 +1320,7 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
   const [phone,   setPhone]   = React.useState(s.phone   || '');
   const [telegram,setTelegram]= React.useState(s.telegram|| '');
   const [email,   setEmail]   = React.useState(s.email   || '');
+  const [licenseNo, setLicenseNo] = React.useState(s.license_no || '');
 
   const [nationality,   setNationality]   = React.useState(s.nationality   || 'ខ្មែរ');
   const [eyeLeft,       setEyeLeft]       = React.useState(s.eye_left      || '');
@@ -1394,6 +1398,7 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
       phone:    phone.trim(),
       telegram: telegram.trim(),
       email:    email.trim(),
+      license_no:    licenseNo.trim(),
       nationality:   nationality.trim(),
       eye_left:      eyeLeft,
       eye_right:     eyeRight,
@@ -1487,6 +1492,7 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
             <option value="SSW">SSW</option>
           </select>
         </SEField>
+        <SEField label={tr('លេខ​បណ្ណ​បើកបរ','Driver license No.')}><input {...inp} value={licenseNo} onChange={e=>setLicenseNo(e.target.value)} placeholder={tr('ឧ. 01234567','e.g. 01234567')}/></SEField>
       </div>
 
       {secTitle(tr('ប្រវត្តិ','BIOGRAPHY'))}

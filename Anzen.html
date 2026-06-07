@@ -211,6 +211,8 @@ window.__trRegistry = {
   "Study shift *": "វេនសិក្សា *",
   "Phone *": "លេខទូរស័ព្ទ *",
   "Email": "អ៊ីមែល",
+  "Driver license No.": "លេខ​បណ្ណ​បើកបរ",
+  "e.g. 01234567": "ឧ. 01234567",
   "Left Eye": "ភ្នែកឆ្វេង",
   "Right Eye": "ភ្នែកស្ដាំ",
   "Both Eyes": "ភ្នែកទាំងពីរ",
@@ -801,6 +803,7 @@ window.__trRegistry = {
   "Age": "អាយុ",
   "y": "ឆ្នាំ",
   "Trans.": "ប្រអប់លេខ",
+  "License No.": "លេខ​បណ្ណ​បើកបរ",
   "Reg. date": "ថ្ងៃចុះឈ្មោះ",
   "Course fee": "ថ្លៃ​វគ្គ",
   "Balance": "នៅខ្វះ",
@@ -5644,6 +5647,7 @@ var NewStudentForm = ({
   var [days, setDays] = React.useState([]);
   var [phone, setPhone] = React.useState('');
   var [email, setEmail] = React.useState('');
+  var [licenseNo, setLicenseNo] = React.useState('');
   var [eyeLeft, setEyeLeft] = React.useState('');
   var [eyeRight, setEyeRight] = React.useState('');
   var [eyeBoth, setEyeBoth] = React.useState('');
@@ -5954,6 +5958,7 @@ Use "" for any field that cannot be read clearly.`;
       next: '—',
       phone: phone.trim() || '—',
       email: email.trim(),
+      license_no: licenseNo.trim(),
       eye_left: eyeLeft,
       eye_right: eyeRight,
       eye_both: eyeBoth,
@@ -6321,6 +6326,12 @@ Use "" for any field that cannot be read clearly.`;
     value: email,
     onChange: e => setEmail(e.target.value)
   }))), React.createElement(Row, null, React.createElement(Field, {
+    label: tr('លេខ​បណ្ណ​បើកបរ · License No.', 'Driver license No.')
+  }, React.createElement(Input, {
+    placeholder: tr('ឧ. 01234567', 'e.g. 01234567'),
+    value: licenseNo,
+    onChange: e => setLicenseNo(e.target.value)
+  })), React.createElement("div", null)), React.createElement(Row, null, React.createElement(Field, {
     label: tr('ភ្នែកឆ្វេង', 'Left Eye')
   }, React.createElement(Select, {
     value: eyeLeft,
@@ -35048,6 +35059,9 @@ var StudentsScreenV2 = () => {
       }), React.createElement(InfoPair, {
         label: tr('ស្ថានភាព', 'Status'),
         val: s.status
+      }), React.createElement(InfoPair, {
+        label: tr('លេខ​បណ្ណ​បើកបរ', 'License No.'),
+        val: s.license_no
       }))), React.createElement(CvSection, {
         id: "payment",
         km: "\u1785\u17BB\u17C7\u1788\u17D2\u1798\u17C4\u17C7 \u1793\u17B7\u1784 \u1780\u17B6\u1794\u1784\u17CB\u1794\u17D2\u179A\u17B6\u1780\u17CB",
@@ -36231,6 +36245,7 @@ var BiographyCard = ({
   var [nationality, setNationality] = React.useState(s.nationality || 'ខ្មែរ');
   var [phone, setPhone] = React.useState(s.phone || '');
   var [telegram, setTelegram] = React.useState(s.telegram || '');
+  var [licenseNo, setLicenseNo] = React.useState(s.license_no || '');
   var [eyeLeft, setEyeLeft] = React.useState(s.eye_left || '');
   var [eyeRight, setEyeRight] = React.useState(s.eye_right || '');
   var [eyeBoth, setEyeBoth] = React.useState(s.eye_both || '');
@@ -36253,6 +36268,7 @@ var BiographyCard = ({
     setNationality(s.nationality || 'ខ្មែរ');
     setPhone(s.phone || '');
     setTelegram(s.telegram || '');
+    setLicenseNo(s.license_no || '');
     setEyeLeft(s.eye_left || '');
     setEyeRight(s.eye_right || '');
     setEyeBoth(s.eye_both || '');
@@ -36276,6 +36292,7 @@ var BiographyCard = ({
     setNationality(s.nationality || 'ខ្មែរ');
     setPhone(s.phone || '');
     setTelegram(s.telegram || '');
+    setLicenseNo(s.license_no || '');
     setEyeLeft(s.eye_left || '');
     setEyeRight(s.eye_right || '');
     setEyeBoth(s.eye_both || '');
@@ -36299,6 +36316,7 @@ var BiographyCard = ({
       nationality: nationality.trim(),
       phone: phone.trim(),
       telegram: telegram.trim(),
+      license_no: licenseNo.trim(),
       eye_left: eyeLeft,
       eye_right: eyeRight,
       eye_both: eyeBoth,
@@ -36440,7 +36458,11 @@ var BiographyCard = ({
     value: telegram,
     onChange: e => setTelegram(e.target.value),
     placeholder: "123456789"
-  }))), React.createElement("div", null), React.createElement("div", null)), React.createElement("div", {
+  }))), React.createElement("div", null, React.createElement(Lbl, null, "\u179B\u17C1\u1781\u200B\u1794\u178E\u17D2\u178E\u200B\u1794\u17BE\u1780\u1794\u179A \xB7 License No."), React.createElement("input", _extends({}, inp, {
+    value: licenseNo,
+    onChange: e => setLicenseNo(e.target.value),
+    placeholder: "01234567"
+  }))), React.createElement("div", null)), React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr 1fr',
@@ -36551,6 +36573,9 @@ var BiographyCard = ({
   }, {
     l: 'Telegram',
     v: s.telegram || '—'
+  }, {
+    l: 'លេខ​បណ្ណ​បើកបរ',
+    v: s.license_no || '—'
   }, {
     l: 'ភ្នែកឆ្វេង',
     v: s.eye_left || '—'
@@ -37440,6 +37465,7 @@ var StudentEditPanel = ({
   var [phone, setPhone] = React.useState(s.phone || '');
   var [telegram, setTelegram] = React.useState(s.telegram || '');
   var [email, setEmail] = React.useState(s.email || '');
+  var [licenseNo, setLicenseNo] = React.useState(s.license_no || '');
   var [nationality, setNationality] = React.useState(s.nationality || 'ខ្មែរ');
   var [eyeLeft, setEyeLeft] = React.useState(s.eye_left || '');
   var [eyeRight, setEyeRight] = React.useState(s.eye_right || '');
@@ -37512,6 +37538,7 @@ var StudentEditPanel = ({
       phone: phone.trim(),
       telegram: telegram.trim(),
       email: email.trim(),
+      license_no: licenseNo.trim(),
       nationality: nationality.trim(),
       eye_left: eyeLeft,
       eye_right: eyeRight,
@@ -37717,7 +37744,13 @@ var StudentEditPanel = ({
     value: "\u1796\u17B7\u179F\u17C1\u179F"
   }, tr('ពិសេស', 'Special')), React.createElement("option", {
     value: "SSW"
-  }, "SSW")))), secTitle(tr('ប្រវត្តិ', 'BIOGRAPHY')), React.createElement("div", g3, React.createElement(SEField, {
+  }, "SSW"))), React.createElement(SEField, {
+    label: tr('លេខ​បណ្ណ​បើកបរ', 'Driver license No.')
+  }, React.createElement("input", _extends({}, inp, {
+    value: licenseNo,
+    onChange: e => setLicenseNo(e.target.value),
+    placeholder: tr('ឧ. 01234567', 'e.g. 01234567')
+  })))), secTitle(tr('ប្រវត្តិ', 'BIOGRAPHY')), React.createElement("div", g3, React.createElement(SEField, {
     label: tr('ភ្នែកឆ្វេង', 'Left Eye')
   }, React.createElement("select", _extends({}, sel, {
     value: eyeLeft,
