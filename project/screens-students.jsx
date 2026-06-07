@@ -262,7 +262,10 @@ const StudentsScreenV2 = () => {
           {/* Section 1: Photo & bio */}
           <CvSection id="bio" km="រូបថត និង ប្រវត្តិរូបសង្ខេប" en="Photo & Bio">
             <div style={{display:'flex',gap:14,marginBottom:12,alignItems:'flex-start'}}>
-              <Avatar tag={s.photo} size={72}/>
+              <div style={{textAlign:'center',flexShrink:0}}>
+                <UploadAvatar id={s.id} photo={s.photo} size={72} onUpload={savePhoto}/>
+                <div style={{fontSize:10,color:'var(--accent)',marginTop:4}}>{tr('ប្ដូររូប','Change')}</div>
+              </div>
               <div style={{flex:1}}>
                 <div style={{fontSize:16,fontWeight:700,fontFamily:'var(--font-km)',lineHeight:1.3}}>{s.name}</div>
                 <div style={{fontSize:13,color:'var(--ink-2)',marginTop:2}}>{s.en}</div>

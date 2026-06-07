@@ -357,7 +357,7 @@ window.__trRegistry = {
   "Re-enable": "ដំណើរការ​វិញ",
   "Suspend": "ផ្អាក",
   "This account is suspended — student cannot log in": "គណនីនេះត្រូវបានផ្អាក — សិស្សមិនអាចចូលប្រព័ន្ធបាន",
-  "Change": "ផ្លាស់ប្ដូរ",
+  "Change": "ប្ដូររូប",
   "Re-enable account": "ដំណើរការ​វិញ",
   "Suspend account": "ផ្អាក​គណនី",
   "Deactivate staff?": "ផ្អាក​បុគ្គលិក?",
@@ -34294,10 +34294,23 @@ var StudentsScreenV2 = () => {
           marginBottom: 12,
           alignItems: 'flex-start'
         }
-      }, React.createElement(Avatar, {
-        tag: s.photo,
-        size: 72
+      }, React.createElement("div", {
+        style: {
+          textAlign: 'center',
+          flexShrink: 0
+        }
+      }, React.createElement(UploadAvatar, {
+        id: s.id,
+        photo: s.photo,
+        size: 72,
+        onUpload: savePhoto
       }), React.createElement("div", {
+        style: {
+          fontSize: 10,
+          color: 'var(--accent)',
+          marginTop: 4
+        }
+      }, tr('ប្ដូររូប', 'Change'))), React.createElement("div", {
         style: {
           flex: 1
         }
