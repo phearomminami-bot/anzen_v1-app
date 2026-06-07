@@ -249,8 +249,12 @@ def main():
         parts.append(f'\n<script>\n{js}\n</script>\n')
     print()
     parts.append(TAIL)
-    OUT.write_text("".join(parts), encoding="utf-8")
+    html = "".join(parts)
+    OUT.write_text(html, encoding="utf-8")
+    # Also write index.html so GitHub Pages serves the latest app at the repo root.
+    (ROOT / "index.html").write_text(html, encoding="utf-8")
     print(f"Wrote {OUT} · {OUT.stat().st_size:,} bytes · {len(registry)} tr() pairs bundled")
+    print(f"Wrote {ROOT / 'index.html'} (GitHub Pages entry)")
 
 if __name__ == "__main__":
     main()
