@@ -338,7 +338,7 @@ const ScheduleMonth = ({ lessons = LESSONS, studentMode = false, weekDates = [] 
   const monthDates = Array.from({length:35}, (_,i) => {
     const d = new Date(startDate + 'T00:00:00');
     d.setDate(d.getDate() + i);
-    return d.toISOString().slice(0,10);
+    return localDateStr(d);
   });
   return (
     <Card pad={0}>
@@ -601,7 +601,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   // On mobile: show 1 day at a time with dayOffset navigation
   const getMobileDate = (off) => {
     const d = new Date(); d.setDate(d.getDate() + off);
-    return d.toISOString().slice(0, 10);
+    return localDateStr(d);   // local date (not UTC) so "today" is correct in UTC+7
   };
   const mobileDate = getMobileDate(dayOffset);
   const weekDates  = bp.mobile ? [mobileDate] : allWeekDates;

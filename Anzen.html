@@ -16314,7 +16314,7 @@ var ScheduleMonth = ({
   }, (_, i) => {
     var d = new Date(startDate + 'T00:00:00');
     d.setDate(d.getDate() + i);
-    return d.toISOString().slice(0, 10);
+    return localDateStr(d);
   });
   return React.createElement(Card, {
     pad: 0
@@ -16772,7 +16772,7 @@ var ScheduleScreen = ({
   var getMobileDate = off => {
     var d = new Date();
     d.setDate(d.getDate() + off);
-    return d.toISOString().slice(0, 10);
+    return localDateStr(d);
   };
   var mobileDate = getMobileDate(dayOffset);
   var weekDates = bp.mobile ? [mobileDate] : allWeekDates;
