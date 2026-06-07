@@ -465,8 +465,11 @@ const ScheduleAgenda = ({ lessons = LESSONS, studentMode = false, weekDates = []
 };
 
 const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
-  const { openForm, navigate, tr } = useAppActions();
+  const { openForm, navigate, tr, lang } = useAppActions();
   const bp = useBreakpoint();
+  // Current logged-in user — the note's author (Google-Calendar style).
+  const me = (role === 'instructor' ? (window.__loggedInInstructorData || LOGIN_USERS.instructor) : (LOGIN_USERS[role] || LOGIN_USERS.admin)) || {};
+  const meName = (lang === 'km' ? me.km : me.en) || me.en || me.km || tr('នាយក','Admin');
   const [v, setV] = React.useState(view || 'week');
   const [weekOffset, setWeekOffset] = React.useState(0);
   const [dayOffset,  setDayOffset]  = React.useState(0);
@@ -494,7 +497,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   const [notes, setNotes] = React.useState(() => {
     try { return JSON.parse(localStorage.getItem('anzen_sched_notes') || '[]'); } catch { return []; }
   });
-  const [noteModal, setNoteModal] = React.useState(null); // null | { id?, date, time, text }
+  const [noteModal, setNoteModal] = React.useState(null); // null | { id?, date, time, text, author, invited:[] }
   const saveNotes = (next) => {
     setNotes(next);
     try { localStorage.setItem('anzen_sched_notes', JSON.stringify(next)); } catch {}
@@ -504,11 +507,16 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
     const text = (noteModal?.text || '').trim();
     if (!text) { setNoteModal(null); return; }
     const time = noteModal.time || '';
-    if (noteModal.id) saveNotes(notes.map(n => n.id === noteModal.id ? { ...n, date: noteModal.date, time, text } : n));
-    else              saveNotes([...notes, { id: 'N' + Date.now(), date: noteModal.date, time, text }]);
+    const invited = noteModal.invited || [];
+    if (noteModal.id) saveNotes(notes.map(n => n.id === noteModal.id ? { ...n, date: noteModal.date, time, text, invited } : n));
+    else              saveNotes([...notes, { id: 'N' + Date.now(), date: noteModal.date, time, text, author: noteModal.author || meName, invited }]);
     setNoteModal(null);
   };
   const removeNote = (id) => saveNotes(notes.filter(n => n.id !== id));
+  const toggleInvite = (instId) => setNoteModal(m => {
+    const cur = m.invited || [];
+    return { ...m, invited: cur.includes(instId) ? cur.filter(x => x !== instId) : [...cur, instId] };
+  });
 
   React.useEffect(()=>{ if(view) setV(view); }, [view]);
   React.useEffect(()=>{
@@ -616,7 +624,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
         en={`${studentMode?'My Schedule':'Schedule'} · ${labelEn}`}
         action={bp.mobile ? (
           <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',justifyContent:'flex-end'}}>
-            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:mobileDate,time:'09:00',text:''})} icon={<Icon name="bell" size={14}/>}>{tr('ចំណាំ','Note')}</Btn>}
+            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:mobileDate,time:'09:00',text:'',author:meName,invited:[]})} icon={<Icon name="bell" size={14}/>}>{tr('ចំណាំ','Note')}</Btn>}
             <Btn kind="ghost" size="md" onClick={()=>generateSchedulePDF({lessons:visibleLessons,weekDates:allWeekDates,viewType:'week',labelEn,instFilter,vehFilter,studentFilter})} icon={<Icon name="download" size={14}/>}>{tr('PDF','PDF')}</Btn>
             {can(role,'create','lesson') && <Btn kind="primary" size="md" onClick={()=>openForm('newLesson',{date:mobileDate})} icon={<Icon name="plus" size={14}/>}>{tr('+ មេរៀន','+ Lesson')}</Btn>}
           </div>
@@ -636,7 +644,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(0)}>{tr('ថ្ងៃ​នេះ','Today')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(o=>o+1)}>{tr('បន្ទាប់ ▶','Next ▶')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>generateSchedulePDF({lessons:visibleLessons,weekDates:allWeekDates,viewType:v,labelEn,instFilter,vehFilter,studentFilter})} icon={<Icon name="download" size={14}/>}>{tr('PDF','PDF')}</Btn>
-            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:allWeekDates[0]||today,time:'09:00',text:''})} icon={<Icon name="bell" size={14}/>}>{tr('+ ចំណាំ','+ Note')}</Btn>}
+            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:allWeekDates[0]||today,time:'09:00',text:'',author:meName,invited:[]})} icon={<Icon name="bell" size={14}/>}>{tr('+ ចំណាំ','+ Note')}</Btn>}
             {can(role,'create','lesson') && <Btn kind="primary" size="md" onClick={()=>openForm('newLesson')} icon={<Icon name="plus" size={14}/>}>{tr('មេរៀន​ថ្មី','New lesson')}</Btn>}
           </div>
         )}
@@ -771,8 +779,19 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
                   <span style={{fontSize:11,fontWeight:700,color:'var(--accent)',fontFamily:'"JetBrains Mono",monospace',flexShrink:0,marginTop:1,whiteSpace:'nowrap'}}>
                     {n.date.slice(5)}{n.time ? ' · ' + n.time : ''}
                   </span>
-                  <span style={{flex:1,minWidth:0,fontSize:13,color:'var(--ink)',whiteSpace:'pre-wrap',wordBreak:'break-word'}}>{n.text}</span>
-                  <button onClick={()=>setNoteModal({id:n.id,date:n.date,time:n.time||'',text:n.text})} title={tr('កែ','Edit')} style={{border:'none',background:'none',cursor:'pointer',color:'var(--ink-3)',fontSize:13,padding:'0 2px',flexShrink:0}}>✎</button>
+                  <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column',gap:3}}>
+                    <span style={{fontSize:13,color:'var(--ink)',whiteSpace:'pre-wrap',wordBreak:'break-word'}}>{n.text}</span>
+                    <div style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:'2px 10px',fontSize:10.5,color:'var(--ink-3)'}}>
+                      {n.author && <span>👤 {n.author}</span>}
+                      {(n.invited||[]).length > 0 && (
+                        <span style={{display:'flex',alignItems:'center',gap:4,flexWrap:'wrap'}}>
+                          <Icon name="users" size={11}/>
+                          {n.invited.map(id => { const i = INSTRUCTORS.find(x=>x.id===id); return i ? (lang==='km'?i.name:(i.en||i.name)) : null; }).filter(Boolean).join(', ')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button onClick={()=>setNoteModal({id:n.id,date:n.date,time:n.time||'',text:n.text,author:n.author,invited:n.invited||[]})} title={tr('កែ','Edit')} style={{border:'none',background:'none',cursor:'pointer',color:'var(--ink-3)',fontSize:13,padding:'0 2px',flexShrink:0}}>✎</button>
                   <button onClick={()=>removeNote(n.id)} title={tr('លុប','Delete')} style={{border:'none',background:'none',cursor:'pointer',color:'var(--danger)',fontSize:15,lineHeight:1,padding:'0 2px',flexShrink:0}}>×</button>
                 </div>
               ))}
@@ -839,6 +858,37 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
                 placeholder={tr('ឧ. ប្រជុំគ្រូ ម៉ោង ២ រសៀល','e.g. Teacher meeting at 2pm')} autoFocus
                 style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',resize:'vertical',fontFamily:'var(--font-km),var(--font-en),inherit'}}/>
             </div>
+
+            {/* Invite instructors (Google-Calendar style guests) */}
+            <div>
+              <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'flex',alignItems:'center',gap:5,marginBottom:7}}>
+                <Icon name="users" size={13}/> {tr('អញ្ជើញ​គ្រូ','Invite instructors')}
+                {(noteModal.invited||[]).length>0 && <span style={{color:'var(--accent)',fontWeight:700}}>· {(noteModal.invited||[]).length}</span>}
+              </label>
+              <div style={{display:'flex',flexWrap:'wrap',gap:6,maxHeight:140,overflowY:'auto'}}>
+                {INSTRUCTORS.map(i => {
+                  const on = (noteModal.invited||[]).includes(i.id);
+                  return (
+                    <button key={i.id} onClick={()=>toggleInvite(i.id)} style={{
+                      display:'flex',alignItems:'center',gap:6,padding:'6px 11px',borderRadius:20,cursor:'pointer',
+                      border:'1px solid '+(on?'var(--accent)':'var(--border)'),
+                      background:on?'var(--accent-soft)':'var(--surface)',
+                      color:on?'var(--accent)':'var(--ink-2)',fontSize:12,fontWeight:on?600:400,
+                    }}>
+                      {on && <Icon name="check" size={11} stroke={3}/>}
+                      {lang==='km' ? i.name : (i.en || i.name)}
+                    </button>
+                  );
+                })}
+                {INSTRUCTORS.length===0 && <span style={{fontSize:12,color:'var(--ink-3)'}}>{tr('មិន​មាន​គ្រូ','No instructors')}</span>}
+              </div>
+            </div>
+
+            {/* Author (creator) */}
+            <div style={{fontSize:11,color:'var(--ink-3)',display:'flex',alignItems:'center',gap:5,borderTop:'1px dashed var(--border)',paddingTop:10}}>
+              👤 {tr('បង្កើត​ដោយ','Created by')}: <span style={{fontWeight:600,color:'var(--ink-2)'}}>{noteModal.author || meName}</span>
+            </div>
+
             <div style={{display:'flex',gap:8,justifyContent:'space-between',alignItems:'center'}}>
               {noteModal.id
                 ? <Btn kind="ghost" size="md" style={{color:'var(--danger)'}} onClick={()=>{ removeNote(noteModal.id); setNoteModal(null); }}>{tr('លុប','Delete')}</Btn>
