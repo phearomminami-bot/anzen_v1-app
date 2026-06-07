@@ -1284,7 +1284,7 @@ const StudentProfile = ({ s, onEdit, onBook, onMessage, onCall, onSaveDoc, onSav
 
 // ── Edit panel helpers — defined at module level to avoid remount on every render ──
 const SELbl = ({children}) => <div style={{fontSize:11,fontWeight:500,color:'var(--ink-2)',marginBottom:4}}>{children}</div>;
-const SEField = ({label, children}) => <div><SELbl>{label}</SELbl>{children}</div>;
+const SEField = ({label, children}) => <div style={{minWidth:0}}><SELbl>{label}</SELbl>{children}</div>;
 const SEDocChk = ({label, checked, onChange}) => (
   <label style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',border:'1px solid var(--border)',borderRadius:8,cursor:'pointer',background:checked?'color-mix(in oklch,var(--good) 10%,var(--surface))':'var(--surface)',userSelect:'none'}}>
     <div style={{width:20,height:20,borderRadius:5,border:`2px solid ${checked?'var(--good)':'var(--border)'}`,background:checked?'var(--good)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,transition:'all .15s'}}>
@@ -1437,7 +1437,7 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
   );
 
   return (
-    <div style={{padding:20}}>
+    <div style={{padding:bp.mobile?14:20}}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
         <div style={{fontSize:15,fontWeight:600}}>
           {tr('កែ​', 'Edit')} — {s.name} <span style={{fontSize:12,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{s.id}</span>

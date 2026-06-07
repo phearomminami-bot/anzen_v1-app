@@ -36672,7 +36672,11 @@ var SELbl = ({
 var SEField = ({
   label,
   children
-}) => React.createElement("div", null, React.createElement(SELbl, null, label), children);
+}) => React.createElement("div", {
+  style: {
+    minWidth: 0
+  }
+}, React.createElement(SELbl, null, label), children);
 var SEDocChk = ({
   label,
   checked,
@@ -36908,7 +36912,7 @@ var StudentEditPanel = ({
   }, t);
   return React.createElement("div", {
     style: {
-      padding: 20
+      padding: bp.mobile ? 14 : 20
     }
   }, React.createElement("div", {
     style: {
