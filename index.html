@@ -723,6 +723,9 @@ window.__trRegistry = {
   "DAILY EXPENSES": "ចំណាយប្រចាំថ្ងៃ",
   "Note…": "កំណត់សម្គាល់…",
   "Tap a type above to add an expense": "ចុចប្រភេទខាងលើ ដើម្បីបន្ថែមចំណាយ",
+  "ACCIDENT LOG": "កំណត់ហេតុ​គ្រោះថ្នាក់",
+  "Add accident report": "បន្ថែម​របាយការណ៍​គ្រោះថ្នាក់",
+  "No accidents for this vehicle": "គ្មាន​គ្រោះថ្នាក់​សម្រាប់​យានយន្ត​នេះ",
   "Notes / Remarks": "កំណត់សម្គាល់",
   "Damage, observations, or other notes…": "ការខូចខាត ឬ ចំណាំផ្សេងៗ…",
   "Download PDF": "ទាញយក PDF",
@@ -781,14 +784,18 @@ window.__trRegistry = {
   "No accidents recorded": "គ្មាន​គ្រោះថ្នាក់​ត្រូវ​បាន​កត់ត្រា",
   "Resolve": "ដោះ​ស្រាយ",
   "Describe what happened": "សូម​បំពេញ​កាលៈទេសៈ",
-  "Accident report": "បាន​រាយ​ការណ៍ · ' + id, 'Accident reported · ' + id), 'good');\n    forceUpdate && forceUpdate();\n    onClose();\n  };\n\n  const inp = { style:{width:'100%',padding:'7px 10px',border:'1px solid var(--border)',borderRadius:6,fontSize:13,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',boxSizing:'border-box'} };\n  const ta  = { style:{...inp.style, minHeight:60, resize:'vertical', fontFamily:'var(--font-km),var(--font-en),inherit'} };\n  const Lbl = ({ja,km}) => <div style={{fontSize:11,fontWeight:600,marginBottom:4}}>{ja} <span style={{color:'var(--ink-3)',fontWeight:400}}>· {km}</span></div>;\n  const sec = (t) => <div style={{font:'600 10px/1 \"JetBrains Mono\",monospace',letterSpacing:'.08em',textTransform:'uppercase',color:'var(--ink-3)',margin:'14px 0 8px'}}>{t}</div>;\n\n  return (\n    <Card>\n      <div style={{fontSize:14,fontWeight:700,marginBottom:4}}>⚠️ {tr('រាយ​ការណ៍​គ្រោះថ្នាក់",
+  "Accident report": "បាន​រាយ​ការណ៍ · ' + id, 'Accident reported · ' + id), 'good');\n    forceUpdate && forceUpdate();\n    onClose();\n  };\n\n  const inp = { style:{width:'100%',padding:'7px 10px',border:'1px solid var(--border)',borderRadius:6,fontSize:13,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',boxSizing:'border-box'} };\n  const ta  = { style:{...inp.style, minHeight:60, resize:'vertical', fontFamily:'var(--font-km),var(--font-en),inherit'} };\n  const Lbl = ({km}) => <div style={{fontSize:11,fontWeight:600,marginBottom:4}}>{km}</div>;\n  const sec = (t) => <div style={{font:'600 10px/1 \"JetBrains Mono\",monospace',letterSpacing:'.08em',textTransform:'uppercase',color:'var(--ink-3)',margin:'14px 0 8px'}}>{t}</div>;\n\n  return (\n    <Card>\n      <div style={{fontSize:14,fontWeight:700,marginBottom:4}}>⚠️ {tr('រាយ​ការណ៍​គ្រោះថ្នាក់",
+  "Occurrence": "កើតហេតុ",
   "Instructor / student": "ឈ្មោះ​គ្រូ / សិស្ស",
   "e.g. Street 310": "ឧ. ផ្លូវ​លេខ ៣១០",
-  "無 None": "គ្មាន",
-  "有 Yes": "មាន",
+  "Type & condition": "ប្រភេទ និង ស្ថានភាព",
+  "None": "មិន​មាន",
+  "Yes": "មាន",
   "Who · injury detail": "នរណា · របួស​បែប​ណា",
+  "Details": "សេចក្ដី​លម្អិត",
   "What happened…": "តើ​មាន​អ្វី​កើតឡើង…",
   "How to prevent recurrence": "របៀប​ការពារ​កុំ​ឱ្យ​កើត​ឡើង​ម្ដង​ទៀត",
+  "Photos": "រូបថត",
   "Save report": "រក្សាទុក​របាយការណ៍",
   "Enter amount": "សូមបំពេញចំនួនទឹកប្រាក់",
   "Add expense": "បន្ថែម​ការ​ចំណាយ",
@@ -960,7 +967,6 @@ window.__trRegistry = {
   "SELECTED": "បាន​ជ្រើស",
   "Review booking": "ពិនិត្យ​ការ​កក់",
   "Day & time": "ថ្ងៃ​ + ម៉ោង",
-  "None": "មិន​មាន",
   "No vehicle available for this slot": "មិន​មាន​យាន​យន្ត​ទំ​នេរ​ក្នុង​ម៉ោង​នេះ",
   "Confirm booking": "បញ្ជាក់​ការ​កក់",
   "Calendar": "បើក​ប្រតិទិន",
@@ -29038,6 +29044,9 @@ var VehicleInspectionModal = ({
   var [expenses, setExpenses] = React.useState([]);
   var [showInsp, setShowInsp] = React.useState(true);
   var [showExp, setShowExp] = React.useState(false);
+  var [showAcc, setShowAcc] = React.useState(false);
+  var [accAdding, setAccAdding] = React.useState(false);
+  var [, forceUp] = React.useReducer(x => x + 1, 0);
   var photoRef = React.useRef();
   var readOnly = role === 'instructor' && date < todayStr();
   React.useEffect(() => {
@@ -29235,13 +29244,32 @@ var VehicleInspectionModal = ({
   var delExp = id => setExpenses(prev => prev.filter(e => e.id !== id));
   var expTotal = expenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
   var toggleInsp = () => setShowInsp(v => {
-    if (!v) setShowExp(false);
+    if (!v) {
+      setShowExp(false);
+      setShowAcc(false);
+    }
     return !v;
   });
   var toggleExp = () => setShowExp(v => {
-    if (!v) setShowInsp(false);
+    if (!v) {
+      setShowInsp(false);
+      setShowAcc(false);
+    }
     return !v;
   });
+  var toggleAcc = () => setShowAcc(v => {
+    if (!v) {
+      setShowInsp(false);
+      setShowExp(false);
+    }
+    return !v;
+  });
+  var removeAcc = id => {
+    var i = (window.__incidentData || []).findIndex(x => x.id === id);
+    if (i !== -1) window.__incidentData.splice(i, 1);
+    if (window.saveAllData) window.saveAllData();
+    forceUp();
+  };
   var os = overallStatus();
   var osC = INSP_VALS[os];
   var renderItem = (it, secId, isCustom) => {
@@ -30177,7 +30205,189 @@ var VehicleInspectionModal = ({
       padding: '6px 0',
       fontStyle: 'italic'
     }
-  }, tr('ចុចប្រភេទខាងលើ ដើម្បីបន្ថែមចំណាយ', 'Tap a type above to add an expense'))), React.createElement("div", {
+  }, tr('ចុចប្រភេទខាងលើ ដើម្បីបន្ថែមចំណាយ', 'Tap a type above to add an expense'))), React.createElement("button", {
+    onClick: toggleAcc,
+    style: {
+      width: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '11px 20px',
+      border: 'none',
+      borderBottom: '1px solid var(--border)',
+      borderTop: '1px solid var(--border)',
+      background: 'var(--surface-muted)',
+      cursor: 'pointer',
+      fontFamily: 'inherit',
+      transition: 'background .12s'
+    },
+    onMouseEnter: e => e.currentTarget.style.background = 'var(--accent-soft)',
+    onMouseLeave: e => e.currentTarget.style.background = 'var(--surface-muted)'
+  }, React.createElement("span", {
+    style: {
+      fontSize: 10,
+      fontWeight: 700,
+      letterSpacing: '.08em',
+      textTransform: 'uppercase',
+      fontFamily: '"JetBrains Mono",monospace',
+      color: 'var(--ink-2)',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6
+    }
+  }, "\uD83D\uDEA8 ", tr('កំណត់ហេតុ​គ្រោះថ្នាក់', 'ACCIDENT LOG'), (() => {
+    var n = (window.__incidentData || []).filter(x => x.v === vehicle.id).length;
+    return n > 0 ? React.createElement("span", {
+      style: {
+        fontSize: 11,
+        fontWeight: 700,
+        color: 'var(--danger)',
+        letterSpacing: 0
+      }
+    }, "\xB7 ", n) : null;
+  })()), React.createElement("svg", {
+    width: "13",
+    height: "13",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "var(--ink-3)",
+    strokeWidth: "2.5",
+    strokeLinecap: "round",
+    style: {
+      transform: showAcc ? 'rotate(0deg)' : 'rotate(-90deg)',
+      transition: 'transform .2s',
+      flexShrink: 0
+    }
+  }, React.createElement("polyline", {
+    points: "6 9 12 15 18 9"
+  }))), showAcc && React.createElement("div", {
+    style: {
+      padding: '12px 20px 14px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 10
+    }
+  }, (window.__incidentData || []).filter(x => x.v === vehicle.id).map(inc => {
+    var tx = accMeta(ACC_TYPES, inc.accType || 'other');
+    return React.createElement("div", {
+      key: inc.id,
+      style: {
+        display: 'flex',
+        gap: 10,
+        alignItems: 'flex-start',
+        padding: '10px 12px',
+        border: '1px solid var(--border)',
+        borderRadius: 8,
+        background: 'var(--surface-muted)'
+      }
+    }, React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        flexWrap: 'wrap'
+      }
+    }, React.createElement("span", {
+      style: {
+        fontSize: 12,
+        fontWeight: 700
+      }
+    }, tx.km), React.createElement(Badge, {
+      tone: inc.severity === 'High' ? 'danger' : inc.severity === 'Medium' ? 'warn' : 'neutral'
+    }, inc.severity)), React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: 'var(--ink-3)',
+        marginTop: 2,
+        fontFamily: '"JetBrains Mono",monospace'
+      }
+    }, inc.id, " \xB7 ", inc.date, " ", inc.time || ''), (inc.circumstances || inc.desc) && React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: 'var(--ink-2)',
+        marginTop: 3
+      }
+    }, inc.circumstances || inc.desc), inc.photos && inc.photos.length > 0 && React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 5,
+        marginTop: 6,
+        flexWrap: 'wrap'
+      }
+    }, inc.photos.slice(0, 5).map((p, j) => React.createElement("img", {
+      key: j,
+      src: p,
+      alt: "",
+      onClick: () => window.open(p, '_blank'),
+      style: {
+        width: 46,
+        height: 34,
+        objectFit: 'cover',
+        borderRadius: 4,
+        border: '1px solid var(--border)',
+        cursor: 'pointer'
+      }
+    })))), React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 6,
+        alignItems: 'center',
+        flexShrink: 0
+      }
+    }, React.createElement(Btn, {
+      kind: "ghost",
+      size: "sm",
+      icon: React.createElement(Icon, {
+        name: "download",
+        size: 12
+      }),
+      onClick: () => generateAccidentPDF(inc, vehicle)
+    }, "PDF"), !readOnly && React.createElement("button", {
+      onClick: () => removeAcc(inc.id),
+      title: tr('លុប', 'Delete'),
+      style: {
+        border: 'none',
+        background: 'none',
+        cursor: 'pointer',
+        color: 'var(--danger)',
+        fontSize: 15
+      }
+    }, "\u2715")));
+  }), !readOnly && (accAdding ? React.createElement(FvIncidentForm, {
+    vehicles: [vehicle],
+    onClose: () => {
+      setAccAdding(false);
+      forceUp();
+    },
+    forceUpdate: forceUp
+  }) : React.createElement("button", {
+    onClick: () => setAccAdding(true),
+    style: {
+      width: '100%',
+      padding: '9px 0',
+      border: '1.5px dashed var(--border-strong)',
+      borderRadius: 8,
+      background: 'transparent',
+      color: 'var(--ink-3)',
+      cursor: 'pointer',
+      fontSize: 12,
+      fontWeight: 500,
+      fontFamily: 'inherit'
+    }
+  }, "+ ", tr('បន្ថែម​របាយការណ៍​គ្រោះថ្នាក់', 'Add accident report'))), (window.__incidentData || []).filter(x => x.v === vehicle.id).length === 0 && !accAdding && React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--good)',
+      textAlign: 'center',
+      padding: '4px 0',
+      fontWeight: 500
+    }
+  }, "\u2713 ", tr('គ្មាន​គ្រោះថ្នាក់​សម្រាប់​យានយន្ត​នេះ', 'No accidents for this vehicle'))), React.createElement("div", {
     style: {
       padding: '12px 20px 14px',
       borderTop: '1px solid var(--border)'
@@ -33092,47 +33302,47 @@ var generateAccidentPDF = (inc, veh) => {
   var wx = accMeta(ACC_WEATHER, inc.weather);
   var rx = accMeta(ACC_ROAD, inc.road);
   var tx = accMeta(ACC_TYPES, inc.accType || 'other');
-  var row = (ja, km, val) => `<tr>
+  var row = (km, en, val) => `<tr>
     <th style="width:28%;text-align:left;padding:8px 10px;background:#f3f3f0;border:1px solid #bbb;font-size:11px;vertical-align:top">
-      <div style="font-weight:700">${ja}</div><div style="font-size:10px;color:#666;font-weight:400">${km}</div></th>
+      <div style="font-weight:700">${km}</div><div style="font-size:10px;color:#666;font-weight:400">${en}</div></th>
     <td style="padding:8px 10px;border:1px solid #bbb;font-size:12px;vertical-align:top;white-space:pre-wrap">${val || '<span style="color:#bbb">—</span>'}</td></tr>`;
   var photosHTML = (inc.photos || []).map(p => `<img src="${p}" style="width:48%;max-height:210px;object-fit:cover;border:1px solid #bbb;border-radius:4px;margin:1%"/>`).join('');
-  var html = `<!doctype html><html lang="ja"><head><meta charset="utf-8"/>
-  <title>交通事故報告書 · ${esc(inc.id)}</title>
+  var html = `<!doctype html><html lang="km"><head><meta charset="utf-8"/>
+  <title>កំណត់ហេតុគ្រោះថ្នាក់ · ${esc(inc.id)}</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Noto Sans Khmer','Noto Sans JP','Hanuman',Arial,sans-serif;font-size:13px;color:#1a1a19;background:#fff;padding:24px 28px}
+    body{font-family:'Noto Sans Khmer','Hanuman',Arial,sans-serif;font-size:13px;color:#1a1a19;background:#fff;padding:24px 28px}
     @page{margin:16mm 14mm;size:A4}
     @media print{body{padding:0}}
     table{width:100%;border-collapse:collapse;margin-bottom:14px}
-    h2{font-size:19px;text-align:center;letter-spacing:.18em;margin:8px 0 12px}
+    h2{font-size:18px;text-align:center;letter-spacing:.1em;margin:8px 0 12px}
   </style></head><body>
   <div style="display:flex;align-items:center;gap:14px;border-bottom:2px solid #333;padding-bottom:10px;margin-bottom:14px">
     ${ss.logo ? `<img src="${ss.logo}" style="width:40px;height:40px;border-radius:8px;object-fit:cover"/>` : '<div style="width:40px;height:40px;border-radius:8px;background:#B0413E;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">A</div>'}
     <div style="flex:1"><div style="font-size:16px;font-weight:700">${esc(ss.name || 'Anzen Driving Academy')}</div>
-      <div style="font-size:11px;color:#777">交通事故報告書 · កំណត់ហេតុគ្រោះថ្នាក់ · Traffic Accident Report</div></div>
+      <div style="font-size:11px;color:#777">កំណត់ហេតុគ្រោះថ្នាក់ · Traffic Accident Report</div></div>
     <div style="text-align:right;font-family:monospace"><div style="font-size:15px;font-weight:700">${esc(inc.id)}</div>
       <div style="font-size:10px;color:#888">${esc(inc.date)} ${esc(inc.time || '')}</div></div>
   </div>
-  <h2>交通事故報告書</h2>
+  <h2>កំណត់ហេតុ​គ្រោះថ្នាក់ចរាចរណ៍</h2>
   <table>
-    ${row('発生日時', 'ថ្ងៃ​ខែ​ម៉ោង​កើតហេតុ', esc(inc.date) + ' ' + esc(inc.time || ''))}
-    ${row('発生場所', 'ទីកន្លែងកើតហេតុ', esc(inc.location))}
-    ${row('車両', 'យានយន្ត', veh ? `${esc(veh.plate)} · ${esc(veh.make)}` : esc(inc.v))}
-    ${row('運転者', 'អ្នកបើកបរ', esc(inc.driver))}
-    ${row('天候 / 路面', 'អាកាសធាតុ / ផ្លូវ', `${wx.ja} (${wx.km}) / ${rx.ja} (${rx.km})`)}
-    ${row('事故種類', 'ប្រភេទគ្រោះថ្នាក់', `${tx.ja} · ${tx.km}`)}
-    ${row('負傷者', 'អ្នករបួស', inc.injuries === 'yes' ? '有 មាន — ' + esc(inc.injuryDetail || '') : '無 គ្មាន')}
-    ${row('状況・経緯', 'កាលៈទេសៈ​នៃ​ហេតុការណ៍', esc(inc.circumstances || inc.desc))}
-    ${row('損傷状況', 'ការ​ខូចខាត', esc(inc.damage))}
-    ${row('原因', 'មូលហេតុ', esc(inc.cause))}
-    ${row('再発防止対策', 'វិធានការ​ការពារ​កុំ​ឱ្យ​កើត​ឡើង​ម្ដង​ទៀត', esc(inc.prevention))}
-    ${row('修理費 / 状況', 'តម្លៃ​ជួសជុល / ស្ថានភាព', (inc.cost ? '$' + inc.cost : '—') + '  ·  ' + esc(inc.status || ''))}
+    ${row('ថ្ងៃ​ខែ​ម៉ោង​កើតហេតុ', 'Date & time', esc(inc.date) + ' ' + esc(inc.time || ''))}
+    ${row('ទីកន្លែង​កើតហេតុ', 'Location', esc(inc.location))}
+    ${row('យានយន្ត', 'Vehicle', veh ? `${esc(veh.plate)} · ${esc(veh.make)}` : esc(inc.v))}
+    ${row('អ្នកបើកបរ', 'Driver', esc(inc.driver))}
+    ${row('អាកាសធាតុ / ផ្លូវ', 'Weather / Road', `${wx.km} / ${rx.km}`)}
+    ${row('ប្រភេទ​គ្រោះថ្នាក់', 'Type', `${tx.km}`)}
+    ${row('អ្នករបួស', 'Injuries', inc.injuries === 'yes' ? 'មាន — ' + esc(inc.injuryDetail || '') : 'គ្មាន')}
+    ${row('កាលៈទេសៈ​នៃ​ហេតុការណ៍', 'Circumstances', esc(inc.circumstances || inc.desc))}
+    ${row('ការ​ខូចខាត', 'Damage', esc(inc.damage))}
+    ${row('មូលហេតុ', 'Cause', esc(inc.cause))}
+    ${row('វិធានការ​ការពារ​កុំ​ឱ្យ​កើត​ឡើង​ម្ដង​ទៀត', 'Prevention', esc(inc.prevention))}
+    ${row('តម្លៃ​ជួសជុល / ស្ថានភាព', 'Cost / Status', (inc.cost ? '$' + inc.cost : '—') + '  ·  ' + esc(inc.status || ''))}
   </table>
-  ${inc.photos && inc.photos.length ? `<div style="font-size:11px;font-weight:700;margin-bottom:6px">写真 · រូបថត</div><div style="display:flex;flex-wrap:wrap;margin-bottom:14px">${photosHTML}</div>` : ''}
+  ${inc.photos && inc.photos.length ? `<div style="font-size:11px;font-weight:700;margin-bottom:6px">រូបថត · Photos</div><div style="display:flex;flex-wrap:wrap;margin-bottom:14px">${photosHTML}</div>` : ''}
   <div style="display:flex;gap:40px;margin-top:22px;font-size:12px">
-    <div>報告者 · អ្នករាយការណ៍: <strong>${esc(inc.reporter || '')}</strong></div>
-    <div style="margin-left:auto">署名 · ហត្ថលេខា: ____________________</div>
+    <div>អ្នករាយការណ៍ · Reporter: <strong>${esc(inc.reporter || '')}</strong></div>
+    <div style="margin-left:auto">ហត្ថលេខា · Signature: ____________________</div>
   </div>
   </body></html>`;
   var win = window.open('', '_blank', 'width=900,height=820');
@@ -33188,7 +33398,7 @@ var FvIncidents = ({
       fontSize: 14,
       fontWeight: 600
     }
-  }, "\u1780\u17C6\u178E\u178F\u17CB\u17A0\u17C1\u178F\u17BB\u200B\u1782\u17D2\u179A\u17C4\u17C7\u1790\u17D2\u1793\u17B6\u1780\u17CB \xB7 \u4E8B\u6545\u5831\u544A \xB7 Accident log"), React.createElement(Badge, {
+  }, "\u1780\u17C6\u178E\u178F\u17CB\u17A0\u17C1\u178F\u17BB\u200B\u1782\u17D2\u179A\u17C4\u17C7\u1790\u17D2\u1793\u17B6\u1780\u17CB \xB7 Accident log"), React.createElement(Badge, {
     tone: "neutral"
   }, incidents.length), React.createElement("div", {
     style: {
@@ -33252,7 +33462,7 @@ var FvIncidents = ({
         fontSize: 13,
         fontWeight: 700
       }
-    }, tx.ja, " \xB7 ", tx.km), React.createElement(Badge, {
+    }, tx.km), React.createElement(Badge, {
       tone: inc.severity === 'High' ? 'danger' : inc.severity === 'Medium' ? 'warn' : 'neutral'
     }, inc.severity), React.createElement(Badge, {
       tone: inc.status === 'Resolved' ? 'good' : 'warn'
@@ -33439,7 +33649,6 @@ var FvIncidentForm = ({
     }
   };
   var Lbl = ({
-    ja,
     km
   }) => React.createElement("div", {
     style: {
@@ -33447,12 +33656,7 @@ var FvIncidentForm = ({
       fontWeight: 600,
       marginBottom: 4
     }
-  }, ja, " ", React.createElement("span", {
-    style: {
-      color: 'var(--ink-3)',
-      fontWeight: 400
-    }
-  }, "\xB7 ", km));
+  }, km);
   var sec = t => React.createElement("div", {
     style: {
       font: '600 10px/1 "JetBrains Mono",monospace',
@@ -33468,7 +33672,7 @@ var FvIncidentForm = ({
       fontWeight: 700,
       marginBottom: 4
     }
-  }, "\u26A0\uFE0F ", tr('រាយ​ការណ៍​គ្រោះថ្នាក់', 'Accident report'), " \xB7 \u4EA4\u901A\u4E8B\u6545\u5831\u544A\u66F8"), sec('発生 · កើតហេតុ'), React.createElement("div", {
+  }, "\u26A0\uFE0F ", tr('រាយ​ការណ៍​គ្រោះថ្នាក់', 'Accident report')), sec(tr('កើតហេតុ', 'Occurrence')), React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
@@ -33476,7 +33680,6 @@ var FvIncidentForm = ({
       marginBottom: 6
     }
   }, React.createElement("div", null, React.createElement(Lbl, {
-    ja: "\u8ECA\u4E21",
     km: "\u1799\u17B6\u1793\u1799\u1793\u17D2\u178F"
   }), React.createElement("select", _extends({}, inp, {
     value: vId,
@@ -33485,21 +33688,18 @@ var FvIncidentForm = ({
     key: v.id,
     value: v.id
   }, v.plate, " \xB7 ", v.make)))), React.createElement("div", null, React.createElement(Lbl, {
-    ja: "\u904B\u8EE2\u8005",
     km: "\u17A2\u17D2\u1793\u1780\u1794\u17BE\u1780\u1794\u179A"
   }), React.createElement("input", _extends({}, inp, {
     value: driver,
     onChange: e => setDriver(e.target.value),
     placeholder: tr('ឈ្មោះ​គ្រូ / សិស្ស', 'Instructor / student')
   }))), React.createElement("div", null, React.createElement(Lbl, {
-    ja: "\u767A\u751F\u65E5",
     km: "\u1790\u17D2\u1784\u17C3"
   }), React.createElement("input", _extends({}, inp, {
     type: "date",
     value: date,
     onChange: e => setDate(e.target.value)
   }))), React.createElement("div", null, React.createElement(Lbl, {
-    ja: "\u767A\u751F\u6642\u523B",
     km: "\u1798\u17C9\u17C4\u1784"
   }), React.createElement("input", _extends({}, inp, {
     type: "time",
@@ -33510,13 +33710,12 @@ var FvIncidentForm = ({
       gridColumn: '1/-1'
     }
   }, React.createElement(Lbl, {
-    ja: "\u767A\u751F\u5834\u6240",
     km: "\u1791\u17B8\u1780\u1793\u17D2\u179B\u17C2\u1784"
   }), React.createElement("input", _extends({}, inp, {
     value: location,
     onChange: e => setLocation(e.target.value),
     placeholder: tr('ឧ. ផ្លូវ​លេខ ៣១០', 'e.g. Street 310')
-  })))), sec('種類・状況 · ប្រភេទ និង ស្ថានភាព'), React.createElement("div", {
+  })))), sec(tr('ប្រភេទ និង ស្ថានភាព', 'Type & condition')), React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr 1fr',
@@ -33524,7 +33723,6 @@ var FvIncidentForm = ({
       marginBottom: 6
     }
   }, React.createElement("div", null, React.createElement(Lbl, {
-    ja: "\u4E8B\u6545\u7A2E\u985E",
     km: "\u1794\u17D2\u179A\u1797\u17C1\u1791"
   }), React.createElement("select", _extends({}, inp, {
     value: accType,
@@ -33532,8 +33730,7 @@ var FvIncidentForm = ({
   }), ACC_TYPES.map(t => React.createElement("option", {
     key: t.v,
     value: t.v
-  }, t.ja, " \xB7 ", t.km)))), React.createElement("div", null, React.createElement(Lbl, {
-    ja: "\u5929\u5019",
+  }, t.km)))), React.createElement("div", null, React.createElement(Lbl, {
     km: "\u17A2\u17B6\u1780\u17B6\u179F\u1792\u17B6\u178F\u17BB"
   }), React.createElement("select", _extends({}, inp, {
     value: weather,
@@ -33541,8 +33738,7 @@ var FvIncidentForm = ({
   }), ACC_WEATHER.map(t => React.createElement("option", {
     key: t.v,
     value: t.v
-  }, t.ja, " \xB7 ", t.km)))), React.createElement("div", null, React.createElement(Lbl, {
-    ja: "\u8DEF\u9762",
+  }, t.km)))), React.createElement("div", null, React.createElement(Lbl, {
     km: "\u1795\u17D2\u1791\u17C3\u200B\u1795\u17D2\u179B\u17BC\u179C"
   }), React.createElement("select", _extends({}, inp, {
     value: road,
@@ -33550,24 +33746,21 @@ var FvIncidentForm = ({
   }), ACC_ROAD.map(t => React.createElement("option", {
     key: t.v,
     value: t.v
-  }, t.ja, " \xB7 ", t.km)))), React.createElement("div", null, React.createElement(Lbl, {
-    ja: "\u7A0B\u5EA6",
+  }, t.km)))), React.createElement("div", null, React.createElement(Lbl, {
     km: "\u1780\u1798\u17D2\u179A\u17B7\u178F"
   }), React.createElement("select", _extends({}, inp, {
     value: severity,
     onChange: e => setSeverity(e.target.value)
   }), React.createElement("option", null, "Low"), React.createElement("option", null, "Medium"), React.createElement("option", null, "High"))), React.createElement("div", null, React.createElement(Lbl, {
-    ja: "\u8CA0\u50B7\u8005",
     km: "\u17A2\u17D2\u1793\u1780\u179A\u1794\u17BD\u179F"
   }), React.createElement("select", _extends({}, inp, {
     value: injuries,
     onChange: e => setInjuries(e.target.value)
   }), React.createElement("option", {
     value: "no"
-  }, tr('គ្មាន', '無 None')), React.createElement("option", {
+  }, tr('គ្មាន', 'None')), React.createElement("option", {
     value: "yes"
-  }, tr('មាន', '有 Yes')))), React.createElement("div", null, React.createElement(Lbl, {
-    ja: "\u4FEE\u7406\u8CBB ($)",
+  }, tr('មាន', 'Yes')))), React.createElement("div", null, React.createElement(Lbl, {
     km: "\u178F\u1798\u17D2\u179B\u17C3\u200B\u1787\u17BD\u179F\u1787\u17BB\u179B"
   }), React.createElement("input", _extends({}, inp, {
     type: "number",
@@ -33580,13 +33773,12 @@ var FvIncidentForm = ({
       gridColumn: '1/-1'
     }
   }, React.createElement(Lbl, {
-    ja: "\u8CA0\u50B7\u306E\u8A73\u7D30",
     km: "\u1796\u17D0\u178F\u17CC\u1798\u17B6\u1793\u200B\u17A2\u17D2\u1793\u1780\u179A\u1794\u17BD\u179F"
   }), React.createElement("input", _extends({}, inp, {
     value: injuryDetail,
     onChange: e => setInjuryDetail(e.target.value),
     placeholder: tr('នរណា · របួស​បែប​ណា', 'Who · injury detail')
-  })))), sec('詳細 · សេចក្ដី​លម្អិត'), React.createElement("div", {
+  })))), sec(tr('សេចក្ដី​លម្អិត', 'Details')), React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
@@ -33594,7 +33786,6 @@ var FvIncidentForm = ({
       marginBottom: 6
     }
   }, React.createElement("div", null, React.createElement(Lbl, {
-    ja: "\u72B6\u6CC1\u30FB\u7D4C\u7DEF",
     km: "\u1780\u17B6\u179B\u17C8\u1791\u17C1\u179F\u17C8\u200B\u1793\u17C3\u200B\u17A0\u17C1\u178F\u17BB\u1780\u17B6\u179A\u178E\u17CD *"
   }), React.createElement("textarea", _extends({}, ta, {
     value: circumstances,
@@ -33607,25 +33798,22 @@ var FvIncidentForm = ({
       gap: 10
     }
   }, React.createElement("div", null, React.createElement(Lbl, {
-    ja: "\u640D\u50B7\u72B6\u6CC1",
     km: "\u1780\u17B6\u179A\u1781\u17BC\u1785\u1781\u17B6\u178F"
   }), React.createElement("textarea", _extends({}, ta, {
     value: damage,
     onChange: e => setDamage(e.target.value)
   }))), React.createElement("div", null, React.createElement(Lbl, {
-    ja: "\u539F\u56E0",
     km: "\u1798\u17BC\u179B\u17A0\u17C1\u178F\u17BB"
   }), React.createElement("textarea", _extends({}, ta, {
     value: cause,
     onChange: e => setCause(e.target.value)
   })))), React.createElement("div", null, React.createElement(Lbl, {
-    ja: "\u518D\u767A\u9632\u6B62\u5BFE\u7B56",
     km: "\u179C\u17B7\u1792\u17B6\u1793\u1780\u17B6\u179A\u200B\u1780\u17B6\u179A\u1796\u17B6\u179A"
   }), React.createElement("textarea", _extends({}, ta, {
     value: prevention,
     onChange: e => setPrevention(e.target.value),
     placeholder: tr('របៀប​ការពារ​កុំ​ឱ្យ​កើត​ឡើង​ម្ដង​ទៀត', 'How to prevent recurrence')
-  })))), sec('写真 · រូបថត'), React.createElement("div", {
+  })))), sec(tr('រូបថត', 'Photos')), React.createElement("div", {
     style: {
       display: 'flex',
       flexWrap: 'wrap',
@@ -33685,7 +33873,6 @@ var FvIncidentForm = ({
     },
     onChange: onPick
   })), React.createElement("div", null, React.createElement(Lbl, {
-    ja: "\u5831\u544A\u8005",
     km: "\u17A2\u17D2\u1793\u1780\u179A\u17B6\u1799\u1780\u17B6\u179A\u178E\u17CD"
   }), React.createElement("input", _extends({}, inp, {
     value: reporter,
