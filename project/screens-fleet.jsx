@@ -74,7 +74,15 @@ const FleetScreenV2 = () => {
 
   const vehicles   = VEHICLES;
   const serviceLog = window.__serviceLog;
-  const incidents  = window.__incidentData;
+  // Accidents are stored in the synced settings blob (shared + persisted).
+  // Keep window.__incidentData pointing at it; re-alias after a cloud reload
+  // replaces __schoolSettings with a fresh object.
+  if (window.__schoolSettings) {
+    if (!Array.isArray(window.__schoolSettings.accidents))
+      window.__schoolSettings.accidents = Array.isArray(window.__incidentData) ? window.__incidentData : [];
+    window.__incidentData = window.__schoolSettings.accidents;
+  }
+  const incidents  = window.__incidentData || [];
   const expenseLog = window.__expenseLog || [];
 
   React.useEffect(() => {

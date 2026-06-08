@@ -91,6 +91,9 @@ const nextLessonId = () => {
 const STORE_KEY = 'anzen_v1';
 
 const saveAllData = (skipCloud) => {
+  // Accidents live inside the synced settings blob so they persist and are
+  // shared with everyone (Vehicle-management Accident log), not just this device.
+  try { if (window.__schoolSettings) window.__schoolSettings.accidents = window.__incidentData || []; } catch (e) {}
   try {
     localStorage.setItem(STORE_KEY, JSON.stringify({
       v: 1,

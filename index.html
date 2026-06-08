@@ -3534,6 +3534,9 @@ var nextLessonId = () => {
 var STORE_KEY = 'anzen_v1';
 var saveAllData = skipCloud => {
   try {
+    if (window.__schoolSettings) window.__schoolSettings.accidents = window.__incidentData || [];
+  } catch (e) {}
+  try {
     localStorage.setItem(STORE_KEY, JSON.stringify({
       v: 1,
       STUDENTS,
@@ -28273,7 +28276,11 @@ var FleetScreenV2 = () => {
   var [viewDate, setViewDate] = React.useState(todayStr());
   var vehicles = VEHICLES;
   var serviceLog = window.__serviceLog;
-  var incidents = window.__incidentData;
+  if (window.__schoolSettings) {
+    if (!Array.isArray(window.__schoolSettings.accidents)) window.__schoolSettings.accidents = Array.isArray(window.__incidentData) ? window.__incidentData : [];
+    window.__incidentData = window.__schoolSettings.accidents;
+  }
+  var incidents = window.__incidentData || [];
   var expenseLog = window.__expenseLog || [];
   React.useEffect(() => {
     if (!selectedId && vehicles.length) setSelectedId(vehicles[0].id);
