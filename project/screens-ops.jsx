@@ -505,7 +505,7 @@ const ScheduleAgenda = ({ lessons = LESSONS, studentMode = false, weekDates = []
 };
 
 const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
-  const { openForm, navigate, tr, lang } = useAppActions();
+  const { openForm, navigate, tr, lang, openDetail } = useAppActions();
   const bp = useBreakpoint();
   // Current logged-in user — the note's author (Google-Calendar style).
   const me = (role === 'instructor' ? (window.__loggedInInstructorData || LOGIN_USERS.instructor) : (LOGIN_USERS[role] || LOGIN_USERS.admin)) || {};
@@ -654,9 +654,16 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   // pre-filled with that slot's date+hour (switchable to a note).
   const openSlot = (date, hour) => setNoteModal({ mode:'lesson', date, hour, time:String(hour).padStart(2,'0')+':00', text:'', author:meName, invited:[] });
   const editNote = (n) => setNoteModal({ id:n.id, date:n.date, time:n.time||'', text:n.text, author:n.author, invited:n.invited||[] });
+  // Clicking a note opens a read-only detail (like the lesson detail); its
+  // Edit/Delete buttons call back into these handlers.
+  React.useEffect(() => {
+    window.__editScheduleNote   = (n) => editNote(n);
+    window.__deleteScheduleNote = (id) => removeNote(id);
+    return () => { delete window.__editScheduleNote; delete window.__deleteScheduleNote; };
+  });
 
   const viewProps = { lessons:visibleLessons, studentMode, weekDates, highlights, onHighlight:handleHighlight, hlColor:activeColor,
-    notes:visNotes, onSlotClick: studentMode ? null : openSlot, onNoteClick: editNote };
+    notes:visNotes, onSlotClick: studentMode ? null : openSlot, onNoteClick: (n)=>openDetail('note', n) };
 
   const selStyle = {
     padding:'6px 10px',border:'1px solid var(--border)',borderRadius:7,

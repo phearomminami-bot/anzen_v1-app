@@ -493,6 +493,73 @@ const LessonDetail = ({ lesson, onClose }) => {
   );
 };
 
+// ── Note detail (schedule pinned note) — mirrors LessonDetail ───────────────
+const NoteDetail = ({ note, onClose }) => {
+  const { tr, confirm } = useAppActions();
+  if (!note) return null;
+  const invited = (note.invited || []).map(id => instById(id)).filter(Boolean);
+  const dateLabel = note.date ? formatDateShort(note.date, 'en') : '';
+  const doEdit = () => { if (window.__editScheduleNote) window.__editScheduleNote(note); onClose && onClose(); };
+  const doDelete = () => confirm?.({
+    title: tr('លុប​ចំណាំ?', 'Delete this note?'),
+    body:  tr('អ្នក​ប្រាកដ​ទេ? ចំណាំ​នេះ​នឹង​ត្រូវ​លុប។', 'Are you sure? This note will be removed.'),
+    confirmText: tr('លុប', 'Delete'), danger: true,
+    onConfirm: () => { if (window.__deleteScheduleNote) window.__deleteScheduleNote(note.id); onClose && onClose(); },
+  });
+  return (
+    <div style={{padding:'24px',display:'flex',flexDirection:'column',gap:18}}>
+      {/* Header */}
+      <div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+          <Badge tone="warn">📌 {tr('ចំណាំ','Note')}</Badge>
+        </div>
+        <div style={{fontSize:32,fontWeight:600,marginTop:10,letterSpacing:'-.02em',fontFamily:'var(--font-display)'}}>
+          {note.time || '—'}
+        </div>
+        <div style={{fontSize:13,color:'var(--ink-3)',marginTop:4}}>{dateLabel}</div>
+      </div>
+
+      {/* Note text */}
+      <div style={{padding:14,background:'rgba(250,204,21,.12)',border:'1px solid rgba(250,204,21,.5)',borderRadius:10}}>
+        <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace',marginBottom:6}}>NOTE · ចំណាំ</div>
+        <div style={{fontSize:15,color:'var(--ink)',whiteSpace:'pre-wrap',wordBreak:'break-word',lineHeight:1.6}}>{note.text}</div>
+      </div>
+
+      {/* Invited instructors */}
+      {invited.length > 0 && (
+        <div style={{padding:14,background:'var(--surface-muted)',borderRadius:10}}>
+          <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace',marginBottom:8}}>INVITED · គ្រូ​ដែល​បាន​អញ្ជើញ</div>
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {invited.map(gi => (
+              <div key={gi.id} style={{display:'flex',gap:10,alignItems:'center'}}>
+                {gi.photo ? <Avatar tag={gi.photo} size={32}/> : <div style={{width:32,height:32,borderRadius:999,background:'var(--border)'}}/>}
+                <div>
+                  <div style={{fontSize:12,fontWeight:500}}>{gi.en || gi.name}</div>
+                  <div style={{fontSize:11,color:'var(--ink-3)'}}>{gi.name || ''}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Created by */}
+      {note.author && (
+        <div style={{fontSize:11,color:'var(--ink-3)',display:'flex',alignItems:'center',gap:5,paddingTop:6,borderTop:'1px dashed var(--border)'}}>
+          👤 {tr('បង្កើត​ដោយ','Created by')}: <span style={{fontWeight:600,color:'var(--ink-2)'}}>{note.author}</span>
+        </div>
+      )}
+
+      {/* Actions */}
+      <div style={{display:'flex',gap:8,marginTop:'auto'}}>
+        <Btn kind="ghost"   size="md" onClick={onClose}  style={{flex:1,justifyContent:'center'}}>{tr('បិទ','Close')}</Btn>
+        <Btn kind="ghost"   size="md" onClick={doDelete} style={{flex:1,justifyContent:'center',color:'var(--danger)'}}>{tr('លុប','Delete')}</Btn>
+        <Btn kind="primary" size="md" onClick={doEdit}   style={{flex:1,justifyContent:'center'}}>✎ {tr('កែ','Edit')}</Btn>
+      </div>
+    </div>
+  );
+};
+
 // ── Student profile (full) ─────────────────────────────────────────────────
 const StudentProfile = ({ student, onClose }) => {
   const { toast, openForm, openDetail, role, tr, curriculumDone, setCurriculumDone, curriculumFeedback, setCurriculumFeedback } = useAppActions();
@@ -1515,4 +1582,4 @@ const StaffProfile = ({ staffProfile, onClose }) => {
   );
 };
 
-Object.assign(window, { LessonDetail, StudentProfile, InstructorProfile, VehicleDetail, InvoicePreview, StaffProfile });
+Object.assign(window, { LessonDetail, NoteDetail, StudentProfile, InstructorProfile, VehicleDetail, InvoicePreview, StaffProfile });
