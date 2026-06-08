@@ -69,7 +69,7 @@ const FORM_TITLES = {
   newStaff:       { km:'បន្ថែម​បុគ្គលិក​ថ្មី',         en:'New staff member'  },
 };
 const FORM_WIDTHS  = { newStudent: 794, newVehicle: 760 };
-const FORM_DARK    = new Set(['newVehicle']);
+const FORM_DARK    = new Set();
 
 const DETAILS = {
   lesson:       { Component: LessonDetail,      titleFn: () => ({km:'មេរៀន',         en:'Lesson detail'   }) },

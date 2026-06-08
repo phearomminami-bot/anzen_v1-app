@@ -2416,25 +2416,25 @@ const NV_STATUSES = [
 
 /* ── Dark vehicle form — constants defined outside to prevent remount on re-render ── */
 const NV_D = {
-  bg:      '#0E1829',
-  input:   '#08111E',
-  border:  'rgba(90,140,200,0.22)',
-  text:    '#DCE9F8',
-  label:   '#6E9ABF',
-  muted:   '#3A5570',
-  accent:  '#1B4F7A',
-  red:     '#C04040',
-  redText: '#F08080',
+  bg:      'var(--surface)',
+  input:   'var(--surface)',
+  border:  'var(--border)',
+  text:    'var(--ink)',
+  label:   'var(--ink-3)',
+  muted:   'var(--ink-3)',
+  accent:  'var(--accent)',
+  red:     'var(--danger)',
+  redText: 'var(--danger)',
 };
 const NV_iSt = {
   width:'100%', padding:'9px 12px',
   background: NV_D.input, border:`1px solid ${NV_D.border}`,
   borderRadius:7, color: NV_D.text, fontSize:13,
   fontFamily:'var(--font-km),var(--font-en),sans-serif',
-  boxSizing:'border-box', outline:'none', colorScheme:'dark',
+  boxSizing:'border-box', outline:'none', colorScheme:'light dark',
 };
 const NV_lSt = {
-  fontSize:11, fontWeight:500, color: NV_D.label,
+  fontSize:11, fontWeight:500, color: 'var(--ink-2)',
   marginBottom:5, display:'block',
   fontFamily:'var(--font-km),sans-serif',
 };
@@ -2558,18 +2558,15 @@ const NewVehicleForm = ({ onClose }) => {
     <div style={{background:D.bg, padding:'26px 30px', color:D.text,
       fontFamily:'var(--font-km),var(--font-en),sans-serif', minHeight:'100%'}}>
 
-      {/* Type selector + Title */}
-      <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20}}>
-        <div style={{fontSize:17, fontWeight:700, color:'#FFFFFF', letterSpacing:'-.01em'}}>
-          {meta.icon} ចុះ​បញ្ជី​{meta.km}
-          <span style={{fontSize:12, fontWeight:400, color:D.label, fontFamily:'"JetBrains Mono",monospace', marginLeft:8}}>{nextId}</span>
-        </div>
-        <div style={{display:'flex', gap:4, background:'rgba(255,255,255,.06)', borderRadius:10, padding:4}}>
+      {/* Type selector */}
+      <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20, flexWrap:'wrap', gap:10}}>
+        <span style={{fontSize:12, fontWeight:500, color:'var(--ink-3)', fontFamily:'"JetBrains Mono",monospace'}}>{nextId}</span>
+        <div style={{display:'flex', gap:4, background:'var(--surface-muted)', borderRadius:10, padding:4}}>
           {Object.entries(NV_VTYPE_META).map(([k, m]) => (
             <button key={k} onClick={()=>switchType(k)} style={{
               padding:'7px 16px', borderRadius:7, border:'none', cursor:'pointer',
               background: vType===k ? D.accent : 'transparent',
-              color: vType===k ? '#E8F4FF' : D.label,
+              color: vType===k ? '#fff' : 'var(--ink-2)',
               fontSize:13, fontFamily:'var(--font-km),sans-serif', fontWeight: vType===k ? 600 : 400,
               transition:'all .15s', display:'flex', alignItems:'center', gap:5,
             }}>
@@ -2661,23 +2658,23 @@ const NewVehicleForm = ({ onClose }) => {
       <div style={{display:'flex', gap:10}}>
         <button onClick={save} style={{
           display:'inline-flex', alignItems:'center', gap:8, padding:'10px 22px',
-          borderRadius:8, cursor:'pointer', background:D.accent,
-          border:`1px solid rgba(100,180,255,0.25)`, color:'#E8F4FF',
-          fontSize:13, fontWeight:600, fontFamily:'inherit', transition:'background .15s',
+          borderRadius:8, cursor:'pointer', background:'var(--accent)',
+          border:'none', color:'#fff',
+          fontSize:13, fontWeight:600, fontFamily:'inherit', transition:'opacity .15s',
         }}
-          onMouseEnter={e=>e.currentTarget.style.background='#245F8E'}
-          onMouseLeave={e=>e.currentTarget.style.background=D.accent}>
+          onMouseEnter={e=>e.currentTarget.style.opacity='.9'}
+          onMouseLeave={e=>e.currentTarget.style.opacity='1'}>
           💾 រក្សា​ទុក
         </button>
         <button onClick={onClose} style={{
           display:'inline-flex', alignItems:'center', gap:8, padding:'10px 22px',
-          borderRadius:8, cursor:'pointer', background:'transparent',
-          border:`1px solid rgba(200,80,80,0.4)`, color:D.redText,
+          borderRadius:8, cursor:'pointer', background:'var(--surface)',
+          border:'1px solid var(--border)', color:'var(--ink-2)',
           fontSize:13, fontWeight:500, fontFamily:'inherit', transition:'border-color .15s',
         }}
-          onMouseEnter={e=>e.currentTarget.style.borderColor='rgba(200,80,80,0.8)'}
-          onMouseLeave={e=>e.currentTarget.style.borderColor='rgba(200,80,80,0.4)'}>
-          ✕ លុប​ចោល
+          onMouseEnter={e=>e.currentTarget.style.borderColor='var(--border-strong)'}
+          onMouseLeave={e=>e.currentTarget.style.borderColor='var(--border)'}>
+          ✕ បោះបង់
         </button>
       </div>
     </div>
