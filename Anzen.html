@@ -586,8 +586,7 @@ window.__trRegistry = {
   "路上 19h": "路上 19h",
   "Add an Anthropic API key in Settings → AI to auto-translate": "បញ្ចូល Anthropic API Key ក្នុង Settings → AI ដើម្បីបកប្រែស្វ័យប្រវត្តិ",
   "Image upload failed": "បន្ទុក​រូប​មិន​បាន",
-  "Use \"Insert image\" to embed an image at the cursor · auto-compressed to ~900px": "ប្រើ​ប៊ូតុង \"ដាក់​រូប\" ដើម្បី​បញ្ចូល​រូប​​​​​​​​ភាព​​នៅ​ចំណុច​ដែល​ Cursor ឈរ​ · រូប​ត្រូវ​បាន​បង្រួម​ដោយ​ស្វ័យ​ប្រវត្តិ",
-  "Insert image · KH": "ដាក់​រូប · ខ្មែរ",
+  "Insert image": "ដាក់​រូប",
   "Enter a YouTube ID to preview": "វាយ YouTube ID ដើម្បីមើល",
   "Add video": "បន្ថែម​វីដេអូ",
   "Questions": "សំណួរ",
@@ -22046,7 +22045,8 @@ var TextLessonForm = ({
   onCancel
 }) => {
   var {
-    tr
+    tr,
+    lang
   } = useAppActions();
   var bp = useBreakpoint();
   var {
@@ -22060,6 +22060,15 @@ var TextLessonForm = ({
   var [bodyEn, setBodyEn] = React.useState(initial?.body_en || '');
   var bodyKmRef = React.useRef(null);
   var bodyEnRef = React.useRef(null);
+  var enMode = lang === 'en';
+  React.useEffect(() => {
+    if (!enMode) return;
+    if (!en.trim() && km.trim()) translate(km, en, v => setEn(p => (p || '').trim() ? p : v));
+    if (!bodyEn.trim() && bodyKm.trim()) translate(bodyKm, bodyEn, v => setBodyEn(p => (p || '').trim() ? p : v));
+  }, [enMode]);
+  var curBody = enMode ? bodyEn : bodyKm;
+  var setCurBody = enMode ? setBodyEn : setBodyKm;
+  var curBodyRef = enMode ? bodyEnRef : bodyKmRef;
   var submit = () => {
     if (!km.trim() && !en.trim()) return;
     onSave({
@@ -22079,27 +22088,19 @@ var TextLessonForm = ({
       gap: bp.mobile ? 12 : 16
     }
   }, React.createElement(AlField, {
-    km: "\u1785\u17C6\u178E\u1784\u1787\u17BE\u1784 \xB7 \u1781\u17D2\u1798\u17C2\u179A",
-    en: "Title \xB7 Khmer",
+    km: enMode ? 'ចំណងជើង · អង់គ្លេស' : 'ចំណងជើង · ខ្មែរ',
     full: false
   }, React.createElement(AlInput, {
-    value: km,
-    onChange: e => setKm(e.target.value),
-    onBlur: () => translate(km, en, v => setEn(p => (p || '').trim() ? p : v)),
-    placeholder: "\u17A7. \u1785\u17D2\u1794\u17B6\u1794\u17CB\u1785\u179A\u17B6\u1785\u179A\u178E\u17CD"
-  })), React.createElement(AlField, {
-    km: "\u1785\u17C6\u178E\u1784\u1787\u17BE\u1784 \xB7 \u17A2\u1784\u17CB\u1782\u17D2\u179B\u17C1\u179F",
-    en: "Title \xB7 English",
-    full: false
-  }, React.createElement(AlInput, {
-    value: en,
-    onChange: e => setEn(e.target.value),
-    placeholder: "e.g. Road Traffic Law"
+    value: enMode ? en : km,
+    onChange: e => enMode ? setEn(e.target.value) : setKm(e.target.value),
+    onBlur: () => {
+      if (!enMode) translate(km, en, v => setEn(p => (p || '').trim() ? p : v));
+    },
+    placeholder: enMode ? 'e.g. Road Traffic Law' : 'ឧ. ច្បាប់ចរាចរណ៍'
   }), React.createElement(TrBadge, {
     show: trBusy
   })), React.createElement(AlField, {
     km: "\u179A\u1799\u17C8\u1796\u17C1\u179B\u17A2\u17B6\u1793 (\u1793\u17B6\u1791\u17B8)",
-    en: "Read time (minutes)",
     full: false
   }, React.createElement(AlInput, {
     type: "number",
@@ -22110,33 +22111,16 @@ var TextLessonForm = ({
     style: {
       width: 120
     }
-  })), React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'flex-end',
-      gap: 8
-    }
-  }, React.createElement("div", {
-    style: {
-      fontSize: 11,
-      color: 'var(--ink-3)',
-      lineHeight: 1.45,
-      padding: '8px 10px',
-      background: 'var(--surface-muted)',
-      borderRadius: 8,
-      border: '1px dashed var(--border)',
-      fontFamily: '"JetBrains Mono",monospace',
-      letterSpacing: '.02em'
-    }
-  }, tr('ប្រើ​ប៊ូតុង "ដាក់​រូប" ដើម្បី​បញ្ចូល​រូប​​​​​​​​ភាព​​នៅ​ចំណុច​ដែល​ Cursor ឈរ​ · រូប​ត្រូវ​បាន​បង្រួម​ដោយ​ស្វ័យ​ប្រវត្តិ', 'Use "Insert image" to embed an image at the cursor · auto-compressed to ~900px'))), React.createElement(AlField, {
-    km: "\u1781\u17D2\u179B\u17B9\u1798\u179F\u17B6\u179A \xB7 \u1781\u17D2\u1798\u17C2\u179A",
-    en: "Body \xB7 Khmer (use **bold** and \u2022 bullets)"
+  })), React.createElement(AlField, {
+    km: enMode ? 'ខ្លឹមសារ · អង់គ្លេស' : 'ខ្លឹមសារ · ខ្មែរ'
   }, React.createElement(AlTextarea, {
-    ref: bodyKmRef,
-    value: bodyKm,
-    onChange: e => setBodyKm(e.target.value),
-    onBlur: () => translate(bodyKm, bodyEn, v => setBodyEn(p => (p || '').trim() ? p : v)),
-    placeholder: 'ខ្លឹមសារ​មេរៀន...\n\n**ចំណុចសំខាន់:**\n• ...'
+    ref: curBodyRef,
+    value: curBody,
+    onChange: e => setCurBody(e.target.value),
+    onBlur: () => {
+      if (!enMode) translate(bodyKm, bodyEn, v => setBodyEn(p => (p || '').trim() ? p : v));
+    },
+    placeholder: enMode ? 'Lesson content...\n\n**Key points:**\n• ...' : 'ខ្លឹមសារ​មេរៀន...\n\n**ចំណុចសំខាន់:**\n• ...'
   }), React.createElement("div", {
     style: {
       display: 'flex',
@@ -22146,11 +22130,11 @@ var TextLessonForm = ({
       flexWrap: 'wrap'
     }
   }, React.createElement(ImagePickerButton, {
-    label: tr('ដាក់​រូប · ខ្មែរ', 'Insert image · KH'),
-    onPick: dataUrl => insertAtCursor(bodyKmRef, setBodyKm, bodyKm, `\n![](${dataUrl})\n`)
+    label: tr('ដាក់​រូប', 'Insert image'),
+    onPick: dataUrl => insertAtCursor(curBodyRef, setCurBody, curBody, `\n![](${dataUrl})\n`)
   }), React.createElement(ImagePreviewStrip, {
-    body: bodyKm,
-    onRemove: src => setBodyKm(stripImageFromBody(bodyKm, src))
+    body: curBody,
+    onRemove: src => setCurBody(stripImageFromBody(curBody, src))
   }))), React.createElement("div", {
     style: {
       gridColumn: '1 / -1',

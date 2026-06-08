@@ -249,7 +249,7 @@ const ImagePickerButton = ({ onPick, label, accept = 'image/*', size = 'sm' }) =
 
 // ── Text-lesson form ──────────────────────────────────────────────────────
 const TextLessonForm = ({ initial, onSave, onCancel }) => {
-  const { tr } = useAppActions();
+  const { tr, lang } = useAppActions();
   const bp = useBreakpoint();
   const { busy: trBusy, translate } = useAutoTranslate();
   const [km,    setKm]    = React.useState(initial?.km    || '');
@@ -259,6 +259,18 @@ const TextLessonForm = ({ initial, onSave, onCancel }) => {
   const [bodyEn, setBodyEn] = React.useState(initial?.body_en || '');
   const bodyKmRef = React.useRef(null);
   const bodyEnRef = React.useRef(null);
+
+  // Title & body follow the app language: Khmer when km, the translated
+  // English when the whole UI is switched to English.
+  const enMode = lang === 'en';
+  React.useEffect(() => {
+    if (!enMode) return;
+    if (!en.trim()     && km.trim())     translate(km,     en,     v => setEn(p     => (p||'').trim()?p:v));
+    if (!bodyEn.trim() && bodyKm.trim()) translate(bodyKm, bodyEn, v => setBodyEn(p => (p||'').trim()?p:v));
+  }, [enMode]);
+  const curBody    = enMode ? bodyEn : bodyKm;
+  const setCurBody = enMode ? setBodyEn : setBodyKm;
+  const curBodyRef = enMode ? bodyEnRef : bodyKmRef;
 
   const submit = () => {
     if (!km.trim() && !en.trim()) return;
@@ -272,39 +284,27 @@ const TextLessonForm = ({ initial, onSave, onCancel }) => {
 
   return (
     <div style={{padding:bp.mobile?'18px 16px 22px':'20px 28px 24px',display:'grid',gridTemplateColumns:bp.mobile?'1fr':'1fr 1fr',gap:bp.mobile?12:16}}>
-      <AlField km="ចំណងជើង · ខ្មែរ"   en="Title · Khmer" full={false}>
-        <AlInput value={km} onChange={e=>setKm(e.target.value)} onBlur={()=>translate(km, en, v=>setEn(p=>(p||'').trim()?p:v))} placeholder="ឧ. ច្បាប់ចរាចរណ៍"/>
-      </AlField>
-      <AlField km="ចំណងជើង · អង់គ្លេស" en="Title · English" full={false}>
-        <AlInput value={en} onChange={e=>setEn(e.target.value)} placeholder="e.g. Road Traffic Law"/>
+      <AlField km={enMode ? 'ចំណងជើង · អង់គ្លេស' : 'ចំណងជើង · ខ្មែរ'} full={false}>
+        <AlInput value={enMode ? en : km}
+          onChange={e=> enMode ? setEn(e.target.value) : setKm(e.target.value)}
+          onBlur={()=>{ if (!enMode) translate(km, en, v=>setEn(p=>(p||'').trim()?p:v)); }}
+          placeholder={enMode ? 'e.g. Road Traffic Law' : 'ឧ. ច្បាប់ចរាចរណ៍'}/>
         <TrBadge show={trBusy}/>
       </AlField>
-      <AlField km="រយៈពេលអាន (នាទី)" en="Read time (minutes)" full={false}>
+      <AlField km="រយៈពេលអាន (នាទី)" full={false}>
         <AlInput type="number" min="1" max="120" value={mins} onChange={e=>setMins(e.target.value)} style={{width:120}}/>
       </AlField>
-      <div style={{display:'flex',alignItems:'flex-end',gap:8}}>
-        <div style={{
-          fontSize:11,color:'var(--ink-3)',lineHeight:1.45,
-          padding:'8px 10px',background:'var(--surface-muted)',
-          borderRadius:8,border:'1px dashed var(--border)',
-          fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.02em',
-        }}>
-          {tr(
-            'ប្រើ​ប៊ូតុង "ដាក់​រូប" ដើម្បី​បញ្ចូល​រូប​​​​​​​​ភាព​​នៅ​ចំណុច​ដែល​ Cursor ឈរ​ · រូប​ត្រូវ​បាន​បង្រួម​ដោយ​ស្វ័យ​ប្រវត្តិ',
-            'Use "Insert image" to embed an image at the cursor · auto-compressed to ~900px',
-          )}
-        </div>
-      </div>
-      <AlField km="ខ្លឹមសារ · ខ្មែរ"  en="Body · Khmer (use **bold** and • bullets)">
-        <AlTextarea ref={bodyKmRef} value={bodyKm} onChange={e=>setBodyKm(e.target.value)} onBlur={()=>translate(bodyKm, bodyEn, v=>setBodyEn(p=>(p||'').trim()?p:v))} placeholder={'ខ្លឹមសារ​មេរៀន...\n\n**ចំណុចសំខាន់:**\n• ...'}/>
+      <AlField km={enMode ? 'ខ្លឹមសារ · អង់គ្លេស' : 'ខ្លឹមសារ · ខ្មែរ'}>
+        <AlTextarea ref={curBodyRef} value={curBody}
+          onChange={e=>setCurBody(e.target.value)}
+          onBlur={()=>{ if (!enMode) translate(bodyKm, bodyEn, v=>setBodyEn(p=>(p||'').trim()?p:v)); }}
+          placeholder={enMode ? 'Lesson content...\n\n**Key points:**\n• ...' : 'ខ្លឹមសារ​មេរៀន...\n\n**ចំណុចសំខាន់:**\n• ...'}/>
         <div style={{display:'flex',gap:8,marginTop:6,alignItems:'center',flexWrap:'wrap'}}>
           <ImagePickerButton
-            label={tr('ដាក់​រូប · ខ្មែរ','Insert image · KH')}
-            onPick={(dataUrl) =>
-              insertAtCursor(bodyKmRef, setBodyKm, bodyKm, `\n![](${dataUrl})\n`)
-            }
+            label={tr('ដាក់​រូប','Insert image')}
+            onPick={(dataUrl) => insertAtCursor(curBodyRef, setCurBody, curBody, `\n![](${dataUrl})\n`)}
           />
-          <ImagePreviewStrip body={bodyKm} onRemove={(src) => setBodyKm(stripImageFromBody(bodyKm, src))}/>
+          <ImagePreviewStrip body={curBody} onRemove={(src) => setCurBody(stripImageFromBody(curBody, src))}/>
         </div>
       </AlField>
       {/* English body is hidden — still auto-translated from Khmer on blur and saved. */}
