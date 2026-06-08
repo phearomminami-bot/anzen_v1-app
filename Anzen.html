@@ -33681,8 +33681,8 @@ var FvIncidentForm = ({
     }
   }, "\u26A0\uFE0F ", tr('រាយ​ការណ៍​គ្រោះថ្នាក់', 'Accident report')), sec(tr('កើតហេតុ', 'Occurrence')), React.createElement("div", {
     style: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
+      display: 'flex',
+      flexDirection: 'column',
       gap: 10,
       marginBottom: 6
     }
@@ -33695,36 +33695,24 @@ var FvIncidentForm = ({
     key: v.id,
     value: v.id
   }, v.plate, " \xB7 ", v.make)))), React.createElement("div", null, React.createElement(Lbl, {
-    km: "\u1790\u17D2\u1784\u17C3"
-  }), React.createElement("input", _extends({}, inp, {
-    type: "date",
-    value: date,
-    onChange: e => setDate(e.target.value)
-  }))), React.createElement("div", {
-    style: {
-      gridColumn: '1/-1'
-    }
-  }, React.createElement(Lbl, {
     km: "\u17A2\u17D2\u1793\u1780\u1794\u17BE\u1780\u1794\u179A"
   }), React.createElement("input", _extends({}, inp, {
     value: driver,
     onChange: e => setDriver(e.target.value),
     placeholder: tr('ឈ្មោះ​គ្រូ / សិស្ស', 'Instructor / student')
-  }))), React.createElement("div", {
-    style: {
-      gridColumn: '1/-1'
-    }
-  }, React.createElement(Lbl, {
+  }))), React.createElement("div", null, React.createElement(Lbl, {
+    km: "\u1790\u17D2\u1784\u17C3"
+  }), React.createElement("input", _extends({}, inp, {
+    type: "date",
+    value: date,
+    onChange: e => setDate(e.target.value)
+  }))), React.createElement("div", null, React.createElement(Lbl, {
     km: "\u1798\u17C9\u17C4\u1784"
   }), React.createElement("input", _extends({}, inp, {
     type: "time",
     value: time,
     onChange: e => setTime(e.target.value)
-  }))), React.createElement("div", {
-    style: {
-      gridColumn: '1/-1'
-    }
-  }, React.createElement(Lbl, {
+  }))), React.createElement("div", null, React.createElement(Lbl, {
     km: "\u1791\u17B8\u1780\u1793\u17D2\u179B\u17C2\u1784"
   }), React.createElement("input", _extends({}, inp, {
     value: location,

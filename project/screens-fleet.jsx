@@ -2525,12 +2525,12 @@ const FvIncidentForm = ({ vehicles, onClose, forceUpdate }) => {
       <div style={{fontSize:14,fontWeight:700,marginBottom:4}}>⚠️ {tr('រាយ​ការណ៍​គ្រោះថ្នាក់','Accident report')}</div>
 
       {sec(tr('កើតហេតុ','Occurrence'))}
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:6}}>
+      <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:6}}>
         <div><Lbl km="យានយន្ត"/><select {...inp} value={vId} onChange={e=>setVId(e.target.value)}>{vehicles.map(v=><option key={v.id} value={v.id}>{v.plate} · {v.make}</option>)}</select></div>
+        <div><Lbl km="អ្នកបើកបរ"/><input {...inp} value={driver} onChange={e=>setDriver(e.target.value)} placeholder={tr('ឈ្មោះ​គ្រូ / សិស្ស','Instructor / student')}/></div>
         <div><Lbl km="ថ្ងៃ"/><input {...inp} type="date" value={date} onChange={e=>setDate(e.target.value)}/></div>
-        <div style={{gridColumn:'1/-1'}}><Lbl km="អ្នកបើកបរ"/><input {...inp} value={driver} onChange={e=>setDriver(e.target.value)} placeholder={tr('ឈ្មោះ​គ្រូ / សិស្ស','Instructor / student')}/></div>
-        <div style={{gridColumn:'1/-1'}}><Lbl km="ម៉ោង"/><input {...inp} type="time" value={time} onChange={e=>setTime(e.target.value)}/></div>
-        <div style={{gridColumn:'1/-1'}}><Lbl km="ទីកន្លែង"/><input {...inp} value={location} onChange={e=>setLocation(e.target.value)} placeholder={tr('ឧ. ផ្លូវ​លេខ ៣១០','e.g. Street 310')}/></div>
+        <div><Lbl km="ម៉ោង"/><input {...inp} type="time" value={time} onChange={e=>setTime(e.target.value)}/></div>
+        <div><Lbl km="ទីកន្លែង"/><input {...inp} value={location} onChange={e=>setLocation(e.target.value)} placeholder={tr('ឧ. ផ្លូវ​លេខ ៣១០','e.g. Street 310')}/></div>
       </div>
 
       {sec(tr('ប្រភេទ និង ស្ថានភាព','Type & condition'))}
