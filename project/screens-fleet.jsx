@@ -2527,9 +2527,9 @@ const FvIncidentForm = ({ vehicles, onClose, forceUpdate }) => {
       {sec(tr('កើតហេតុ','Occurrence'))}
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:6}}>
         <div><Lbl km="យានយន្ត"/><select {...inp} value={vId} onChange={e=>setVId(e.target.value)}>{vehicles.map(v=><option key={v.id} value={v.id}>{v.plate} · {v.make}</option>)}</select></div>
-        <div><Lbl km="អ្នកបើកបរ"/><input {...inp} value={driver} onChange={e=>setDriver(e.target.value)} placeholder={tr('ឈ្មោះ​គ្រូ / សិស្ស','Instructor / student')}/></div>
         <div><Lbl km="ថ្ងៃ"/><input {...inp} type="date" value={date} onChange={e=>setDate(e.target.value)}/></div>
-        <div><Lbl km="ម៉ោង"/><input {...inp} type="time" value={time} onChange={e=>setTime(e.target.value)}/></div>
+        <div style={{gridColumn:'1/-1'}}><Lbl km="អ្នកបើកបរ"/><input {...inp} value={driver} onChange={e=>setDriver(e.target.value)} placeholder={tr('ឈ្មោះ​គ្រូ / សិស្ស','Instructor / student')}/></div>
+        <div style={{gridColumn:'1/-1'}}><Lbl km="ម៉ោង"/><input {...inp} type="time" value={time} onChange={e=>setTime(e.target.value)}/></div>
         <div style={{gridColumn:'1/-1'}}><Lbl km="ទីកន្លែង"/><input {...inp} value={location} onChange={e=>setLocation(e.target.value)} placeholder={tr('ឧ. ផ្លូវ​លេខ ៣១០','e.g. Street 310')}/></div>
       </div>
 
@@ -2547,10 +2547,8 @@ const FvIncidentForm = ({ vehicles, onClose, forceUpdate }) => {
       {sec(tr('សេចក្ដី​លម្អិត','Details'))}
       <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:6}}>
         <div><Lbl km="កាលៈទេសៈ​នៃ​ហេតុការណ៍ *"/><textarea {...ta} value={circumstances} onChange={e=>setCircumstances(e.target.value)} placeholder={tr('តើ​មាន​អ្វី​កើតឡើង…','What happened…')}/></div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-          <div><Lbl km="ការខូចខាត"/><textarea {...ta} value={damage} onChange={e=>setDamage(e.target.value)}/></div>
-          <div><Lbl km="មូលហេតុ"/><textarea {...ta} value={cause} onChange={e=>setCause(e.target.value)}/></div>
-        </div>
+        <div><Lbl km="ការខូចខាត"/><textarea {...ta} value={damage} onChange={e=>setDamage(e.target.value)}/></div>
+        <div><Lbl km="មូលហេតុ"/><textarea {...ta} value={cause} onChange={e=>setCause(e.target.value)}/></div>
         <div><Lbl km="វិធានការ​ការពារ"/><textarea {...ta} value={prevention} onChange={e=>setPrevention(e.target.value)} placeholder={tr('របៀប​ការពារ​កុំ​ឱ្យ​កើត​ឡើង​ម្ដង​ទៀត','How to prevent recurrence')}/></div>
       </div>
 

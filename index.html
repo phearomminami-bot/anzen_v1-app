@@ -33695,18 +33695,26 @@ var FvIncidentForm = ({
     key: v.id,
     value: v.id
   }, v.plate, " \xB7 ", v.make)))), React.createElement("div", null, React.createElement(Lbl, {
-    km: "\u17A2\u17D2\u1793\u1780\u1794\u17BE\u1780\u1794\u179A"
-  }), React.createElement("input", _extends({}, inp, {
-    value: driver,
-    onChange: e => setDriver(e.target.value),
-    placeholder: tr('ឈ្មោះ​គ្រូ / សិស្ស', 'Instructor / student')
-  }))), React.createElement("div", null, React.createElement(Lbl, {
     km: "\u1790\u17D2\u1784\u17C3"
   }), React.createElement("input", _extends({}, inp, {
     type: "date",
     value: date,
     onChange: e => setDate(e.target.value)
-  }))), React.createElement("div", null, React.createElement(Lbl, {
+  }))), React.createElement("div", {
+    style: {
+      gridColumn: '1/-1'
+    }
+  }, React.createElement(Lbl, {
+    km: "\u17A2\u17D2\u1793\u1780\u1794\u17BE\u1780\u1794\u179A"
+  }), React.createElement("input", _extends({}, inp, {
+    value: driver,
+    onChange: e => setDriver(e.target.value),
+    placeholder: tr('ឈ្មោះ​គ្រូ / សិស្ស', 'Instructor / student')
+  }))), React.createElement("div", {
+    style: {
+      gridColumn: '1/-1'
+    }
+  }, React.createElement(Lbl, {
     km: "\u1798\u17C9\u17C4\u1784"
   }), React.createElement("input", _extends({}, inp, {
     type: "time",
@@ -33798,13 +33806,7 @@ var FvIncidentForm = ({
     value: circumstances,
     onChange: e => setCircumstances(e.target.value),
     placeholder: tr('តើ​មាន​អ្វី​កើតឡើង…', 'What happened…')
-  }))), React.createElement("div", {
-    style: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: 10
-    }
-  }, React.createElement("div", null, React.createElement(Lbl, {
+  }))), React.createElement("div", null, React.createElement(Lbl, {
     km: "\u1780\u17B6\u179A\u1781\u17BC\u1785\u1781\u17B6\u178F"
   }), React.createElement("textarea", _extends({}, ta, {
     value: damage,
@@ -33814,7 +33816,7 @@ var FvIncidentForm = ({
   }), React.createElement("textarea", _extends({}, ta, {
     value: cause,
     onChange: e => setCause(e.target.value)
-  })))), React.createElement("div", null, React.createElement(Lbl, {
+  }))), React.createElement("div", null, React.createElement(Lbl, {
     km: "\u179C\u17B7\u1792\u17B6\u1793\u1780\u17B6\u179A\u200B\u1780\u17B6\u179A\u1796\u17B6\u179A"
   }), React.createElement("textarea", _extends({}, ta, {
     value: prevention,
