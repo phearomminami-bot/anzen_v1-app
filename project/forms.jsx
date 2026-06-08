@@ -1920,6 +1920,8 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
         pickup,
         location: locationText.trim(),
         note: note.trim(),
+        createdBy: window.__currentUserName || '',
+        createdAt: new Date().toISOString(),
       });
     });
 

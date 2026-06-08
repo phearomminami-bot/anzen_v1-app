@@ -456,6 +456,14 @@ const LessonDetail = ({ lesson, onClose }) => {
         </div>
       )}
 
+      {/* Created by */}
+      {lesson.createdBy && (
+        <div style={{fontSize:11,color:'var(--ink-3)',display:'flex',alignItems:'center',gap:5,paddingTop:6,borderTop:'1px dashed var(--border)'}}>
+          👤 {tr('បង្កើត​ដោយ','Created by')}: <span style={{fontWeight:600,color:'var(--ink-2)'}}>{lesson.createdBy}</span>
+          {lesson.createdAt && <span style={{marginLeft:'auto',fontFamily:'"JetBrains Mono",monospace',fontSize:10}}>{String(lesson.createdAt).slice(0,10)}</span>}
+        </div>
+      )}
+
       {/* Actions */}
       <div style={{display:'flex',gap:8,marginTop:'auto'}}>
         {isStudent ? (

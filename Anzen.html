@@ -317,6 +317,7 @@ window.__trRegistry = {
   "Cancel lesson": "លុប",
   "Lesson cancelled": "បាន​លុប​ចោល​មេរៀន",
   "Done": "ចប់",
+  "Created by": "បង្កើត​ដោយ",
   "Close": "បិទ",
   "Contacting instructor…": "សាក​ទំនាក់​គ្រូ…",
   "Contact instructor": "ទំនាក់​គ្រូ",
@@ -492,7 +493,6 @@ window.__trRegistry = {
   "e.g. Teacher meeting at 2pm": "ឧ. ប្រជុំគ្រូ ម៉ោង ២ រសៀល",
   "Invite instructors": "អញ្ជើញ​គ្រូ",
   "No instructors": "មិន​មាន​គ្រូ",
-  "Created by": "បង្កើត​ដោយ",
   "Maintenance": "កាលវិភាគ​ថែទាំ",
   "Add vehicle": "បន្ថែមរថយន្ត",
   "Utilization": "ការ​ប្រើ​ប្រាស់",
@@ -6569,7 +6569,9 @@ var NewLessonForm = ({
         status: 'scheduled',
         pickup,
         location: locationText.trim(),
-        note: note.trim()
+        note: note.trim(),
+        createdBy: window.__currentUserName || '',
+        createdAt: new Date().toISOString()
       });
     });
     if (window.__notifyLessonsChanged) window.__notifyLessonsChanged();
@@ -9423,7 +9425,28 @@ var LessonDetail = ({
       fontSize: 13,
       color: 'var(--ink-2)'
     }
-  }, lesson.note), React.createElement("div", {
+  }, lesson.note), lesson.createdBy && React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--ink-3)',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 5,
+      paddingTop: 6,
+      borderTop: '1px dashed var(--border)'
+    }
+  }, "\uD83D\uDC64 ", tr('បង្កើត​ដោយ', 'Created by'), ": ", React.createElement("span", {
+    style: {
+      fontWeight: 600,
+      color: 'var(--ink-2)'
+    }
+  }, lesson.createdBy), lesson.createdAt && React.createElement("span", {
+    style: {
+      marginLeft: 'auto',
+      fontFamily: '"JetBrains Mono",monospace',
+      fontSize: 10
+    }
+  }, String(lesson.createdAt).slice(0, 10))), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
@@ -59467,6 +59490,11 @@ function App() {
   React.useEffect(() => {
     window.__anzenLang = lang;
   }, [lang]);
+  React.useEffect(() => {
+    var u = (role === 'instructor' ? window.__loggedInInstructorData || LOGIN_USERS.instructor : LOGIN_USERS[role]) || {};
+    window.__currentUser = u;
+    window.__currentUserName = (lang === 'km' ? u.km : u.en) || u.en || u.km || '';
+  }, [role, lang, authed]);
   React.useEffect(() => {
     window.__curriculumDone = curriculumDone;
   }, [curriculumDone]);

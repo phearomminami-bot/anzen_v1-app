@@ -116,6 +116,13 @@ function App() {
   // mirror to window so non-context helpers can read it
   React.useEffect(() => { window.__anzenLang = lang; }, [lang]);
 
+  // Mirror the current logged-in user so forms can record who created a record.
+  React.useEffect(() => {
+    const u = (role === 'instructor' ? (window.__loggedInInstructorData || LOGIN_USERS.instructor) : LOGIN_USERS[role]) || {};
+    window.__currentUser = u;
+    window.__currentUserName = (lang === 'km' ? u.km : u.en) || u.en || u.km || '';
+  }, [role, lang, authed]);
+
   // Keep curriculum state mirrored to window for persistence
   React.useEffect(() => { window.__curriculumDone = curriculumDone; }, [curriculumDone]);
   React.useEffect(() => { window.__curriculumFeedback = curriculumFeedback; }, [curriculumFeedback]);
