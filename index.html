@@ -268,8 +268,6 @@ window.__trRegistry = {
   "+ Add guest instructor": "+ Add guest instructor",
   "LOCATION": "ទីតាំង",
   "Meeting location": "ទីតាំង​ជួប",
-  "Or type manually": "ឬ បំពេញ​ដោយ​ដៃ",
-  "Custom location...": "ទីតាំង​ផ្សេង...",
   "Note": "កំណត់ចំណាំ",
   "Extra note...": "ចំណាំ​បន្ថែម...",
   "Instructor \"'+INSTRUCTORS.find(i=>i.id===instId)?.en+'\" is busy '+String(hour).padStart(2,'0": "គ្រូ​​ \"'+INSTRUCTORS.find(i=>i.id===instId)?.name+'\" រវល់​ម៉ោង​' + String(hour).padStart(2,'0') + ':00–' + String(parseInt(hour)+parseFloat(len)).padStart(2,'0') + ':00",
@@ -308,6 +306,8 @@ window.__trRegistry = {
   "Start time": "ម៉ោង​ចាប់​ផ្ដើម",
   "Add guest instructor": "Add guest instructor",
   "LOCATION & STATUS": "ទីតាំង + ស្ថានភាព",
+  "Or type manually": "ឬ បំពេញ​ដោយ​ដៃ",
+  "Custom location...": "ទីតាំង​ផ្សេង...",
   "Status": "ស្ថានភាព",
   "Scheduled": "កំណត់​ពេល",
   "Done ✓": "រួច​រាល់",
@@ -6831,7 +6831,8 @@ var NewLessonForm = ({
       gap: 10
     }
   }, React.createElement(Field, {
-    label: tr('សិស្ស', 'Student')
+    label: tr('សិស្ស', 'Student'),
+    full: true
   }, React.createElement(Select, {
     value: studentId,
     onChange: e => setStudentId(e.target.value)
@@ -6841,6 +6842,7 @@ var NewLessonForm = ({
     key: s.id,
     value: s.id
   }, s.en || s.name)))), React.createElement(Field, {
+    full: true,
     label: tr('គ្រូ *', 'Instructor *'),
     sub: touched.instId && !instId ? tr('ទាមទារ', 'Required') : hasConflict ? tr('⚠ គ្រូ​នេះ​រវល់​ម៉ោង​នេះ', '⚠ Instructor busy') : ''
   }, React.createElement(Select, {
@@ -6940,31 +6942,22 @@ var NewLessonForm = ({
     }, busy ? '🔴 ' : '', i.en || i.name, busy ? tr(' (រវល់)', ' (busy)') : '');
   })))), React.createElement(FormSection, {
     title: tr('ទីតាំង', 'LOCATION')
-  }, React.createElement("div", {
-    style: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: 10
-    }
   }, React.createElement(Field, {
-    label: tr('ទីតាំង​ជួប', 'Meeting location')
+    label: tr('ទីតាំង​ជួប', 'Meeting location'),
+    full: true
   }, React.createElement(Select, {
     value: pickup,
     onChange: e => setPickup(e.target.value)
   }, LOCATIONS.map(loc => React.createElement("option", {
     key: loc.v,
     value: loc.v
-  }, loc.en)))), React.createElement(Field, {
-    label: tr('ឬ បំពេញ​ដោយ​ដៃ', 'Or type manually')
-  }, React.createElement(Input, {
-    value: locationText,
-    onChange: e => setLocationText(e.target.value),
-    placeholder: tr('ទីតាំង​ផ្សេង...', 'Custom location...')
-  }))), React.createElement(Field, {
-    label: tr('ចំណាំ', 'Note'),
+  }, loc.en)))), React.createElement("div", {
     style: {
-      marginTop: 10
+      height: 10
     }
+  }), React.createElement(Field, {
+    label: tr('ចំណាំ', 'Note'),
+    full: true
   }, React.createElement(Input, {
     value: note,
     onChange: e => setNote(e.target.value),

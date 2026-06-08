@@ -2074,7 +2074,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
       {/* ── PEOPLE ── */}
       <FormSection title={tr('អ្នក​ពាក់​ព័ន្ធ','PEOPLE')}>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-          <Field label={tr('សិស្ស','Student')}>
+          <Field label={tr('សិស្ស','Student')} full>
             <Select value={studentId} onChange={e=>setStudentId(e.target.value)}>
               <option value="">{tr('ក្រុម / មិន​ផ្ទាល់​ខ្លួន','Group / not individual')}</option>
               {STUDENTS.map(s=>(
@@ -2082,7 +2082,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
               ))}
             </Select>
           </Field>
-          <Field label={tr('គ្រូ *','Instructor *')}
+          <Field full label={tr('គ្រូ *','Instructor *')}
             sub={touched.instId&&!instId ? tr('ទាមទារ','Required') : hasConflict ? tr('⚠ គ្រូ​នេះ​រវល់​ម៉ោង​នេះ','⚠ Instructor busy') : ''}>
             <Select value={instId} onChange={e=>setInstId(e.target.value)}
               style={hasConflict?{borderColor:'var(--warn)'}:touched.instId&&!instId?{borderColor:'var(--danger)'}:{}}>
@@ -2148,19 +2148,15 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
 
       {/* ── LOCATION ── */}
       <FormSection title={tr('ទីតាំង','LOCATION')}>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-          <Field label={tr('ទីតាំង​ជួប','Meeting location')}>
-            <Select value={pickup} onChange={e=>setPickup(e.target.value)}>
-              {LOCATIONS.map(loc => (
-                <option key={loc.v} value={loc.v}>{loc.en}</option>
-              ))}
-            </Select>
-          </Field>
-          <Field label={tr('ឬ បំពេញ​ដោយ​ដៃ','Or type manually')}>
-            <Input value={locationText} onChange={e=>setLocationText(e.target.value)} placeholder={tr('ទីតាំង​ផ្សេង...','Custom location...')}/>
-          </Field>
-        </div>
-        <Field label={tr('ចំណាំ','Note')} style={{marginTop:10}}>
+        <Field label={tr('ទីតាំង​ជួប','Meeting location')} full>
+          <Select value={pickup} onChange={e=>setPickup(e.target.value)}>
+            {LOCATIONS.map(loc => (
+              <option key={loc.v} value={loc.v}>{loc.en}</option>
+            ))}
+          </Select>
+        </Field>
+        <div style={{height:10}}/>
+        <Field label={tr('ចំណាំ','Note')} full>
           <Input value={note} onChange={e=>setNote(e.target.value)} placeholder={tr('ចំណាំ​បន្ថែម...','Extra note...')}/>
         </Field>
       </FormSection>
