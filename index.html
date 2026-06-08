@@ -35101,7 +35101,8 @@ var VehicleMobileDetail = ({
 };
 var VehicleScreen = () => {
   var {
-    tr
+    tr,
+    openForm
   } = useAppActions();
   var bp = useBreakpoint();
   var [, forceUpdate] = React.useReducer(x => x + 1, 0);
@@ -35241,7 +35242,22 @@ var VehicleScreen = () => {
         fontWeight: 600,
         color: 'var(--ink-2)'
       }
-    }, tr(`យានយន្ត · ${visible.length} គ្រឿង`, `Vehicles · ${visible.length}`)), React.createElement(SortBar, null)), visible.length === 0 ? React.createElement("div", {
+    }, tr(`យានយន្ត · ${visible.length} គ្រឿង`, `Vehicles · ${visible.length}`)), React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        flexWrap: 'wrap'
+      }
+    }, React.createElement(SortBar, null), React.createElement(Btn, {
+      kind: "primary",
+      size: "sm",
+      icon: React.createElement(Icon, {
+        name: "plus",
+        size: 13
+      }),
+      onClick: () => openForm('newVehicle')
+    }, tr('បន្ថែម', 'Add')))), visible.length === 0 ? React.createElement("div", {
       style: {
         textAlign: 'center',
         padding: '48px 20px',
@@ -35348,7 +35364,22 @@ var VehicleScreen = () => {
   }, React.createElement(SectionTitle, {
     km: `យានយន្ត · ${visible.length} គ្រឿង`,
     en: `Vehicles · ${visible.length} available`
-  }), React.createElement(SortBar, null)), visible.length === 0 ? React.createElement(Card, {
+  }), React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      flexWrap: 'wrap'
+    }
+  }, React.createElement(SortBar, null), React.createElement(Btn, {
+    kind: "primary",
+    size: "md",
+    icon: React.createElement(Icon, {
+      name: "plus",
+      size: 14
+    }),
+    onClick: () => openForm('newVehicle')
+  }, tr('បន្ថែមរថយន្ត', 'Add vehicle')))), visible.length === 0 ? React.createElement(Card, {
     pad: 48,
     style: {
       textAlign: 'center',

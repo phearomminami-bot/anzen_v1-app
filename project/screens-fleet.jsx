@@ -3135,7 +3135,7 @@ const VehicleMobileDetail = ({ v, onClose, tr, onSaved, onStatusChange, onParkin
 
 // ── Public vehicle card view ──────────────────────────────────────────────────
 const VehicleScreen = () => {
-  const { tr } = useAppActions();
+  const { tr, openForm } = useAppActions();
   const bp = useBreakpoint();
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   const [selectedId, setSelectedId] = React.useState(null);
@@ -3225,7 +3225,10 @@ const VehicleScreen = () => {
             <span style={{fontSize:13,fontWeight:600,color:'var(--ink-2)'}}>
               {tr(`យានយន្ត · ${visible.length} គ្រឿង`, `Vehicles · ${visible.length}`)}
             </span>
-            <SortBar/>
+            <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
+              <SortBar/>
+              <Btn kind="primary" size="sm" icon={<Icon name="plus" size={13}/>} onClick={() => openForm('newVehicle')}>{tr('បន្ថែម','Add')}</Btn>
+            </div>
           </div>
           {visible.length === 0 ? (
             <div style={{textAlign:'center',padding:'48px 20px',color:'var(--ink-3)',fontSize:13}}>
@@ -3283,7 +3286,12 @@ const VehicleScreen = () => {
           km={`យានយន្ត · ${visible.length} គ្រឿង`}
           en={`Vehicles · ${visible.length} available`}
         />
-        <SortBar/>
+        <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+          <SortBar/>
+          <Btn kind="primary" size="md" icon={<Icon name="plus" size={14}/>} onClick={() => openForm('newVehicle')}>
+            {tr('បន្ថែមរថយន្ត','Add vehicle')}
+          </Btn>
+        </div>
       </div>
       {visible.length === 0 ? (
         <Card pad={48} style={{textAlign:'center',color:'var(--ink-3)'}}>
