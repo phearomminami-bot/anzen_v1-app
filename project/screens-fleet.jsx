@@ -131,6 +131,16 @@ const FleetScreenV2 = () => {
     toast(`${VEHICLES[i].plate || id}: ${cur} → ${next}`, 'neutral');
   };
 
+  const toggleVisible = (veh) => {
+    veh.visible = veh.visible === false ? true : false;
+    if (window.saveAllData) window.saveAllData();
+    if (window.__notifyVehiclesChanged) window.__notifyVehiclesChanged();
+    forceUpdate();
+    toast(veh.visible === false
+      ? tr('លាក់​ចេញ​ពី Tab Vehicle', 'Hidden from Vehicle tab')
+      : tr('បង្ហាញ​នៅ Tab Vehicle', 'Shown in Vehicle tab'), 'neutral');
+  };
+
   const cycleParking = (id) => {
     const i = VEHICLES.findIndex(v => v.id === id);
     if (i === -1) return;
@@ -301,7 +311,7 @@ const FleetScreenV2 = () => {
                   )}
                 </div>
                 {view === 'cards'
-                  ? <FvCards vehicles={filtered} onSelect={setSelectedId} selectedId={selectedId} onStatusChange={cycleStatus} onSaveDates={saveDates} onParkingChange={cycleParking} viewDate={viewDate}/>
+                  ? <FvCards vehicles={filtered} onSelect={setSelectedId} selectedId={selectedId} onStatusChange={cycleStatus} onSaveDates={saveDates} onParkingChange={cycleParking} viewDate={viewDate} manage onToggleVisible={toggleVisible}/>
                   : <FvTable vehicles={filtered} onSelect={setSelectedId} selectedId={selectedId}/>
                 }
               </div>
@@ -1289,7 +1299,7 @@ const plateBg = (trans) => {
   return { bg:'rgba(0,0,0,.72)', color:'#FFFFFF' };
 };
 
-const FvCard = ({ v, onSelect, selectedId, onStatusChange, onSaveDates, onParkingChange, viewDate }) => {
+const FvCard = ({ v, onSelect, selectedId, onStatusChange, onSaveDates, onParkingChange, viewDate, manage, onToggleVisible }) => {
   const { tr } = useAppActions();
   const bp = useBreakpoint();
   const [editDates, setEditDates] = React.useState(false);
@@ -1416,6 +1426,18 @@ const FvCard = ({ v, onSelect, selectedId, onStatusChange, onSaveDates, onParkin
           </div>
           )}
         </div>
+        {manage && (
+          <div onClick={e=>{ e.stopPropagation(); onToggleVisible && onToggleVisible(v); }} style={{
+            marginTop:10, padding:'6px 10px', borderRadius:8, fontSize:11, fontWeight:600, cursor:'pointer',
+            textAlign:'center', border:'1px solid '+(v.visible===false?'var(--border)':'var(--good)'),
+            background: v.visible===false ? 'var(--surface-muted)' : 'var(--good)18',
+            color:       v.visible===false ? 'var(--ink-3)' : 'var(--good)',
+          }}>
+            {v.visible===false
+              ? '🚫 '+tr('លាក់​ពី Tab Vehicle — ចុច​ដើម្បី​បង្ហាញ','Hidden from Vehicle — tap to show')
+              : '👁 '+tr('បង្ហាញ​ក្នុង Tab Vehicle — ចុច​ដើម្បី​លាក់','Shown in Vehicle — tap to hide')}
+          </div>
+        )}
         <div style={{marginTop:12}}>
           <div style={{display:'flex',justifyContent:'space-between',marginBottom:4,fontSize:10,color:'var(--ink-3)'}}>
             <span>⛽ ប្រេង · Fuel</span>
@@ -1509,14 +1531,14 @@ const FvCard = ({ v, onSelect, selectedId, onStatusChange, onSaveDates, onParkin
   );
 };
 
-const FvCards = ({ vehicles, onSelect, selectedId, onStatusChange, onSaveDates, onParkingChange, viewDate }) => {
+const FvCards = ({ vehicles, onSelect, selectedId, onStatusChange, onSaveDates, onParkingChange, viewDate, manage, onToggleVisible }) => {
   const bp = useBreakpoint();
   return (
     <div style={{padding:bp.mobile?10:14,display:'grid',gridTemplateColumns:bp.mobile?'repeat(auto-fill,minmax(160px,1fr))':'repeat(auto-fill,minmax(280px,1fr))',gap:bp.mobile?10:12}}>
       {vehicles.map(v => (
         <FvCard key={v.id} v={v} onSelect={onSelect} selectedId={selectedId}
           onStatusChange={onStatusChange} onSaveDates={onSaveDates} onParkingChange={onParkingChange}
-          viewDate={viewDate}/>
+          viewDate={viewDate} manage={manage} onToggleVisible={onToggleVisible}/>
       ))}
     </div>
   );

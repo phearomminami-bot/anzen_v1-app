@@ -703,6 +703,8 @@ window.__trRegistry = {
   "To": "ដល់",
   "Reason": "មូល​ហេតុ",
   "Vehicle removed": "បានលុបយានយន្ត",
+  "Hidden from Vehicle tab": "លាក់​ចេញ​ពី Tab Vehicle",
+  "Shown in Vehicle tab": "បង្ហាញ​នៅ Tab Vehicle",
   "Exporting…": "នាំចេញ…",
   "Work order": "បញ្ជាការងារ",
   "MTD": "ចំណាយ",
@@ -739,12 +741,12 @@ window.__trRegistry = {
   "Recent inspections (all dates)": "ប្រវត្តិពិនិត្យថ្មីៗ (គ្រប់ថ្ងៃ)",
   "Click to open this date": "ចុចដើម្បីបើកថ្ងៃនេះ",
   "Inspect": "ពិនិត្យ",
+  "Hidden from Vehicle — tap to show": "លាក់​ពី Tab Vehicle — ចុច​ដើម្បី​បង្ហាញ",
+  "Shown in Vehicle — tap to hide": "បង្ហាញ​ក្នុង Tab Vehicle — ចុច​ដើម្បី​លាក់",
   "View fullscreen": "មើលពេញអេក្រង់",
   "No photo": "គ្មានរូប",
   "Add photo": "បន្ថែមរូប",
   "Delete this photo": "លុបរូបនេះ",
-  "Hidden from Vehicle tab": "លាក់​ចេញ​ពី Tab Vehicle",
-  "Shown in Vehicle tab": "បង្ហាញ​នៅ Tab Vehicle",
   "Hidden in Vehicle ●": "លាក់ Tab Vehicle ●",
   "Visible in Vehicle ●": "បង្ហាញ Tab Vehicle ●",
   "Use \"Work order\" button above": "សូម​ប្រើ​ \"Work order\" ខាង​ជើង",
@@ -28312,6 +28314,13 @@ var FleetScreenV2 = () => {
     forceUpdate();
     toast(`${VEHICLES[i].plate || id}: ${cur} → ${next}`, 'neutral');
   };
+  var toggleVisible = veh => {
+    veh.visible = veh.visible === false ? true : false;
+    if (window.saveAllData) window.saveAllData();
+    if (window.__notifyVehiclesChanged) window.__notifyVehiclesChanged();
+    forceUpdate();
+    toast(veh.visible === false ? tr('លាក់​ចេញ​ពី Tab Vehicle', 'Hidden from Vehicle tab') : tr('បង្ហាញ​នៅ Tab Vehicle', 'Shown in Vehicle tab'), 'neutral');
+  };
   var cycleParking = id => {
     var i = VEHICLES.findIndex(v => v.id === id);
     if (i === -1) return;
@@ -28651,7 +28660,9 @@ var FleetScreenV2 = () => {
     onStatusChange: cycleStatus,
     onSaveDates: saveDates,
     onParkingChange: cycleParking,
-    viewDate: viewDate
+    viewDate: viewDate,
+    manage: true,
+    onToggleVisible: toggleVisible
   }) : React.createElement(FvTable, {
     vehicles: filtered,
     onSelect: setSelectedId,
@@ -31112,7 +31123,9 @@ var FvCard = ({
   onStatusChange,
   onSaveDates,
   onParkingChange,
-  viewDate
+  viewDate,
+  manage,
+  onToggleVisible
 }) => {
   var {
     tr
@@ -31349,7 +31362,24 @@ var FvCard = ({
       color: 'var(--ink-3)',
       fontFamily: '"JetBrains Mono",monospace'
     }
-  }, "km"))), React.createElement("div", {
+  }, "km"))), manage && React.createElement("div", {
+    onClick: e => {
+      e.stopPropagation();
+      onToggleVisible && onToggleVisible(v);
+    },
+    style: {
+      marginTop: 10,
+      padding: '6px 10px',
+      borderRadius: 8,
+      fontSize: 11,
+      fontWeight: 600,
+      cursor: 'pointer',
+      textAlign: 'center',
+      border: '1px solid ' + (v.visible === false ? 'var(--border)' : 'var(--good)'),
+      background: v.visible === false ? 'var(--surface-muted)' : 'var(--good)18',
+      color: v.visible === false ? 'var(--ink-3)' : 'var(--good)'
+    }
+  }, v.visible === false ? '🚫 ' + tr('លាក់​ពី Tab Vehicle — ចុច​ដើម្បី​បង្ហាញ', 'Hidden from Vehicle — tap to show') : '👁 ' + tr('បង្ហាញ​ក្នុង Tab Vehicle — ចុច​ដើម្បី​លាក់', 'Shown in Vehicle — tap to hide')), React.createElement("div", {
     style: {
       marginTop: 12
     }
@@ -31581,7 +31611,9 @@ var FvCards = ({
   onStatusChange,
   onSaveDates,
   onParkingChange,
-  viewDate
+  viewDate,
+  manage,
+  onToggleVisible
 }) => {
   var bp = useBreakpoint();
   return React.createElement("div", {
@@ -31599,7 +31631,9 @@ var FvCards = ({
     onStatusChange: onStatusChange,
     onSaveDates: onSaveDates,
     onParkingChange: onParkingChange,
-    viewDate: viewDate
+    viewDate: viewDate,
+    manage: manage,
+    onToggleVisible: onToggleVisible
   })));
 };
 var FvTable = ({
