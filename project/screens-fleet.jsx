@@ -158,7 +158,7 @@ const FleetScreenV2 = () => {
     { id:'service',    km:'ការថែទាំ',       en:'Service',     icon:'wrench' },
     { id:'docs',       km:'ឯកសារ',          en:'Documents',   icon:'book'   },
     { id:'usage',      km:'ការប្រើប្រាស់',  en:'Usage',       icon:'chart'  },
-    { id:'incidents',  km:'ឧប្បត្តិហេតុ',   en:'Incidents',   icon:'bell'   },
+    { id:'incidents',  km:'កំណត់ហេតុគ្រោះថ្នាក់', en:'Accident log', icon:'flag'   },
     { id:'expenses',   km:'ចំណាយ',           en:'Expenses',    icon:'cash'   },
   ];
 
@@ -2242,7 +2242,85 @@ const FvUsage = ({ vehicles }) => {
   );
 };
 
-// ── Incidents tab ────────────────────────────────────────────────────────────
+// ── Accident / incident log (Japanese 事故報告書 style) ──────────────────────
+const ACC_WEATHER = [
+  {v:'clear', km:'ល្អ',     ja:'晴れ', en:'Clear'},
+  {v:'cloudy',km:'មានពពក', ja:'曇り', en:'Cloudy'},
+  {v:'rain',  km:'ភ្លៀង',   ja:'雨',   en:'Rain'},
+  {v:'fog',   km:'អ័ព្ទ',   ja:'霧',   en:'Fog'},
+];
+const ACC_ROAD = [
+  {v:'dry',  km:'ស្ងួត',  ja:'乾燥', en:'Dry'},
+  {v:'wet',  km:'សើម',    ja:'湿潤', en:'Wet'},
+  {v:'mud',  km:'ភក់',    ja:'泥',   en:'Muddy'},
+  {v:'flood',km:'លិចទឹក', ja:'冠水', en:'Flooded'},
+];
+const ACC_TYPES = [
+  {v:'property',km:'ខូចទ្រព្យសម្បត្តិ', ja:'物損事故',     en:'Property damage'},
+  {v:'injury',  km:'មានរបួស',           ja:'人身事故',     en:'Personal injury'},
+  {v:'contact', km:'ប៉ះទង្គិច',          ja:'接触事故',     en:'Contact'},
+  {v:'nearmiss',km:'ស្ទើរគ្រោះថ្នាក់',   ja:'ヒヤリハット', en:'Near-miss'},
+  {v:'other',   km:'ផ្សេងៗ',            ja:'その他',       en:'Other'},
+];
+const accMeta = (arr, v) => arr.find(x => x.v === v) || arr[0];
+
+// A4 Japanese traffic-accident report (交通事故報告書) with photos.
+const generateAccidentPDF = (inc, veh) => {
+  const ss = window.__schoolSettings || {};
+  const esc = (s) => String(s==null?'':s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+  const wx = accMeta(ACC_WEATHER, inc.weather);
+  const rx = accMeta(ACC_ROAD, inc.road);
+  const tx = accMeta(ACC_TYPES, inc.accType || 'other');
+  const row = (ja, km, val) => `<tr>
+    <th style="width:28%;text-align:left;padding:8px 10px;background:#f3f3f0;border:1px solid #bbb;font-size:11px;vertical-align:top">
+      <div style="font-weight:700">${ja}</div><div style="font-size:10px;color:#666;font-weight:400">${km}</div></th>
+    <td style="padding:8px 10px;border:1px solid #bbb;font-size:12px;vertical-align:top;white-space:pre-wrap">${val || '<span style="color:#bbb">—</span>'}</td></tr>`;
+  const photosHTML = (inc.photos||[]).map(p => `<img src="${p}" style="width:48%;max-height:210px;object-fit:cover;border:1px solid #bbb;border-radius:4px;margin:1%"/>`).join('');
+  const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8"/>
+  <title>交通事故報告書 · ${esc(inc.id)}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Noto Sans Khmer','Noto Sans JP','Hanuman',Arial,sans-serif;font-size:13px;color:#1a1a19;background:#fff;padding:24px 28px}
+    @page{margin:16mm 14mm;size:A4}
+    @media print{body{padding:0}}
+    table{width:100%;border-collapse:collapse;margin-bottom:14px}
+    h2{font-size:19px;text-align:center;letter-spacing:.18em;margin:8px 0 12px}
+  </style></head><body>
+  <div style="display:flex;align-items:center;gap:14px;border-bottom:2px solid #333;padding-bottom:10px;margin-bottom:14px">
+    ${ss.logo?`<img src="${ss.logo}" style="width:40px;height:40px;border-radius:8px;object-fit:cover"/>`:'<div style="width:40px;height:40px;border-radius:8px;background:#B0413E;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">A</div>'}
+    <div style="flex:1"><div style="font-size:16px;font-weight:700">${esc(ss.name||'Anzen Driving Academy')}</div>
+      <div style="font-size:11px;color:#777">交通事故報告書 · កំណត់ហេតុគ្រោះថ្នាក់ · Traffic Accident Report</div></div>
+    <div style="text-align:right;font-family:monospace"><div style="font-size:15px;font-weight:700">${esc(inc.id)}</div>
+      <div style="font-size:10px;color:#888">${esc(inc.date)} ${esc(inc.time||'')}</div></div>
+  </div>
+  <h2>交通事故報告書</h2>
+  <table>
+    ${row('発生日時','ថ្ងៃ​ខែ​ម៉ោង​កើតហេតុ', esc(inc.date)+' '+esc(inc.time||''))}
+    ${row('発生場所','ទីកន្លែងកើតហេតុ', esc(inc.location))}
+    ${row('車両','យានយន្ត', veh?`${esc(veh.plate)} · ${esc(veh.make)}`:esc(inc.v))}
+    ${row('運転者','អ្នកបើកបរ', esc(inc.driver))}
+    ${row('天候 / 路面','អាកាសធាតុ / ផ្លូវ', `${wx.ja} (${wx.km}) / ${rx.ja} (${rx.km})`)}
+    ${row('事故種類','ប្រភេទគ្រោះថ្នាក់', `${tx.ja} · ${tx.km}`)}
+    ${row('負傷者','អ្នករបួស', inc.injuries==='yes' ? ('有 មាន — '+esc(inc.injuryDetail||'')) : '無 គ្មាន')}
+    ${row('状況・経緯','កាលៈទេសៈ​នៃ​ហេតុការណ៍', esc(inc.circumstances||inc.desc))}
+    ${row('損傷状況','ការ​ខូចខាត', esc(inc.damage))}
+    ${row('原因','មូលហេតុ', esc(inc.cause))}
+    ${row('再発防止対策','វិធានការ​ការពារ​កុំ​ឱ្យ​កើត​ឡើង​ម្ដង​ទៀត', esc(inc.prevention))}
+    ${row('修理費 / 状況','តម្លៃ​ជួសជុល / ស្ថានភាព', (inc.cost?('$'+inc.cost):'—')+'  ·  '+esc(inc.status||''))}
+  </table>
+  ${(inc.photos&&inc.photos.length)?`<div style="font-size:11px;font-weight:700;margin-bottom:6px">写真 · រូបថត</div><div style="display:flex;flex-wrap:wrap;margin-bottom:14px">${photosHTML}</div>`:''}
+  <div style="display:flex;gap:40px;margin-top:22px;font-size:12px">
+    <div>報告者 · អ្នករាយការណ៍: <strong>${esc(inc.reporter||'')}</strong></div>
+    <div style="margin-left:auto">署名 · ហត្ថលេខា: ____________________</div>
+  </div>
+  </body></html>`;
+  const win = window.open('', '_blank', 'width=900,height=820');
+  if (!win) { alert('Pop-up blocked. Please allow pop-ups.'); return; }
+  win.document.write(html); win.document.close();
+  setTimeout(()=>win.print(), 600);
+};
+
+// ── Accident log tab ─────────────────────────────────────────────────────────
 const FvIncidents = ({ vehicles, incidents, forceUpdate }) => {
   const { tr } = useAppActions();
   const [adding, setAdding] = React.useState(false);
@@ -2250,6 +2328,13 @@ const FvIncidents = ({ vehicles, incidents, forceUpdate }) => {
   const updateStatus = (id, status) => {
     const i = window.__incidentData.findIndex(x => x.id === id);
     if (i !== -1) window.__incidentData[i].status = status;
+    if (window.saveAllData) window.saveAllData();
+    forceUpdate();
+  };
+  const removeInc = (id) => {
+    const i = window.__incidentData.findIndex(x => x.id === id);
+    if (i !== -1) window.__incidentData.splice(i, 1);
+    if (window.saveAllData) window.saveAllData();
     forceUpdate();
   };
 
@@ -2258,59 +2343,55 @@ const FvIncidents = ({ vehicles, incidents, forceUpdate }) => {
       {adding && (
         <FvIncidentForm vehicles={vehicles} onClose={() => setAdding(false)} forceUpdate={forceUpdate}/>
       )}
-      <div style={{display:'flex',alignItems:'center',gap:8}}>
-        <div style={{fontSize:14,fontWeight:600}}>ឧប្បត្តិហេតុ · Incidents</div>
-        <Badge tone="neutral">{incidents.length} total</Badge>
+      <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+        <div style={{fontSize:14,fontWeight:600}}>កំណត់ហេតុ​គ្រោះថ្នាក់ · 事故報告 · Accident log</div>
+        <Badge tone="neutral">{incidents.length}</Badge>
         <div style={{flex:1}}/>
         <Btn kind="primary" size="sm" icon={<Icon name="plus" size={13}/>}
           onClick={() => setAdding(true)}>
-          {tr('រាយ​ការណ៍','Report')}
+          {tr('រាយ​ការណ៍​ថ្មី','New report')}
         </Btn>
       </div>
 
       {incidents.length === 0 ? (
-        <div style={{padding:'48px',textAlign:'center',color:'var(--ink-3)',
-          border:'1px solid var(--border)',borderRadius:10}}>
-          <div style={{fontSize:13,color:'var(--good)',fontWeight:500}}>
-            ✓ {tr('គ្មាន​ឧប្បត្តិហេតុ','No incidents recorded')}
-          </div>
+        <div style={{padding:'48px',textAlign:'center',color:'var(--good)',
+          border:'1px solid var(--border)',borderRadius:10,fontSize:13,fontWeight:500}}>
+          ✓ {tr('គ្មាន​គ្រោះថ្នាក់​ត្រូវ​បាន​កត់ត្រា','No accidents recorded')}
         </div>
       ) : (
-        <div style={{border:'1px solid var(--border)',borderRadius:10,overflow:'hidden'}}>
-          {incidents.map((inc, i) => {
+        <div style={{display:'flex',flexDirection:'column',gap:10}}>
+          {incidents.map(inc => {
             const veh = vehicles.find(x => x.id === inc.v);
+            const tx  = accMeta(ACC_TYPES, inc.accType || 'other');
             return (
-              <div key={inc.id} style={{padding:'14px 16px',borderTop:i?'1px solid var(--border)':'none',
-                display:'grid',gridTemplateColumns:'100px 1fr 70px 100px',gap:12,alignItems:'center'}}>
-                <div>
-                  <div style={{fontSize:11,fontFamily:'"JetBrains Mono",monospace',color:'var(--ink-3)'}}>{inc.date}</div>
-                  <div style={{fontSize:10,color:'var(--ink-3)',marginTop:2,fontFamily:'"JetBrains Mono",monospace'}}>{inc.id}</div>
-                </div>
-                <div style={{display:'flex',gap:10,alignItems:'flex-start',minWidth:0}}>
-                  <Photo tag={veh?.photo} w={44} h={28} r={4}/>
-                  <div style={{minWidth:0,flex:1}}>
+              <div key={inc.id} style={{border:'1px solid var(--border)',borderRadius:10,padding:14}}>
+                <div style={{display:'flex',gap:12,alignItems:'flex-start',flexWrap:'wrap'}}>
+                  <div style={{flex:1,minWidth:180}}>
                     <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
-                      <div style={{fontSize:13,fontWeight:600}}>{inc.type}</div>
+                      <span style={{fontSize:13,fontWeight:700}}>{tx.ja} · {tx.km}</span>
                       <Badge tone={inc.severity==='High'?'danger':inc.severity==='Medium'?'warn':'neutral'}>{inc.severity}</Badge>
+                      <Badge tone={inc.status==='Resolved'?'good':'warn'}>{inc.status}</Badge>
                     </div>
-                    <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2}}>
-                      {veh ? `${veh.make} ${veh.plate}` : inc.v} · {inc.driver || '—'}
+                    <div style={{fontSize:11,color:'var(--ink-3)',marginTop:3,fontFamily:'"JetBrains Mono",monospace'}}>
+                      {inc.id} · {inc.date} {inc.time||''} · {veh?veh.plate:inc.v} · {inc.driver||'—'}
                     </div>
-                    {inc.desc && <div style={{fontSize:11,color:'var(--ink-2)',marginTop:3}}>{inc.desc}</div>}
+                    {(inc.circumstances||inc.desc) && <div style={{fontSize:12,color:'var(--ink-2)',marginTop:4}}>{inc.circumstances||inc.desc}</div>}
+                    {(inc.photos && inc.photos.length>0) && (
+                      <div style={{display:'flex',gap:6,marginTop:8,flexWrap:'wrap'}}>
+                        {inc.photos.slice(0,6).map((p,idx)=>(
+                          <img key={idx} src={p} onClick={()=>window.open(p,'_blank')} alt="" style={{width:54,height:40,objectFit:'cover',borderRadius:5,border:'1px solid var(--border)',cursor:'pointer'}}/>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-                <div style={{textAlign:'right'}}>
-                  <div style={{fontSize:14,fontWeight:600}}>${inc.cost || 0}</div>
-                </div>
-                <div>
-                  <Badge tone={inc.status==='Resolved'?'good':inc.status==='Open'?'warn':'neutral'}>{inc.status}</Badge>
-                  {inc.status !== 'Resolved' && (
-                    <div style={{marginTop:6}}>
-                      <Btn kind="ghost" size="sm" onClick={() => updateStatus(inc.id, 'Resolved')}>
-                        {tr('ដោះ​ស្រាយ','Resolve')}
-                      </Btn>
+                  <div style={{display:'flex',flexDirection:'column',gap:8,alignItems:'flex-end'}}>
+                    {inc.cost>0 && <div style={{fontSize:15,fontWeight:700}}>${inc.cost}</div>}
+                    <div style={{display:'flex',gap:6,alignItems:'center',flexWrap:'wrap',justifyContent:'flex-end'}}>
+                      <Btn kind="ghost" size="sm" icon={<Icon name="download" size={12}/>} onClick={()=>generateAccidentPDF(inc, veh)}>PDF</Btn>
+                      {inc.status!=='Resolved' && <Btn kind="ghost" size="sm" onClick={()=>updateStatus(inc.id,'Resolved')}>{tr('ដោះ​ស្រាយ','Resolve')}</Btn>}
+                      <button onClick={()=>removeInc(inc.id)} title={tr('លុប','Delete')} style={{border:'none',background:'none',cursor:'pointer',color:'var(--danger)',fontSize:15,lineHeight:1}}>✕</button>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             );
@@ -2321,78 +2402,118 @@ const FvIncidents = ({ vehicles, incidents, forceUpdate }) => {
   );
 };
 
-// ── Incident report form ─────────────────────────────────────────────────────
+// ── Accident report form (Japanese 事故報告書 style) ─────────────────────────
 const FvIncidentForm = ({ vehicles, onClose, forceUpdate }) => {
   const { toast, tr } = useAppActions();
-  const [vId,      setVId]      = React.useState(vehicles[0]?.id || '');
-  const [date,     setDate]     = React.useState(new Date().toISOString().slice(0,10));
-  const [type,     setType]     = React.useState('');
-  const [severity, setSeverity] = React.useState('Low');
-  const [driver,   setDriver]   = React.useState('');
-  const [cost,     setCost]     = React.useState('');
-  const [desc,     setDesc]     = React.useState('');
+  const [vId,           setVId]           = React.useState(vehicles[0]?.id || '');
+  const [date,          setDate]          = React.useState(typeof todayStr==='function'?todayStr():new Date().toISOString().slice(0,10));
+  const [time,          setTime]          = React.useState('');
+  const [location,      setLocation]      = React.useState('');
+  const [accType,       setAccType]       = React.useState('property');
+  const [severity,      setSeverity]      = React.useState('Low');
+  const [driver,        setDriver]        = React.useState('');
+  const [weather,       setWeather]       = React.useState('clear');
+  const [road,          setRoad]          = React.useState('dry');
+  const [injuries,      setInjuries]      = React.useState('no');
+  const [injuryDetail,  setInjuryDetail]  = React.useState('');
+  const [circumstances, setCircumstances] = React.useState('');
+  const [damage,        setDamage]        = React.useState('');
+  const [cause,         setCause]         = React.useState('');
+  const [prevention,    setPrevention]    = React.useState('');
+  const [cost,          setCost]          = React.useState('');
+  const [reporter,      setReporter]      = React.useState(window.__currentUserName || '');
+  const [photos,        setPhotos]        = React.useState([]);
+  const fileRef = React.useRef(null);
+
+  const onPick = (e) => {
+    const files = [...(e.target.files || [])]; e.target.value = '';
+    files.slice(0, 6 - photos.length).forEach(f => {
+      if (!f.type.startsWith('image/')) return;
+      const add = (d) => setPhotos(p => p.length < 6 ? [...p, d] : p);
+      if (window.resizeImageFile) window.resizeImageFile(f, 1280, 1280).then(add).catch(() => { const r=new FileReader(); r.onload=()=>add(r.result); r.readAsDataURL(f); });
+      else { const r = new FileReader(); r.onload = () => add(r.result); r.readAsDataURL(f); }
+    });
+  };
 
   const save = () => {
-    if (!type.trim()) { toast(tr('សូម​បញ្ចូល​ប្រភេទ​', 'Enter incident type'), 'warn'); return; }
-    const id = 'IC-' + String(window.__incidentData.length + 1).padStart(3,'0');
+    if (!circumstances.trim()) { toast(tr('សូម​បំពេញ​កាលៈទេសៈ','Describe what happened'), 'warn'); return; }
+    const id = 'IC-' + String((window.__incidentData.length || 0) + 1).padStart(3, '0');
     window.__incidentData.unshift({
-      id, v: vId, date, type: type.trim(),
+      id, v: vId, date, time, location: location.trim(),
+      accType, type: accMeta(ACC_TYPES, accType).en,
       severity, driver: driver.trim() || '—',
-      cost: parseFloat(cost) || 0,
-      status: 'Open',
-      desc: desc.trim(),
+      weather, road, injuries, injuryDetail: injuryDetail.trim(),
+      circumstances: circumstances.trim(), desc: circumstances.trim(),
+      damage: damage.trim(), cause: cause.trim(), prevention: prevention.trim(),
+      cost: parseFloat(cost) || 0, reporter: reporter.trim(),
+      photos: [...photos], status: 'Open',
+      createdAt: new Date().toISOString(),
     });
+    if (window.saveAllData) window.saveAllData();
     if (window.__notifyVehiclesChanged) window.__notifyVehiclesChanged();
-    toast(tr('បាន​រាយ​ការណ៍ · ' + id, 'Incident reported · ' + id), 'warn');
+    toast(tr('បាន​រាយ​ការណ៍ · ' + id, 'Accident reported · ' + id), 'good');
+    forceUpdate && forceUpdate();
     onClose();
   };
 
-  const inp = { style:{width:'100%',padding:'7px 10px',border:'1px solid var(--border)',
-    borderRadius:6,fontSize:13,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',boxSizing:'border-box'} };
+  const inp = { style:{width:'100%',padding:'7px 10px',border:'1px solid var(--border)',borderRadius:6,fontSize:13,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',boxSizing:'border-box'} };
+  const ta  = { style:{...inp.style, minHeight:60, resize:'vertical', fontFamily:'var(--font-km),var(--font-en),inherit'} };
+  const Lbl = ({ja,km}) => <div style={{fontSize:11,fontWeight:600,marginBottom:4}}>{ja} <span style={{color:'var(--ink-3)',fontWeight:400}}>· {km}</span></div>;
+  const sec = (t) => <div style={{font:'600 10px/1 "JetBrains Mono",monospace',letterSpacing:'.08em',textTransform:'uppercase',color:'var(--ink-3)',margin:'14px 0 8px'}}>{t}</div>;
 
   return (
     <Card>
-      <div style={{fontSize:14,fontWeight:600,marginBottom:14}}>
-        ⚠️ {tr('រាយ​ការណ៍​ឧប្បត្តិហេតុ','Report incident')}
+      <div style={{fontSize:14,fontWeight:700,marginBottom:4}}>⚠️ {tr('រាយ​ការណ៍​គ្រោះថ្នាក់','Accident report')} · 交通事故報告書</div>
+
+      {sec('発生 · កើតហេតុ')}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:6}}>
+        <div><Lbl ja="車両" km="យានយន្ត"/><select {...inp} value={vId} onChange={e=>setVId(e.target.value)}>{vehicles.map(v=><option key={v.id} value={v.id}>{v.plate} · {v.make}</option>)}</select></div>
+        <div><Lbl ja="運転者" km="អ្នកបើកបរ"/><input {...inp} value={driver} onChange={e=>setDriver(e.target.value)} placeholder={tr('ឈ្មោះ​គ្រូ / សិស្ស','Instructor / student')}/></div>
+        <div><Lbl ja="発生日" km="ថ្ងៃ"/><input {...inp} type="date" value={date} onChange={e=>setDate(e.target.value)}/></div>
+        <div><Lbl ja="発生時刻" km="ម៉ោង"/><input {...inp} type="time" value={time} onChange={e=>setTime(e.target.value)}/></div>
+        <div style={{gridColumn:'1/-1'}}><Lbl ja="発生場所" km="ទីកន្លែង"/><input {...inp} value={location} onChange={e=>setLocation(e.target.value)} placeholder={tr('ឧ. ផ្លូវ​លេខ ៣១០','e.g. Street 310')}/></div>
       </div>
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
-        <div>
-          <div style={{fontSize:11,fontWeight:500,marginBottom:4}}>យានយន្ត · Vehicle</div>
-          <select {...inp} value={vId} onChange={e=>setVId(e.target.value)}>
-            {vehicles.map(v => <option key={v.id} value={v.id}>{v.make} · {v.plate}</option>)}
-          </select>
-        </div>
-        <div>
-          <div style={{fontSize:11,fontWeight:500,marginBottom:4}}>ថ្ងៃ​ · Date</div>
-          <input {...inp} type="date" value={date} onChange={e=>setDate(e.target.value)}/>
-        </div>
-        <div>
-          <div style={{fontSize:11,fontWeight:500,marginBottom:4}}>ប្រភេទ · Type *</div>
-          <input {...inp} value={type} onChange={e=>setType(e.target.value)} placeholder="Minor scrape, Flat tire…"/>
-        </div>
-        <div>
-          <div style={{fontSize:11,fontWeight:500,marginBottom:4}}>កម្រិត · Severity</div>
-          <select {...inp} value={severity} onChange={e=>setSeverity(e.target.value)}>
-            <option>None</option><option>Very low</option><option>Low</option>
-            <option>Medium</option><option>High</option>
-          </select>
-        </div>
-        <div>
-          <div style={{fontSize:11,fontWeight:500,marginBottom:4}}>អ្នក​បើក · Driver</div>
-          <input {...inp} value={driver} onChange={e=>setDriver(e.target.value)} placeholder="Mr. Vichea or Student ID"/>
-        </div>
-        <div>
-          <div style={{fontSize:11,fontWeight:500,marginBottom:4}}>តម្លៃ​ជួស​ជុល · Repair cost ($)</div>
-          <input {...inp} type="number" value={cost} onChange={e=>setCost(e.target.value)} min="0" placeholder="0"/>
-        </div>
-        <div style={{gridColumn:'1/-1'}}>
-          <div style={{fontSize:11,fontWeight:500,marginBottom:4}}>ការ​ពិពណ៌នា · Description</div>
-          <input {...inp} value={desc} onChange={e=>setDesc(e.target.value)} placeholder="What happened…"/>
-        </div>
+
+      {sec('種類・状況 · ប្រភេទ និង ស្ថានភាព')}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10,marginBottom:6}}>
+        <div><Lbl ja="事故種類" km="ប្រភេទ"/><select {...inp} value={accType} onChange={e=>setAccType(e.target.value)}>{ACC_TYPES.map(t=><option key={t.v} value={t.v}>{t.ja} · {t.km}</option>)}</select></div>
+        <div><Lbl ja="天候" km="អាកាសធាតុ"/><select {...inp} value={weather} onChange={e=>setWeather(e.target.value)}>{ACC_WEATHER.map(t=><option key={t.v} value={t.v}>{t.ja} · {t.km}</option>)}</select></div>
+        <div><Lbl ja="路面" km="ផ្ទៃ​ផ្លូវ"/><select {...inp} value={road} onChange={e=>setRoad(e.target.value)}>{ACC_ROAD.map(t=><option key={t.v} value={t.v}>{t.ja} · {t.km}</option>)}</select></div>
+        <div><Lbl ja="程度" km="កម្រិត"/><select {...inp} value={severity} onChange={e=>setSeverity(e.target.value)}><option>Low</option><option>Medium</option><option>High</option></select></div>
+        <div><Lbl ja="負傷者" km="អ្នករបួស"/><select {...inp} value={injuries} onChange={e=>setInjuries(e.target.value)}><option value="no">{tr('គ្មាន','無 None')}</option><option value="yes">{tr('មាន','有 Yes')}</option></select></div>
+        <div><Lbl ja="修理費 ($)" km="តម្លៃ​ជួសជុល"/><input {...inp} type="number" min="0" value={cost} onChange={e=>setCost(e.target.value)} placeholder="0"/></div>
+        {injuries==='yes' && <div style={{gridColumn:'1/-1'}}><Lbl ja="負傷の詳細" km="ព័ត៌មាន​អ្នករបួស"/><input {...inp} value={injuryDetail} onChange={e=>setInjuryDetail(e.target.value)} placeholder={tr('នរណា · របួស​បែប​ណា','Who · injury detail')}/></div>}
       </div>
-      <div style={{display:'flex',gap:8,justifyContent:'flex-end'}}>
+
+      {sec('詳細 · សេចក្ដី​លម្អិត')}
+      <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:6}}>
+        <div><Lbl ja="状況・経緯" km="កាលៈទេសៈ​នៃ​ហេតុការណ៍ *"/><textarea {...ta} value={circumstances} onChange={e=>setCircumstances(e.target.value)} placeholder={tr('តើ​មាន​អ្វី​កើតឡើង…','What happened…')}/></div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+          <div><Lbl ja="損傷状況" km="ការខូចខាត"/><textarea {...ta} value={damage} onChange={e=>setDamage(e.target.value)}/></div>
+          <div><Lbl ja="原因" km="មូលហេតុ"/><textarea {...ta} value={cause} onChange={e=>setCause(e.target.value)}/></div>
+        </div>
+        <div><Lbl ja="再発防止対策" km="វិធានការ​ការពារ"/><textarea {...ta} value={prevention} onChange={e=>setPrevention(e.target.value)} placeholder={tr('របៀប​ការពារ​កុំ​ឱ្យ​កើត​ឡើង​ម្ដង​ទៀត','How to prevent recurrence')}/></div>
+      </div>
+
+      {sec('写真 · រូបថត')}
+      <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:6}}>
+        {photos.map((p,idx)=>(
+          <div key={idx} style={{position:'relative'}}>
+            <img src={p} alt="" style={{width:84,height:64,objectFit:'cover',borderRadius:6,border:'1px solid var(--border)'}}/>
+            <button onClick={()=>setPhotos(ph=>ph.filter((_,j)=>j!==idx))} style={{position:'absolute',top:-6,right:-6,width:20,height:20,borderRadius:999,border:'none',background:'var(--danger)',color:'#fff',cursor:'pointer',fontSize:12,lineHeight:1}}>×</button>
+          </div>
+        ))}
+        {photos.length < 6 && (
+          <button onClick={()=>fileRef.current?.click()} style={{width:84,height:64,borderRadius:6,border:'1.5px dashed var(--border-strong)',background:'transparent',color:'var(--ink-3)',cursor:'pointer',fontSize:22}}>＋</button>
+        )}
+        <input ref={fileRef} type="file" accept="image/*" multiple style={{display:'none'}} onChange={onPick}/>
+      </div>
+
+      <div><Lbl ja="報告者" km="អ្នករាយការណ៍"/><input {...inp} value={reporter} onChange={e=>setReporter(e.target.value)} placeholder={tr('ឈ្មោះ','Name')}/></div>
+
+      <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:14}}>
         <Btn kind="ghost" size="sm" onClick={onClose}>{tr('បោះ​បង់','Cancel')}</Btn>
-        <Btn kind="primary" size="sm" onClick={save}>{tr('រាយ​ការណ៍','Submit report')}</Btn>
+        <Btn kind="primary" size="sm" onClick={save}>{tr('រក្សាទុក​របាយការណ៍','Save report')}</Btn>
       </div>
     </Card>
   );

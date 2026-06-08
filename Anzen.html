@@ -777,12 +777,19 @@ window.__trRegistry = {
   "No work orders yet": "មិន​ទាន់​មាន​ការ​ងារ",
   "Complete": "បញ្ចប់",
   "No vehicles to show documents for": "មិន​ទាន់​មាន​យានយន្ត",
-  "Report": "រាយ​ការណ៍",
-  "No incidents recorded": "គ្មាន​ឧប្បត្តិហេតុ",
+  "New report": "រាយ​ការណ៍​ថ្មី",
+  "No accidents recorded": "គ្មាន​គ្រោះថ្នាក់​ត្រូវ​បាន​កត់ត្រា",
   "Resolve": "ដោះ​ស្រាយ",
-  "Enter incident type": "សូម​បញ្ចូល​ប្រភេទ​",
-  "Report incident": "បាន​រាយ​ការណ៍ · ' + id, 'Incident reported · ' + id), 'warn');\n    onClose();\n  };\n\n  const inp = { style:{width:'100%',padding:'7px 10px',border:'1px solid var(--border)',\n    borderRadius:6,fontSize:13,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',boxSizing:'border-box'} };\n\n  return (\n    <Card>\n      <div style={{fontSize:14,fontWeight:600,marginBottom:14}}>\n        ⚠️ {tr('រាយ​ការណ៍​ឧប្បត្តិហេតុ",
-  "Submit report": "រាយ​ការណ៍",
+  "Describe what happened": "សូម​បំពេញ​កាលៈទេសៈ",
+  "Accident report": "បាន​រាយ​ការណ៍ · ' + id, 'Accident reported · ' + id), 'good');\n    forceUpdate && forceUpdate();\n    onClose();\n  };\n\n  const inp = { style:{width:'100%',padding:'7px 10px',border:'1px solid var(--border)',borderRadius:6,fontSize:13,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',boxSizing:'border-box'} };\n  const ta  = { style:{...inp.style, minHeight:60, resize:'vertical', fontFamily:'var(--font-km),var(--font-en),inherit'} };\n  const Lbl = ({ja,km}) => <div style={{fontSize:11,fontWeight:600,marginBottom:4}}>{ja} <span style={{color:'var(--ink-3)',fontWeight:400}}>· {km}</span></div>;\n  const sec = (t) => <div style={{font:'600 10px/1 \"JetBrains Mono\",monospace',letterSpacing:'.08em',textTransform:'uppercase',color:'var(--ink-3)',margin:'14px 0 8px'}}>{t}</div>;\n\n  return (\n    <Card>\n      <div style={{fontSize:14,fontWeight:700,marginBottom:4}}>⚠️ {tr('រាយ​ការណ៍​គ្រោះថ្នាក់",
+  "Instructor / student": "ឈ្មោះ​គ្រូ / សិស្ស",
+  "e.g. Street 310": "ឧ. ផ្លូវ​លេខ ៣១០",
+  "無 None": "គ្មាន",
+  "有 Yes": "មាន",
+  "Who · injury detail": "នរណា · របួស​បែប​ណា",
+  "What happened…": "តើ​មាន​អ្វី​កើតឡើង…",
+  "How to prevent recurrence": "របៀប​ការពារ​កុំ​ឱ្យ​កើត​ឡើង​ម្ដង​ទៀត",
+  "Save report": "រក្សាទុក​របាយការណ៍",
   "Enter amount": "សូមបំពេញចំនួនទឹកប្រាក់",
   "Add expense": "បន្ថែម​ការ​ចំណាយ",
   "entries": "ធាតុ",
@@ -28353,9 +28360,9 @@ var FleetScreenV2 = () => {
     icon: 'chart'
   }, {
     id: 'incidents',
-    km: 'ឧប្បត្តិហេតុ',
-    en: 'Incidents',
-    icon: 'bell'
+    km: 'កំណត់ហេតុគ្រោះថ្នាក់',
+    en: 'Accident log',
+    icon: 'flag'
   }, {
     id: 'expenses',
     km: 'ចំណាយ',
@@ -33006,6 +33013,137 @@ var FvUsage = ({
     }
   }, "$", v.cost_mo || 0))))));
 };
+var ACC_WEATHER = [{
+  v: 'clear',
+  km: 'ល្អ',
+  ja: '晴れ',
+  en: 'Clear'
+}, {
+  v: 'cloudy',
+  km: 'មានពពក',
+  ja: '曇り',
+  en: 'Cloudy'
+}, {
+  v: 'rain',
+  km: 'ភ្លៀង',
+  ja: '雨',
+  en: 'Rain'
+}, {
+  v: 'fog',
+  km: 'អ័ព្ទ',
+  ja: '霧',
+  en: 'Fog'
+}];
+var ACC_ROAD = [{
+  v: 'dry',
+  km: 'ស្ងួត',
+  ja: '乾燥',
+  en: 'Dry'
+}, {
+  v: 'wet',
+  km: 'សើម',
+  ja: '湿潤',
+  en: 'Wet'
+}, {
+  v: 'mud',
+  km: 'ភក់',
+  ja: '泥',
+  en: 'Muddy'
+}, {
+  v: 'flood',
+  km: 'លិចទឹក',
+  ja: '冠水',
+  en: 'Flooded'
+}];
+var ACC_TYPES = [{
+  v: 'property',
+  km: 'ខូចទ្រព្យសម្បត្តិ',
+  ja: '物損事故',
+  en: 'Property damage'
+}, {
+  v: 'injury',
+  km: 'មានរបួស',
+  ja: '人身事故',
+  en: 'Personal injury'
+}, {
+  v: 'contact',
+  km: 'ប៉ះទង្គិច',
+  ja: '接触事故',
+  en: 'Contact'
+}, {
+  v: 'nearmiss',
+  km: 'ស្ទើរគ្រោះថ្នាក់',
+  ja: 'ヒヤリハット',
+  en: 'Near-miss'
+}, {
+  v: 'other',
+  km: 'ផ្សេងៗ',
+  ja: 'その他',
+  en: 'Other'
+}];
+var accMeta = (arr, v) => arr.find(x => x.v === v) || arr[0];
+var generateAccidentPDF = (inc, veh) => {
+  var ss = window.__schoolSettings || {};
+  var esc = s => String(s == null ? '' : s).replace(/[&<>]/g, m => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;'
+  })[m]);
+  var wx = accMeta(ACC_WEATHER, inc.weather);
+  var rx = accMeta(ACC_ROAD, inc.road);
+  var tx = accMeta(ACC_TYPES, inc.accType || 'other');
+  var row = (ja, km, val) => `<tr>
+    <th style="width:28%;text-align:left;padding:8px 10px;background:#f3f3f0;border:1px solid #bbb;font-size:11px;vertical-align:top">
+      <div style="font-weight:700">${ja}</div><div style="font-size:10px;color:#666;font-weight:400">${km}</div></th>
+    <td style="padding:8px 10px;border:1px solid #bbb;font-size:12px;vertical-align:top;white-space:pre-wrap">${val || '<span style="color:#bbb">—</span>'}</td></tr>`;
+  var photosHTML = (inc.photos || []).map(p => `<img src="${p}" style="width:48%;max-height:210px;object-fit:cover;border:1px solid #bbb;border-radius:4px;margin:1%"/>`).join('');
+  var html = `<!doctype html><html lang="ja"><head><meta charset="utf-8"/>
+  <title>交通事故報告書 · ${esc(inc.id)}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Noto Sans Khmer','Noto Sans JP','Hanuman',Arial,sans-serif;font-size:13px;color:#1a1a19;background:#fff;padding:24px 28px}
+    @page{margin:16mm 14mm;size:A4}
+    @media print{body{padding:0}}
+    table{width:100%;border-collapse:collapse;margin-bottom:14px}
+    h2{font-size:19px;text-align:center;letter-spacing:.18em;margin:8px 0 12px}
+  </style></head><body>
+  <div style="display:flex;align-items:center;gap:14px;border-bottom:2px solid #333;padding-bottom:10px;margin-bottom:14px">
+    ${ss.logo ? `<img src="${ss.logo}" style="width:40px;height:40px;border-radius:8px;object-fit:cover"/>` : '<div style="width:40px;height:40px;border-radius:8px;background:#B0413E;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">A</div>'}
+    <div style="flex:1"><div style="font-size:16px;font-weight:700">${esc(ss.name || 'Anzen Driving Academy')}</div>
+      <div style="font-size:11px;color:#777">交通事故報告書 · កំណត់ហេតុគ្រោះថ្នាក់ · Traffic Accident Report</div></div>
+    <div style="text-align:right;font-family:monospace"><div style="font-size:15px;font-weight:700">${esc(inc.id)}</div>
+      <div style="font-size:10px;color:#888">${esc(inc.date)} ${esc(inc.time || '')}</div></div>
+  </div>
+  <h2>交通事故報告書</h2>
+  <table>
+    ${row('発生日時', 'ថ្ងៃ​ខែ​ម៉ោង​កើតហេតុ', esc(inc.date) + ' ' + esc(inc.time || ''))}
+    ${row('発生場所', 'ទីកន្លែងកើតហេតុ', esc(inc.location))}
+    ${row('車両', 'យានយន្ត', veh ? `${esc(veh.plate)} · ${esc(veh.make)}` : esc(inc.v))}
+    ${row('運転者', 'អ្នកបើកបរ', esc(inc.driver))}
+    ${row('天候 / 路面', 'អាកាសធាតុ / ផ្លូវ', `${wx.ja} (${wx.km}) / ${rx.ja} (${rx.km})`)}
+    ${row('事故種類', 'ប្រភេទគ្រោះថ្នាក់', `${tx.ja} · ${tx.km}`)}
+    ${row('負傷者', 'អ្នករបួស', inc.injuries === 'yes' ? '有 មាន — ' + esc(inc.injuryDetail || '') : '無 គ្មាន')}
+    ${row('状況・経緯', 'កាលៈទេសៈ​នៃ​ហេតុការណ៍', esc(inc.circumstances || inc.desc))}
+    ${row('損傷状況', 'ការ​ខូចខាត', esc(inc.damage))}
+    ${row('原因', 'មូលហេតុ', esc(inc.cause))}
+    ${row('再発防止対策', 'វិធានការ​ការពារ​កុំ​ឱ្យ​កើត​ឡើង​ម្ដង​ទៀត', esc(inc.prevention))}
+    ${row('修理費 / 状況', 'តម្លៃ​ជួសជុល / ស្ថានភាព', (inc.cost ? '$' + inc.cost : '—') + '  ·  ' + esc(inc.status || ''))}
+  </table>
+  ${inc.photos && inc.photos.length ? `<div style="font-size:11px;font-weight:700;margin-bottom:6px">写真 · រូបថត</div><div style="display:flex;flex-wrap:wrap;margin-bottom:14px">${photosHTML}</div>` : ''}
+  <div style="display:flex;gap:40px;margin-top:22px;font-size:12px">
+    <div>報告者 · អ្នករាយការណ៍: <strong>${esc(inc.reporter || '')}</strong></div>
+    <div style="margin-left:auto">署名 · ហត្ថលេខា: ____________________</div>
+  </div>
+  </body></html>`;
+  var win = window.open('', '_blank', 'width=900,height=820');
+  if (!win) {
+    alert('Pop-up blocked. Please allow pop-ups.');
+    return;
+  }
+  win.document.write(html);
+  win.document.close();
+  setTimeout(() => win.print(), 600);
+};
 var FvIncidents = ({
   vehicles,
   incidents,
@@ -33018,6 +33156,13 @@ var FvIncidents = ({
   var updateStatus = (id, status) => {
     var i = window.__incidentData.findIndex(x => x.id === id);
     if (i !== -1) window.__incidentData[i].status = status;
+    if (window.saveAllData) window.saveAllData();
+    forceUpdate();
+  };
+  var removeInc = id => {
+    var i = window.__incidentData.findIndex(x => x.id === id);
+    if (i !== -1) window.__incidentData.splice(i, 1);
+    if (window.saveAllData) window.saveAllData();
     forceUpdate();
   };
   return React.createElement("div", {
@@ -33035,16 +33180,17 @@ var FvIncidents = ({
     style: {
       display: 'flex',
       alignItems: 'center',
-      gap: 8
+      gap: 8,
+      flexWrap: 'wrap'
     }
   }, React.createElement("div", {
     style: {
       fontSize: 14,
       fontWeight: 600
     }
-  }, "\u17A7\u1794\u17D2\u1794\u178F\u17D2\u178F\u17B7\u17A0\u17C1\u178F\u17BB \xB7 Incidents"), React.createElement(Badge, {
+  }, "\u1780\u17C6\u178E\u178F\u17CB\u17A0\u17C1\u178F\u17BB\u200B\u1782\u17D2\u179A\u17C4\u17C7\u1790\u17D2\u1793\u17B6\u1780\u17CB \xB7 \u4E8B\u6545\u5831\u544A \xB7 Accident log"), React.createElement(Badge, {
     tone: "neutral"
-  }, incidents.length, " total"), React.createElement("div", {
+  }, incidents.length), React.createElement("div", {
     style: {
       flex: 1
     }
@@ -33056,67 +33202,43 @@ var FvIncidents = ({
       size: 13
     }),
     onClick: () => setAdding(true)
-  }, tr('រាយ​ការណ៍', 'Report'))), incidents.length === 0 ? React.createElement("div", {
+  }, tr('រាយ​ការណ៍​ថ្មី', 'New report'))), incidents.length === 0 ? React.createElement("div", {
     style: {
       padding: '48px',
       textAlign: 'center',
-      color: 'var(--ink-3)',
-      border: '1px solid var(--border)',
-      borderRadius: 10
-    }
-  }, React.createElement("div", {
-    style: {
-      fontSize: 13,
       color: 'var(--good)',
-      fontWeight: 500
-    }
-  }, "\u2713 ", tr('គ្មាន​ឧប្បត្តិហេតុ', 'No incidents recorded'))) : React.createElement("div", {
-    style: {
       border: '1px solid var(--border)',
       borderRadius: 10,
-      overflow: 'hidden'
+      fontSize: 13,
+      fontWeight: 500
     }
-  }, incidents.map((inc, i) => {
+  }, "\u2713 ", tr('គ្មាន​គ្រោះថ្នាក់​ត្រូវ​បាន​កត់ត្រា', 'No accidents recorded')) : React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 10
+    }
+  }, incidents.map(inc => {
     var veh = vehicles.find(x => x.id === inc.v);
+    var tx = accMeta(ACC_TYPES, inc.accType || 'other');
     return React.createElement("div", {
       key: inc.id,
       style: {
-        padding: '14px 16px',
-        borderTop: i ? '1px solid var(--border)' : 'none',
-        display: 'grid',
-        gridTemplateColumns: '100px 1fr 70px 100px',
-        gap: 12,
-        alignItems: 'center'
+        border: '1px solid var(--border)',
+        borderRadius: 10,
+        padding: 14
       }
-    }, React.createElement("div", null, React.createElement("div", {
-      style: {
-        fontSize: 11,
-        fontFamily: '"JetBrains Mono",monospace',
-        color: 'var(--ink-3)'
-      }
-    }, inc.date), React.createElement("div", {
-      style: {
-        fontSize: 10,
-        color: 'var(--ink-3)',
-        marginTop: 2,
-        fontFamily: '"JetBrains Mono",monospace'
-      }
-    }, inc.id)), React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         display: 'flex',
-        gap: 10,
+        gap: 12,
         alignItems: 'flex-start',
-        minWidth: 0
+        flexWrap: 'wrap'
       }
-    }, React.createElement(Photo, {
-      tag: veh?.photo,
-      w: 44,
-      h: 28,
-      r: 4
-    }), React.createElement("div", {
+    }, React.createElement("div", {
       style: {
-        minWidth: 0,
-        flex: 1
+        flex: 1,
+        minWidth: 180
       }
     }, React.createElement("div", {
       style: {
@@ -33125,45 +33247,92 @@ var FvIncidents = ({
         gap: 8,
         flexWrap: 'wrap'
       }
-    }, React.createElement("div", {
+    }, React.createElement("span", {
       style: {
         fontSize: 13,
-        fontWeight: 600
+        fontWeight: 700
       }
-    }, inc.type), React.createElement(Badge, {
+    }, tx.ja, " \xB7 ", tx.km), React.createElement(Badge, {
       tone: inc.severity === 'High' ? 'danger' : inc.severity === 'Medium' ? 'warn' : 'neutral'
-    }, inc.severity)), React.createElement("div", {
+    }, inc.severity), React.createElement(Badge, {
+      tone: inc.status === 'Resolved' ? 'good' : 'warn'
+    }, inc.status)), React.createElement("div", {
       style: {
         fontSize: 11,
         color: 'var(--ink-3)',
-        marginTop: 2
+        marginTop: 3,
+        fontFamily: '"JetBrains Mono",monospace'
       }
-    }, veh ? `${veh.make} ${veh.plate}` : inc.v, " \xB7 ", inc.driver || '—'), inc.desc && React.createElement("div", {
+    }, inc.id, " \xB7 ", inc.date, " ", inc.time || '', " \xB7 ", veh ? veh.plate : inc.v, " \xB7 ", inc.driver || '—'), (inc.circumstances || inc.desc) && React.createElement("div", {
       style: {
-        fontSize: 11,
+        fontSize: 12,
         color: 'var(--ink-2)',
-        marginTop: 3
+        marginTop: 4
       }
-    }, inc.desc))), React.createElement("div", {
+    }, inc.circumstances || inc.desc), inc.photos && inc.photos.length > 0 && React.createElement("div", {
       style: {
-        textAlign: 'right'
+        display: 'flex',
+        gap: 6,
+        marginTop: 8,
+        flexWrap: 'wrap'
       }
-    }, React.createElement("div", {
+    }, inc.photos.slice(0, 6).map((p, idx) => React.createElement("img", {
+      key: idx,
+      src: p,
+      onClick: () => window.open(p, '_blank'),
+      alt: "",
       style: {
-        fontSize: 14,
-        fontWeight: 600
+        width: 54,
+        height: 40,
+        objectFit: 'cover',
+        borderRadius: 5,
+        border: '1px solid var(--border)',
+        cursor: 'pointer'
       }
-    }, "$", inc.cost || 0)), React.createElement("div", null, React.createElement(Badge, {
-      tone: inc.status === 'Resolved' ? 'good' : inc.status === 'Open' ? 'warn' : 'neutral'
-    }, inc.status), inc.status !== 'Resolved' && React.createElement("div", {
+    })))), React.createElement("div", {
       style: {
-        marginTop: 6
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        alignItems: 'flex-end'
+      }
+    }, inc.cost > 0 && React.createElement("div", {
+      style: {
+        fontSize: 15,
+        fontWeight: 700
+      }
+    }, "$", inc.cost), React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 6,
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        justifyContent: 'flex-end'
       }
     }, React.createElement(Btn, {
       kind: "ghost",
       size: "sm",
+      icon: React.createElement(Icon, {
+        name: "download",
+        size: 12
+      }),
+      onClick: () => generateAccidentPDF(inc, veh)
+    }, "PDF"), inc.status !== 'Resolved' && React.createElement(Btn, {
+      kind: "ghost",
+      size: "sm",
       onClick: () => updateStatus(inc.id, 'Resolved')
-    }, tr('ដោះ​ស្រាយ', 'Resolve')))));
+    }, tr('ដោះ​ស្រាយ', 'Resolve')), React.createElement("button", {
+      onClick: () => removeInc(inc.id),
+      title: tr('លុប', 'Delete'),
+      style: {
+        border: 'none',
+        background: 'none',
+        cursor: 'pointer',
+        color: 'var(--danger)',
+        fontSize: 15,
+        lineHeight: 1
+      }
+    }, "\u2715")))));
   })));
 };
 var FvIncidentForm = ({
@@ -33176,31 +33345,76 @@ var FvIncidentForm = ({
     tr
   } = useAppActions();
   var [vId, setVId] = React.useState(vehicles[0]?.id || '');
-  var [date, setDate] = React.useState(new Date().toISOString().slice(0, 10));
-  var [type, setType] = React.useState('');
+  var [date, setDate] = React.useState(typeof todayStr === 'function' ? todayStr() : new Date().toISOString().slice(0, 10));
+  var [time, setTime] = React.useState('');
+  var [location, setLocation] = React.useState('');
+  var [accType, setAccType] = React.useState('property');
   var [severity, setSeverity] = React.useState('Low');
   var [driver, setDriver] = React.useState('');
+  var [weather, setWeather] = React.useState('clear');
+  var [road, setRoad] = React.useState('dry');
+  var [injuries, setInjuries] = React.useState('no');
+  var [injuryDetail, setInjuryDetail] = React.useState('');
+  var [circumstances, setCircumstances] = React.useState('');
+  var [damage, setDamage] = React.useState('');
+  var [cause, setCause] = React.useState('');
+  var [prevention, setPrevention] = React.useState('');
   var [cost, setCost] = React.useState('');
-  var [desc, setDesc] = React.useState('');
+  var [reporter, setReporter] = React.useState(window.__currentUserName || '');
+  var [photos, setPhotos] = React.useState([]);
+  var fileRef = React.useRef(null);
+  var onPick = e => {
+    var files = [...(e.target.files || [])];
+    e.target.value = '';
+    files.slice(0, 6 - photos.length).forEach(f => {
+      if (!f.type.startsWith('image/')) return;
+      var add = d => setPhotos(p => p.length < 6 ? [...p, d] : p);
+      if (window.resizeImageFile) window.resizeImageFile(f, 1280, 1280).then(add).catch(() => {
+        var r = new FileReader();
+        r.onload = () => add(r.result);
+        r.readAsDataURL(f);
+      });else {
+        var r = new FileReader();
+        r.onload = () => add(r.result);
+        r.readAsDataURL(f);
+      }
+    });
+  };
   var save = () => {
-    if (!type.trim()) {
-      toast(tr('សូម​បញ្ចូល​ប្រភេទ​', 'Enter incident type'), 'warn');
+    if (!circumstances.trim()) {
+      toast(tr('សូម​បំពេញ​កាលៈទេសៈ', 'Describe what happened'), 'warn');
       return;
     }
-    var id = 'IC-' + String(window.__incidentData.length + 1).padStart(3, '0');
+    var id = 'IC-' + String((window.__incidentData.length || 0) + 1).padStart(3, '0');
     window.__incidentData.unshift({
       id,
       v: vId,
       date,
-      type: type.trim(),
+      time,
+      location: location.trim(),
+      accType,
+      type: accMeta(ACC_TYPES, accType).en,
       severity,
       driver: driver.trim() || '—',
+      weather,
+      road,
+      injuries,
+      injuryDetail: injuryDetail.trim(),
+      circumstances: circumstances.trim(),
+      desc: circumstances.trim(),
+      damage: damage.trim(),
+      cause: cause.trim(),
+      prevention: prevention.trim(),
       cost: parseFloat(cost) || 0,
+      reporter: reporter.trim(),
+      photos: [...photos],
       status: 'Open',
-      desc: desc.trim()
+      createdAt: new Date().toISOString()
     });
+    if (window.saveAllData) window.saveAllData();
     if (window.__notifyVehiclesChanged) window.__notifyVehiclesChanged();
-    toast(tr('បាន​រាយ​ការណ៍ · ' + id, 'Incident reported · ' + id), 'warn');
+    toast(tr('បាន​រាយ​ការណ៍ · ' + id, 'Accident reported · ' + id), 'good');
+    forceUpdate && forceUpdate();
     onClose();
   };
   var inp = {
@@ -33216,101 +33430,273 @@ var FvIncidentForm = ({
       boxSizing: 'border-box'
     }
   };
+  var ta = {
+    style: {
+      ...inp.style,
+      minHeight: 60,
+      resize: 'vertical',
+      fontFamily: 'var(--font-km),var(--font-en),inherit'
+    }
+  };
+  var Lbl = ({
+    ja,
+    km
+  }) => React.createElement("div", {
+    style: {
+      fontSize: 11,
+      fontWeight: 600,
+      marginBottom: 4
+    }
+  }, ja, " ", React.createElement("span", {
+    style: {
+      color: 'var(--ink-3)',
+      fontWeight: 400
+    }
+  }, "\xB7 ", km));
+  var sec = t => React.createElement("div", {
+    style: {
+      font: '600 10px/1 "JetBrains Mono",monospace',
+      letterSpacing: '.08em',
+      textTransform: 'uppercase',
+      color: 'var(--ink-3)',
+      margin: '14px 0 8px'
+    }
+  }, t);
   return React.createElement(Card, null, React.createElement("div", {
     style: {
       fontSize: 14,
-      fontWeight: 600,
-      marginBottom: 14
+      fontWeight: 700,
+      marginBottom: 4
     }
-  }, "\u26A0\uFE0F ", tr('រាយ​ការណ៍​ឧប្បត្តិហេតុ', 'Report incident')), React.createElement("div", {
+  }, "\u26A0\uFE0F ", tr('រាយ​ការណ៍​គ្រោះថ្នាក់', 'Accident report'), " \xB7 \u4EA4\u901A\u4E8B\u6545\u5831\u544A\u66F8"), sec('発生 · កើតហេតុ'), React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: 10,
-      marginBottom: 10
+      marginBottom: 6
     }
-  }, React.createElement("div", null, React.createElement("div", {
-    style: {
-      fontSize: 11,
-      fontWeight: 500,
-      marginBottom: 4
-    }
-  }, "\u1799\u17B6\u1793\u1799\u1793\u17D2\u178F \xB7 Vehicle"), React.createElement("select", _extends({}, inp, {
+  }, React.createElement("div", null, React.createElement(Lbl, {
+    ja: "\u8ECA\u4E21",
+    km: "\u1799\u17B6\u1793\u1799\u1793\u17D2\u178F"
+  }), React.createElement("select", _extends({}, inp, {
     value: vId,
     onChange: e => setVId(e.target.value)
   }), vehicles.map(v => React.createElement("option", {
     key: v.id,
     value: v.id
-  }, v.make, " \xB7 ", v.plate)))), React.createElement("div", null, React.createElement("div", {
-    style: {
-      fontSize: 11,
-      fontWeight: 500,
-      marginBottom: 4
-    }
-  }, "\u1790\u17D2\u1784\u17C3\u200B \xB7 Date"), React.createElement("input", _extends({}, inp, {
+  }, v.plate, " \xB7 ", v.make)))), React.createElement("div", null, React.createElement(Lbl, {
+    ja: "\u904B\u8EE2\u8005",
+    km: "\u17A2\u17D2\u1793\u1780\u1794\u17BE\u1780\u1794\u179A"
+  }), React.createElement("input", _extends({}, inp, {
+    value: driver,
+    onChange: e => setDriver(e.target.value),
+    placeholder: tr('ឈ្មោះ​គ្រូ / សិស្ស', 'Instructor / student')
+  }))), React.createElement("div", null, React.createElement(Lbl, {
+    ja: "\u767A\u751F\u65E5",
+    km: "\u1790\u17D2\u1784\u17C3"
+  }), React.createElement("input", _extends({}, inp, {
     type: "date",
     value: date,
     onChange: e => setDate(e.target.value)
-  }))), React.createElement("div", null, React.createElement("div", {
-    style: {
-      fontSize: 11,
-      fontWeight: 500,
-      marginBottom: 4
-    }
-  }, "\u1794\u17D2\u179A\u1797\u17C1\u1791 \xB7 Type *"), React.createElement("input", _extends({}, inp, {
-    value: type,
-    onChange: e => setType(e.target.value),
-    placeholder: "Minor scrape, Flat tire\u2026"
-  }))), React.createElement("div", null, React.createElement("div", {
-    style: {
-      fontSize: 11,
-      fontWeight: 500,
-      marginBottom: 4
-    }
-  }, "\u1780\u1798\u17D2\u179A\u17B7\u178F \xB7 Severity"), React.createElement("select", _extends({}, inp, {
-    value: severity,
-    onChange: e => setSeverity(e.target.value)
-  }), React.createElement("option", null, "None"), React.createElement("option", null, "Very low"), React.createElement("option", null, "Low"), React.createElement("option", null, "Medium"), React.createElement("option", null, "High"))), React.createElement("div", null, React.createElement("div", {
-    style: {
-      fontSize: 11,
-      fontWeight: 500,
-      marginBottom: 4
-    }
-  }, "\u17A2\u17D2\u1793\u1780\u200B\u1794\u17BE\u1780 \xB7 Driver"), React.createElement("input", _extends({}, inp, {
-    value: driver,
-    onChange: e => setDriver(e.target.value),
-    placeholder: "Mr. Vichea or Student ID"
-  }))), React.createElement("div", null, React.createElement("div", {
-    style: {
-      fontSize: 11,
-      fontWeight: 500,
-      marginBottom: 4
-    }
-  }, "\u178F\u1798\u17D2\u179B\u17C3\u200B\u1787\u17BD\u179F\u200B\u1787\u17BB\u179B \xB7 Repair cost ($)"), React.createElement("input", _extends({}, inp, {
-    type: "number",
-    value: cost,
-    onChange: e => setCost(e.target.value),
-    min: "0",
-    placeholder: "0"
+  }))), React.createElement("div", null, React.createElement(Lbl, {
+    ja: "\u767A\u751F\u6642\u523B",
+    km: "\u1798\u17C9\u17C4\u1784"
+  }), React.createElement("input", _extends({}, inp, {
+    type: "time",
+    value: time,
+    onChange: e => setTime(e.target.value)
   }))), React.createElement("div", {
     style: {
       gridColumn: '1/-1'
     }
-  }, React.createElement("div", {
+  }, React.createElement(Lbl, {
+    ja: "\u767A\u751F\u5834\u6240",
+    km: "\u1791\u17B8\u1780\u1793\u17D2\u179B\u17C2\u1784"
+  }), React.createElement("input", _extends({}, inp, {
+    value: location,
+    onChange: e => setLocation(e.target.value),
+    placeholder: tr('ឧ. ផ្លូវ​លេខ ៣១០', 'e.g. Street 310')
+  })))), sec('種類・状況 · ប្រភេទ និង ស្ថានភាព'), React.createElement("div", {
     style: {
-      fontSize: 11,
-      fontWeight: 500,
-      marginBottom: 4
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr 1fr',
+      gap: 10,
+      marginBottom: 6
     }
-  }, "\u1780\u17B6\u179A\u200B\u1796\u17B7\u1796\u178E\u17CC\u1793\u17B6 \xB7 Description"), React.createElement("input", _extends({}, inp, {
-    value: desc,
-    onChange: e => setDesc(e.target.value),
-    placeholder: "What happened\u2026"
-  })))), React.createElement("div", {
+  }, React.createElement("div", null, React.createElement(Lbl, {
+    ja: "\u4E8B\u6545\u7A2E\u985E",
+    km: "\u1794\u17D2\u179A\u1797\u17C1\u1791"
+  }), React.createElement("select", _extends({}, inp, {
+    value: accType,
+    onChange: e => setAccType(e.target.value)
+  }), ACC_TYPES.map(t => React.createElement("option", {
+    key: t.v,
+    value: t.v
+  }, t.ja, " \xB7 ", t.km)))), React.createElement("div", null, React.createElement(Lbl, {
+    ja: "\u5929\u5019",
+    km: "\u17A2\u17B6\u1780\u17B6\u179F\u1792\u17B6\u178F\u17BB"
+  }), React.createElement("select", _extends({}, inp, {
+    value: weather,
+    onChange: e => setWeather(e.target.value)
+  }), ACC_WEATHER.map(t => React.createElement("option", {
+    key: t.v,
+    value: t.v
+  }, t.ja, " \xB7 ", t.km)))), React.createElement("div", null, React.createElement(Lbl, {
+    ja: "\u8DEF\u9762",
+    km: "\u1795\u17D2\u1791\u17C3\u200B\u1795\u17D2\u179B\u17BC\u179C"
+  }), React.createElement("select", _extends({}, inp, {
+    value: road,
+    onChange: e => setRoad(e.target.value)
+  }), ACC_ROAD.map(t => React.createElement("option", {
+    key: t.v,
+    value: t.v
+  }, t.ja, " \xB7 ", t.km)))), React.createElement("div", null, React.createElement(Lbl, {
+    ja: "\u7A0B\u5EA6",
+    km: "\u1780\u1798\u17D2\u179A\u17B7\u178F"
+  }), React.createElement("select", _extends({}, inp, {
+    value: severity,
+    onChange: e => setSeverity(e.target.value)
+  }), React.createElement("option", null, "Low"), React.createElement("option", null, "Medium"), React.createElement("option", null, "High"))), React.createElement("div", null, React.createElement(Lbl, {
+    ja: "\u8CA0\u50B7\u8005",
+    km: "\u17A2\u17D2\u1793\u1780\u179A\u1794\u17BD\u179F"
+  }), React.createElement("select", _extends({}, inp, {
+    value: injuries,
+    onChange: e => setInjuries(e.target.value)
+  }), React.createElement("option", {
+    value: "no"
+  }, tr('គ្មាន', '無 None')), React.createElement("option", {
+    value: "yes"
+  }, tr('មាន', '有 Yes')))), React.createElement("div", null, React.createElement(Lbl, {
+    ja: "\u4FEE\u7406\u8CBB ($)",
+    km: "\u178F\u1798\u17D2\u179B\u17C3\u200B\u1787\u17BD\u179F\u1787\u17BB\u179B"
+  }), React.createElement("input", _extends({}, inp, {
+    type: "number",
+    min: "0",
+    value: cost,
+    onChange: e => setCost(e.target.value),
+    placeholder: "0"
+  }))), injuries === 'yes' && React.createElement("div", {
+    style: {
+      gridColumn: '1/-1'
+    }
+  }, React.createElement(Lbl, {
+    ja: "\u8CA0\u50B7\u306E\u8A73\u7D30",
+    km: "\u1796\u17D0\u178F\u17CC\u1798\u17B6\u1793\u200B\u17A2\u17D2\u1793\u1780\u179A\u1794\u17BD\u179F"
+  }), React.createElement("input", _extends({}, inp, {
+    value: injuryDetail,
+    onChange: e => setInjuryDetail(e.target.value),
+    placeholder: tr('នរណា · របួស​បែប​ណា', 'Who · injury detail')
+  })))), sec('詳細 · សេចក្ដី​លម្អិត'), React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 8,
+      marginBottom: 6
+    }
+  }, React.createElement("div", null, React.createElement(Lbl, {
+    ja: "\u72B6\u6CC1\u30FB\u7D4C\u7DEF",
+    km: "\u1780\u17B6\u179B\u17C8\u1791\u17C1\u179F\u17C8\u200B\u1793\u17C3\u200B\u17A0\u17C1\u178F\u17BB\u1780\u17B6\u179A\u178E\u17CD *"
+  }), React.createElement("textarea", _extends({}, ta, {
+    value: circumstances,
+    onChange: e => setCircumstances(e.target.value),
+    placeholder: tr('តើ​មាន​អ្វី​កើតឡើង…', 'What happened…')
+  }))), React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 10
+    }
+  }, React.createElement("div", null, React.createElement(Lbl, {
+    ja: "\u640D\u50B7\u72B6\u6CC1",
+    km: "\u1780\u17B6\u179A\u1781\u17BC\u1785\u1781\u17B6\u178F"
+  }), React.createElement("textarea", _extends({}, ta, {
+    value: damage,
+    onChange: e => setDamage(e.target.value)
+  }))), React.createElement("div", null, React.createElement(Lbl, {
+    ja: "\u539F\u56E0",
+    km: "\u1798\u17BC\u179B\u17A0\u17C1\u178F\u17BB"
+  }), React.createElement("textarea", _extends({}, ta, {
+    value: cause,
+    onChange: e => setCause(e.target.value)
+  })))), React.createElement("div", null, React.createElement(Lbl, {
+    ja: "\u518D\u767A\u9632\u6B62\u5BFE\u7B56",
+    km: "\u179C\u17B7\u1792\u17B6\u1793\u1780\u17B6\u179A\u200B\u1780\u17B6\u179A\u1796\u17B6\u179A"
+  }), React.createElement("textarea", _extends({}, ta, {
+    value: prevention,
+    onChange: e => setPrevention(e.target.value),
+    placeholder: tr('របៀប​ការពារ​កុំ​ឱ្យ​កើត​ឡើង​ម្ដង​ទៀត', 'How to prevent recurrence')
+  })))), sec('写真 · រូបថត'), React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: 8,
+      marginBottom: 6
+    }
+  }, photos.map((p, idx) => React.createElement("div", {
+    key: idx,
+    style: {
+      position: 'relative'
+    }
+  }, React.createElement("img", {
+    src: p,
+    alt: "",
+    style: {
+      width: 84,
+      height: 64,
+      objectFit: 'cover',
+      borderRadius: 6,
+      border: '1px solid var(--border)'
+    }
+  }), React.createElement("button", {
+    onClick: () => setPhotos(ph => ph.filter((_, j) => j !== idx)),
+    style: {
+      position: 'absolute',
+      top: -6,
+      right: -6,
+      width: 20,
+      height: 20,
+      borderRadius: 999,
+      border: 'none',
+      background: 'var(--danger)',
+      color: '#fff',
+      cursor: 'pointer',
+      fontSize: 12,
+      lineHeight: 1
+    }
+  }, "\xD7"))), photos.length < 6 && React.createElement("button", {
+    onClick: () => fileRef.current?.click(),
+    style: {
+      width: 84,
+      height: 64,
+      borderRadius: 6,
+      border: '1.5px dashed var(--border-strong)',
+      background: 'transparent',
+      color: 'var(--ink-3)',
+      cursor: 'pointer',
+      fontSize: 22
+    }
+  }, "\uFF0B"), React.createElement("input", {
+    ref: fileRef,
+    type: "file",
+    accept: "image/*",
+    multiple: true,
+    style: {
+      display: 'none'
+    },
+    onChange: onPick
+  })), React.createElement("div", null, React.createElement(Lbl, {
+    ja: "\u5831\u544A\u8005",
+    km: "\u17A2\u17D2\u1793\u1780\u179A\u17B6\u1799\u1780\u17B6\u179A\u178E\u17CD"
+  }), React.createElement("input", _extends({}, inp, {
+    value: reporter,
+    onChange: e => setReporter(e.target.value),
+    placeholder: tr('ឈ្មោះ', 'Name')
+  }))), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
-      justifyContent: 'flex-end'
+      justifyContent: 'flex-end',
+      marginTop: 14
     }
   }, React.createElement(Btn, {
     kind: "ghost",
@@ -33320,7 +33706,7 @@ var FvIncidentForm = ({
     kind: "primary",
     size: "sm",
     onClick: save
-  }, tr('រាយ​ការណ៍', 'Submit report'))));
+  }, tr('រក្សាទុក​របាយការណ៍', 'Save report'))));
 };
 var EXP_CATS = [{
   v: 'fuel',
