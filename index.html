@@ -6687,7 +6687,7 @@ var NewLessonForm = ({
     }, stage === 1 ? tr('── ដំណាក់កាល ១', '── Stage 1 · 第一段階 ──') : tr('── ដំណាក់កាល ២', '── Stage 2 · 第二段階 ──')), ...grp.map(u => React.createElement("option", {
       key: u.id,
       value: u.id
-    }, u.no ? u.no + ' · ' : '', tr(u.km, u.en), u.ja ? ' · ' + u.ja : ''))];
+    }, u.no ? u.no + ' · ' : '', tr(u.km, u.en)))];
   })]))), React.createElement(FormSection, {
     title: tr('ពេល​វេលា', 'WHEN')
   }, React.createElement("div", {
@@ -6804,7 +6804,15 @@ var NewLessonForm = ({
     value: "1.5"
   }, "1.5 \u1798\u17C9\u17C4\u1784"), React.createElement("option", {
     value: "2"
-  }, "2 \u1798\u17C9\u17C4\u1784")))), dates.length > 1 && React.createElement("div", {
+  }, "2 \u1798\u17C9\u17C4\u1784"), React.createElement("option", {
+    value: "2.5"
+  }, "2.5 \u1798\u17C9\u17C4\u1784"), React.createElement("option", {
+    value: "3"
+  }, "3 \u1798\u17C9\u17C4\u1784"), React.createElement("option", {
+    value: "3.5"
+  }, "3.5 \u1798\u17C9\u17C4\u1784"), React.createElement("option", {
+    value: "4"
+  }, "4 \u1798\u17C9\u17C4\u1784")))), dates.length > 1 && React.createElement("div", {
     style: {
       marginTop: 8,
       padding: '8px 12px',
@@ -6832,7 +6840,7 @@ var NewLessonForm = ({
   }, tr('ក្រុម / មិន​ផ្ទាល់​ខ្លួន', 'Group / not individual')), STUDENTS.map(s => React.createElement("option", {
     key: s.id,
     value: s.id
-  }, s.name, " \xB7 ", s.id)))), React.createElement(Field, {
+  }, s.en || s.name)))), React.createElement(Field, {
     label: tr('គ្រូ *', 'Instructor *'),
     sub: touched.instId && !instId ? tr('ទាមទារ', 'Required') : hasConflict ? tr('⚠ គ្រូ​នេះ​រវល់​ម៉ោង​នេះ', '⚠ Instructor busy') : ''
   }, React.createElement(Select, {
@@ -6851,7 +6859,7 @@ var NewLessonForm = ({
       key: i.id,
       value: i.id,
       disabled: busy
-    }, busy ? '🔴 ' : '', i.name, " \xB7 ", i.en, busy ? tr(' (រវល់)', ' (busy)') : '');
+    }, busy ? '🔴 ' : '', i.en || i.name, busy ? tr(' (រវល់)', ' (busy)') : '');
   }))), React.createElement(Field, {
     label: tr('យានយន្ត', 'Vehicle'),
     full: true,
@@ -6929,7 +6937,7 @@ var NewLessonForm = ({
     return React.createElement("option", {
       key: i.id,
       value: i.id
-    }, busy ? '🔴 ' : '', i.name, " \xB7 ", i.en, busy ? tr(' (រវល់)', ' (busy)') : '');
+    }, busy ? '🔴 ' : '', i.en || i.name, busy ? tr(' (រវល់)', ' (busy)') : '');
   })))), React.createElement(FormSection, {
     title: tr('ទីតាំង', 'LOCATION')
   }, React.createElement("div", {
@@ -6946,7 +6954,7 @@ var NewLessonForm = ({
   }, LOCATIONS.map(loc => React.createElement("option", {
     key: loc.v,
     value: loc.v
-  }, loc.km, " \xB7 ", loc.en)))), React.createElement(Field, {
+  }, loc.en)))), React.createElement(Field, {
     label: tr('ឬ បំពេញ​ដោយ​ដៃ', 'Or type manually')
   }, React.createElement(Input, {
     value: locationText,

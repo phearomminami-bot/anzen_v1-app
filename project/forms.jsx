@@ -2002,7 +2002,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
                   if (!grp.length) return [];
                   return [
                     <option key={'st'+stage} value="" disabled>{stage===1 ? tr('── ដំណាក់កាល ១','── Stage 1 · 第一段階 ──') : tr('── ដំណាក់កាល ២','── Stage 2 · 第二段階 ──')}</option>,
-                    ...grp.map(u => <option key={u.id} value={u.id}>{u.no ? u.no+' · ' : ''}{tr(u.km, u.en)}{u.ja ? ' · '+u.ja : ''}</option>),
+                    ...grp.map(u => <option key={u.id} value={u.id}>{u.no ? u.no+' · ' : ''}{tr(u.km, u.en)}</option>),
                   ];
                 }),
               ]}
@@ -2057,6 +2057,10 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
               <option value="1">1 ម៉ោង</option>
               <option value="1.5">1.5 ម៉ោង</option>
               <option value="2">2 ម៉ោង</option>
+              <option value="2.5">2.5 ម៉ោង</option>
+              <option value="3">3 ម៉ោង</option>
+              <option value="3.5">3.5 ម៉ោង</option>
+              <option value="4">4 ម៉ោង</option>
             </Select>
           </Field>
         </div>
@@ -2074,7 +2078,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
             <Select value={studentId} onChange={e=>setStudentId(e.target.value)}>
               <option value="">{tr('ក្រុម / មិន​ផ្ទាល់​ខ្លួន','Group / not individual')}</option>
               {STUDENTS.map(s=>(
-                <option key={s.id} value={s.id}>{s.name} · {s.id}</option>
+                <option key={s.id} value={s.id}>{s.en || s.name}</option>
               ))}
             </Select>
           </Field>
@@ -2085,7 +2089,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
               <option value="">{tr('--- ជ្រើស​គ្រូ ---','--- Select instructor ---')}</option>
               {INSTRUCTORS.map(i=>{
                 const busy = LESSONS.some(l=>l.instId===i.id && slotBusy(l));
-                return <option key={i.id} value={i.id} disabled={busy}>{busy?'🔴 ':''}{i.name} · {i.en}{busy?tr(' (រវល់)',' (busy)'):''}</option>;
+                return <option key={i.id} value={i.id} disabled={busy}>{busy?'🔴 ':''}{i.en || i.name}{busy?tr(' (រវល់)',' (busy)'):''}</option>;
               })}
             </Select>
           </Field>
@@ -2136,7 +2140,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
             <option value="">{tr('+ Add guest instructor','+ Add guest instructor')}</option>
             {INSTRUCTORS.filter(i => i.id !== instId && !guests.includes(i.id)).map(i => {
               const busy = LESSONS.some(l => (l.instId===i.id||(l.guests||[]).includes(i.id)) && slotBusy(l));
-              return <option key={i.id} value={i.id}>{busy?'🔴 ':''}{i.name} · {i.en}{busy?tr(' (រវល់)',' (busy)'):''}</option>;
+              return <option key={i.id} value={i.id}>{busy?'🔴 ':''}{i.en || i.name}{busy?tr(' (រវល់)',' (busy)'):''}</option>;
             })}
           </Select>
         </Field>
@@ -2148,7 +2152,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
           <Field label={tr('ទីតាំង​ជួប','Meeting location')}>
             <Select value={pickup} onChange={e=>setPickup(e.target.value)}>
               {LOCATIONS.map(loc => (
-                <option key={loc.v} value={loc.v}>{loc.km} · {loc.en}</option>
+                <option key={loc.v} value={loc.v}>{loc.en}</option>
               ))}
             </Select>
           </Field>
