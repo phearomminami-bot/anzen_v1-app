@@ -588,7 +588,6 @@ window.__trRegistry = {
   "Image upload failed": "បន្ទុក​រូប​មិន​បាន",
   "Use \"Insert image\" to embed an image at the cursor · auto-compressed to ~900px": "ប្រើ​ប៊ូតុង \"ដាក់​រូប\" ដើម្បី​បញ្ចូល​រូប​​​​​​​​ភាព​​នៅ​ចំណុច​ដែល​ Cursor ឈរ​ · រូប​ត្រូវ​បាន​បង្រួម​ដោយ​ស្វ័យ​ប្រវត្តិ",
   "Insert image · KH": "ដាក់​រូប · ខ្មែរ",
-  "Insert image · EN": "ដាក់​រូប",
   "Enter a YouTube ID to preview": "វាយ YouTube ID ដើម្បីមើល",
   "Add video": "បន្ថែម​វីដេអូ",
   "Questions": "សំណួរ",
@@ -21856,7 +21855,6 @@ var nextLessonContentId = (list, prefix) => {
 };
 var AlField = ({
   km,
-  en,
   children,
   full = true
 }) => React.createElement("div", {
@@ -21866,24 +21864,12 @@ var AlField = ({
     gap: 6,
     gridColumn: full ? '1 / -1' : 'auto'
   }
-}, React.createElement("label", {
-  style: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'baseline'
-  }
-}, React.createElement("span", {
+}, React.createElement("label", null, React.createElement("span", {
   style: {
     fontSize: 13,
     fontWeight: 600
   }
-}, km), React.createElement("span", {
-  style: {
-    fontSize: 11,
-    color: 'var(--ink-3)',
-    fontFamily: '"JetBrains Mono",monospace'
-  }
-}, en)), children);
+}, km)), children);
 var AlInput = ({
   onFocus,
   onBlur,
@@ -22165,28 +22151,6 @@ var TextLessonForm = ({
   }), React.createElement(ImagePreviewStrip, {
     body: bodyKm,
     onRemove: src => setBodyKm(stripImageFromBody(bodyKm, src))
-  }))), React.createElement(AlField, {
-    km: "\u1781\u17D2\u179B\u17B9\u1798\u179F\u17B6\u179A \xB7 \u17A2\u1784\u17CB\u1782\u17D2\u179B\u17C1\u179F",
-    en: "Body \xB7 English"
-  }, React.createElement(AlTextarea, {
-    ref: bodyEnRef,
-    value: bodyEn,
-    onChange: e => setBodyEn(e.target.value),
-    placeholder: 'Lesson content...\n\n**Key points:**\n• ...'
-  }), React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 8,
-      marginTop: 6,
-      alignItems: 'center',
-      flexWrap: 'wrap'
-    }
-  }, React.createElement(ImagePickerButton, {
-    label: tr('ដាក់​រូប', 'Insert image · EN'),
-    onPick: dataUrl => insertAtCursor(bodyEnRef, setBodyEn, bodyEn, `\n![](${dataUrl})\n`)
-  }), React.createElement(ImagePreviewStrip, {
-    body: bodyEn,
-    onRemove: src => setBodyEn(stripImageFromBody(bodyEn, src))
   }))), React.createElement("div", {
     style: {
       gridColumn: '1 / -1',
@@ -23535,7 +23499,7 @@ var AdminLessonsScreen = ({
       fontFamily: '"JetBrains Mono",monospace',
       letterSpacing: '.08em'
     }
-  }, editor.target === textsKey ? isTheory ? 'THEORY · TEXT' : 'PRACTICAL · TEXT' : editor.target === videosKey ? isTheory ? 'THEORY · VIDEO' : 'PRACTICAL · VIDEO' : isTheory ? 'THEORY · QUIZ' : 'PRACTICAL · QUIZ'), React.createElement("div", {
+  }, editor.target === textsKey ? isTheory ? 'ទ្រឹស្ដី · អត្ថបទ' : 'អនុវត្តន៍ · អត្ថបទ' : editor.target === videosKey ? isTheory ? 'ទ្រឹស្ដី · វីដេអូ' : 'អនុវត្តន៍ · វីដេអូ' : isTheory ? 'ទ្រឹស្ដី · លំហាត់' : 'អនុវត្តន៍ · លំហាត់'), React.createElement("div", {
     style: {
       fontSize: 20,
       fontWeight: 600,

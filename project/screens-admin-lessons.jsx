@@ -121,11 +121,10 @@ const nextLessonContentId = (list, prefix) => {
 };
 
 // ── small form helpers ────────────────────────────────────────────────────
-const AlField = ({ km, en, children, full = true }) => (
+const AlField = ({ km, children, full = true }) => (
   <div style={{display:'flex',flexDirection:'column',gap:6,gridColumn:full?'1 / -1':'auto'}}>
-    <label style={{display:'flex',justifyContent:'space-between',alignItems:'baseline'}}>
+    <label>
       <span style={{fontSize:13,fontWeight:600}}>{km}</span>
-      <span style={{fontSize:11,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{en}</span>
     </label>
     {children}
   </div>
@@ -308,18 +307,7 @@ const TextLessonForm = ({ initial, onSave, onCancel }) => {
           <ImagePreviewStrip body={bodyKm} onRemove={(src) => setBodyKm(stripImageFromBody(bodyKm, src))}/>
         </div>
       </AlField>
-      <AlField km="ខ្លឹមសារ · អង់គ្លេស" en="Body · English">
-        <AlTextarea ref={bodyEnRef} value={bodyEn} onChange={e=>setBodyEn(e.target.value)} placeholder={'Lesson content...\n\n**Key points:**\n• ...'}/>
-        <div style={{display:'flex',gap:8,marginTop:6,alignItems:'center',flexWrap:'wrap'}}>
-          <ImagePickerButton
-            label={tr('ដាក់​រូប','Insert image · EN')}
-            onPick={(dataUrl) =>
-              insertAtCursor(bodyEnRef, setBodyEn, bodyEn, `\n![](${dataUrl})\n`)
-            }
-          />
-          <ImagePreviewStrip body={bodyEn} onRemove={(src) => setBodyEn(stripImageFromBody(bodyEn, src))}/>
-        </div>
-      </AlField>
+      {/* English body is hidden — still auto-translated from Khmer on blur and saved. */}
       <div style={{gridColumn:'1 / -1',display:'flex',justifyContent:'flex-end',gap:8,marginTop:8}}>
         <Btn kind="ghost"   size="md" onClick={onCancel}>{tr('បោះបង់','Cancel')}</Btn>
         <Btn kind="primary" size="md" onClick={submit}>{initial ? tr('រក្សាទុក','Save') : tr('បន្ថែម','Add lesson')}</Btn>
@@ -998,9 +986,9 @@ const AdminLessonsScreen = ({ role = 'admin' }) => {
           <div>
             <div style={{padding:'22px 28px 16px',borderBottom:'1px solid var(--border)'}}>
               <div style={{fontSize:11,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.08em'}}>
-                {editor.target === textsKey   ? (isTheory?'THEORY · TEXT':'PRACTICAL · TEXT')   :
-                 editor.target === videosKey  ? (isTheory?'THEORY · VIDEO':'PRACTICAL · VIDEO') :
-                                                (isTheory?'THEORY · QUIZ':'PRACTICAL · QUIZ')}
+                {editor.target === textsKey   ? (isTheory?'ទ្រឹស្ដី · អត្ថបទ':'អនុវត្តន៍ · អត្ថបទ')   :
+                 editor.target === videosKey  ? (isTheory?'ទ្រឹស្ដី · វីដេអូ':'អនុវត្តន៍ · វីដេអូ') :
+                                                (isTheory?'ទ្រឹស្ដី · លំហាត់':'អនុវត្តន៍ · លំហាត់')}
               </div>
               <div style={{fontSize:20,fontWeight:600,fontFamily:'var(--font-display)',letterSpacing:'-.01em',marginTop:4}}>
                 {editor.initial
