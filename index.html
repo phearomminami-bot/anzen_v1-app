@@ -20912,6 +20912,23 @@ var TextCard = ({
         height: 8
       }
     });
+    var imgM = line.trim().match(/^!\[[^\]]*\]\(([^)]+)\)$/);
+    if (imgM) {
+      var src = imgM[1];
+      if (src.startsWith('img:')) src = (lesson.images || {})[src.slice(4)] || '';
+      return src ? React.createElement("img", {
+        key: i,
+        src: src,
+        alt: "",
+        style: {
+          maxWidth: '100%',
+          borderRadius: 8,
+          margin: '8px 0',
+          display: 'block',
+          border: '1px solid var(--border)'
+        }
+      }) : null;
+    }
     if (line.startsWith('**') && line.endsWith('**')) {
       return React.createElement("div", {
         key: i,
@@ -22058,6 +22075,9 @@ var TextLessonForm = ({
   var [mins, setMins] = React.useState(initial?.mins || 10);
   var [bodyKm, setBodyKm] = React.useState(initial?.body_km || '');
   var [bodyEn, setBodyEn] = React.useState(initial?.body_en || '');
+  var [images, setImages] = React.useState(() => ({
+    ...(initial?.images || {})
+  }));
   var bodyKmRef = React.useRef(null);
   var bodyEnRef = React.useRef(null);
   var enMode = lang === 'en';
@@ -22069,15 +22089,37 @@ var TextLessonForm = ({
   var curBody = enMode ? bodyEn : bodyKm;
   var setCurBody = enMode ? setBodyEn : setBodyKm;
   var curBodyRef = enMode ? bodyEnRef : bodyKmRef;
+  var insertImage = dataUrl => {
+    var id = 'i' + Date.now().toString(36) + Math.floor(Math.random() * 46656).toString(36);
+    setImages(m => ({
+      ...m,
+      [id]: dataUrl
+    }));
+    var token = `\n![](img:${id})\n`;
+    insertAtCursor(curBodyRef, setCurBody, curBody, token);
+    var otherSet = enMode ? setBodyKm : setBodyEn;
+    otherSet(p => (p || '') + token);
+  };
   var submit = () => {
     if (!km.trim() && !en.trim()) return;
+    var used = new Set();
+    [bodyKm, bodyEn].forEach(b => {
+      var re = /!\[[^\]]*\]\(img:([^)]+)\)/g;
+      var m2;
+      while ((m2 = re.exec(b || '')) !== null) used.add(m2[1]);
+    });
+    var keptImages = {};
+    Object.keys(images).forEach(k => {
+      if (used.has(k)) keptImages[k] = images[k];
+    });
     onSave({
       ...(initial || {}),
       km: km.trim(),
       en: en.trim(),
       mins: parseInt(mins) || 10,
       body_km: bodyKm,
-      body_en: bodyEn
+      body_en: bodyEn,
+      images: keptImages
     });
   };
   return React.createElement("div", {
@@ -22131,10 +22173,14 @@ var TextLessonForm = ({
     }
   }, React.createElement(ImagePickerButton, {
     label: tr('ដាក់​រូប', 'Insert image'),
-    onPick: dataUrl => insertAtCursor(curBodyRef, setCurBody, curBody, `\n![](${dataUrl})\n`)
+    onPick: insertImage
   }), React.createElement(ImagePreviewStrip, {
     body: curBody,
-    onRemove: src => setCurBody(stripImageFromBody(curBody, src))
+    images: images,
+    onRemove: token => {
+      setBodyKm(b => stripImageFromBody(b, token));
+      setBodyEn(b => stripImageFromBody(b, token));
+    }
   }))), React.createElement("div", {
     style: {
       gridColumn: '1 / -1',
@@ -22168,10 +22214,12 @@ var stripImageFromBody = (body, src) => {
 };
 var ImagePreviewStrip = ({
   body,
+  images = {},
   onRemove
 }) => {
   var srcs = extractBodyImages(body);
   if (!srcs.length) return null;
+  var resolve = s => s.startsWith('img:') ? images[s.slice(4)] || '' : s;
   return React.createElement("div", {
     style: {
       display: 'flex',
@@ -22185,7 +22233,7 @@ var ImagePreviewStrip = ({
       width: 48,
       height: 36,
       borderRadius: 6,
-      background: `#000 url(${src}) center/cover no-repeat`,
+      background: `#000 url(${resolve(src)}) center/cover no-repeat`,
       border: '1px solid var(--border)',
       flexShrink: 0
     }

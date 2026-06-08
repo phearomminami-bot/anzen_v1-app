@@ -257,6 +257,9 @@ const TextLessonForm = ({ initial, onSave, onCancel }) => {
   const [mins,  setMins]  = React.useState(initial?.mins  || 10);
   const [bodyKm, setBodyKm] = React.useState(initial?.body_km || '');
   const [bodyEn, setBodyEn] = React.useState(initial?.body_en || '');
+  // Embedded images are kept in a map so the body text only holds a short
+  // "img:ID" token instead of a huge base64 data URL.
+  const [images, setImages] = React.useState(() => ({ ...(initial?.images || {}) }));
   const bodyKmRef = React.useRef(null);
   const bodyEnRef = React.useRef(null);
 
@@ -272,13 +275,30 @@ const TextLessonForm = ({ initial, onSave, onCancel }) => {
   const setCurBody = enMode ? setBodyEn : setBodyKm;
   const curBodyRef = enMode ? bodyEnRef : bodyKmRef;
 
+  // Insert an image: store the data URL in the images map and put only a short
+  // token in the body text, then mirror the token into the other language so
+  // the picture shows in both KH and EN.
+  const insertImage = (dataUrl) => {
+    const id = 'i' + Date.now().toString(36) + Math.floor(Math.random()*46656).toString(36);
+    setImages(m => ({ ...m, [id]: dataUrl }));
+    const token = `\n![](img:${id})\n`;
+    insertAtCursor(curBodyRef, setCurBody, curBody, token);
+    const otherSet = enMode ? setBodyKm : setBodyEn;
+    otherSet(p => (p || '') + token);
+  };
+
   const submit = () => {
     if (!km.trim() && !en.trim()) return;
+    // Only keep images still referenced by either body.
+    const used = new Set();
+    [bodyKm, bodyEn].forEach(b => { const re = /!\[[^\]]*\]\(img:([^)]+)\)/g; let m2; while ((m2 = re.exec(b||'')) !== null) used.add(m2[1]); });
+    const keptImages = {}; Object.keys(images).forEach(k => { if (used.has(k)) keptImages[k] = images[k]; });
     onSave({
       ...(initial || {}),
       km: km.trim(), en: en.trim(),
       mins: parseInt(mins) || 10,
       body_km: bodyKm, body_en: bodyEn,
+      images: keptImages,
     });
   };
 
@@ -302,9 +322,10 @@ const TextLessonForm = ({ initial, onSave, onCancel }) => {
         <div style={{display:'flex',gap:8,marginTop:6,alignItems:'center',flexWrap:'wrap'}}>
           <ImagePickerButton
             label={tr('ដាក់​រូប','Insert image')}
-            onPick={(dataUrl) => insertAtCursor(curBodyRef, setCurBody, curBody, `\n![](${dataUrl})\n`)}
+            onPick={insertImage}
           />
-          <ImagePreviewStrip body={curBody} onRemove={(src) => setCurBody(stripImageFromBody(curBody, src))}/>
+          <ImagePreviewStrip body={curBody} images={images}
+            onRemove={(token) => { setBodyKm(b=>stripImageFromBody(b, token)); setBodyEn(b=>stripImageFromBody(b, token)); }}/>
         </div>
       </AlField>
       {/* English body is hidden — still auto-translated from Khmer on blur and saved. */}
@@ -337,15 +358,16 @@ const stripImageFromBody = (body, src) => {
     .replace(/\n{3,}/g, '\n\n');
 };
 
-const ImagePreviewStrip = ({ body, onRemove }) => {
-  const srcs = extractBodyImages(body);
+const ImagePreviewStrip = ({ body, images = {}, onRemove }) => {
+  const srcs = extractBodyImages(body);   // tokens (img:ID) or legacy data URLs
   if (!srcs.length) return null;
+  const resolve = (s) => s.startsWith('img:') ? (images[s.slice(4)] || '') : s;
   return (
     <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
       {srcs.map((src, i) => (
         <div key={i} style={{
           position:'relative', width:48, height:36, borderRadius:6,
-          background:`#000 url(${src}) center/cover no-repeat`,
+          background:`#000 url(${resolve(src)}) center/cover no-repeat`,
           border:'1px solid var(--border)', flexShrink:0,
         }}>
           <button onClick={()=>onRemove(src)}

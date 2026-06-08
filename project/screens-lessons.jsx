@@ -1097,6 +1097,14 @@ const TextCard = ({ lesson, done, onToggle }) => {
 
   const renderBody = (text) => text.split('\n').map((line, i) => {
     if (!line.trim()) return <div key={i} style={{ height: 8 }}/>;
+    // Image: ![](url) — url may be a data URL (legacy) or an "img:ID" token
+    // resolved from the lesson's images map.
+    const imgM = line.trim().match(/^!\[[^\]]*\]\(([^)]+)\)$/);
+    if (imgM) {
+      let src = imgM[1];
+      if (src.startsWith('img:')) src = (lesson.images || {})[src.slice(4)] || '';
+      return src ? <img key={i} src={src} alt="" style={{ maxWidth:'100%', borderRadius:8, margin:'8px 0', display:'block', border:'1px solid var(--border)' }}/> : null;
+    }
     if (line.startsWith('**') && line.endsWith('**')) {
       return <div key={i} style={{ fontWeight: 700, marginTop: 12, marginBottom: 4, fontSize: 13 }}>{line.slice(2, -2)}</div>;
     }
