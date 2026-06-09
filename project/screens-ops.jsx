@@ -705,9 +705,9 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
 
   return (
     <div style={{display:'flex',flexDirection:'column',gap:14}}>
-      <SectionTitle
-        km={bp.mobile ? 'កាលវិភាគ' : `កាលវិភាគ · ${labelKm}`}
-        en={bp.mobile ? (studentMode?'My Schedule':'Schedule') : `${studentMode?'My Schedule':'Schedule'} · ${labelEn}`}
+      {!bp.mobile && <SectionTitle
+        km={`កាលវិភាគ · ${labelKm}`}
+        en={`${studentMode?'My Schedule':'Schedule'} · ${labelEn}`}
         action={bp.mobile ? null : (
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
             <div style={{display:'flex',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:8,padding:2}}>
@@ -728,14 +728,12 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
             {can(role,'create','lesson') && <Btn kind="primary" size="md" onClick={()=>openForm('newLesson')} icon={<Icon name="plus" size={14}/>}>{tr('មេរៀន​ថ្មី','New lesson')}</Btn>}
           </div>
         )}
-      />
+      />}
 
-      {/* Mobile: action buttons in one row (Note · PDF · Lesson) */}
+      {/* Mobile: PDF export only (add a lesson/note by tapping a time slot) */}
       {bp.mobile && (
         <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:mobileDate,time:'09:00',title:'',description:'',author:meName,invited:[]})} icon={<Icon name="bell" size={14}/>}>{tr('ចំណាំ','Note')}</Btn>}
           <Btn kind="ghost" size="md" onClick={()=>generateSchedulePDF({lessons:visibleLessons,weekDates:allWeekDates,viewType:'week',labelEn,instFilter,vehFilter,studentFilter})} icon={<Icon name="download" size={14}/>}>{tr('PDF','PDF')}</Btn>
-          {can(role,'create','lesson') && <Btn kind="primary" size="md" style={{flex:1,justifyContent:'center'}} onClick={()=>openForm('newLesson',{date:mobileDate})} icon={<Icon name="plus" size={14}/>}>{tr('មេរៀន','Lesson')}</Btn>}
         </div>
       )}
 

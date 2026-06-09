@@ -3243,10 +3243,7 @@ const VehicleScreen = () => {
           <VehicleMobileDetail v={selected} onClose={()=>setSelectedId(null)} tr={tr} onSaved={forceUpdate} onStatusChange={cycleStatus} onParkingChange={cycleParking}/>
         )}
         <div style={{display:'flex',flexDirection:'column',gap:0}}>
-          <div style={{padding:'10px 0 6px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:6}}>
-            <span style={{fontSize:13,fontWeight:600,color:'var(--ink-2)'}}>
-              {tr(`យានយន្ត · ${visible.length} គ្រឿង`, `Vehicles · ${visible.length}`)}
-            </span>
+          <div style={{padding:'10px 0 6px',display:'flex',alignItems:'center',justifyContent:'flex-start',flexWrap:'wrap',gap:6}}>
             <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
               <SortBar/>
               <Btn kind="primary" size="sm" icon={<Icon name="plus" size={13}/>} onClick={() => openForm('newVehicle')}>{tr('បន្ថែម','Add')}</Btn>

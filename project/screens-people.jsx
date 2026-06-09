@@ -305,10 +305,10 @@ const InstructorsScreen = ({ role = 'admin' }) => {
 
   return (
   <div style={{display:'flex',flexDirection:'column',gap:14}}>
-    <SectionTitle
+    {!bp.mobile && <SectionTitle
       km={`គ្រូបង្រៀន · ${INSTRUCTORS.filter(i=>i.visible!==false).length} នាក់`}
       en={`Instructors · ${INSTRUCTORS.filter(i=>i.visible!==false).length} on staff`}
-    />
+    />}
 
     <div style={{display:'grid',gridTemplateColumns: bp.mobile ? 'repeat(auto-fill,minmax(160px,1fr))' : 'repeat(auto-fill,minmax(300px,1fr))',gap: bp.mobile ? 10 : 14}}>
       {INSTRUCTORS.filter(i => i.visible !== false).map(i => {

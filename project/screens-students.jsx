@@ -180,7 +180,6 @@ const StudentsScreenV2 = () => {
       {id:'new', l:tr('ថ្មី','New')},
       {id:'inprogress', l:tr('កំពុងរៀន','Active')},
       {id:'exam', l:tr('នឹងប្រឡង','Exam')},
-      {id:'B', l:'B'}, {id:'A', l:'A'}, {id:'C', l:'C'},
     ];
     const toggleSection = (id) => setOpenSections(prev => ({...prev, [id]: !prev[id]}));
 
@@ -397,9 +396,9 @@ const StudentsScreenV2 = () => {
     // ── List view ──────────────────────────────────────────────────────────
     return (
       <div style={{display:'flex',flexDirection:'column',gap:10}}>
-        <SectionTitle km="សិស្ស" en={`${allStudents.length} students`}
-          action={<Btn kind="primary" size="md" icon={<Icon name="plus" size={14}/>} onClick={()=>openForm('newStudent')}>{tr('ចុះឈ្មោះ','Enroll')}</Btn>}
-        />
+        <div style={{display:'flex',justifyContent:'flex-end'}}>
+          <Btn kind="primary" size="md" icon={<Icon name="plus" size={14}/>} onClick={()=>openForm('newStudent')}>{tr('ចុះឈ្មោះ','Enroll')}</Btn>
+        </div>
         <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
           {filterChips.map(c => (
             <button key={c.id} onClick={()=>setFilter(c.id)} style={{

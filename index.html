@@ -512,7 +512,6 @@ window.__trRegistry = {
   "PDF": "PDF",
   "+ Note": "+ ចំណាំ",
   "New lesson": "មេរៀន​ថ្មី",
-  "Lesson": "មេរៀន",
   "All": "ទាំងអស់",
   "Clear": "សម្អាត",
   "Stop": "ឈប់",
@@ -867,6 +866,7 @@ window.__trRegistry = {
   "Hours": "ម៉ោង",
   "Tap to toggle status": "ចុច​ដើម្បី​ប្ដូរ​ស្ថានភាព",
   "Missing": "មិន​ទាន់",
+  "Lesson": "មេរៀន",
   "Enroll": "ចុះ​ឈ្មោះ​",
   "Filter": "តម្រង",
   "Avg mock": "មធ្យម",
@@ -16012,7 +16012,7 @@ var InstructorsScreen = ({
       flexDirection: 'column',
       gap: 14
     }
-  }, React.createElement(SectionTitle, {
+  }, !bp.mobile && React.createElement(SectionTitle, {
     km: `គ្រូបង្រៀន · ${INSTRUCTORS.filter(i => i.visible !== false).length} នាក់`,
     en: `Instructors · ${INSTRUCTORS.filter(i => i.visible !== false).length} on staff`
   }), React.createElement("div", {
@@ -17603,9 +17603,9 @@ var ScheduleScreen = ({
       flexDirection: 'column',
       gap: 14
     }
-  }, React.createElement(SectionTitle, {
-    km: bp.mobile ? 'កាលវិភាគ' : `កាលវិភាគ · ${labelKm}`,
-    en: bp.mobile ? studentMode ? 'My Schedule' : 'Schedule' : `${studentMode ? 'My Schedule' : 'Schedule'} · ${labelEn}`,
+  }, !bp.mobile && React.createElement(SectionTitle, {
+    km: `កាលវិភាគ · ${labelKm}`,
+    en: `${studentMode ? 'My Schedule' : 'Schedule'} · ${labelEn}`,
     action: bp.mobile ? null : React.createElement("div", {
       style: {
         display: 'flex',
@@ -17691,22 +17691,7 @@ var ScheduleScreen = ({
       gap: 8,
       alignItems: 'center'
     }
-  }, !studentMode && React.createElement(Btn, {
-    kind: "ghost",
-    size: "md",
-    onClick: () => setNoteModal({
-      date: mobileDate,
-      time: '09:00',
-      title: '',
-      description: '',
-      author: meName,
-      invited: []
-    }),
-    icon: React.createElement(Icon, {
-      name: "bell",
-      size: 14
-    })
-  }, tr('ចំណាំ', 'Note')), React.createElement(Btn, {
+  }, React.createElement(Btn, {
     kind: "ghost",
     size: "md",
     onClick: () => generateSchedulePDF({
@@ -17722,21 +17707,7 @@ var ScheduleScreen = ({
       name: "download",
       size: 14
     })
-  }, tr('PDF', 'PDF')), can(role, 'create', 'lesson') && React.createElement(Btn, {
-    kind: "primary",
-    size: "md",
-    style: {
-      flex: 1,
-      justifyContent: 'center'
-    },
-    onClick: () => openForm('newLesson', {
-      date: mobileDate
-    }),
-    icon: React.createElement(Icon, {
-      name: "plus",
-      size: 14
-    })
-  }, tr('មេរៀន', 'Lesson'))), bp.mobile && React.createElement(MobileDayNav, null), !studentMode && !instructorMode && !bp.mobile && React.createElement("div", {
+  }, tr('PDF', 'PDF'))), bp.mobile && React.createElement(MobileDayNav, null), !studentMode && !instructorMode && !bp.mobile && React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
@@ -36240,17 +36211,11 @@ var VehicleScreen = () => {
         padding: '10px 0 6px',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-start',
         flexWrap: 'wrap',
         gap: 6
       }
-    }, React.createElement("span", {
-      style: {
-        fontSize: 13,
-        fontWeight: 600,
-        color: 'var(--ink-2)'
-      }
-    }, tr(`យានយន្ត · ${visible.length} គ្រឿង`, `Vehicles · ${visible.length}`)), React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
@@ -36631,15 +36596,6 @@ var StudentsScreenV2 = () => {
     }, {
       id: 'exam',
       l: tr('នឹងប្រឡង', 'Exam')
-    }, {
-      id: 'B',
-      l: 'B'
-    }, {
-      id: 'A',
-      l: 'A'
-    }, {
-      id: 'C',
-      l: 'C'
     }];
     var toggleSection = id => setOpenSections(prev => ({
       ...prev,
@@ -37158,19 +37114,20 @@ var StudentsScreenV2 = () => {
         flexDirection: 'column',
         gap: 10
       }
-    }, React.createElement(SectionTitle, {
-      km: "\u179F\u17B7\u179F\u17D2\u179F",
-      en: `${allStudents.length} students`,
-      action: React.createElement(Btn, {
-        kind: "primary",
-        size: "md",
-        icon: React.createElement(Icon, {
-          name: "plus",
-          size: 14
-        }),
-        onClick: () => openForm('newStudent')
-      }, tr('ចុះឈ្មោះ', 'Enroll'))
-    }), React.createElement("div", {
+    }, React.createElement("div", {
+      style: {
+        display: 'flex',
+        justifyContent: 'flex-end'
+      }
+    }, React.createElement(Btn, {
+      kind: "primary",
+      size: "md",
+      icon: React.createElement(Icon, {
+        name: "plus",
+        size: 14
+      }),
+      onClick: () => openForm('newStudent')
+    }, tr('ចុះឈ្មោះ', 'Enroll'))), React.createElement("div", {
       style: {
         display: 'flex',
         gap: 5,
