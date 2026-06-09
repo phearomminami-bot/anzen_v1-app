@@ -47,6 +47,10 @@ const ADMIN_LESSONS_STORE = 'anzen_lessons_v1';
 
 const persistLessonsLib = () => {
   try { localStorage.setItem(ADMIN_LESSONS_STORE, JSON.stringify(window.__lessonsLib)); } catch(e) {}
+  // Push the edit to Supabase too. Without this the edit lives only in this
+  // browser's localStorage; the next cloud load (rebuildLib) would overwrite
+  // it with the un-synced server copy and the change would disappear.
+  try { if (window.__sbConfigured && window.__sbConfigured()) window.__sbSyncAll && window.__sbSyncAll(); } catch(e) {}
 };
 // Exposed so the Settings → Data backup export can include the lessons library.
 window.__persistLessonsLib = persistLessonsLib;

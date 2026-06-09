@@ -21851,6 +21851,9 @@ var persistLessonsLib = () => {
   try {
     localStorage.setItem(ADMIN_LESSONS_STORE, JSON.stringify(window.__lessonsLib));
   } catch (e) {}
+  try {
+    if (window.__sbConfigured && window.__sbConfigured()) window.__sbSyncAll && window.__sbSyncAll();
+  } catch (e) {}
 };
 window.__persistLessonsLib = persistLessonsLib;
 async function aiTranslateKmToEn(kmText) {
