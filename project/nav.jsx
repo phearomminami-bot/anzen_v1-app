@@ -226,8 +226,14 @@ const BAR_SHORT = {
 };
 
 const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
-  const { lang, tr, toast } = useAppActions();
+  const { lang, tr, toast, setLang, dark, toggleDark } = useAppActions();
   const ll = (o) => o[lang] || o.en;
+  const cycleLang = () => {
+    const order = ['km','en','jp'];
+    const next = order[(order.indexOf(lang) + 1) % order.length];
+    setLang && setLang(next);
+    toast && toast(next==='km'?'ប្តូរ​ទៅ​ភាសា​ខ្មែរ':next==='jp'?'日本語に切り替えました':'Switched to English','good');
+  };
   const shortLabel = (it) => { const s = BAR_SHORT[it.id]; return (s && (s[lang] || s.en)) || ll(it); };
   const [menuOpen, setMenuOpen] = React.useState(false);
   const quickItems = (() => {
@@ -245,10 +251,26 @@ const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
     <>
       {menuOpen && (
         <div style={{position:'fixed',inset:0,background:'var(--bg)',zIndex:200,display:'flex',flexDirection:'column',overflow:'hidden'}}>
-          <div style={{padding:'16px 20px',display:'flex',alignItems:'center',borderBottom:'1px solid var(--border)',flexShrink:0,background:'var(--surface)'}}>
-            <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <div style={{padding:'16px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:'1px solid var(--border)',flexShrink:0,background:'var(--surface)'}}>
+            <div style={{display:'flex',alignItems:'center',gap:10,minWidth:0}}>
               {ss?.logo?<img src={ss.logo} style={{width:28,height:28,borderRadius:6,objectFit:'cover'}} alt=""/>:<Logo size={28}/>}
-              <div style={{fontSize:16,fontWeight:700}}>{ss?.name||'Anzen'}</div>
+              <div style={{fontSize:16,fontWeight:700,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{ss?.name||'Anzen'}</div>
+            </div>
+            <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
+              {/* Theme toggle — icon only, tap to switch light/dark */}
+              <button onClick={toggleDark} aria-label={tr('ផ្ទៃ​ខ្នង','Theme')} title={dark?tr('ប្ដូរ​ទៅ​ភ្លឺ','Switch to light'):tr('ប្ដូរ​ទៅ​ងងឹត','Switch to dark')} style={{
+                width:40,height:40,borderRadius:10,border:'1px solid var(--border)',background:'var(--surface-muted)',
+                cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,
+              }}>{dark?'🌙':'☀️'}</button>
+              {/* Language — icon only, tap to cycle KM → EN → JP */}
+              <button onClick={cycleLang} aria-label={tr('ភាសា','Language')} title={tr('ប្ដូរ​ភាសា','Change language')} style={{
+                width:40,height:40,borderRadius:10,border:'1px solid var(--border)',background:'var(--surface-muted)',
+                cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--ink-2)',
+              }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"/>
+                </svg>
+              </button>
             </div>
           </div>
           <nav style={{flex:1,padding:'10px 14px',overflowY:'auto'}}>

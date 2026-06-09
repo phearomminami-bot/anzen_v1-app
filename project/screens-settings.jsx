@@ -1725,70 +1725,8 @@ const AppearanceSettings = ({ lang, setLang, tr, toast, fontSize, setFontSize, r
   return (
     <div style={{display:'flex',flexDirection:'column',gap:14}}>
 
-      {/* Dark / Light mode */}
-      <Card label={tr('ផ្ទៃ​ខ្នង','THEME · ផ្ទៃ​ខ្នង')}>
-        <div style={{display:'flex',gap:8}}>
-          {[
-            {v:false, icon:'☀️', k:'ភ្លឺ',  e:'Light'},
-            {v:true,  icon:'🌙', k:'ងងឹត', e:'Dark'},
-          ].map(o => (
-            <button key={String(o.v)} onClick={()=>{ if(dark!==o.v) toggleDark(); }} title={tr(o.k,o.e)} style={{
-              width:52, height:44, borderRadius:10, fontSize:20, cursor:'pointer',
-              display:'flex', alignItems:'center', justifyContent:'center',
-              background: dark===o.v ? 'var(--accent-soft)' : 'var(--surface)',
-              border: '2px solid '+(dark===o.v ? 'var(--accent)' : 'var(--border)'),
-              transition:'all .12s',
-            }}>{o.icon}</button>
-          ))}
-        </div>
-      </Card>
-
-      {/* Language */}
-      <Card label={tr('ភាសា','LANGUAGE','言語')}>
-        <div style={{fontSize:13,color:'var(--ink-2)',marginBottom:12}}>
-          {tr('ជ្រើស​រើស​ភាសា​បង្ហាញ​សម្រាប់​ផ្ទាំង​ទាំង​អស់​នៅ​ក្នុង​​​​​ app។','Choose the interface language for all screens in the app.','アプリ全体の表示言語を選択してください。')}
-        </div>
-        <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-          {[
-            {v:'km', label:'ខ្មែរ',  sub:'Khmer'},
-            {v:'en', label:'EN',     sub:'English'},
-            {v:'jp', label:'日本語', sub:'Japanese'},
-          ].map(o=>(
-            <button key={o.v} onClick={()=>{
-              setLang(o.v);
-              toast(o.v==='km'?'ប្តូរ​​​ទៅ​ភាសា​ខ្មែរ':o.v==='jp'?'日本語に切り替えました':'Switched to English','good');
-            }} title={o.sub} style={{
-              minWidth:54, padding:'10px 16px', textAlign:'center',
-              background: lang===o.v ? 'var(--accent-soft)' : 'var(--surface)',
-              color: lang===o.v ? 'var(--accent)' : 'var(--ink-2)',
-              border: '2px solid '+(lang===o.v ? 'var(--accent)' : 'var(--border)'),
-              borderRadius:10, cursor:'pointer', fontSize:15, fontWeight:600,
-              fontFamily:'var(--font-display)', transition:'all .12s',
-            }}>{o.label}</button>
-          ))}
-        </div>
-      </Card>
-
-      {/* Font size */}
-      <Card label={tr('ទំហំ​អក្សរ','FONT SIZE · ទំហំ​អក្សរ')}>
-        <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-          {FONT_SIZE_OPTIONS.map(o => {
-            const active = fontSize === o.v;
-            return (
-              <button key={o.v} onClick={()=>{ setFontSize?.(o.v); toast(tr('ទំហំ​អក្សរ​​​​ · '+o.label,'Font size · '+o.en),'good'); }}
-                title={tr(o.label,o.en)+' · '+o.px+'px'} style={{
-                width:46, height:46, borderRadius:10, cursor:'pointer',
-                display:'flex', alignItems:'center', justifyContent:'center',
-                fontWeight:700, fontSize: Math.min(o.px + 2, 22),
-                background: active ? 'var(--accent)' : 'var(--surface-muted)',
-                color: active ? '#fff' : 'var(--ink-2)',
-                border: '2px solid '+(active ? 'var(--accent)' : 'var(--border)'),
-                transition:'all .12s',
-              }}>A</button>
-            );
-          })}
-        </div>
-      </Card>
+      {/* Theme & language live in the top bar (desktop) / the mobile "More" menu
+          header now; font size was unused and has been removed. */}
 
       {/* Account / avatar upload */}
       <Card label={tr('គណនី','ACCOUNT · គណនី')}>

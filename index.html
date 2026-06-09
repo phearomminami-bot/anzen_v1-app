@@ -409,6 +409,11 @@ window.__trRegistry = {
   "Check-out": "ចេញ​ថ្ងៃ​នេះ",
   "Contact": "ទំនាក់​ទំនង",
   "Editing...": "កំពុង​កែ​ប្រែ...",
+  "Theme": "ផ្ទៃ​ខ្នង",
+  "Switch to light": "ប្ដូរ​ទៅ​ភ្លឺ",
+  "Switch to dark": "ប្ដូរ​ទៅ​ងងឹត",
+  "Language": "ភាសា",
+  "Change language": "ប្ដូរ​ភាសា",
   "Refresh": "ផ្ទុក​ឡើង​វិញ",
   "More": "ទាំងអស់",
   "Vehicle needs service": "យានយន្ត​ត្រូវ​ថែទាំ",
@@ -1114,11 +1119,7 @@ window.__trRegistry = {
   "Cannot find account": "មិន​អាច​រក​គណនី",
   "Please enter your name": "សូម​បំពេញ​ឈ្មោះ",
   "Profile saved": "បានរក្សាទុក​ប្រវត្តិរូប",
-  "THEME · ផ្ទៃ​ខ្នង": "ផ្ទៃ​ខ្នង",
-  "LANGUAGE": "ភាសា",
-  "Choose the interface language for all screens in the app.": "ជ្រើស​រើស​ភាសា​បង្ហាញ​សម្រាប់​ផ្ទាំង​ទាំង​អស់​នៅ​ក្នុង​​​​​ app។",
-  "FONT SIZE · ទំហំ​អក្សរ": "ទំហំ​អក្សរ",
-  "ACCOUNT · គណនី": "ទំហំ​អក្សរ​​​​ · '+o.label,'Font size · '+o.en),'good'); }}\n                title={tr(o.label,o.en)+' · '+o.px+'px'} style={{\n                width:46, height:46, borderRadius:10, cursor:'pointer',\n                display:'flex', alignItems:'center', justifyContent:'center',\n                fontWeight:700, fontSize: Math.min(o.px + 2, 22),\n                background: active ? 'var(--accent)' : 'var(--surface-muted)',\n                color: active ? '#fff' : 'var(--ink-2)',\n                border: '2px solid '+(active ? 'var(--accent)' : 'var(--border)'),\n                transition:'all .12s',\n              }}>A</button>\n            );\n          })}\n        </div>\n      </Card>\n\n      {/* Account / avatar upload */}\n      <Card label={tr('គណនី",
+  "ACCOUNT · គណនី": "គណនី",
   "Click avatar to change photo": "ចុច​លើ​រូប​ភាព​ដើម្បី​ផ្លាស់ប្ដូរ",
   "Khmer Name": "ឈ្មោះ​ខ្មែរ",
   "Name in Khmer": "ឈ្មោះ​ជា​ភាសា​ខ្មែរ",
@@ -12943,9 +12944,18 @@ var MobileBottomBar = ({
   var {
     lang,
     tr,
-    toast
+    toast,
+    setLang,
+    dark,
+    toggleDark
   } = useAppActions();
   var ll = o => o[lang] || o.en;
+  var cycleLang = () => {
+    var order = ['km', 'en', 'jp'];
+    var next = order[(order.indexOf(lang) + 1) % order.length];
+    setLang && setLang(next);
+    toast && toast(next === 'km' ? 'ប្តូរ​ទៅ​ភាសា​ខ្មែរ' : next === 'jp' ? '日本語に切り替えました' : 'Switched to English', 'good');
+  };
   var shortLabel = it => {
     var s = BAR_SHORT[it.id];
     return s && (s[lang] || s.en) || ll(it);
@@ -12977,6 +12987,7 @@ var MobileBottomBar = ({
       padding: '16px 20px',
       display: 'flex',
       alignItems: 'center',
+      justifyContent: 'space-between',
       borderBottom: '1px solid var(--border)',
       flexShrink: 0,
       background: 'var(--surface)'
@@ -12985,7 +12996,8 @@ var MobileBottomBar = ({
     style: {
       display: 'flex',
       alignItems: 'center',
-      gap: 10
+      gap: 10,
+      minWidth: 0
     }
   }, ss?.logo ? React.createElement("img", {
     src: ss.logo,
@@ -13001,9 +13013,68 @@ var MobileBottomBar = ({
   }), React.createElement("div", {
     style: {
       fontSize: 16,
-      fontWeight: 700
+      fontWeight: 700,
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap'
     }
-  }, ss?.name || 'Anzen'))), React.createElement("nav", {
+  }, ss?.name || 'Anzen')), React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      flexShrink: 0
+    }
+  }, React.createElement("button", {
+    onClick: toggleDark,
+    "aria-label": tr('ផ្ទៃ​ខ្នង', 'Theme'),
+    title: dark ? tr('ប្ដូរ​ទៅ​ភ្លឺ', 'Switch to light') : tr('ប្ដូរ​ទៅ​ងងឹត', 'Switch to dark'),
+    style: {
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      border: '1px solid var(--border)',
+      background: 'var(--surface-muted)',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: 18
+    }
+  }, dark ? '🌙' : '☀️'), React.createElement("button", {
+    onClick: cycleLang,
+    "aria-label": tr('ភាសា', 'Language'),
+    title: tr('ប្ដូរ​ភាសា', 'Change language'),
+    style: {
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      border: '1px solid var(--border)',
+      background: 'var(--surface-muted)',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'var(--ink-2)'
+    }
+  }, React.createElement("svg", {
+    width: "20",
+    height: "20",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "1.9",
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }, React.createElement("circle", {
+    cx: "12",
+    cy: "12",
+    r: "9"
+  }), React.createElement("path", {
+    d: "M3 12h18"
+  }), React.createElement("path", {
+    d: "M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"
+  }))))), React.createElement("nav", {
     style: {
       flex: 1,
       padding: '10px 14px',
@@ -53376,122 +53447,6 @@ var AppearanceSettings = ({
       gap: 14
     }
   }, React.createElement(Card, {
-    label: tr('ផ្ទៃ​ខ្នង', 'THEME · ផ្ទៃ​ខ្នង')
-  }, React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 8
-    }
-  }, [{
-    v: false,
-    icon: '☀️',
-    k: 'ភ្លឺ',
-    e: 'Light'
-  }, {
-    v: true,
-    icon: '🌙',
-    k: 'ងងឹត',
-    e: 'Dark'
-  }].map(o => React.createElement("button", {
-    key: String(o.v),
-    onClick: () => {
-      if (dark !== o.v) toggleDark();
-    },
-    title: tr(o.k, o.e),
-    style: {
-      width: 52,
-      height: 44,
-      borderRadius: 10,
-      fontSize: 20,
-      cursor: 'pointer',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: dark === o.v ? 'var(--accent-soft)' : 'var(--surface)',
-      border: '2px solid ' + (dark === o.v ? 'var(--accent)' : 'var(--border)'),
-      transition: 'all .12s'
-    }
-  }, o.icon)))), React.createElement(Card, {
-    label: tr('ភាសា', 'LANGUAGE', '言語')
-  }, React.createElement("div", {
-    style: {
-      fontSize: 13,
-      color: 'var(--ink-2)',
-      marginBottom: 12
-    }
-  }, tr('ជ្រើស​រើស​ភាសា​បង្ហាញ​សម្រាប់​ផ្ទាំង​ទាំង​អស់​នៅ​ក្នុង​​​​​ app។', 'Choose the interface language for all screens in the app.', 'アプリ全体の表示言語を選択してください。')), React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 8,
-      flexWrap: 'wrap'
-    }
-  }, [{
-    v: 'km',
-    label: 'ខ្មែរ',
-    sub: 'Khmer'
-  }, {
-    v: 'en',
-    label: 'EN',
-    sub: 'English'
-  }, {
-    v: 'jp',
-    label: '日本語',
-    sub: 'Japanese'
-  }].map(o => React.createElement("button", {
-    key: o.v,
-    onClick: () => {
-      setLang(o.v);
-      toast(o.v === 'km' ? 'ប្តូរ​​​ទៅ​ភាសា​ខ្មែរ' : o.v === 'jp' ? '日本語に切り替えました' : 'Switched to English', 'good');
-    },
-    title: o.sub,
-    style: {
-      minWidth: 54,
-      padding: '10px 16px',
-      textAlign: 'center',
-      background: lang === o.v ? 'var(--accent-soft)' : 'var(--surface)',
-      color: lang === o.v ? 'var(--accent)' : 'var(--ink-2)',
-      border: '2px solid ' + (lang === o.v ? 'var(--accent)' : 'var(--border)'),
-      borderRadius: 10,
-      cursor: 'pointer',
-      fontSize: 15,
-      fontWeight: 600,
-      fontFamily: 'var(--font-display)',
-      transition: 'all .12s'
-    }
-  }, o.label)))), React.createElement(Card, {
-    label: tr('ទំហំ​អក្សរ', 'FONT SIZE · ទំហំ​អក្សរ')
-  }, React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 8,
-      flexWrap: 'wrap'
-    }
-  }, FONT_SIZE_OPTIONS.map(o => {
-    var active = fontSize === o.v;
-    return React.createElement("button", {
-      key: o.v,
-      onClick: () => {
-        setFontSize?.(o.v);
-        toast(tr('ទំហំ​អក្សរ​​​​ · ' + o.label, 'Font size · ' + o.en), 'good');
-      },
-      title: tr(o.label, o.en) + ' · ' + o.px + 'px',
-      style: {
-        width: 46,
-        height: 46,
-        borderRadius: 10,
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontWeight: 700,
-        fontSize: Math.min(o.px + 2, 22),
-        background: active ? 'var(--accent)' : 'var(--surface-muted)',
-        color: active ? '#fff' : 'var(--ink-2)',
-        border: '2px solid ' + (active ? 'var(--accent)' : 'var(--border)'),
-        transition: 'all .12s'
-      }
-    }, "A");
-  }))), React.createElement(Card, {
     label: tr('គណនី', 'ACCOUNT · គណនី')
   }, role === 'instructor' ? React.createElement("div", {
     style: {
