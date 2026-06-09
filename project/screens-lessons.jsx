@@ -2,6 +2,60 @@
 // Structure: 第一段階 (Stage 1 · school course) → 第二段階 (Stage 2 · public road)
 // Theory 学科 1–26 · Practical 技能 (AT 12h / MT 15h stage1, 19h stage2) · Exam milestones
 
+// ── Lesson body: HTML (rich text) helpers ─────────────────────────────────
+// Lesson bodies can be either the legacy markdown-ish text (**heading**, • bullet,
+// ![](img:ID)) OR rich HTML produced by the WYSIWYG editor. These helpers detect
+// and safely render the HTML variant; defined here (loads before the admin
+// lesson editor) so both screens share one implementation.
+const LESSON_HTML_RE = /<(p|div|br|ul|ol|li|span|b|i|u|strong|em|font|h[1-6]|img)\b[^>]*>/i;
+const isLessonHtml = (s) => LESSON_HTML_RE.test(s || '');
+const escapeLessonHtml = (s) => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+// Convert a legacy markdown body to HTML so it shows formatted in the WYSIWYG
+// editor (and migrates to HTML on the next save).
+const lessonMdToHtml = (md, images) => {
+  const lines = (md || '').split('\n');
+  const out = []; let inList = false;
+  const closeList = () => { if (inList) { out.push('</ul>'); inList = false; } };
+  lines.forEach(raw => {
+    const line = raw.replace(/\r$/, '');
+    const t = line.trim();
+    const imgM = t.match(/^!\[[^\]]*\]\(([^)]+)\)$/);
+    if (imgM) {
+      closeList();
+      let src = imgM[1];
+      if (src.startsWith('img:')) src = (images || {})[src.slice(4)] || '';
+      if (src) out.push('<img src="' + src + '">');
+      return;
+    }
+    if (!t) { closeList(); out.push('<div><br></div>'); return; }
+    if (t.startsWith('**') && t.endsWith('**')) { closeList(); out.push('<div><b>' + escapeLessonHtml(t.slice(2, -2)) + '</b></div>'); return; }
+    if (t.startsWith('• ') || t.startsWith('- ')) { if (!inList) { out.push('<ul>'); inList = true; } out.push('<li>' + escapeLessonHtml(t.slice(2)) + '</li>'); return; }
+    closeList();
+    out.push('<div>' + escapeLessonHtml(line).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>') + '</div>');
+  });
+  closeList();
+  return out.join('');
+};
+
+// Strip dangerous markup and resolve any img:ID tokens before rendering.
+const sanitizeLessonHtml = (html, images) => {
+  let s = String(html || '');
+  s = s.replace(/src\s*=\s*"img:([^"]+)"/g, (m, id) => 'src="' + ((images || {})[id] || '') + '"');
+  s = s.replace(/<\s*(script|style)[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, '');
+  s = s.replace(/\son\w+\s*=\s*"[^"]*"/gi, '').replace(/\son\w+\s*=\s*'[^']*'/gi, '');
+  s = s.replace(/(href|src)\s*=\s*"(\s*javascript:[^"]*)"/gi, '$1="#"');
+  return s;
+};
+
+// One-time stylesheet for rendered rich lesson bodies.
+(() => {
+  if (typeof document === 'undefined' || document.getElementById('lesson-rich-style')) return;
+  const st = document.createElement('style'); st.id = 'lesson-rich-style';
+  st.textContent = '.lesson-rich-body img{max-width:100%;border-radius:8px;margin:8px 0;display:block;border:1px solid var(--border)}.lesson-rich-body ul{margin:6px 0;padding-left:22px}.lesson-rich-body li{margin:2px 0}.lesson-rich-body div{margin:2px 0}';
+  document.head.appendChild(st);
+})();
+
 // ── THEORY 学科教習 ──────────────────────────────────────────────────────────
 // Stage 1: 学科 1–10 (provisional license / 仮免許)  ·  Stage 2: 学科 11–26 (full license / 本免許)
 const THEORY_TEXTS = [
@@ -1095,7 +1149,15 @@ const TextCard = ({ lesson, done, onToggle }) => {
   const [open, setOpen] = React.useState(false);
   const { tr, lang } = useAppActions();
 
-  const renderBody = (text) => text.split('\n').map((line, i) => {
+  const renderBody = (text) => {
+    const body = text || '';
+    // Rich HTML body (from the WYSIWYG editor) — render directly.
+    if (isLessonHtml(body)) {
+      return <div className="lesson-rich-body" style={{ fontSize: 13, lineHeight: 1.75 }}
+        dangerouslySetInnerHTML={{ __html: sanitizeLessonHtml(body, lesson.images) }}/>;
+    }
+    // Legacy markdown body — render line by line.
+    return body.split('\n').map((line, i) => {
     if (!line.trim()) return <div key={i} style={{ height: 8 }}/>;
     // Image: ![](url) — url may be a data URL (legacy) or an "img:ID" token
     // resolved from the lesson's images map.
@@ -1117,7 +1179,8 @@ const TextCard = ({ lesson, done, onToggle }) => {
       );
     }
     return <div key={i} style={{ color: 'var(--ink-2)', marginBottom: 3 }}>{line}</div>;
-  });
+    });
+  };
 
   return (
     <div style={{

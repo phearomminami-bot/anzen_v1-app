@@ -162,6 +162,66 @@ const AlTextarea = React.forwardRef(({ onFocus, onBlur, ...p }, ref) => (
   />
 ));
 
+// ── Rich-text (WYSIWYG) body editor ───────────────────────────────────────
+// Stores HTML. Supports bold / italic / underline / colour / bullet list /
+// font size via document.execCommand. isLessonHtml + lessonMdToHtml live in
+// screens-lessons.jsx (loaded first) and are shared here.
+(() => {
+  if (typeof document === 'undefined' || document.getElementById('al-rte-style')) return;
+  const st = document.createElement('style'); st.id = 'al-rte-style';
+  st.textContent = '.al-rte:empty:before{content:attr(data-ph);color:var(--ink-3)}.al-rte:focus{outline:none}.al-rte img{max-width:100%;border-radius:8px;margin:6px 0;display:block}.al-rte ul{margin:6px 0;padding-left:22px}.al-rte li{margin:2px 0}';
+  document.head.appendChild(st);
+})();
+
+const RTE_COLORS = ['#111827','#e11d48','#2563eb','#16a34a','#d97706','#7c3aed','#0891b2'];
+const RTE_SIZES = [{km:'តូច',v:'2'},{km:'ធម្មតា',v:'3'},{km:'ធំ',v:'4'},{km:'ធំ​បំផុត',v:'6'}];
+
+const RteBtn = ({ onClick, title, children }) => (
+  <button type="button" title={title} onMouseDown={e=>e.preventDefault()} onClick={onClick} style={{
+    minWidth:32, height:30, padding:'0 8px', borderRadius:6, cursor:'pointer',
+    border:'1px solid var(--border)', background:'var(--surface)', color:'var(--ink)',
+    fontSize:14, display:'inline-flex', alignItems:'center', justifyContent:'center',
+  }}>{children}</button>
+);
+
+const RichBodyEditor = React.forwardRef(({ langKey, initialHtml, onChange, onBlur, placeholder }, ref) => {
+  const edRef = React.useRef(null);
+  React.useImperativeHandle(ref, () => edRef.current);
+  // Load HTML into the (uncontrolled) editor on mount and whenever the language
+  // switches — never on every keystroke, so the caret doesn't jump.
+  React.useEffect(() => {
+    if (edRef.current && edRef.current.innerHTML !== (initialHtml || '')) edRef.current.innerHTML = initialHtml || '';
+  }, [langKey]);
+  const fire = () => { if (edRef.current) onChange(edRef.current.innerHTML); };
+  const exec = (cmd, val) => { if (edRef.current) edRef.current.focus(); try { document.execCommand(cmd, false, val); } catch(e) {} fire(); };
+  return (
+    <div style={{border:'1px solid var(--border)',borderRadius:8,background:'var(--surface)',overflow:'hidden'}}>
+      <div style={{display:'flex',flexWrap:'wrap',gap:5,padding:'7px 8px',borderBottom:'1px solid var(--border)',background:'var(--surface-muted)',alignItems:'center'}}>
+        <RteBtn onClick={()=>exec('bold')}      title="Bold"><b>B</b></RteBtn>
+        <RteBtn onClick={()=>exec('italic')}    title="Italic"><i>I</i></RteBtn>
+        <RteBtn onClick={()=>exec('underline')} title="Underline"><span style={{textDecoration:'underline'}}>U</span></RteBtn>
+        <RteBtn onClick={()=>exec('insertUnorderedList')} title="ចំណុច​ត្រួយ · Bullets">•&nbsp;≡</RteBtn>
+        <span style={{width:1,height:20,background:'var(--border)',margin:'0 3px'}}/>
+        <select title="ទំហំ​អក្សរ · Font size" onMouseDown={e=>e.stopPropagation()}
+          onChange={e=>{ if(e.target.value) exec('fontSize', e.target.value); e.target.selectedIndex=0; }}
+          style={{height:30,borderRadius:6,border:'1px solid var(--border)',background:'var(--surface)',color:'var(--ink)',fontSize:12,padding:'0 6px',cursor:'pointer'}}>
+          <option value="">ទំហំ</option>
+          {RTE_SIZES.map(s=><option key={s.v} value={s.v}>{s.km}</option>)}
+        </select>
+        <span style={{width:1,height:20,background:'var(--border)',margin:'0 3px'}}/>
+        {RTE_COLORS.map(c=>(
+          <button key={c} type="button" title="ពណ៌ · Colour" onMouseDown={e=>e.preventDefault()} onClick={()=>exec('foreColor', c)}
+            style={{width:20,height:20,borderRadius:'50%',background:c,border:'1px solid rgba(0,0,0,.2)',cursor:'pointer',padding:0,flexShrink:0}}/>
+        ))}
+      </div>
+      <div ref={edRef} className="al-rte" contentEditable suppressContentEditableWarning data-ph={placeholder||''}
+        onInput={fire} onBlur={onBlur}
+        style={{minHeight:300,maxHeight:'52vh',overflowY:'auto',padding:'12px 14px',fontSize:15,lineHeight:1.7,
+          color:'var(--ink)',fontFamily:'var(--font-km),var(--font-en),sans-serif'}}/>
+    </div>
+  );
+});
+
 // ── Image helpers ─────────────────────────────────────────────────────────
 // Resize a chosen image file down to maxDim px on the longest side and return
 // a data URL. Keeps PNG transparency, otherwise uses JPEG for smaller payload.
@@ -259,50 +319,42 @@ const TextLessonForm = ({ initial, onSave, onCancel }) => {
   const [km,    setKm]    = React.useState(initial?.km    || '');
   const [en,    setEn]    = React.useState(initial?.en    || '');
   const [mins,  setMins]  = React.useState(initial?.mins  || 10);
-  const [bodyKm, setBodyKm] = React.useState(initial?.body_km || '');
-  const [bodyEn, setBodyEn] = React.useState(initial?.body_en || '');
-  // Embedded images are kept in a map so the body text only holds a short
-  // "img:ID" token instead of a huge base64 data URL.
-  const [images, setImages] = React.useState(() => ({ ...(initial?.images || {}) }));
+  // Bodies are stored as rich HTML. Legacy markdown bodies are converted on
+  // open so they show formatted in the WYSIWYG editor (and migrate on save).
+  const [bodyKm, setBodyKm] = React.useState(() => { const b = initial?.body_km || ''; return isLessonHtml(b) ? b : lessonMdToHtml(b, initial?.images); });
+  const [bodyEn, setBodyEn] = React.useState(() => { const b = initial?.body_en || ''; return isLessonHtml(b) ? b : lessonMdToHtml(b, initial?.images); });
   const bodyKmRef = React.useRef(null);
   const bodyEnRef = React.useRef(null);
 
-  // Title & body follow the app language: Khmer when km, the translated
-  // English when the whole UI is switched to English.
+  // Title follows the app language: Khmer when km, the translated English when
+  // the whole UI is switched to English. (Body is rich HTML — not auto-translated.)
   const enMode = lang === 'en';
   React.useEffect(() => {
     if (!enMode) return;
-    if (!en.trim()     && km.trim())     translate(km,     en,     v => setEn(p     => (p||'').trim()?p:v));
-    if (!bodyEn.trim() && bodyKm.trim()) translate(bodyKm, bodyEn, v => setBodyEn(p => (p||'').trim()?p:v));
+    if (!en.trim() && km.trim()) translate(km, en, v => setEn(p => (p||'').trim()?p:v));
   }, [enMode]);
   const curBody    = enMode ? bodyEn : bodyKm;
   const setCurBody = enMode ? setBodyEn : setBodyKm;
   const curBodyRef = enMode ? bodyEnRef : bodyKmRef;
 
-  // Insert an image: store the data URL in the images map and put only a short
-  // token in the body text, then mirror the token into the other language so
-  // the picture shows in both KH and EN.
+  // Insert an image at the caret — embeds it directly in the HTML body.
   const insertImage = (dataUrl) => {
-    const id = 'i' + Date.now().toString(36) + Math.floor(Math.random()*46656).toString(36);
-    setImages(m => ({ ...m, [id]: dataUrl }));
-    const token = `\n![](img:${id})\n`;
-    insertAtCursor(curBodyRef, setCurBody, curBody, token);
-    const otherSet = enMode ? setBodyKm : setBodyEn;
-    otherSet(p => (p || '') + token);
+    const el = curBodyRef.current;
+    if (!el) return;
+    el.focus();
+    try { document.execCommand('insertImage', false, dataUrl); } catch(e) {}
+    setCurBody(el.innerHTML);
   };
 
   const submit = () => {
     if (!km.trim() && !en.trim()) return;
-    // Only keep images still referenced by either body.
-    const used = new Set();
-    [bodyKm, bodyEn].forEach(b => { const re = /!\[[^\]]*\]\(img:([^)]+)\)/g; let m2; while ((m2 = re.exec(b||'')) !== null) used.add(m2[1]); });
-    const keptImages = {}; Object.keys(images).forEach(k => { if (used.has(k)) keptImages[k] = images[k]; });
     onSave({
       ...(initial || {}),
       km: km.trim(), en: en.trim(),
       mins: parseInt(mins) || 10,
-      body_km: bodyKm, body_en: bodyEn,
-      images: keptImages,
+      body_km: bodyKm,
+      body_en: (bodyEn && bodyEn.trim()) ? bodyEn : bodyKm,  // fall back to KH so EN viewers see content
+      images: {},   // images are embedded inline in the HTML body now
     });
   };
 
@@ -319,17 +371,11 @@ const TextLessonForm = ({ initial, onSave, onCancel }) => {
         <AlInput type="number" min="1" max="120" value={mins} onChange={e=>setMins(e.target.value)} style={{width:120}}/>
       </AlField>
       <AlField km={enMode ? 'ខ្លឹមសារ · អង់គ្លេស' : 'ខ្លឹមសារ · ខ្មែរ'}>
-        <AlTextarea ref={curBodyRef} value={curBody}
-          onChange={e=>setCurBody(e.target.value)}
-          onBlur={()=>{ if (!enMode) translate(bodyKm, bodyEn, v=>setBodyEn(p=>(p||'').trim()?p:v)); }}
-          placeholder={enMode ? 'Lesson content...\n\n**Key points:**\n• ...' : 'ខ្លឹមសារ​មេរៀន...\n\n**ចំណុចសំខាន់:**\n• ...'}/>
-        <div style={{display:'flex',gap:8,marginTop:6,alignItems:'center',flexWrap:'wrap'}}>
-          <ImagePickerButton
-            label={tr('ដាក់​រូប','Insert image')}
-            onPick={insertImage}
-          />
-          <ImagePreviewStrip body={curBody} images={images}
-            onRemove={(token) => { setBodyKm(b=>stripImageFromBody(b, token)); setBodyEn(b=>stripImageFromBody(b, token)); }}/>
+        <RichBodyEditor ref={curBodyRef} langKey={enMode ? 'en' : 'km'} initialHtml={curBody}
+          onChange={setCurBody}
+          placeholder={enMode ? 'Lesson content…' : 'ខ្លឹមសារ​មេរៀន…'}/>
+        <div style={{display:'flex',gap:8,marginTop:8,alignItems:'center',flexWrap:'wrap'}}>
+          <ImagePickerButton label={tr('ដាក់​រូប','Insert image')} onPick={insertImage}/>
         </div>
       </AlField>
       {/* English body is hidden — still auto-translated from Khmer on blur and saved. */}
@@ -1007,7 +1053,7 @@ const AdminLessonsScreen = ({ role = 'admin' }) => {
       </AlSection>
 
       {/* Editor modal */}
-      <Modal open={!!editor} onClose={()=>setEditor(null)} width={editor?.type === 'quiz' ? 820 : 680}>
+      <Modal open={!!editor} onClose={()=>setEditor(null)} width={editor?.type === 'text' ? 900 : 820}>
         {editor && (
           <div>
             <div style={{padding:'22px 28px 16px',borderBottom:'1px solid var(--border)'}}>
