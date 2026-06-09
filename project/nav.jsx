@@ -312,6 +312,40 @@ const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
   );
 };
 
+// ─── Floating Refresh button (mobile) — re-pulls latest data from the cloud ───
+const MobileRefreshButton = () => {
+  const { tr, toast } = useAppActions();
+  const [busy, setBusy] = React.useState(false);
+  const doRefresh = async () => {
+    if (busy) return;
+    const cloud = !!(window.__sbConfigured && window.__sbConfigured() && window.__sbLoadAll);
+    if (!cloud) { location.reload(); return; }
+    setBusy(true);
+    try {
+      await window.__sbLoadAll();
+      toast && toast(tr('បាន​ធ្វើ​បច្ចុប្បន្នភាព ✓', 'Refreshed ✓'), 'good');
+    } catch (e) {
+      toast && toast(tr('ផ្ទុក​ឡើង​វិញ​បរាជ័យ', 'Refresh failed'), 'warn');
+    }
+    setBusy(false);
+  };
+  return (
+    <button onClick={doRefresh} aria-label={tr('ផ្ទុក​ឡើង​វិញ', 'Refresh')} title={tr('ផ្ទុក​ឡើង​វិញ', 'Refresh')} style={{
+      position:'fixed', right:16, zIndex:90,
+      bottom:'calc(56px + env(safe-area-inset-bottom,0px) + 16px)',
+      width:48, height:48, borderRadius:'50%', border:'none', cursor:'pointer',
+      background:'var(--accent)', color:'#fff',
+      boxShadow:'0 4px 14px rgba(0,0,0,.28)',
+      display:'flex', alignItems:'center', justifyContent:'center',
+    }}>
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+        style={busy ? { animation:'anzenSpin .8s linear infinite' } : undefined}>
+        <path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/>
+      </svg>
+    </button>
+  );
+};
+
 // ─── Collapse chevron button ───
 const CollapseBtn = ({ collapsed, onToggle, style = {} }) => (
   <button
@@ -579,4 +613,4 @@ const TabsBar = ({ items, current, onGo, role, onLogout, onReorder }) => {
   );
 };
 
-Object.assign(window, { NAV_ITEMS, ROLE_LABELS, Sidebar, Topbar, TabsBar, UserPill, DarkToggleBtn });
+Object.assign(window, { NAV_ITEMS, ROLE_LABELS, Sidebar, Topbar, TabsBar, UserPill, DarkToggleBtn, MobileRefreshButton });

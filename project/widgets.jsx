@@ -313,6 +313,7 @@ if (typeof document !== 'undefined' && !document.getElementById('anzen-anim')) {
     @keyframes sheetUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
     @keyframes drawerSlide { from{transform:translateX(20px);opacity:0} to{transform:translateX(0);opacity:1} }
     @keyframes toastSlide { from{transform:translateY(10px);opacity:0} to{transform:translateY(0);opacity:1} }
+    @keyframes anzenSpin { to{transform:rotate(360deg)} }
     button[data-clickable]:hover { background: var(--surface-muted) !important; }
   `;
   document.head.appendChild(s);
