@@ -409,10 +409,11 @@ window.__trRegistry = {
   "Check-out": "ចេញ​ថ្ងៃ​នេះ",
   "Contact": "ទំនាក់​ទំនង",
   "Editing...": "កំពុង​កែ​ប្រែ...",
-  "More": "ទាំងអស់",
   "Refreshed ✓": "បាន​ធ្វើ​បច្ចុប្បន្នភាព ✓",
   "Refresh failed": "ផ្ទុក​ឡើង​វិញ​បរាជ័យ",
+  "Refreshing…": "កំពុង​ផ្ទុក…",
   "Refresh": "ផ្ទុក​ឡើង​វិញ",
+  "More": "ទាំងអស់",
   "Vehicle needs service": "យានយន្ត​ត្រូវ​ថែទាំ",
   "Invoice overdue": "វិក្កយបត្រ​ហួស​កាល",
   "Road exam appointment needed": "ត្រូវ​ការ​ណាត់​ប្រឡង",
@@ -12944,7 +12945,8 @@ var MobileBottomBar = ({
 }) => {
   var {
     lang,
-    tr
+    tr,
+    toast
   } = useAppActions();
   var ll = o => o[lang] || o.en;
   var shortLabel = it => {
@@ -12962,6 +12964,24 @@ var MobileBottomBar = ({
   })();
   var ss = window.__schoolSettings;
   var close = () => setMenuOpen(false);
+  var [busy, setBusy] = React.useState(false);
+  var doRefresh = async () => {
+    if (busy) return;
+    var cloud = !!(window.__sbConfigured && window.__sbConfigured() && window.__sbLoadAll);
+    if (!cloud) {
+      location.reload();
+      return;
+    }
+    setBusy(true);
+    try {
+      await window.__sbLoadAll();
+      close();
+      toast && toast(tr('បាន​ធ្វើ​បច្ចុប្បន្នភាព ✓', 'Refreshed ✓'), 'good');
+    } catch (e) {
+      toast && toast(tr('ផ្ទុក​ឡើង​វិញ​បរាជ័យ', 'Refresh failed'), 'warn');
+    }
+    setBusy(false);
+  };
   return React.createElement(React.Fragment, null, menuOpen && React.createElement("div", {
     style: {
       position: 'fixed',
@@ -13043,6 +13063,46 @@ var MobileBottomBar = ({
       flexShrink: 0,
       paddingBottom: 'calc(12px + env(safe-area-inset-bottom,0px))',
       display: 'flex',
+      flexDirection: 'column',
+      gap: 10
+    }
+  }, React.createElement("button", {
+    onClick: doRefresh,
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      width: '100%',
+      padding: '12px',
+      border: '1px solid var(--border)',
+      background: 'var(--surface-muted)',
+      borderRadius: 12,
+      cursor: 'pointer',
+      color: 'var(--ink)',
+      fontSize: 14,
+      fontWeight: 600,
+      fontFamily: 'inherit'
+    }
+  }, React.createElement("svg", {
+    width: "17",
+    height: "17",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "2.2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    style: busy ? {
+      animation: 'anzenSpin .8s linear infinite'
+    } : undefined
+  }, React.createElement("path", {
+    d: "M21 12a9 9 0 1 1-2.64-6.36"
+  }), React.createElement("path", {
+    d: "M21 3v6h-6"
+  })), busy ? tr('កំពុង​ផ្ទុក…', 'Refreshing…') : tr('ផ្ទុក​ឡើង​វិញ', 'Refresh')), React.createElement("div", {
+    style: {
+      display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: 12
@@ -13056,24 +13116,25 @@ var MobileBottomBar = ({
     compact: true
   }), React.createElement("button", {
     onClick: close,
+    "aria-label": tr('បិទ', 'Close'),
+    title: tr('បិទ', 'Close'),
     style: {
       display: 'flex',
       alignItems: 'center',
-      gap: 8,
-      padding: '10px 18px',
+      justifyContent: 'center',
+      width: 44,
+      height: 44,
+      padding: 0,
       border: '1px solid var(--border)',
       background: 'var(--surface-muted)',
       borderRadius: 12,
       cursor: 'pointer',
       color: 'var(--ink-2)',
-      fontSize: 14,
-      fontWeight: 600,
-      fontFamily: 'inherit',
       flexShrink: 0
     }
   }, React.createElement("svg", {
-    width: "14",
-    height: "14",
+    width: "16",
+    height: "16",
     viewBox: "0 0 24 24",
     fill: "none",
     stroke: "currentColor",
@@ -13081,7 +13142,7 @@ var MobileBottomBar = ({
     strokeLinecap: "round"
   }, React.createElement("path", {
     d: "M6 6l12 12M18 6L6 18"
-  })), tr('បិទ', 'Close')))), React.createElement("div", {
+  })))))), React.createElement("div", {
     style: {
       position: 'fixed',
       bottom: 0,
@@ -13193,67 +13254,6 @@ var MobileBottomBar = ({
       textAlign: 'center'
     }
   }, tr('ទាំងអស់', 'More', 'すべて')))));
-};
-var MobileRefreshButton = () => {
-  var {
-    tr,
-    toast
-  } = useAppActions();
-  var [busy, setBusy] = React.useState(false);
-  var doRefresh = async () => {
-    if (busy) return;
-    var cloud = !!(window.__sbConfigured && window.__sbConfigured() && window.__sbLoadAll);
-    if (!cloud) {
-      location.reload();
-      return;
-    }
-    setBusy(true);
-    try {
-      await window.__sbLoadAll();
-      toast && toast(tr('បាន​ធ្វើ​បច្ចុប្បន្នភាព ✓', 'Refreshed ✓'), 'good');
-    } catch (e) {
-      toast && toast(tr('ផ្ទុក​ឡើង​វិញ​បរាជ័យ', 'Refresh failed'), 'warn');
-    }
-    setBusy(false);
-  };
-  return React.createElement("button", {
-    onClick: doRefresh,
-    "aria-label": tr('ផ្ទុក​ឡើង​វិញ', 'Refresh'),
-    title: tr('ផ្ទុក​ឡើង​វិញ', 'Refresh'),
-    style: {
-      position: 'fixed',
-      right: 16,
-      zIndex: 90,
-      bottom: 'calc(56px + env(safe-area-inset-bottom,0px) + 16px)',
-      width: 48,
-      height: 48,
-      borderRadius: '50%',
-      border: 'none',
-      cursor: 'pointer',
-      background: 'var(--accent)',
-      color: '#fff',
-      boxShadow: '0 4px 14px rgba(0,0,0,.28)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    }
-  }, React.createElement("svg", {
-    width: "21",
-    height: "21",
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: "2.2",
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    style: busy ? {
-      animation: 'anzenSpin .8s linear infinite'
-    } : undefined
-  }, React.createElement("path", {
-    d: "M21 12a9 9 0 1 1-2.64-6.36"
-  }), React.createElement("path", {
-    d: "M21 3v6h-6"
-  })));
 };
 var CollapseBtn = ({
   collapsed,
@@ -13848,8 +13848,7 @@ Object.assign(window, {
   Topbar,
   TabsBar,
   UserPill,
-  DarkToggleBtn,
-  MobileRefreshButton
+  DarkToggleBtn
 });
 </script>
 
@@ -61423,7 +61422,7 @@ function App() {
           padding: '12px 14px',
           paddingBottom: 'calc(72px + env(safe-area-inset-bottom,0px))'
         }
-      }, screens[current]), React.createElement(MobileRefreshButton, null), React.createElement(MobileBottomBar, {
+      }, screens[current]), React.createElement(MobileBottomBar, {
         items: items,
         current: current,
         onGo: setCurrent,

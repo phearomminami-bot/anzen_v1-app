@@ -226,7 +226,7 @@ const BAR_SHORT = {
 };
 
 const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
-  const { lang, tr } = useAppActions();
+  const { lang, tr, toast } = useAppActions();
   const ll = (o) => o[lang] || o.en;
   const shortLabel = (it) => { const s = BAR_SHORT[it.id]; return (s && (s[lang] || s.en)) || ll(it); };
   const [menuOpen, setMenuOpen] = React.useState(false);
@@ -240,6 +240,21 @@ const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
   })();
   const ss = window.__schoolSettings;
   const close = () => setMenuOpen(false);
+  const [busy, setBusy] = React.useState(false);
+  const doRefresh = async () => {
+    if (busy) return;
+    const cloud = !!(window.__sbConfigured && window.__sbConfigured() && window.__sbLoadAll);
+    if (!cloud) { location.reload(); return; }
+    setBusy(true);
+    try {
+      await window.__sbLoadAll();
+      close();
+      toast && toast(tr('បាន​ធ្វើ​បច្ចុប្បន្នភាព ✓', 'Refreshed ✓'), 'good');
+    } catch (e) {
+      toast && toast(tr('ផ្ទុក​ឡើង​វិញ​បរាជ័យ', 'Refresh failed'), 'warn');
+    }
+    setBusy(false);
+  };
   return (
     <>
       {menuOpen && (
@@ -263,12 +278,20 @@ const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
               </button>
             ))}
           </nav>
-          <div style={{padding:'12px 16px',borderTop:'1px solid var(--border)',flexShrink:0,paddingBottom:'calc(12px + env(safe-area-inset-bottom,0px))',display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}>
-            <UserPill role={role} onLogout={()=>{close();onLogout();}} compact/>
-            <button onClick={close} style={{display:'flex',alignItems:'center',gap:8,padding:'10px 18px',border:'1px solid var(--border)',background:'var(--surface-muted)',borderRadius:12,cursor:'pointer',color:'var(--ink-2)',fontSize:14,fontWeight:600,fontFamily:'inherit',flexShrink:0}}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
-              {tr('បិទ','Close')}
+          <div style={{padding:'12px 16px',borderTop:'1px solid var(--border)',flexShrink:0,paddingBottom:'calc(12px + env(safe-area-inset-bottom,0px))',display:'flex',flexDirection:'column',gap:10}}>
+            {/* Refresh — sits above the Close button */}
+            <button onClick={doRefresh} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,width:'100%',padding:'12px',border:'1px solid var(--border)',background:'var(--surface-muted)',borderRadius:12,cursor:'pointer',color:'var(--ink)',fontSize:14,fontWeight:600,fontFamily:'inherit'}}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={busy?{animation:'anzenSpin .8s linear infinite'}:undefined}>
+                <path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/>
+              </svg>
+              {busy ? tr('កំពុង​ផ្ទុក…','Refreshing…') : tr('ផ្ទុក​ឡើង​វិញ','Refresh')}
             </button>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}>
+              <UserPill role={role} onLogout={()=>{close();onLogout();}} compact/>
+              <button onClick={close} aria-label={tr('បិទ','Close')} title={tr('បិទ','Close')} style={{display:'flex',alignItems:'center',justifyContent:'center',width:44,height:44,padding:0,border:'1px solid var(--border)',background:'var(--surface-muted)',borderRadius:12,cursor:'pointer',color:'var(--ink-2)',flexShrink:0}}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -309,40 +332,6 @@ const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
         </button>
       </div>
     </>
-  );
-};
-
-// ─── Floating Refresh button (mobile) — re-pulls latest data from the cloud ───
-const MobileRefreshButton = () => {
-  const { tr, toast } = useAppActions();
-  const [busy, setBusy] = React.useState(false);
-  const doRefresh = async () => {
-    if (busy) return;
-    const cloud = !!(window.__sbConfigured && window.__sbConfigured() && window.__sbLoadAll);
-    if (!cloud) { location.reload(); return; }
-    setBusy(true);
-    try {
-      await window.__sbLoadAll();
-      toast && toast(tr('បាន​ធ្វើ​បច្ចុប្បន្នភាព ✓', 'Refreshed ✓'), 'good');
-    } catch (e) {
-      toast && toast(tr('ផ្ទុក​ឡើង​វិញ​បរាជ័យ', 'Refresh failed'), 'warn');
-    }
-    setBusy(false);
-  };
-  return (
-    <button onClick={doRefresh} aria-label={tr('ផ្ទុក​ឡើង​វិញ', 'Refresh')} title={tr('ផ្ទុក​ឡើង​វិញ', 'Refresh')} style={{
-      position:'fixed', right:16, zIndex:90,
-      bottom:'calc(56px + env(safe-area-inset-bottom,0px) + 16px)',
-      width:48, height:48, borderRadius:'50%', border:'none', cursor:'pointer',
-      background:'var(--accent)', color:'#fff',
-      boxShadow:'0 4px 14px rgba(0,0,0,.28)',
-      display:'flex', alignItems:'center', justifyContent:'center',
-    }}>
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
-        style={busy ? { animation:'anzenSpin .8s linear infinite' } : undefined}>
-        <path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/>
-      </svg>
-    </button>
   );
 };
 
@@ -613,4 +602,4 @@ const TabsBar = ({ items, current, onGo, role, onLogout, onReorder }) => {
   );
 };
 
-Object.assign(window, { NAV_ITEMS, ROLE_LABELS, Sidebar, Topbar, TabsBar, UserPill, DarkToggleBtn, MobileRefreshButton });
+Object.assign(window, { NAV_ITEMS, ROLE_LABELS, Sidebar, Topbar, TabsBar, UserPill, DarkToggleBtn });
