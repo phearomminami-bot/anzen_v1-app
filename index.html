@@ -409,9 +409,6 @@ window.__trRegistry = {
   "Check-out": "ចេញ​ថ្ងៃ​នេះ",
   "Contact": "ទំនាក់​ទំនង",
   "Editing...": "កំពុង​កែ​ប្រែ...",
-  "Refreshed ✓": "បាន​ធ្វើ​បច្ចុប្បន្នភាព ✓",
-  "Refresh failed": "ផ្ទុក​ឡើង​វិញ​បរាជ័យ",
-  "Refreshing…": "កំពុង​ផ្ទុក…",
   "Refresh": "ផ្ទុក​ឡើង​វិញ",
   "More": "ទាំងអស់",
   "Vehicle needs service": "យានយន្ត​ត្រូវ​ថែទាំ",
@@ -12964,24 +12961,7 @@ var MobileBottomBar = ({
   })();
   var ss = window.__schoolSettings;
   var close = () => setMenuOpen(false);
-  var [busy, setBusy] = React.useState(false);
-  var doRefresh = async () => {
-    if (busy) return;
-    var cloud = !!(window.__sbConfigured && window.__sbConfigured() && window.__sbLoadAll);
-    if (!cloud) {
-      location.reload();
-      return;
-    }
-    setBusy(true);
-    try {
-      await window.__sbLoadAll();
-      close();
-      toast && toast(tr('បាន​ធ្វើ​បច្ចុប្បន្នភាព ✓', 'Refreshed ✓'), 'good');
-    } catch (e) {
-      toast && toast(tr('ផ្ទុក​ឡើង​វិញ​បរាជ័យ', 'Refresh failed'), 'warn');
-    }
-    setBusy(false);
-  };
+  var doRefresh = () => location.reload();
   return React.createElement(React.Fragment, null, menuOpen && React.createElement("div", {
     style: {
       position: 'fixed',
@@ -13063,46 +13043,6 @@ var MobileBottomBar = ({
       flexShrink: 0,
       paddingBottom: 'calc(12px + env(safe-area-inset-bottom,0px))',
       display: 'flex',
-      flexDirection: 'column',
-      gap: 10
-    }
-  }, React.createElement("button", {
-    onClick: doRefresh,
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-      width: '100%',
-      padding: '12px',
-      border: '1px solid var(--border)',
-      background: 'var(--surface-muted)',
-      borderRadius: 12,
-      cursor: 'pointer',
-      color: 'var(--ink)',
-      fontSize: 14,
-      fontWeight: 600,
-      fontFamily: 'inherit'
-    }
-  }, React.createElement("svg", {
-    width: "17",
-    height: "17",
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: "2.2",
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    style: busy ? {
-      animation: 'anzenSpin .8s linear infinite'
-    } : undefined
-  }, React.createElement("path", {
-    d: "M21 12a9 9 0 1 1-2.64-6.36"
-  }), React.createElement("path", {
-    d: "M21 3v6h-6"
-  })), busy ? tr('កំពុង​ផ្ទុក…', 'Refreshing…') : tr('ផ្ទុក​ឡើង​វិញ', 'Refresh')), React.createElement("div", {
-    style: {
-      display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: 12
@@ -13114,7 +13054,44 @@ var MobileBottomBar = ({
       onLogout();
     },
     compact: true
-  }), React.createElement("button", {
+  }), React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      flexShrink: 0
+    }
+  }, React.createElement("button", {
+    onClick: doRefresh,
+    "aria-label": tr('ផ្ទុក​ឡើង​វិញ', 'Refresh'),
+    title: tr('ផ្ទុក​ឡើង​វិញ', 'Refresh'),
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: 44,
+      height: 44,
+      padding: 0,
+      border: '1px solid var(--border)',
+      background: 'var(--surface-muted)',
+      borderRadius: 12,
+      cursor: 'pointer',
+      color: 'var(--ink-2)'
+    }
+  }, React.createElement("svg", {
+    width: "17",
+    height: "17",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "2.2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }, React.createElement("path", {
+    d: "M21 12a9 9 0 1 1-2.64-6.36"
+  }), React.createElement("path", {
+    d: "M21 3v6h-6"
+  }))), React.createElement("button", {
     onClick: close,
     "aria-label": tr('បិទ', 'Close'),
     title: tr('បិទ', 'Close'),
@@ -13129,8 +13106,7 @@ var MobileBottomBar = ({
       background: 'var(--surface-muted)',
       borderRadius: 12,
       cursor: 'pointer',
-      color: 'var(--ink-2)',
-      flexShrink: 0
+      color: 'var(--ink-2)'
     }
   }, React.createElement("svg", {
     width: "16",

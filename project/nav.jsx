@@ -240,21 +240,7 @@ const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
   })();
   const ss = window.__schoolSettings;
   const close = () => setMenuOpen(false);
-  const [busy, setBusy] = React.useState(false);
-  const doRefresh = async () => {
-    if (busy) return;
-    const cloud = !!(window.__sbConfigured && window.__sbConfigured() && window.__sbLoadAll);
-    if (!cloud) { location.reload(); return; }
-    setBusy(true);
-    try {
-      await window.__sbLoadAll();
-      close();
-      toast && toast(tr('បាន​ធ្វើ​បច្ចុប្បន្នភាព ✓', 'Refreshed ✓'), 'good');
-    } catch (e) {
-      toast && toast(tr('ផ្ទុក​ឡើង​វិញ​បរាជ័យ', 'Refresh failed'), 'warn');
-    }
-    setBusy(false);
-  };
+  const doRefresh = () => location.reload();   // Refresh = reload the page
   return (
     <>
       {menuOpen && (
@@ -278,17 +264,14 @@ const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
               </button>
             ))}
           </nav>
-          <div style={{padding:'12px 16px',borderTop:'1px solid var(--border)',flexShrink:0,paddingBottom:'calc(12px + env(safe-area-inset-bottom,0px))',display:'flex',flexDirection:'column',gap:10}}>
-            {/* Refresh — sits above the Close button */}
-            <button onClick={doRefresh} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,width:'100%',padding:'12px',border:'1px solid var(--border)',background:'var(--surface-muted)',borderRadius:12,cursor:'pointer',color:'var(--ink)',fontSize:14,fontWeight:600,fontFamily:'inherit'}}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={busy?{animation:'anzenSpin .8s linear infinite'}:undefined}>
-                <path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/>
-              </svg>
-              {busy ? tr('កំពុង​ផ្ទុក…','Refreshing…') : tr('ផ្ទុក​ឡើង​វិញ','Refresh')}
-            </button>
-            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}>
-              <UserPill role={role} onLogout={()=>{close();onLogout();}} compact/>
-              <button onClick={close} aria-label={tr('បិទ','Close')} title={tr('បិទ','Close')} style={{display:'flex',alignItems:'center',justifyContent:'center',width:44,height:44,padding:0,border:'1px solid var(--border)',background:'var(--surface-muted)',borderRadius:12,cursor:'pointer',color:'var(--ink-2)',flexShrink:0}}>
+          <div style={{padding:'12px 16px',borderTop:'1px solid var(--border)',flexShrink:0,paddingBottom:'calc(12px + env(safe-area-inset-bottom,0px))',display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}>
+            <UserPill role={role} onLogout={()=>{close();onLogout();}} compact/>
+            <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
+              {/* Refresh (reload) — icon-only, sits just left of Close */}
+              <button onClick={doRefresh} aria-label={tr('ផ្ទុក​ឡើង​វិញ','Refresh')} title={tr('ផ្ទុក​ឡើង​វិញ','Refresh')} style={{display:'flex',alignItems:'center',justifyContent:'center',width:44,height:44,padding:0,border:'1px solid var(--border)',background:'var(--surface-muted)',borderRadius:12,cursor:'pointer',color:'var(--ink-2)'}}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+              </button>
+              <button onClick={close} aria-label={tr('បិទ','Close')} title={tr('បិទ','Close')} style={{display:'flex',alignItems:'center',justifyContent:'center',width:44,height:44,padding:0,border:'1px solid var(--border)',background:'var(--surface-muted)',borderRadius:12,cursor:'pointer',color:'var(--ink-2)'}}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
               </button>
             </div>
