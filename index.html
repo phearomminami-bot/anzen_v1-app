@@ -14138,9 +14138,7 @@ var DashboardAdmin = () => {
       flexDirection: 'column',
       gap: 18
     }
-  }, React.createElement("div", null, bp.mobile ? React.createElement(MobileAppHeader, {
-    showDate: true
-  }) : React.createElement("div", {
+  }, !bp.mobile && React.createElement("div", null, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'baseline',
@@ -14616,9 +14614,7 @@ var DashboardInstructor = () => {
       flexDirection: 'column',
       gap: 18
     }
-  }, bp.mobile && React.createElement(MobileAppHeader, {
-    showDate: true
-  }), React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -14825,9 +14821,7 @@ var DashboardStudent = ({
       flexDirection: 'column',
       gap: 18
     }
-  }, bp.mobile && React.createElement(MobileAppHeader, {
-    showDate: true
-  }), React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -61302,11 +61296,22 @@ function App() {
         style: {
           display: 'flex',
           flexDirection: 'column',
-          minHeight: '100svh',
+          height: '100svh',
           width: '100vw',
           background: 'var(--bg)'
         }
-      }, React.createElement("main", {
+      }, current === 'dashboard' && React.createElement("div", {
+        style: {
+          flexShrink: 0,
+          zIndex: 20,
+          background: 'var(--surface)',
+          borderBottom: '1px solid var(--border)',
+          boxShadow: '0 1px 10px rgba(0,0,0,.06)',
+          padding: 'calc(10px + env(safe-area-inset-top,0px)) 14px 10px'
+        }
+      }, React.createElement(MobileAppHeader, {
+        showDate: true
+      })), React.createElement("main", {
         style: {
           flex: 1,
           overflow: 'auto',

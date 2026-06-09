@@ -427,7 +427,12 @@ function App() {
     // Mobile: always bottom bar, no sidebar
     if (bp.mobile) {
       return (
-        <div style={{display:'flex',flexDirection:'column',minHeight:'100svh',width:'100vw',background:'var(--bg)'}}>
+        <div style={{display:'flex',flexDirection:'column',height:'100svh',width:'100vw',background:'var(--bg)'}}>
+          {current==='dashboard' && (
+            <div style={{flexShrink:0,zIndex:20,background:'var(--surface)',borderBottom:'1px solid var(--border)',boxShadow:'0 1px 10px rgba(0,0,0,.06)',padding:'calc(10px + env(safe-area-inset-top,0px)) 14px 10px'}}>
+              <MobileAppHeader showDate/>
+            </div>
+          )}
           <main style={{flex:1,overflow:'auto',padding:'12px 14px',paddingBottom:'calc(72px + env(safe-area-inset-bottom,0px))'}}>{screens[current]}</main>
           <MobileBottomBar items={items} current={current} onGo={setCurrent} role={role} onLogout={logout}/>
         </div>

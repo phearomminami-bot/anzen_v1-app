@@ -131,18 +131,17 @@ const DashboardAdmin = () => {
 
   return (
   <div style={{display:'flex',flexDirection:'column',gap:18}}>
-    {/* ── Header ── */}
+    {/* ── Header (desktop/tablet only — mobile uses the fixed app-bar) ── */}
+    {!bp.mobile && (
     <div>
-      {bp.mobile
-        ? <MobileAppHeader showDate/>
-        : <div style={{display:'flex',alignItems:'baseline',gap:14,flexWrap:'wrap'}}>
-            <div style={{fontSize:28,fontWeight:700,letterSpacing:'-.02em',fontFamily:'var(--font-display)'}}>
-              {ss.name || tr('Anzen','Anzen')}
-            </div>
-            <div style={{fontSize:16,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.04em',fontWeight:400}}>
-              {today}
-            </div>
-          </div>}
+      <div style={{display:'flex',alignItems:'baseline',gap:14,flexWrap:'wrap'}}>
+        <div style={{fontSize:28,fontWeight:700,letterSpacing:'-.02em',fontFamily:'var(--font-display)'}}>
+          {ss.name || tr('Anzen','Anzen')}
+        </div>
+        <div style={{fontSize:16,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.04em',fontWeight:400}}>
+          {today}
+        </div>
+      </div>
       <div style={{fontSize:13,color:'var(--ink-2)',marginTop:5}}>
         {todayLessons.length > 0 || newStudents > 0
           ? tr(
@@ -152,6 +151,7 @@ const DashboardAdmin = () => {
           : tr('សូម​ស្វាគមន៍ · ចាប់​ផ្ដើម​ដោយ​បន្ថែម​គ្រូ​ & សិស្ស', 'Welcome — start by adding instructors & students')}
       </div>
     </div>
+    )}
 
     {/* ── KPI strip — desktop/tablet only ── */}
     {!bp.mobile && <div style={{display:'grid',gridTemplateColumns:bp.tablet ? 'repeat(2,1fr)' : 'repeat(4,1fr)',gap:12}}>
@@ -381,7 +381,6 @@ const DashboardInstructor = () => {
   const doneCnt      = todayLessons.filter(l => l.status==='done').length;
   return (
     <div style={{display:'flex',flexDirection:'column',gap:18}}>
-      {bp.mobile && <MobileAppHeader showDate/>}
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end'}}>
         <div>
           {!bp.mobile && <div style={{fontSize:11,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.08em'}}>{tr('ច័ន្ទ · មិថុនា 1, 2026','MON · JUNE 1, 2026')}</div>}
@@ -474,7 +473,6 @@ const DashboardStudent = ({ studentId }) => {
 
   return (
     <div style={{display:'flex',flexDirection:'column',gap:18}}>
-      {bp.mobile && <MobileAppHeader showDate/>}
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end'}}>
         <div>
           <div style={{fontSize:11,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.08em'}}>
