@@ -270,14 +270,11 @@ const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
   };
   const shortLabel = (it) => { const s = BAR_SHORT[it.id]; return (s && (s[lang] || s.en)) || ll(it); };
   const [menuOpen, setMenuOpen] = React.useState(false);
-  const quickItems = (() => {
-    const base = items.slice(0, 4);
-    const vehicleItem = items.find(i => i.id === 'vehicle');
-    if (vehicleItem && base.some(i => i.id === 'lessons')) {
-      return base.map(i => i.id === 'lessons' ? vehicleItem : i);
-    }
-    return base;
-  })();
+  // Fixed bottom-bar tabs: Home · Students · Schedule · Vehicle (then More)
+  const QUICK_IDS = ['dashboard','students','schedule','vehicle'];
+  const quickItems = QUICK_IDS
+    .map(id => items.find(i => i.id === id) || (window.NAV_ITEMS && window.NAV_ITEMS.admin || []).find(i => i.id === id))
+    .filter(Boolean);
   const ss = window.__schoolSettings;
   const close = () => setMenuOpen(false);
   const doRefresh = () => location.reload();   // Refresh = reload the page

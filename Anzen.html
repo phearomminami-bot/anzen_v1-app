@@ -13248,14 +13248,8 @@ var MobileBottomBar = ({
     return s && (s[lang] || s.en) || ll(it);
   };
   var [menuOpen, setMenuOpen] = React.useState(false);
-  var quickItems = (() => {
-    var base = items.slice(0, 4);
-    var vehicleItem = items.find(i => i.id === 'vehicle');
-    if (vehicleItem && base.some(i => i.id === 'lessons')) {
-      return base.map(i => i.id === 'lessons' ? vehicleItem : i);
-    }
-    return base;
-  })();
+  var QUICK_IDS = ['dashboard', 'students', 'schedule', 'vehicle'];
+  var quickItems = QUICK_IDS.map(id => items.find(i => i.id === id) || (window.NAV_ITEMS && window.NAV_ITEMS.admin || []).find(i => i.id === id)).filter(Boolean);
   var ss = window.__schoolSettings;
   var close = () => setMenuOpen(false);
   var doRefresh = () => location.reload();
