@@ -1727,25 +1727,18 @@ const AppearanceSettings = ({ lang, setLang, tr, toast, fontSize, setFontSize, r
 
       {/* Dark / Light mode */}
       <Card label={tr('ផ្ទៃ​ខ្នង','THEME · ផ្ទៃ​ខ្នង')}>
-        <div style={{display:'flex',gap:10}}>
+        <div style={{display:'flex',gap:8}}>
           {[
-            {v:false, label:'☀️ ភ្លឺ', sub:'Light mode'},
-            {v:true,  label:'🌙 ងងឹត', sub:'Dark mode'},
+            {v:false, icon:'☀️', k:'ភ្លឺ',  e:'Light'},
+            {v:true,  icon:'🌙', k:'ងងឹត', e:'Dark'},
           ].map(o => (
-            <button key={String(o.v)} onClick={()=>{ if(dark!==o.v) toggleDark(); }} style={{
-              flex:1, padding:'16px 18px', textAlign:'left',
+            <button key={String(o.v)} onClick={()=>{ if(dark!==o.v) toggleDark(); }} title={tr(o.k,o.e)} style={{
+              width:52, height:44, borderRadius:10, fontSize:20, cursor:'pointer',
+              display:'flex', alignItems:'center', justifyContent:'center',
               background: dark===o.v ? 'var(--accent-soft)' : 'var(--surface)',
               border: '2px solid '+(dark===o.v ? 'var(--accent)' : 'var(--border)'),
-              borderRadius:12, cursor:'pointer', font:'inherit', color:'inherit', transition:'all .12s',
-            }}>
-              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
-                <div style={{width:22,height:22,borderRadius:999,border:`2px solid ${dark===o.v?'var(--accent)':'var(--border-strong)'}`,background:dark===o.v?'var(--accent)':'transparent',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                  {dark===o.v && <Icon name="check" size={12} stroke={3}/>}
-                </div>
-                <div style={{fontSize:15,fontWeight:600}}>{o.label}</div>
-              </div>
-              <div style={{fontSize:11,color:'var(--ink-3)'}}>{o.sub}</div>
-            </button>
+              transition:'all .12s',
+            }}>{o.icon}</button>
           ))}
         </div>
       </Card>
@@ -1755,50 +1748,43 @@ const AppearanceSettings = ({ lang, setLang, tr, toast, fontSize, setFontSize, r
         <div style={{fontSize:13,color:'var(--ink-2)',marginBottom:12}}>
           {tr('ជ្រើស​រើស​ភាសា​បង្ហាញ​សម្រាប់​ផ្ទាំង​ទាំង​អស់​នៅ​ក្នុង​​​​​ app។','Choose the interface language for all screens in the app.','アプリ全体の表示言語を選択してください。')}
         </div>
-        <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
           {[
-            {v:'km', label:'ខ្មែរ',    sub:'Khmer · ភាសាខ្មែរ'},
-            {v:'en', label:'English',  sub:'English · អង់គ្លេស'},
-            {v:'jp', label:'日本語',   sub:'Japanese · 日本語'},
+            {v:'km', label:'ខ្មែរ',  sub:'Khmer'},
+            {v:'en', label:'EN',     sub:'English'},
+            {v:'jp', label:'日本語', sub:'Japanese'},
           ].map(o=>(
             <button key={o.v} onClick={()=>{
               setLang(o.v);
               toast(o.v==='km'?'ប្តូរ​​​ទៅ​ភាសា​ខ្មែរ':o.v==='jp'?'日本語に切り替えました':'Switched to English','good');
-            }} style={{
-              flex:'1 1 120px', padding:'16px 18px', textAlign:'left',
+            }} title={o.sub} style={{
+              minWidth:54, padding:'10px 16px', textAlign:'center',
               background: lang===o.v ? 'var(--accent-soft)' : 'var(--surface)',
+              color: lang===o.v ? 'var(--accent)' : 'var(--ink-2)',
               border: '2px solid '+(lang===o.v ? 'var(--accent)' : 'var(--border)'),
-              borderRadius:12, cursor:'pointer', font:'inherit', color:'inherit', transition:'all .12s',
-            }}>
-              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
-                <div style={{width:22,height:22,borderRadius:999,border:`2px solid ${lang===o.v?'var(--accent)':'var(--border-strong)'}`,background:lang===o.v?'var(--accent)':'transparent',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                  {lang===o.v && <Icon name="check" size={12} stroke={3}/>}
-                </div>
-                <div style={{fontSize:18,fontWeight:600,fontFamily:'var(--font-display)'}}>{o.label}</div>
-              </div>
-              <div style={{fontSize:11,color:'var(--ink-3)'}}>{o.sub}</div>
-            </button>
+              borderRadius:10, cursor:'pointer', fontSize:15, fontWeight:600,
+              fontFamily:'var(--font-display)', transition:'all .12s',
+            }}>{o.label}</button>
           ))}
         </div>
       </Card>
 
       {/* Font size */}
       <Card label={tr('ទំហំ​អក្សរ','FONT SIZE · ទំហំ​អក្សរ')}>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8}}>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
           {FONT_SIZE_OPTIONS.map(o => {
             const active = fontSize === o.v;
             return (
-              <button key={o.v} onClick={()=>{ setFontSize?.(o.v); toast(tr('ទំហំ​អក្សរ​​​​ · '+o.label,'Font size · '+o.en),'good'); }} style={{
-                padding:'14px 10px', textAlign:'center',
-                background: active ? 'var(--accent-soft)' : 'var(--surface)',
+              <button key={o.v} onClick={()=>{ setFontSize?.(o.v); toast(tr('ទំហំ​អក្សរ​​​​ · '+o.label,'Font size · '+o.en),'good'); }}
+                title={tr(o.label,o.en)+' · '+o.px+'px'} style={{
+                width:46, height:46, borderRadius:10, cursor:'pointer',
+                display:'flex', alignItems:'center', justifyContent:'center',
+                fontWeight:700, fontSize: Math.min(o.px + 2, 22),
+                background: active ? 'var(--accent)' : 'var(--surface-muted)',
+                color: active ? '#fff' : 'var(--ink-2)',
                 border: '2px solid '+(active ? 'var(--accent)' : 'var(--border)'),
-                borderRadius:12, cursor:'pointer', font:'inherit', color:'inherit',
-                transition:'all .12s', display:'flex', flexDirection:'column', alignItems:'center', gap:6,
-              }}>
-                <div style={{width:36,height:36,borderRadius:10,background:active?'var(--accent)':'var(--surface-muted)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:o.px,fontWeight:700,color:active?'#fff':'var(--ink-2)',transition:'all .12s',flexShrink:0}}>A</div>
-                <div style={{fontSize:13,fontWeight:active?600:400,color:active?'var(--accent)':'var(--ink-2)'}}>{tr(o.label,o.en)}</div>
-                <div style={{fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{o.px}px</div>
-              </button>
+                transition:'all .12s',
+              }}>A</button>
             );
           })}
         </div>
