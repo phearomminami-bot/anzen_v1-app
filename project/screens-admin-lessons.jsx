@@ -1005,6 +1005,7 @@ const AdminLessonsScreen = ({ role = 'admin' }) => {
       arr.push({ id, ...data });
       toast(tr('បាន​បន្ថែម','Added'), 'good');
     }
+    if (window.__logActivity) window.__logActivity(initial ? 'edit' : 'create', 'lesson-content', (data.km || data.en || '').slice(0,60));
     persistLessonsLib();
     setEditor(null);
     force();
@@ -1022,6 +1023,7 @@ const AdminLessonsScreen = ({ role = 'admin' }) => {
         const arr = lib[target];
         const idx = arr.findIndex(it => it.id === item.id);
         if (idx >= 0) arr.splice(idx, 1);
+        if (window.__logActivity) window.__logActivity('delete', 'lesson-content', (item.km || item.en || '').slice(0,60));
         persistLessonsLib();
         toast(tr('បាន​លុប','Removed'),'neutral');
         force();

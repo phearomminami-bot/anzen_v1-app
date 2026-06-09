@@ -122,6 +122,7 @@ function App() {
     const u = (role === 'instructor' ? (window.__loggedInInstructorData || LOGIN_USERS.instructor) : LOGIN_USERS[role]) || {};
     window.__currentUser = u;
     window.__currentUserName = (lang === 'km' ? u.km : u.en) || u.en || u.km || '';
+    window.__currentRole = role;
   }, [role, lang, authed]);
 
   // Keep curriculum state mirrored to window for persistence

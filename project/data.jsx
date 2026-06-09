@@ -87,6 +87,31 @@ const nextLessonId = () => {
   return 'L-' + String(n).padStart(4,'0');
 };
 
+// ── Activity history (audit log) ──────────────────────────────────────────
+// Records who did what (create / edit / delete / settings) so admins can review
+// instructor activity. Stored inside the synced settings blob so it reaches the
+// admin's device through the normal cloud sync.
+const ACTIVITY_MAX = 600;
+window.__logActivity = function (action, entity, detail) {
+  try {
+    const ss = window.__schoolSettings || (window.__schoolSettings = {});
+    if (!Array.isArray(ss.activityLog)) ss.activityLog = [];
+    const u = window.__currentUser || {};
+    ss.activityLog.unshift({
+      id: 'L' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      ts: Date.now(),
+      user: window.__currentUserName || u.en || u.km || 'Unknown',
+      role: window.__currentRole || 'admin',
+      action: action || 'edit',          // 'create' | 'edit' | 'delete' | 'settings'
+      entity: entity || '',              // e.g. 'student', 'lesson', 'vehicle'
+      detail: detail || '',              // human-readable label of the record
+    });
+    if (ss.activityLog.length > ACTIVITY_MAX) ss.activityLog.length = ACTIVITY_MAX;
+    if (window.saveAllData) window.saveAllData(true);   // persist locally; cloud push rides the action's own save
+    if (window.__notifyAuditChanged) window.__notifyAuditChanged();
+  } catch (e) {}
+};
+
 // ── Persistence ───────────────────────────────────────────────────────────
 const STORE_KEY = 'anzen_v1';
 

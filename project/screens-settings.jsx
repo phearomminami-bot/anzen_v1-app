@@ -171,6 +171,7 @@ const SettingsScreen = ({ role, fontSize = 'md', setFontSize }) => {
     origRef.current = JSON.parse(JSON.stringify(window.__schoolSettings));
     setDirty(false);
     if (window.__notifySettingsChanged) window.__notifySettingsChanged();
+    if (window.__logActivity) window.__logActivity('settings', 'settings', tr('កំណត់​ប្រព័ន្ធ','System settings'));
     flushSave();
     toast(tr('បានរក្សាទុករួចហើយ ✓', 'Changes saved ✓'), 'good');
   };
@@ -195,7 +196,7 @@ const SettingsScreen = ({ role, fontSize = 'md', setFontSize }) => {
     {id:'integ',     km:'ការ​ភ្ជាប់',          en:'Integrations',   icon:'plus',     adminOnly:true},
     {id:'ai',        km:'AI & OCR',           en:'AI & OCR',       icon:'settings', adminOnly:true},
     {id:'appear',    km:'រូបរាង',             en:'Appearance',     icon:'settings', adminOnly:false},
-    {id:'audit',     km:'កំណត់ហេតុ',          en:'Audit log',      icon:'book',     adminOnly:true},
+    {id:'audit',     km:'ប្រវត្តិ',           en:'History',        icon:'book',     adminOnly:true},
     {id:'data',      km:'ទិន្នន័យ',           en:'Data backup',    icon:'download', adminOnly:true},
   ];
   const tabs = isAdmin ? allTabs : allTabs.filter(t => !t.adminOnly);
@@ -1848,59 +1849,88 @@ const pushAudit = (who, act, tgt, sev='edit') => {
 };
 Object.assign(window, { pushAudit });
 
+// History / activity log — admin review of who created/edited/deleted what.
+const ACT_META = {
+  create:   { km:'បង្កើត',   en:'Created',  color:'var(--good)' },
+  edit:     { km:'កែ',        en:'Edited',   color:'var(--accent)' },
+  delete:   { km:'លុប',       en:'Deleted',  color:'var(--danger)' },
+  settings: { km:'កំណត់',     en:'Settings', color:'var(--warn)' },
+};
+const ENTITY_KM = {
+  student:'សិស្ស', lesson:'មេរៀន', instructor:'គ្រូ', staff:'បុគ្គលិក',
+  vehicle:'យានយន្ត', invoice:'វិក្កយបត្រ', note:'ចំណាំ',
+  'lesson-content':'ខ្លឹមសារ​មេរៀន', settings:'ការ​កំណត់',
+};
 const AuditLog = () => {
+  const { tr, lang, confirm } = useAppActions();
   const [filter, setFilter] = React.useState('all');
-  const [ver, setVer] = React.useState(0);
+  const [, setVer] = React.useState(0);
   React.useEffect(() => { window.__notifyAuditChanged = () => setVer(n=>n+1); return ()=>{delete window.__notifyAuditChanged;}; }, []);
-  const events = window.__auditLog || [];
-  const filters = ['all','create','edit','approve','auth','auto'];
-  const shown = filter==='all' ? events : events.filter(e=>e.sev===filter);
+  const events = (window.__schoolSettings && window.__schoolSettings.activityLog) || [];
+  const filters = [['all','ទាំងអស់','All'],['create','បង្កើត','Created'],['edit','កែ','Edited'],['delete','លុប','Deleted'],['settings','កំណត់','Settings']];
+  const shown = filter==='all' ? events : events.filter(e => e.action === filter);
+  const fmtTime = (ts) => { try { return new Date(ts).toLocaleString(lang==='en'?'en-GB':'en-GB', {hour:'2-digit',minute:'2-digit'}); } catch(e){ return ''; } };
+  const fmtDay  = (ts) => { try { return new Date(ts).toISOString().slice(0,10); } catch(e){ return ''; } };
+
+  const clearAll = () => confirm?.({
+    title: tr('សម្អាត​ប្រវត្តិ?','Clear history?'),
+    body:  tr('កំណត់​ហេតុ​សកម្មភាព​ទាំងអស់​នឹង​ត្រូវ​លុប។','All activity records will be removed.'),
+    confirmText: tr('សម្អាត','Clear'), danger:true,
+    onConfirm: () => { if(window.__schoolSettings) window.__schoolSettings.activityLog = []; if(window.saveAllData) window.saveAllData(); setVer(n=>n+1); },
+  });
 
   return (
-    <Card label="សកម្មភាព​ប្រព័ន្ធ">
-      <div style={{display:'flex',gap:6,flexWrap:'wrap',padding:'4px 0 12px'}}>
-        {filters.map((c,i)=>(
+    <Card label={tr('ប្រវត្តិ​សកម្មភាព','ACTIVITY HISTORY')}
+      action={events.length>0 && <button onClick={clearAll} style={{border:'1px solid var(--border)',background:'var(--surface)',color:'var(--ink-3)',borderRadius:6,padding:'4px 10px',fontSize:11,cursor:'pointer'}}>{tr('សម្អាត','Clear')}</button>}>
+      <div style={{fontSize:12,color:'var(--ink-3)',marginBottom:10}}>
+        {tr('បង្ហាញ​សកម្មភាព​របស់​គណនី​គ្រូ និង​អ្នក​ប្រើ​ផ្សេងៗ — បង្កើត លុប កែ ឬ​បញ្ចូល​ទិន្នន័យ។',
+            'Shows what instructor and other accounts have created, edited, deleted or entered.')}
+      </div>
+      <div style={{display:'flex',gap:6,flexWrap:'wrap',padding:'0 0 12px'}}>
+        {filters.map(([c,km,en])=>(
           <button key={c} onClick={()=>setFilter(c)} style={{
-            padding:'4px 10px',
+            padding:'4px 12px',
             background: filter===c?'var(--ink)':'var(--surface-muted)',
             color: filter===c?'var(--bg)':'var(--ink-2)',
             border:'1px solid '+(filter===c?'var(--ink)':'var(--border)'),
             borderRadius:999, fontSize:11, fontWeight:500, cursor:'pointer',
-          }}>{i===0?'ទាំងអស់':c.charAt(0).toUpperCase()+c.slice(1)}</button>
+          }}>{tr(km,en)}</button>
         ))}
       </div>
 
       {shown.length === 0 && (
         <div style={{padding:40,textAlign:'center',color:'var(--ink-3)',fontSize:13}}>
-          <div style={{fontSize:24,marginBottom:8}}>📋</div>
-          <div>{filter==='all' ? 'មិន​ទាន់​មាន​' : `No "${filter}" events`}</div>
-          <div style={{fontSize:11,marginTop:6}}>Activity will be logged here as the system is used</div>
+          <div style={{fontSize:24,marginBottom:8}}>🕑</div>
+          <div>{tr('មិន​ទាន់​មាន​សកម្មភាព','No activity yet')}</div>
+          <div style={{fontSize:11,marginTop:6}}>{tr('សកម្មភាព​នឹង​ត្រូវ​កត់ត្រា​នៅ​ទីនេះ','Activity will be recorded here as the system is used')}</div>
         </div>
       )}
       {shown.map((e,i,arr)=>{
-        const prevDay = i>0 ? arr[i-1].d : null;
-        const showDay = e.d !== prevDay;
-        const sevColor = {create:'var(--good)',edit:'var(--accent)',approve:'var(--warn)',auto:'var(--ink-3)',auth:'var(--ink-2)',read:'var(--ink-3)'}[e.sev];
+        const day = fmtDay(e.ts);
+        const showDay = i===0 || fmtDay(arr[i-1].ts) !== day;
+        const meta = ACT_META[e.action] || ACT_META.edit;
+        const entKm = ENTITY_KM[e.entity] || e.entity;
         return (
-          <React.Fragment key={i}>
+          <React.Fragment key={e.id || i}>
             {showDay && (
-              <div style={{padding:'14px 0 6px',fontSize:10,letterSpacing:'.08em',color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',textTransform:'uppercase',borderTop:i?'1px solid var(--border)':'none',marginTop:i?6:0}}>
-                {e.d}
-              </div>
+              <div style={{padding:'14px 0 6px',fontSize:10,letterSpacing:'.08em',color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',textTransform:'uppercase',borderTop:i?'1px solid var(--border)':'none',marginTop:i?6:0}}>{day}</div>
             )}
-            <div style={{display:'grid',gridTemplateColumns:'60px 14px 1fr 80px',gap:12,padding:'8px 0',alignItems:'center',borderTop:!showDay?'1px dashed var(--border)':'none'}}>
-              <div style={{fontSize:11,fontFamily:'"JetBrains Mono",monospace',color:'var(--ink-3)'}}>{e.t}</div>
-              <div style={{width:8,height:8,borderRadius:999,background:sevColor,marginLeft:3}}/>
-              <div style={{fontSize:12}}><b>{e.who}</b> <span style={{color:'var(--ink-3)'}}>{e.act}</span> <span>{e.tgt}</span></div>
-              <Badge tone="neutral">{e.sev}</Badge>
+            <div style={{display:'flex',gap:10,padding:'9px 0',alignItems:'flex-start',borderTop:!showDay?'1px dashed var(--border)':'none'}}>
+              <div style={{fontSize:11,fontFamily:'"JetBrains Mono",monospace',color:'var(--ink-3)',width:46,flexShrink:0,paddingTop:2}}>{fmtTime(e.ts)}</div>
+              <div style={{width:8,height:8,borderRadius:999,background:meta.color,marginTop:6,flexShrink:0}}/>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13,lineHeight:1.5}}>
+                  <b>{e.user}</b>
+                  {e.role && e.role!=='admin' && <span style={{fontSize:10,color:'var(--accent)',background:'var(--accent-soft)',padding:'1px 6px',borderRadius:6,marginLeft:6,fontWeight:600}}>{tr('គ្រូ','Instructor')}</span>}
+                  <span style={{color:meta.color,fontWeight:600,margin:'0 5px'}}>{tr(meta.km,meta.en)}</span>
+                  <span style={{color:'var(--ink-2)'}}>{entKm}</span>
+                  {e.detail && <span style={{color:'var(--ink)'}}> · {e.detail}</span>}
+                </div>
+              </div>
             </div>
           </React.Fragment>
         );
       })}
-
-      <div style={{padding:'14px 0 0',display:'flex',justifyContent:'center'}}>
-        <Btn kind="ghost" size="sm">ផ្ទុក​បន្ថែម · Load more</Btn>
-      </div>
     </Card>
   );
 };

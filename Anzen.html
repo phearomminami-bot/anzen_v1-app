@@ -1015,6 +1015,7 @@ window.__trRegistry = {
   "CANCEL RATE": "អត្រា​",
   "TOP REASONS": "មូលហេតុ​​ទូទៅ",
   "POLICY": "គោលនយោបាយ",
+  "System settings": "កំណត់​ប្រព័ន្ធ",
   "Changes saved ✓": "បានរក្សាទុករួចហើយ ✓",
   "Changes discarded": "បានបោះបង់ការ​កែ​ប្រែ",
   "Backup started…": "ការ​បម្រុង​ទុក​​ចាប់​ផ្ដើម…",
@@ -1129,6 +1130,12 @@ window.__trRegistry = {
   "DANGER ZONE": "ឌាមីន",
   "Delete account": "លុប​គណនី",
   "This action cannot be undone.": "សកម្ម​ភាព​នេះ​មិន​អាច​ត្រឡប់​​វិញ​បាន​ទេ​។",
+  "Clear history?": "សម្អាត​ប្រវត្តិ?",
+  "All activity records will be removed.": "កំណត់​ហេតុ​សកម្មភាព​ទាំងអស់​នឹង​ត្រូវ​លុប។",
+  "ACTIVITY HISTORY": "ប្រវត្តិ​សកម្មភាព",
+  "Shows what instructor and other accounts have created, edited, deleted or entered.": "បង្ហាញ​សកម្មភាព​របស់​គណនី​គ្រូ និង​អ្នក​ប្រើ​ផ្សេងៗ — បង្កើត លុប កែ ឬ​បញ្ចូល​ទិន្នន័យ។",
+  "No activity yet": "មិន​ទាន់​មាន​សកម្មភាព",
+  "Activity will be recorded here as the system is used": "សកម្មភាព​នឹង​ត្រូវ​កត់ត្រា​នៅ​ទីនេះ",
   "Pushed to cloud ✓": "បានផ្ទេរទិន្នន័យទៅ Cloud ✓",
   "Push failed": "ផ្ទេរមានបញ្ហា — ' + (r?.error||''), 'Push failed — ' + (r?.error||'')), 'danger');\n    } catch (e) { toast(tr('ផ្ទេរមានបញ្ហា",
   "Reloaded from cloud ✓": "បានទាញទិន្នន័យពី Cloud ✓ — កំពុង reload",
@@ -3559,6 +3566,26 @@ var nextLessonId = () => {
   var nums = LESSONS.map(l => parseInt((l.id || '').replace('L-', ''))).filter(n => !isNaN(n));
   var n = (nums.length > 0 ? Math.max(...nums) : 0) + 1;
   return 'L-' + String(n).padStart(4, '0');
+};
+var ACTIVITY_MAX = 600;
+window.__logActivity = function (action, entity, detail) {
+  try {
+    var ss = window.__schoolSettings || (window.__schoolSettings = {});
+    if (!Array.isArray(ss.activityLog)) ss.activityLog = [];
+    var u = window.__currentUser || {};
+    ss.activityLog.unshift({
+      id: 'L' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      ts: Date.now(),
+      user: window.__currentUserName || u.en || u.km || 'Unknown',
+      role: window.__currentRole || 'admin',
+      action: action || 'edit',
+      entity: entity || '',
+      detail: detail || ''
+    });
+    if (ss.activityLog.length > ACTIVITY_MAX) ss.activityLog.length = ACTIVITY_MAX;
+    if (window.saveAllData) window.saveAllData(true);
+    if (window.__notifyAuditChanged) window.__notifyAuditChanged();
+  } catch (e) {}
 };
 var STORE_KEY = 'anzen_v1';
 var saveAllData = skipCloud => {
@@ -6046,6 +6073,7 @@ Use "" for any field that cannot be read clearly.`;
       studentType
     });
     if (window.__notifyStudentsChanged) window.__notifyStudentsChanged();
+    if (window.__logActivity) window.__logActivity('create', 'student', name.trim() || nextId);
     if (window.saveAllData) window.saveAllData();
     toast(tr(`បន្ថែម​ ${nextId} · Password: ${pw}`, `Added ${nextId} · Password: ${pw}`), 'good');
     onClose();
@@ -6640,6 +6668,7 @@ var NewLessonForm = ({
     });
     if (window.__notifyLessonsChanged) window.__notifyLessonsChanged();
     if (window.__notifyStudentsChanged) window.__notifyStudentsChanged();
+    if (window.__logActivity) window.__logActivity('create', 'lesson', (stu ? stu.name + ' · ' : '') + (lessonNo || typeName || 'lesson'));
     if (window.saveAllData) window.saveAllData();
     if (studentId && window.__autoTelegramStudent) {
       var inst = INSTRUCTORS.find(i => i.id === instId);
@@ -7164,6 +7193,7 @@ var NewInstructorForm = ({
       if (window.__notifyStaffChanged) window.__notifyStaffChanged();
     }
     if (window.__notifyInstructorsChanged) window.__notifyInstructorsChanged();
+    if (window.__logActivity) window.__logActivity('create', 'instructor', nameEn.trim());
     if (window.saveAllData) window.saveAllData();
     toast(tr(`គ្រូ ${nameEn} · ID: ${nextId} · Password: ${instPw}`, `Instructor ${nameEn} · ID: ${nextId} · Password: ${instPw}`), 'good');
     onClose();
@@ -7706,6 +7736,7 @@ var NewVehicleForm = ({
       vehicleCategory: vType
     });
     if (window.__notifyVehiclesChanged) window.__notifyVehiclesChanged();
+    if (window.__logActivity) window.__logActivity('create', 'vehicle', plate.trim());
     if (window.saveAllData) window.saveAllData();
     toast(tr(`បាន​បន្ថែម ${meta.km} · ${nextId}`, `${meta.en} added · ${nextId}`), 'good');
     onClose();
@@ -8019,6 +8050,7 @@ var NewInvoiceForm = ({
       method,
       status: 'Pending'
     });
+    if (window.__logActivity) window.__logActivity('create', 'invoice', (stu ? stu.name + ' · ' : '') + '$' + amt);
     if (window.saveAllData) window.saveAllData();
     toast?.(tr('បាន​​បង្កើត​​​​វិក្កយបត្រ​​ · ' + nextId, 'Invoice created · ' + nextId), 'good');
     onClose();
@@ -8302,6 +8334,7 @@ var NewStaffForm = ({
       });
       if (window.__notifyInstructorsChanged) window.__notifyInstructorsChanged();
       if (window.__notifyStaffChanged) window.__notifyStaffChanged();
+      if (window.__logActivity) window.__logActivity('create', 'instructor', nameEn.trim());
       if (window.saveAllData) window.saveAllData();
       toast(tr(`គ្រូ ${nameEn} · ID: ${nextInstId} · Password: ${staffPw}`, `Instructor ${nameEn} · ID: ${nextInstId} · Password: ${staffPw}`), 'good');
     } else {
@@ -8337,6 +8370,7 @@ var NewStaffForm = ({
         schedule: [1, 1, 1, 1, 1, 0, 0]
       });
       if (window.__notifyStaffChanged) window.__notifyStaffChanged();
+      if (window.__logActivity) window.__logActivity('create', 'staff', nameEn.trim());
       if (window.saveAllData) window.saveAllData();
       toast(tr('បាន​បន្ថែម​បុគ្គលិក · ' + nameEn, 'Staff added · ' + nameEn), 'good');
     }
@@ -17218,9 +17252,14 @@ var ScheduleScreen = ({
       author: noteModal.author || meName,
       invited
     }]);
+    if (window.__logActivity) window.__logActivity(noteModal.id ? 'edit' : 'create', 'note', (title || description || '').slice(0, 60));
     setNoteModal(null);
   };
-  var removeNote = id => saveNotes(notes.filter(n => n.id !== id));
+  var removeNote = id => {
+    var n = notes.find(x => x.id === id);
+    saveNotes(notes.filter(x => x.id !== id));
+    if (window.__logActivity) window.__logActivity('delete', 'note', n ? (n.title || n.text || '').slice(0, 60) : '');
+  };
   var toggleInvite = instId => setNoteModal(m => {
     var cur = m.invited || [];
     return {
@@ -24074,6 +24113,7 @@ var AdminLessonsScreen = ({
       });
       toast(tr('បាន​បន្ថែម', 'Added'), 'good');
     }
+    if (window.__logActivity) window.__logActivity(initial ? 'edit' : 'create', 'lesson-content', (data.km || data.en || '').slice(0, 60));
     persistLessonsLib();
     setEditor(null);
     force();
@@ -24088,6 +24128,7 @@ var AdminLessonsScreen = ({
         var arr = lib[target];
         var idx = arr.findIndex(it => it.id === item.id);
         if (idx >= 0) arr.splice(idx, 1);
+        if (window.__logActivity) window.__logActivity('delete', 'lesson-content', (item.km || item.en || '').slice(0, 60));
         persistLessonsLib();
         toast(tr('បាន​លុប', 'Removed'), 'neutral');
         force();
@@ -49769,6 +49810,7 @@ var SettingsScreen = ({
     origRef.current = JSON.parse(JSON.stringify(window.__schoolSettings));
     setDirty(false);
     if (window.__notifySettingsChanged) window.__notifySettingsChanged();
+    if (window.__logActivity) window.__logActivity('settings', 'settings', tr('កំណត់​ប្រព័ន្ធ', 'System settings'));
     flushSave();
     toast(tr('បានរក្សាទុករួចហើយ ✓', 'Changes saved ✓'), 'good');
   };
@@ -49835,8 +49877,8 @@ var SettingsScreen = ({
     adminOnly: false
   }, {
     id: 'audit',
-    km: 'កំណត់ហេតុ',
-    en: 'Audit log',
+    km: 'ប្រវត្តិ',
+    en: 'History',
     icon: 'book',
     adminOnly: true
   }, {
@@ -53854,32 +53896,116 @@ var pushAudit = (who, act, tgt, sev = 'edit') => {
 Object.assign(window, {
   pushAudit
 });
+var ACT_META = {
+  create: {
+    km: 'បង្កើត',
+    en: 'Created',
+    color: 'var(--good)'
+  },
+  edit: {
+    km: 'កែ',
+    en: 'Edited',
+    color: 'var(--accent)'
+  },
+  delete: {
+    km: 'លុប',
+    en: 'Deleted',
+    color: 'var(--danger)'
+  },
+  settings: {
+    km: 'កំណត់',
+    en: 'Settings',
+    color: 'var(--warn)'
+  }
+};
+var ENTITY_KM = {
+  student: 'សិស្ស',
+  lesson: 'មេរៀន',
+  instructor: 'គ្រូ',
+  staff: 'បុគ្គលិក',
+  vehicle: 'យានយន្ត',
+  invoice: 'វិក្កយបត្រ',
+  note: 'ចំណាំ',
+  'lesson-content': 'ខ្លឹមសារ​មេរៀន',
+  settings: 'ការ​កំណត់'
+};
 var AuditLog = () => {
+  var {
+    tr,
+    lang,
+    confirm
+  } = useAppActions();
   var [filter, setFilter] = React.useState('all');
-  var [ver, setVer] = React.useState(0);
+  var [, setVer] = React.useState(0);
   React.useEffect(() => {
     window.__notifyAuditChanged = () => setVer(n => n + 1);
     return () => {
       delete window.__notifyAuditChanged;
     };
   }, []);
-  var events = window.__auditLog || [];
-  var filters = ['all', 'create', 'edit', 'approve', 'auth', 'auto'];
-  var shown = filter === 'all' ? events : events.filter(e => e.sev === filter);
+  var events = window.__schoolSettings && window.__schoolSettings.activityLog || [];
+  var filters = [['all', 'ទាំងអស់', 'All'], ['create', 'បង្កើត', 'Created'], ['edit', 'កែ', 'Edited'], ['delete', 'លុប', 'Deleted'], ['settings', 'កំណត់', 'Settings']];
+  var shown = filter === 'all' ? events : events.filter(e => e.action === filter);
+  var fmtTime = ts => {
+    try {
+      return new Date(ts).toLocaleString(lang === 'en' ? 'en-GB' : 'en-GB', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (e) {
+      return '';
+    }
+  };
+  var fmtDay = ts => {
+    try {
+      return new Date(ts).toISOString().slice(0, 10);
+    } catch (e) {
+      return '';
+    }
+  };
+  var clearAll = () => confirm?.({
+    title: tr('សម្អាត​ប្រវត្តិ?', 'Clear history?'),
+    body: tr('កំណត់​ហេតុ​សកម្មភាព​ទាំងអស់​នឹង​ត្រូវ​លុប។', 'All activity records will be removed.'),
+    confirmText: tr('សម្អាត', 'Clear'),
+    danger: true,
+    onConfirm: () => {
+      if (window.__schoolSettings) window.__schoolSettings.activityLog = [];
+      if (window.saveAllData) window.saveAllData();
+      setVer(n => n + 1);
+    }
+  });
   return React.createElement(Card, {
-    label: "\u179F\u1780\u1798\u17D2\u1798\u1797\u17B6\u1796\u200B\u1794\u17D2\u179A\u1796\u17D0\u1793\u17D2\u1792"
+    label: tr('ប្រវត្តិ​សកម្មភាព', 'ACTIVITY HISTORY'),
+    action: events.length > 0 && React.createElement("button", {
+      onClick: clearAll,
+      style: {
+        border: '1px solid var(--border)',
+        background: 'var(--surface)',
+        color: 'var(--ink-3)',
+        borderRadius: 6,
+        padding: '4px 10px',
+        fontSize: 11,
+        cursor: 'pointer'
+      }
+    }, tr('សម្អាត', 'Clear'))
   }, React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'var(--ink-3)',
+      marginBottom: 10
+    }
+  }, tr('បង្ហាញ​សកម្មភាព​របស់​គណនី​គ្រូ និង​អ្នក​ប្រើ​ផ្សេងៗ — បង្កើត លុប កែ ឬ​បញ្ចូល​ទិន្នន័យ។', 'Shows what instructor and other accounts have created, edited, deleted or entered.')), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
       flexWrap: 'wrap',
-      padding: '4px 0 12px'
+      padding: '0 0 12px'
     }
-  }, filters.map((c, i) => React.createElement("button", {
+  }, filters.map(([c, km, en]) => React.createElement("button", {
     key: c,
     onClick: () => setFilter(c),
     style: {
-      padding: '4px 10px',
+      padding: '4px 12px',
       background: filter === c ? 'var(--ink)' : 'var(--surface-muted)',
       color: filter === c ? 'var(--bg)' : 'var(--ink-2)',
       border: '1px solid ' + (filter === c ? 'var(--ink)' : 'var(--border)'),
@@ -53888,7 +54014,7 @@ var AuditLog = () => {
       fontWeight: 500,
       cursor: 'pointer'
     }
-  }, i === 0 ? 'ទាំងអស់' : c.charAt(0).toUpperCase() + c.slice(1)))), shown.length === 0 && React.createElement("div", {
+  }, tr(km, en)))), shown.length === 0 && React.createElement("div", {
     style: {
       padding: 40,
       textAlign: 'center',
@@ -53900,24 +54026,18 @@ var AuditLog = () => {
       fontSize: 24,
       marginBottom: 8
     }
-  }, "\uD83D\uDCCB"), React.createElement("div", null, filter === 'all' ? 'មិន​ទាន់​មាន​' : `No "${filter}" events`), React.createElement("div", {
+  }, "\uD83D\uDD51"), React.createElement("div", null, tr('មិន​ទាន់​មាន​សកម្មភាព', 'No activity yet')), React.createElement("div", {
     style: {
       fontSize: 11,
       marginTop: 6
     }
-  }, "Activity will be logged here as the system is used")), shown.map((e, i, arr) => {
-    var prevDay = i > 0 ? arr[i - 1].d : null;
-    var showDay = e.d !== prevDay;
-    var sevColor = {
-      create: 'var(--good)',
-      edit: 'var(--accent)',
-      approve: 'var(--warn)',
-      auto: 'var(--ink-3)',
-      auth: 'var(--ink-2)',
-      read: 'var(--ink-3)'
-    }[e.sev];
+  }, tr('សកម្មភាព​នឹង​ត្រូវ​កត់ត្រា​នៅ​ទីនេះ', 'Activity will be recorded here as the system is used'))), shown.map((e, i, arr) => {
+    var day = fmtDay(e.ts);
+    var showDay = i === 0 || fmtDay(arr[i - 1].ts) !== day;
+    var meta = ACT_META[e.action] || ACT_META.edit;
+    var entKm = ENTITY_KM[e.entity] || e.entity;
     return React.createElement(React.Fragment, {
-      key: i
+      key: e.id || i
     }, showDay && React.createElement("div", {
       style: {
         padding: '14px 0 6px',
@@ -53929,50 +54049,68 @@ var AuditLog = () => {
         borderTop: i ? '1px solid var(--border)' : 'none',
         marginTop: i ? 6 : 0
       }
-    }, e.d), React.createElement("div", {
+    }, day), React.createElement("div", {
       style: {
-        display: 'grid',
-        gridTemplateColumns: '60px 14px 1fr 80px',
-        gap: 12,
-        padding: '8px 0',
-        alignItems: 'center',
+        display: 'flex',
+        gap: 10,
+        padding: '9px 0',
+        alignItems: 'flex-start',
         borderTop: !showDay ? '1px dashed var(--border)' : 'none'
       }
     }, React.createElement("div", {
       style: {
         fontSize: 11,
         fontFamily: '"JetBrains Mono",monospace',
-        color: 'var(--ink-3)'
+        color: 'var(--ink-3)',
+        width: 46,
+        flexShrink: 0,
+        paddingTop: 2
       }
-    }, e.t), React.createElement("div", {
+    }, fmtTime(e.ts)), React.createElement("div", {
       style: {
         width: 8,
         height: 8,
         borderRadius: 999,
-        background: sevColor,
-        marginLeft: 3
+        background: meta.color,
+        marginTop: 6,
+        flexShrink: 0
       }
     }), React.createElement("div", {
       style: {
-        fontSize: 12
+        flex: 1,
+        minWidth: 0
       }
-    }, React.createElement("b", null, e.who), " ", React.createElement("span", {
+    }, React.createElement("div", {
       style: {
-        color: 'var(--ink-3)'
+        fontSize: 13,
+        lineHeight: 1.5
       }
-    }, e.act), " ", React.createElement("span", null, e.tgt)), React.createElement(Badge, {
-      tone: "neutral"
-    }, e.sev)));
-  }), React.createElement("div", {
-    style: {
-      padding: '14px 0 0',
-      display: 'flex',
-      justifyContent: 'center'
-    }
-  }, React.createElement(Btn, {
-    kind: "ghost",
-    size: "sm"
-  }, "\u1795\u17D2\u1791\u17BB\u1780\u200B\u1794\u1793\u17D2\u1790\u17C2\u1798 \xB7 Load more")));
+    }, React.createElement("b", null, e.user), e.role && e.role !== 'admin' && React.createElement("span", {
+      style: {
+        fontSize: 10,
+        color: 'var(--accent)',
+        background: 'var(--accent-soft)',
+        padding: '1px 6px',
+        borderRadius: 6,
+        marginLeft: 6,
+        fontWeight: 600
+      }
+    }, tr('គ្រូ', 'Instructor')), React.createElement("span", {
+      style: {
+        color: meta.color,
+        fontWeight: 600,
+        margin: '0 5px'
+      }
+    }, tr(meta.km, meta.en)), React.createElement("span", {
+      style: {
+        color: 'var(--ink-2)'
+      }
+    }, entKm), e.detail && React.createElement("span", {
+      style: {
+        color: 'var(--ink)'
+      }
+    }, " \xB7 ", e.detail)))));
+  }));
 };
 var StField = ({
   km,
@@ -60917,6 +61055,7 @@ function App() {
     var u = (role === 'instructor' ? window.__loggedInInstructorData || LOGIN_USERS.instructor : LOGIN_USERS[role]) || {};
     window.__currentUser = u;
     window.__currentUserName = (lang === 'km' ? u.km : u.en) || u.en || u.km || '';
+    window.__currentRole = role;
   }, [role, lang, authed]);
   React.useEffect(() => {
     window.__curriculumDone = curriculumDone;

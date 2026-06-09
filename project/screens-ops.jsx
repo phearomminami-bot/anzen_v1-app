@@ -564,9 +564,14 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
     const text = title || description;
     if (noteModal.id) saveNotes(notes.map(n => n.id === noteModal.id ? { ...n, date: noteModal.date, time, title, description, text, invited } : n));
     else              saveNotes([...notes, { id: 'N' + Date.now(), date: noteModal.date, time, title, description, text, author: noteModal.author || meName, invited }]);
+    if (window.__logActivity) window.__logActivity(noteModal.id ? 'edit' : 'create', 'note', (title || description || '').slice(0,60));
     setNoteModal(null);
   };
-  const removeNote = (id) => saveNotes(notes.filter(n => n.id !== id));
+  const removeNote = (id) => {
+    const n = notes.find(x => x.id === id);
+    saveNotes(notes.filter(x => x.id !== id));
+    if (window.__logActivity) window.__logActivity('delete', 'note', n ? (n.title || n.text || '').slice(0,60) : '');
+  };
   const toggleInvite = (instId) => setNoteModal(m => {
     const cur = m.invited || [];
     return { ...m, invited: cur.includes(instId) ? cur.filter(x => x !== instId) : [...cur, instId] };

@@ -1525,6 +1525,7 @@ Use "" for any field that cannot be read clearly.`;
       studentType,
     });
     if (window.__notifyStudentsChanged) window.__notifyStudentsChanged();
+    if (window.__logActivity) window.__logActivity('create','student', (name.trim()||nextId));
     if (window.saveAllData) window.saveAllData();
     toast(tr(`បន្ថែម​ ${nextId} · Password: ${pw}`, `Added ${nextId} · Password: ${pw}`), 'good');
     onClose();
@@ -1927,6 +1928,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
 
     if (window.__notifyLessonsChanged)  window.__notifyLessonsChanged();
     if (window.__notifyStudentsChanged) window.__notifyStudentsChanged();
+    if (window.__logActivity) window.__logActivity('create','lesson', ((stu?stu.name+' · ':'') + (lessonNo || typeName || 'lesson')));
     if (window.saveAllData) window.saveAllData();
 
     // Auto-send the booking to the student's Telegram (if configured)
@@ -2264,6 +2266,7 @@ const NewInstructorForm = ({ onClose }) => {
       if (window.__notifyStaffChanged) window.__notifyStaffChanged();
     }
     if (window.__notifyInstructorsChanged) window.__notifyInstructorsChanged();
+    if (window.__logActivity) window.__logActivity('create','instructor', nameEn.trim());
     if (window.saveAllData) window.saveAllData();
     toast(tr(`គ្រូ ${nameEn} · ID: ${nextId} · Password: ${instPw}`, `Instructor ${nameEn} · ID: ${nextId} · Password: ${instPw}`), 'good');
     onClose();
@@ -2543,6 +2546,7 @@ const NewVehicleForm = ({ onClose }) => {
       vehicleCategory: vType,
     });
     if (window.__notifyVehiclesChanged) window.__notifyVehiclesChanged();
+    if (window.__logActivity) window.__logActivity('create','vehicle', plate.trim());
     if (window.saveAllData) window.saveAllData();
     toast(tr(`បាន​បន្ថែម ${meta.km} · ${nextId}`, `${meta.en} added · ${nextId}`), 'good');
     onClose();
@@ -2713,6 +2717,7 @@ const NewInvoiceForm = ({ onClose }) => {
       method,
       status: 'Pending',
     });
+    if (window.__logActivity) window.__logActivity('create','invoice', (stu?stu.name+' · ':'') + '$' + amt);
     if (window.saveAllData) window.saveAllData();
     toast?.(tr('បាន​​បង្កើត​​​​វិក្កយបត្រ​​ · ' + nextId, 'Invoice created · ' + nextId), 'good');
     onClose();
@@ -2926,6 +2931,7 @@ const NewStaffForm = ({ onClose }) => {
       });
       if (window.__notifyInstructorsChanged) window.__notifyInstructorsChanged();
       if (window.__notifyStaffChanged) window.__notifyStaffChanged();
+      if (window.__logActivity) window.__logActivity('create','instructor', nameEn.trim());
       if (window.saveAllData) window.saveAllData();
       toast(tr(`គ្រូ ${nameEn} · ID: ${nextInstId} · Password: ${staffPw}`, `Instructor ${nameEn} · ID: ${nextInstId} · Password: ${staffPw}`), 'good');
     } else {
@@ -2951,6 +2957,7 @@ const NewStaffForm = ({ onClose }) => {
         schedule:  [1,1,1,1,1,0,0],
       });
       if (window.__notifyStaffChanged) window.__notifyStaffChanged();
+      if (window.__logActivity) window.__logActivity('create','staff', nameEn.trim());
       if (window.saveAllData) window.saveAllData();
       toast(tr('បាន​បន្ថែម​បុគ្គលិក · ' + nameEn, 'Staff added · ' + nameEn), 'good');
     }
