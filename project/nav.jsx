@@ -214,9 +214,21 @@ const DarkToggleBtn = () => {
 };
 
 // ─── Mobile bottom bar ───
+// Compact labels for the cramped bottom tab bar (full names live in the menu).
+const BAR_SHORT = {
+  dashboard:{km:'ដើម',en:'Home'}, students:{km:'សិស្ស',en:'Students'},
+  lessons:{km:'មេរៀន',en:'Lessons'}, schedule:{km:'កាលវិភាគ',en:'Schedule'},
+  instructors:{km:'គ្រូ',en:'Tutors'}, vehicle:{km:'យានយន្ត',en:'Vehicle'},
+  fleet:{km:'យានយន្ត',en:'Fleet'}, progress:{km:'វឌ្ឍនភាព',en:'Progress'},
+  billing:{km:'វិក្កយបត្រ',en:'Billing'}, finance:{km:'ហិរញ្ញវត្ថុ',en:'Finance'},
+  staff:{km:'បុគ្គលិក',en:'Staff'}, settings:{km:'កំណត់',en:'Settings'},
+  announce:{km:'ដំណឹង',en:'News'},
+};
+
 const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
   const { lang, tr } = useAppActions();
   const ll = (o) => o[lang] || o.en;
+  const shortLabel = (it) => { const s = BAR_SHORT[it.id]; return (s && (s[lang] || s.en)) || ll(it); };
   const [menuOpen, setMenuOpen] = React.useState(false);
   const quickItems = (() => {
     const base = items.slice(0, 4);
@@ -263,33 +275,37 @@ const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
       <div style={{
         position:'fixed',bottom:0,left:0,right:0,zIndex:100,
         background:'var(--surface)',borderTop:'1px solid var(--border)',
-        display:'flex',alignItems:'stretch',height:56,
+        boxShadow:'0 -1px 12px rgba(0,0,0,.05)',
+        display:'flex',alignItems:'stretch',
         paddingBottom:'env(safe-area-inset-bottom,0px)',
       }}>
-        {quickItems.map(it=>(
+        {quickItems.map(it=>{
+          const on = current===it.id;
+          return (
           <button key={it.id} onClick={()=>onGo(it.id)} style={{
             position:'relative',
-            flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',
-            gap:3,border:'none',background:'transparent',cursor:'pointer',padding:'6px 4px',
-            color:current===it.id?'var(--accent)':'var(--ink-3)',
-            transition:'color .15s',
+            flex:1,minWidth:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'flex-start',
+            gap:3,border:'none',background:'transparent',cursor:'pointer',padding:'9px 2px 7px',
+            color:on?'var(--accent)':'var(--ink-3)',transition:'color .15s',
           }}>
-            {current===it.id && <span style={{position:'absolute',top:0,width:26,height:3,borderRadius:'0 0 3px 3px',background:'var(--accent)'}}/>}
-            <Icon name={it.icon} size={22} stroke={current===it.id?2:1.5}/>
-            <span style={{fontSize:9,fontWeight:current===it.id?600:400,letterSpacing:'.02em',maxWidth:56,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-              {ll(it)}
-            </span>
+            {on && <span style={{position:'absolute',top:0,left:'50%',transform:'translateX(-50%)',width:24,height:3,borderRadius:'0 0 3px 3px',background:'var(--accent)'}}/>}
+            <Icon name={it.icon} size={21} stroke={on?2.2:1.6}/>
+            <span style={{
+              fontSize:10,fontWeight:on?600:500,lineHeight:1.12,textAlign:'center',width:'100%',
+              display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden',
+              wordBreak:'break-word',
+            }}>{shortLabel(it)}</span>
           </button>
-        ))}
+        );})}
         <button onClick={()=>setMenuOpen(true)} style={{
-          flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',
+          flex:1,minWidth:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'flex-start',
           gap:3,border:'none',background:menuOpen?'var(--surface-muted)':'transparent',
-          cursor:'pointer',padding:'6px 4px',color:'var(--ink-3)',
+          cursor:'pointer',padding:'9px 2px 7px',color:menuOpen?'var(--accent)':'var(--ink-3)',transition:'color .15s',
         }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
             <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
-          <span style={{fontSize:9,letterSpacing:'.02em'}}>{tr('ទាំងអស់','More','すべて')}</span>
+          <span style={{fontSize:10,fontWeight:menuOpen?600:500,lineHeight:1.12,textAlign:'center'}}>{tr('ទាំងអស់','More','すべて')}</span>
         </button>
       </div>
     </>

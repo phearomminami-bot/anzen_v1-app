@@ -12877,6 +12877,60 @@ var DarkToggleBtn = () => {
     d: "M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
   })));
 };
+var BAR_SHORT = {
+  dashboard: {
+    km: 'ដើម',
+    en: 'Home'
+  },
+  students: {
+    km: 'សិស្ស',
+    en: 'Students'
+  },
+  lessons: {
+    km: 'មេរៀន',
+    en: 'Lessons'
+  },
+  schedule: {
+    km: 'កាលវិភាគ',
+    en: 'Schedule'
+  },
+  instructors: {
+    km: 'គ្រូ',
+    en: 'Tutors'
+  },
+  vehicle: {
+    km: 'យានយន្ត',
+    en: 'Vehicle'
+  },
+  fleet: {
+    km: 'យានយន្ត',
+    en: 'Fleet'
+  },
+  progress: {
+    km: 'វឌ្ឍនភាព',
+    en: 'Progress'
+  },
+  billing: {
+    km: 'វិក្កយបត្រ',
+    en: 'Billing'
+  },
+  finance: {
+    km: 'ហិរញ្ញវត្ថុ',
+    en: 'Finance'
+  },
+  staff: {
+    km: 'បុគ្គលិក',
+    en: 'Staff'
+  },
+  settings: {
+    km: 'កំណត់',
+    en: 'Settings'
+  },
+  announce: {
+    km: 'ដំណឹង',
+    en: 'News'
+  }
+};
 var MobileBottomBar = ({
   items,
   current,
@@ -12889,6 +12943,10 @@ var MobileBottomBar = ({
     tr
   } = useAppActions();
   var ll = o => o[lang] || o.en;
+  var shortLabel = it => {
+    var s = BAR_SHORT[it.id];
+    return s && (s[lang] || s.en) || ll(it);
+  };
   var [menuOpen, setMenuOpen] = React.useState(false);
   var quickItems = (() => {
     var base = items.slice(0, 4);
@@ -13028,74 +13086,85 @@ var MobileBottomBar = ({
       zIndex: 100,
       background: 'var(--surface)',
       borderTop: '1px solid var(--border)',
+      boxShadow: '0 -1px 12px rgba(0,0,0,.05)',
       display: 'flex',
       alignItems: 'stretch',
-      height: 56,
       paddingBottom: 'env(safe-area-inset-bottom,0px)'
     }
-  }, quickItems.map(it => React.createElement("button", {
-    key: it.id,
-    onClick: () => onGo(it.id),
-    style: {
-      position: 'relative',
-      flex: 1,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 3,
-      border: 'none',
-      background: 'transparent',
-      cursor: 'pointer',
-      padding: '6px 4px',
-      color: current === it.id ? 'var(--accent)' : 'var(--ink-3)',
-      transition: 'color .15s'
-    }
-  }, current === it.id && React.createElement("span", {
-    style: {
-      position: 'absolute',
-      top: 0,
-      width: 26,
-      height: 3,
-      borderRadius: '0 0 3px 3px',
-      background: 'var(--accent)'
-    }
-  }), React.createElement(Icon, {
-    name: it.icon,
-    size: 22,
-    stroke: current === it.id ? 2 : 1.5
-  }), React.createElement("span", {
-    style: {
-      fontSize: 9,
-      fontWeight: current === it.id ? 600 : 400,
-      letterSpacing: '.02em',
-      maxWidth: 56,
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
-      whiteSpace: 'nowrap'
-    }
-  }, ll(it)))), React.createElement("button", {
+  }, quickItems.map(it => {
+    var on = current === it.id;
+    return React.createElement("button", {
+      key: it.id,
+      onClick: () => onGo(it.id),
+      style: {
+        position: 'relative',
+        flex: 1,
+        minWidth: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        gap: 3,
+        border: 'none',
+        background: 'transparent',
+        cursor: 'pointer',
+        padding: '9px 2px 7px',
+        color: on ? 'var(--accent)' : 'var(--ink-3)',
+        transition: 'color .15s'
+      }
+    }, on && React.createElement("span", {
+      style: {
+        position: 'absolute',
+        top: 0,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: 24,
+        height: 3,
+        borderRadius: '0 0 3px 3px',
+        background: 'var(--accent)'
+      }
+    }), React.createElement(Icon, {
+      name: it.icon,
+      size: 21,
+      stroke: on ? 2.2 : 1.6
+    }), React.createElement("span", {
+      style: {
+        fontSize: 10,
+        fontWeight: on ? 600 : 500,
+        lineHeight: 1.12,
+        textAlign: 'center',
+        width: '100%',
+        display: '-webkit-box',
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: 'vertical',
+        overflow: 'hidden',
+        wordBreak: 'break-word'
+      }
+    }, shortLabel(it)));
+  }), React.createElement("button", {
     onClick: () => setMenuOpen(true),
     style: {
       flex: 1,
+      minWidth: 0,
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
+      justifyContent: 'flex-start',
       gap: 3,
       border: 'none',
       background: menuOpen ? 'var(--surface-muted)' : 'transparent',
       cursor: 'pointer',
-      padding: '6px 4px',
-      color: 'var(--ink-3)'
+      padding: '9px 2px 7px',
+      color: menuOpen ? 'var(--accent)' : 'var(--ink-3)',
+      transition: 'color .15s'
     }
   }, React.createElement("svg", {
-    width: "22",
-    height: "22",
+    width: "21",
+    height: "21",
     viewBox: "0 0 24 24",
     fill: "none",
     stroke: "currentColor",
-    strokeWidth: "1.5",
+    strokeWidth: "1.8",
     strokeLinecap: "round"
   }, React.createElement("line", {
     x1: "3",
@@ -13114,8 +13183,10 @@ var MobileBottomBar = ({
     y2: "18"
   })), React.createElement("span", {
     style: {
-      fontSize: 9,
-      letterSpacing: '.02em'
+      fontSize: 10,
+      fontWeight: menuOpen ? 600 : 500,
+      lineHeight: 1.12,
+      textAlign: 'center'
     }
   }, tr('ទាំងអស់', 'More', 'すべて')))));
 };
