@@ -108,6 +108,7 @@ window.__logActivity = function (action, entity, detail) {
     });
     if (ss.activityLog.length > ACTIVITY_MAX) ss.activityLog.length = ACTIVITY_MAX;
     if (window.saveAllData) window.saveAllData(true);   // persist locally; cloud push rides the action's own save
+    try { window.__captureSnapshot && window.__captureSnapshot(true); } catch(e) {}   // restore point for this action
     if (window.__notifyAuditChanged) window.__notifyAuditChanged();
   } catch (e) {}
 };
@@ -146,12 +147,78 @@ const saveAllData = (skipCloud) => {
       currFeedback: window.__curriculumFeedback || {},
     }));
     window.__autoBackup?.();
+    try { window.__captureSnapshot && window.__captureSnapshot(); } catch(e) {}
   } catch(e) {}
   // Mirror the change up to Supabase when connected (debounced inside __sbSyncAll).
   // skipCloud=true for the periodic auto-save — only user-triggered changes push to cloud.
   if (!skipCloud) {
     try { if (window.__sbConfigured && window.__sbConfigured()) window.__sbSyncAll && window.__sbSyncAll(); } catch(e) {}
   }
+};
+
+// ── Restore points (point-in-time snapshots) ──────────────────────────────
+// A snapshot = the full local data blob + timestamp, kept in a local ring so the
+// admin can roll the whole system back to a chosen hour/day. Snapshots are
+// device-local (not synced — too large); restoring re-pushes to the cloud.
+const SNAP_KEY = 'anzen_snapshots';
+let __lastSnapTs = 0;
+function __readSnaps() { try { return JSON.parse(localStorage.getItem(SNAP_KEY) || '[]'); } catch(e) { return []; } }
+function __writeSnaps(list) {
+  let arr = list.slice(0, 40);                 // hard cap; newest-first
+  while (arr.length) {
+    try { localStorage.setItem(SNAP_KEY, JSON.stringify(arr)); return true; }
+    catch(e) { arr = arr.slice(0, arr.length - 1); }   // over quota → drop the oldest, retry
+  }
+  return false;
+}
+window.__captureSnapshot = function (force) {
+  const now = Date.now();
+  if (!force && now - __lastSnapTs < 90000) return;     // throttle automatic captures to ≥90s apart
+  __lastSnapTs = now;
+  try {
+    const data = localStorage.getItem(STORE_KEY);
+    if (!data) return;
+    const snaps = __readSnaps();
+    // collapse near-duplicate timestamps (avoid two within 2s)
+    if (snaps[0] && now - snaps[0].ts < 2000) { snaps[0] = { id: snaps[0].id, ts: now, data }; }
+    else snaps.unshift({ id: 'S' + now.toString(36), ts: now, data });
+    __writeSnaps(snaps);
+  } catch(e) {}
+};
+window.__listSnapshots = function () { return __readSnaps().map(s => ({ id: s.id, ts: s.ts })); };
+function __hydrateFromBlob(saved) {
+  const setArr = (arr, key) => { if (Array.isArray(arr)) { arr.length = 0; if (Array.isArray(saved[key])) arr.push(...saved[key]); } };
+  setArr(STUDENTS,'STUDENTS'); setArr(INSTRUCTORS,'INSTRUCTORS'); setArr(VEHICLES,'VEHICLES');
+  setArr(LESSONS,'LESSONS'); setArr(INVOICES,'INVOICES'); setArr(STAFF,'STAFF'); setArr(LEAVE_REQUESTS,'LEAVE_REQUESTS');
+  window.__staffData = saved.staffData || []; window.__applicationsData = saved.appData || [];
+  window.__bookingData = saved.bookData || []; window.__maintenanceData = saved.maintData || [];
+  window.__serviceLog = saved.serviceLog || []; window.__vehicleInspections = saved.inspections || [];
+  window.__inspRenames = saved.inspRenames || {}; window.__studentColorAssign = saved.studentColors || {};
+  window.__incidentData = saved.incidentLog || []; window.__expenseLog = saved.expenseLog || [];
+  window.__auditLog = saved.auditLog || []; window.__leaveData = saved.leaveData || [];
+  window.__waitlistData = saved.waitlist || []; window.__attendanceData = saved.attendanceData || {};
+  window.__payrollRuns = saved.payrollRuns || [];
+  try { if (saved.attToday) Object.assign(ATTENDANCE_TODAY, saved.attToday); } catch(e){}
+  try { if (saved.attWeek) Object.assign(ATTENDANCE_WEEK, saved.attWeek); } catch(e){}
+  window.__schoolSettings = saved.settings || {};
+  if (saved.staffPolicy) window.__staffPolicy = saved.staffPolicy;
+  window.__curriculumDone = new Set(saved.currDone || []);
+  window.__curriculumFeedback = saved.currFeedback || {};
+}
+window.__restoreSnapshot = async function (id) {
+  const s = __readSnaps().find(x => x.id === id);
+  if (!s) return false;
+  let saved; try { saved = JSON.parse(s.data); } catch(e) { return false; }
+  if (!saved) return false;
+  try { localStorage.setItem(STORE_KEY, s.data); } catch(e) {}   // local ← restored
+  try {
+    if (window.__sbConfigured && window.__sbConfigured() && window.__sbPushNow) {
+      __hydrateFromBlob(saved);          // load restored data into memory…
+      await window.__sbPushNow();         // …so the cloud is overwritten with the restored state
+    }
+  } catch(e) {}
+  setTimeout(() => { try { location.reload(); } catch(e) {} }, 300);
+  return true;
 };
 
 // Restore saved data on startup

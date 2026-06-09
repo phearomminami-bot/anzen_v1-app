@@ -1862,15 +1862,30 @@ const ENTITY_KM = {
   'lesson-content':'ខ្លឹមសារ​មេរៀន', settings:'ការ​កំណត់',
 };
 const AuditLog = () => {
-  const { tr, lang, confirm } = useAppActions();
+  const { tr, lang, confirm, toast } = useAppActions();
   const [filter, setFilter] = React.useState('all');
+  const [selSnap, setSelSnap] = React.useState('');
   const [, setVer] = React.useState(0);
   React.useEffect(() => { window.__notifyAuditChanged = () => setVer(n=>n+1); return ()=>{delete window.__notifyAuditChanged;}; }, []);
   const events = (window.__schoolSettings && window.__schoolSettings.activityLog) || [];
   const filters = [['all','ទាំងអស់','All'],['create','បង្កើត','Created'],['edit','កែ','Edited'],['delete','លុប','Deleted'],['settings','កំណត់','Settings']];
   const shown = filter==='all' ? events : events.filter(e => e.action === filter);
-  const fmtTime = (ts) => { try { return new Date(ts).toLocaleString(lang==='en'?'en-GB':'en-GB', {hour:'2-digit',minute:'2-digit'}); } catch(e){ return ''; } };
+  const fmtTime = (ts) => { try { return new Date(ts).toLocaleString('en-GB', {hour:'2-digit',minute:'2-digit'}); } catch(e){ return ''; } };
   const fmtDay  = (ts) => { try { return new Date(ts).toISOString().slice(0,10); } catch(e){ return ''; } };
+  const fmtDT   = (ts) => { try { const d=new Date(ts); return d.toISOString().slice(0,10)+' · '+d.toLocaleString('en-GB',{hour:'2-digit',minute:'2-digit'}); } catch(e){ return ''; } };
+
+  const snaps = (typeof window!=='undefined' && window.__listSnapshots) ? window.__listSnapshots() : [];
+  const doRestore = () => {
+    if (!selSnap) return;
+    const s = snaps.find(x => x.id === selSnap);
+    confirm?.({
+      title: tr('ស្ដារ​ឡើងវិញ?','Restore this point?'),
+      body:  tr('ទិន្នន័យ​ទាំងអស់​នឹង​ត្រឡប់​ទៅ​ស្ថានភាព​នៅ '+(s?fmtDT(s.ts):'')+'។ ការ​ផ្លាស់​ប្ដូរ​ក្រោយ​ពេល​នោះ​នឹង​បាត់។',
+                 'All data will revert to its state at '+(s?fmtDT(s.ts):'')+'. Any changes after that point will be lost.'),
+      confirmText: tr('ស្ដារ','Restore'), danger:true,
+      onConfirm: () => { toast?.(tr('កំពុង​ស្ដារ…','Restoring…'),'neutral'); if (window.__restoreSnapshot) window.__restoreSnapshot(selSnap); },
+    });
+  };
 
   const clearAll = () => confirm?.({
     title: tr('សម្អាត​ប្រវត្តិ?','Clear history?'),
@@ -1886,6 +1901,28 @@ const AuditLog = () => {
         {tr('បង្ហាញ​សកម្មភាព​របស់​គណនី​គ្រូ និង​អ្នក​ប្រើ​ផ្សេងៗ — បង្កើត លុប កែ ឬ​បញ្ចូល​ទិន្នន័យ។',
             'Shows what instructor and other accounts have created, edited, deleted or entered.')}
       </div>
+
+      {/* Restore to a point in time */}
+      {snaps.length > 0 && (
+        <div style={{background:'var(--surface-muted)',border:'1px solid var(--border)',borderRadius:10,padding:'12px 14px',marginBottom:14}}>
+          <div style={{fontSize:13,fontWeight:600,marginBottom:8,display:'flex',alignItems:'center',gap:6}}>
+            ↩ {tr('ស្ដារ​ទិន្នន័យ​តាម​ថ្ងៃ & ម៉ោង','Restore to a date & time')}
+          </div>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+            <select value={selSnap} onChange={e=>setSelSnap(e.target.value)}
+              style={{flex:'1 1 220px',minWidth:0,padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',fontSize:13}}>
+              <option value="">{tr('— ជ្រើស​ថ្ងៃ & ម៉ោង —','— pick date & time —')}</option>
+              {snaps.map(s => <option key={s.id} value={s.id}>{fmtDT(s.ts)}</option>)}
+            </select>
+            <Btn kind="primary" size="md" onClick={doRestore} style={selSnap?{}:{opacity:.5,pointerEvents:'none'}}>{tr('ស្ដារ','Restore')}</Btn>
+          </div>
+          <div style={{fontSize:11,color:'var(--ink-3)',marginTop:8}}>
+            {tr('មាន '+snaps.length+' ចំណុច​ស្ដារ​នៅ​លើ​ឧបករណ៍​នេះ · ការ​ស្ដារ​នឹង​ត្រឡប់​ប្រព័ន្ធ​ទាំងមូល​ទៅ​ពេល​នោះ។',
+                snaps.length+' restore points on this device · restoring reverts the whole system to that moment.')}
+          </div>
+        </div>
+      )}
+
       <div style={{display:'flex',gap:6,flexWrap:'wrap',padding:'0 0 12px'}}>
         {filters.map(([c,km,en])=>(
           <button key={c} onClick={()=>setFilter(c)} style={{

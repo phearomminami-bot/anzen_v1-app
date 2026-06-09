@@ -1130,11 +1130,17 @@ window.__trRegistry = {
   "DANGER ZONE": "ឌាមីន",
   "Delete account": "លុប​គណនី",
   "This action cannot be undone.": "សកម្ម​ភាព​នេះ​មិន​អាច​ត្រឡប់​​វិញ​បាន​ទេ​។",
+  "Restore this point?": "ស្ដារ​ឡើងវិញ?",
+  "All data will revert to its state at '+(s?fmtDT(s.ts):'": "ទិន្នន័យ​ទាំងអស់​នឹង​ត្រឡប់​ទៅ​ស្ថានភាព​នៅ '+(s?fmtDT(s.ts):'')+'។ ការ​ផ្លាស់​ប្ដូរ​ក្រោយ​ពេល​នោះ​នឹង​បាត់។",
+  "Restore": "ស្ដារ",
+  "Restoring…": "កំពុង​ស្ដារ…",
   "Clear history?": "សម្អាត​ប្រវត្តិ?",
   "All activity records will be removed.": "កំណត់​ហេតុ​សកម្មភាព​ទាំងអស់​នឹង​ត្រូវ​លុប។",
   "ACTIVITY HISTORY": "ប្រវត្តិ​សកម្មភាព",
   "Shows what instructor and other accounts have created, edited, deleted or entered.": "បង្ហាញ​សកម្មភាព​របស់​គណនី​គ្រូ និង​អ្នក​ប្រើ​ផ្សេងៗ — បង្កើត លុប កែ ឬ​បញ្ចូល​ទិន្នន័យ។",
-  "No activity yet": "មិន​ទាន់​មាន​សកម្មភាព",
+  "Restore to a date & time": "ស្ដារ​ទិន្នន័យ​តាម​ថ្ងៃ & ម៉ោង",
+  "— pick date & time —": "— ជ្រើស​ថ្ងៃ & ម៉ោង —",
+  "No activity yet": "មាន '+snaps.length+' ចំណុច​ស្ដារ​នៅ​លើ​ឧបករណ៍​នេះ · ការ​ស្ដារ​នឹង​ត្រឡប់​ប្រព័ន្ធ​ទាំងមូល​ទៅ​ពេល​នោះ។',\n                snaps.length+' restore points on this device · restoring reverts the whole system to that moment.')}\n          </div>\n        </div>\n      )}\n\n      <div style={{display:'flex',gap:6,flexWrap:'wrap',padding:'0 0 12px'}}>\n        {filters.map(([c,km,en])=>(\n          <button key={c} onClick={()=>setFilter(c)} style={{\n            padding:'4px 12px',\n            background: filter===c?'var(--ink)':'var(--surface-muted)',\n            color: filter===c?'var(--bg)':'var(--ink-2)',\n            border:'1px solid '+(filter===c?'var(--ink)':'var(--border)'),\n            borderRadius:999, fontSize:11, fontWeight:500, cursor:'pointer',\n          }}>{tr(km,en)}</button>\n        ))}\n      </div>\n\n      {shown.length === 0 && (\n        <div style={{padding:40,textAlign:'center',color:'var(--ink-3)',fontSize:13}}>\n          <div style={{fontSize:24,marginBottom:8}}>🕑</div>\n          <div>{tr('មិន​ទាន់​មាន​សកម្មភាព",
   "Activity will be recorded here as the system is used": "សកម្មភាព​នឹង​ត្រូវ​កត់ត្រា​នៅ​ទីនេះ",
   "Pushed to cloud ✓": "បានផ្ទេរទិន្នន័យទៅ Cloud ✓",
   "Push failed": "ផ្ទេរមានបញ្ហា — ' + (r?.error||''), 'Push failed — ' + (r?.error||'')), 'danger');\n    } catch (e) { toast(tr('ផ្ទេរមានបញ្ហា",
@@ -3584,6 +3590,9 @@ window.__logActivity = function (action, entity, detail) {
     });
     if (ss.activityLog.length > ACTIVITY_MAX) ss.activityLog.length = ACTIVITY_MAX;
     if (window.saveAllData) window.saveAllData(true);
+    try {
+      window.__captureSnapshot && window.__captureSnapshot(true);
+    } catch (e) {}
     if (window.__notifyAuditChanged) window.__notifyAuditChanged();
   } catch (e) {}
 };
@@ -3625,12 +3634,130 @@ var saveAllData = skipCloud => {
       currFeedback: window.__curriculumFeedback || {}
     }));
     window.__autoBackup?.();
+    try {
+      window.__captureSnapshot && window.__captureSnapshot();
+    } catch (e) {}
   } catch (e) {}
   if (!skipCloud) {
     try {
       if (window.__sbConfigured && window.__sbConfigured()) window.__sbSyncAll && window.__sbSyncAll();
     } catch (e) {}
   }
+};
+var SNAP_KEY = 'anzen_snapshots';
+var __lastSnapTs = 0;
+function __readSnaps() {
+  try {
+    return JSON.parse(localStorage.getItem(SNAP_KEY) || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+function __writeSnaps(list) {
+  var arr = list.slice(0, 40);
+  while (arr.length) {
+    try {
+      localStorage.setItem(SNAP_KEY, JSON.stringify(arr));
+      return true;
+    } catch (e) {
+      arr = arr.slice(0, arr.length - 1);
+    }
+  }
+  return false;
+}
+window.__captureSnapshot = function (force) {
+  var now = Date.now();
+  if (!force && now - __lastSnapTs < 90000) return;
+  __lastSnapTs = now;
+  try {
+    var data = localStorage.getItem(STORE_KEY);
+    if (!data) return;
+    var snaps = __readSnaps();
+    if (snaps[0] && now - snaps[0].ts < 2000) {
+      snaps[0] = {
+        id: snaps[0].id,
+        ts: now,
+        data
+      };
+    } else snaps.unshift({
+      id: 'S' + now.toString(36),
+      ts: now,
+      data
+    });
+    __writeSnaps(snaps);
+  } catch (e) {}
+};
+window.__listSnapshots = function () {
+  return __readSnaps().map(s => ({
+    id: s.id,
+    ts: s.ts
+  }));
+};
+function __hydrateFromBlob(saved) {
+  var setArr = (arr, key) => {
+    if (Array.isArray(arr)) {
+      arr.length = 0;
+      if (Array.isArray(saved[key])) arr.push(...saved[key]);
+    }
+  };
+  setArr(STUDENTS, 'STUDENTS');
+  setArr(INSTRUCTORS, 'INSTRUCTORS');
+  setArr(VEHICLES, 'VEHICLES');
+  setArr(LESSONS, 'LESSONS');
+  setArr(INVOICES, 'INVOICES');
+  setArr(STAFF, 'STAFF');
+  setArr(LEAVE_REQUESTS, 'LEAVE_REQUESTS');
+  window.__staffData = saved.staffData || [];
+  window.__applicationsData = saved.appData || [];
+  window.__bookingData = saved.bookData || [];
+  window.__maintenanceData = saved.maintData || [];
+  window.__serviceLog = saved.serviceLog || [];
+  window.__vehicleInspections = saved.inspections || [];
+  window.__inspRenames = saved.inspRenames || {};
+  window.__studentColorAssign = saved.studentColors || {};
+  window.__incidentData = saved.incidentLog || [];
+  window.__expenseLog = saved.expenseLog || [];
+  window.__auditLog = saved.auditLog || [];
+  window.__leaveData = saved.leaveData || [];
+  window.__waitlistData = saved.waitlist || [];
+  window.__attendanceData = saved.attendanceData || {};
+  window.__payrollRuns = saved.payrollRuns || [];
+  try {
+    if (saved.attToday) Object.assign(ATTENDANCE_TODAY, saved.attToday);
+  } catch (e) {}
+  try {
+    if (saved.attWeek) Object.assign(ATTENDANCE_WEEK, saved.attWeek);
+  } catch (e) {}
+  window.__schoolSettings = saved.settings || {};
+  if (saved.staffPolicy) window.__staffPolicy = saved.staffPolicy;
+  window.__curriculumDone = new Set(saved.currDone || []);
+  window.__curriculumFeedback = saved.currFeedback || {};
+}
+window.__restoreSnapshot = async function (id) {
+  var s = __readSnaps().find(x => x.id === id);
+  if (!s) return false;
+  var saved;
+  try {
+    saved = JSON.parse(s.data);
+  } catch (e) {
+    return false;
+  }
+  if (!saved) return false;
+  try {
+    localStorage.setItem(STORE_KEY, s.data);
+  } catch (e) {}
+  try {
+    if (window.__sbConfigured && window.__sbConfigured() && window.__sbPushNow) {
+      __hydrateFromBlob(saved);
+      await window.__sbPushNow();
+    }
+  } catch (e) {}
+  setTimeout(() => {
+    try {
+      location.reload();
+    } catch (e) {}
+  }, 300);
+  return true;
 };
 (() => {
   try {
@@ -53933,9 +54060,11 @@ var AuditLog = () => {
   var {
     tr,
     lang,
-    confirm
+    confirm,
+    toast
   } = useAppActions();
   var [filter, setFilter] = React.useState('all');
+  var [selSnap, setSelSnap] = React.useState('');
   var [, setVer] = React.useState(0);
   React.useEffect(() => {
     window.__notifyAuditChanged = () => setVer(n => n + 1);
@@ -53948,7 +54077,7 @@ var AuditLog = () => {
   var shown = filter === 'all' ? events : events.filter(e => e.action === filter);
   var fmtTime = ts => {
     try {
-      return new Date(ts).toLocaleString(lang === 'en' ? 'en-GB' : 'en-GB', {
+      return new Date(ts).toLocaleString('en-GB', {
         hour: '2-digit',
         minute: '2-digit'
       });
@@ -53962,6 +54091,32 @@ var AuditLog = () => {
     } catch (e) {
       return '';
     }
+  };
+  var fmtDT = ts => {
+    try {
+      var d = new Date(ts);
+      return d.toISOString().slice(0, 10) + ' · ' + d.toLocaleString('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (e) {
+      return '';
+    }
+  };
+  var snaps = typeof window !== 'undefined' && window.__listSnapshots ? window.__listSnapshots() : [];
+  var doRestore = () => {
+    if (!selSnap) return;
+    var s = snaps.find(x => x.id === selSnap);
+    confirm?.({
+      title: tr('ស្ដារ​ឡើងវិញ?', 'Restore this point?'),
+      body: tr('ទិន្នន័យ​ទាំងអស់​នឹង​ត្រឡប់​ទៅ​ស្ថានភាព​នៅ ' + (s ? fmtDT(s.ts) : '') + '។ ការ​ផ្លាស់​ប្ដូរ​ក្រោយ​ពេល​នោះ​នឹង​បាត់។', 'All data will revert to its state at ' + (s ? fmtDT(s.ts) : '') + '. Any changes after that point will be lost.'),
+      confirmText: tr('ស្ដារ', 'Restore'),
+      danger: true,
+      onConfirm: () => {
+        toast?.(tr('កំពុង​ស្ដារ…', 'Restoring…'), 'neutral');
+        if (window.__restoreSnapshot) window.__restoreSnapshot(selSnap);
+      }
+    });
   };
   var clearAll = () => confirm?.({
     title: tr('សម្អាត​ប្រវត្តិ?', 'Clear history?'),
@@ -53994,7 +54149,62 @@ var AuditLog = () => {
       color: 'var(--ink-3)',
       marginBottom: 10
     }
-  }, tr('បង្ហាញ​សកម្មភាព​របស់​គណនី​គ្រូ និង​អ្នក​ប្រើ​ផ្សេងៗ — បង្កើត លុប កែ ឬ​បញ្ចូល​ទិន្នន័យ។', 'Shows what instructor and other accounts have created, edited, deleted or entered.')), React.createElement("div", {
+  }, tr('បង្ហាញ​សកម្មភាព​របស់​គណនី​គ្រូ និង​អ្នក​ប្រើ​ផ្សេងៗ — បង្កើត លុប កែ ឬ​បញ្ចូល​ទិន្នន័យ។', 'Shows what instructor and other accounts have created, edited, deleted or entered.')), snaps.length > 0 && React.createElement("div", {
+    style: {
+      background: 'var(--surface-muted)',
+      border: '1px solid var(--border)',
+      borderRadius: 10,
+      padding: '12px 14px',
+      marginBottom: 14
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 13,
+      fontWeight: 600,
+      marginBottom: 8,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6
+    }
+  }, "\u21A9 ", tr('ស្ដារ​ទិន្នន័យ​តាម​ថ្ងៃ & ម៉ោង', 'Restore to a date & time')), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      flexWrap: 'wrap'
+    }
+  }, React.createElement("select", {
+    value: selSnap,
+    onChange: e => setSelSnap(e.target.value),
+    style: {
+      flex: '1 1 220px',
+      minWidth: 0,
+      padding: '9px 12px',
+      border: '1.5px solid var(--border)',
+      borderRadius: 8,
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      fontSize: 13
+    }
+  }, React.createElement("option", {
+    value: ""
+  }, tr('— ជ្រើស​ថ្ងៃ & ម៉ោង —', '— pick date & time —')), snaps.map(s => React.createElement("option", {
+    key: s.id,
+    value: s.id
+  }, fmtDT(s.ts)))), React.createElement(Btn, {
+    kind: "primary",
+    size: "md",
+    onClick: doRestore,
+    style: selSnap ? {} : {
+      opacity: .5,
+      pointerEvents: 'none'
+    }
+  }, tr('ស្ដារ', 'Restore'))), React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--ink-3)',
+      marginTop: 8
+    }
+  }, tr('មាន ' + snaps.length + ' ចំណុច​ស្ដារ​នៅ​លើ​ឧបករណ៍​នេះ · ការ​ស្ដារ​នឹង​ត្រឡប់​ប្រព័ន្ធ​ទាំងមូល​ទៅ​ពេល​នោះ។', snaps.length + ' restore points on this device · restoring reverts the whole system to that moment.'))), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
