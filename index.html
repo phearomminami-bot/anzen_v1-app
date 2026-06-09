@@ -105,6 +105,32 @@
     background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.4), transparent 40%);
     pointer-events:none;
   }
+
+  /* ── Native mobile feel ───────────────────────────────────────────────── */
+  html{ -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+  html,body{ overscroll-behavior:none; }      /* no page rubber-band / pull-to-refresh */
+  body{ -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none;
+        text-rendering:optimizeLegibility; }
+  /* remove the 300ms tap delay on anything interactive */
+  button,a,[role="button"],label,select,summary,
+  input[type="button"],input[type="submit"],input[type="checkbox"],input[type="radio"]{
+    touch-action:manipulation;
+  }
+  button,[role="button"]{ -webkit-user-select:none; user-select:none; }
+  /* tactile press feedback on touch devices only (don't fight desktop hover) */
+  @media (hover:none){
+    button:active,[role="button"]:active,a:active{ opacity:.55; transition:opacity .04s ease; }
+  }
+  /* momentum scrolling everywhere */
+  *{ -webkit-overflow-scrolling:touch; }
+  /* native accent colour for form controls */
+  input[type="checkbox"],input[type="radio"],input[type="range"],progress{ accent-color:var(--accent); }
+  /* slim scrollbars on desktop, hidden on phones (like a native app) */
+  ::-webkit-scrollbar{ width:8px;height:8px; }
+  ::-webkit-scrollbar-thumb{ background:var(--border-strong);border-radius:8px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  @media (max-width:1100px){ ::-webkit-scrollbar{ width:0;height:0; } }
+  @media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms!important;transition-duration:.01ms!important;} }
 </style>
 </head>
 <body>
@@ -3711,6 +3737,7 @@ var Modal = ({
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
   if (!open) return null;
+  var isMobile = window.innerWidth < 700;
   return ReactDOM.createPortal(React.createElement("div", {
     onMouseDown: onClose,
     style: {
@@ -3720,24 +3747,38 @@ var Modal = ({
       background: 'rgba(20,20,18,.4)',
       backdropFilter: 'blur(2px)',
       display: 'flex',
-      alignItems: 'center',
+      alignItems: isMobile ? 'flex-end' : 'center',
       justifyContent: 'center',
-      padding: 20,
+      padding: isMobile ? 0 : 20,
       animation: 'fadeIn .15s ease'
     }
   }, React.createElement("div", {
     onMouseDown: e => e.stopPropagation(),
     style: {
       background: 'var(--surface)',
-      borderRadius: 14,
-      width,
+      borderRadius: isMobile ? '18px 18px 0 0' : 14,
+      width: isMobile ? '100%' : width,
       maxWidth: '100%',
-      maxHeight: '85vh',
+      maxHeight: isMobile ? '92vh' : '85vh',
       overflow: 'auto',
+      paddingBottom: isMobile ? 'env(safe-area-inset-bottom,0px)' : 0,
       boxShadow: '0 24px 60px rgba(0,0,0,.25), 0 0 0 1px var(--border)',
-      animation: 'modalPop .18s cubic-bezier(.2,.8,.3,1)'
+      animation: isMobile ? 'sheetUp .26s cubic-bezier(.2,.8,.3,1)' : 'modalPop .18s cubic-bezier(.2,.8,.3,1)'
     }
-  }, children)), document.body);
+  }, isMobile && React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'center',
+      padding: '8px 0 2px'
+    }
+  }, React.createElement("div", {
+    style: {
+      width: 38,
+      height: 4,
+      borderRadius: 4,
+      background: 'var(--border-strong)'
+    }
+  })), children)), document.body);
 };
 var FormModal = ({
   open,
@@ -4237,6 +4278,7 @@ if (typeof document !== 'undefined' && !document.getElementById('anzen-anim')) {
   s.textContent = `
     @keyframes fadeIn { from{opacity:0} to{opacity:1} }
     @keyframes modalPop { from{opacity:0;transform:scale(.96) translateY(8px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    @keyframes sheetUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
     @keyframes drawerSlide { from{transform:translateX(20px);opacity:0} to{transform:translateX(0);opacity:1} }
     @keyframes toastSlide { from{transform:translateY(10px);opacity:0} to{transform:translateY(0);opacity:1} }
     button[data-clickable]:hover { background: var(--surface-muted) !important; }
@@ -12995,6 +13037,7 @@ var MobileBottomBar = ({
     key: it.id,
     onClick: () => onGo(it.id),
     style: {
+      position: 'relative',
       flex: 1,
       display: 'flex',
       flexDirection: 'column',
@@ -13005,9 +13048,19 @@ var MobileBottomBar = ({
       background: 'transparent',
       cursor: 'pointer',
       padding: '6px 4px',
-      color: current === it.id ? 'var(--accent)' : 'var(--ink-3)'
+      color: current === it.id ? 'var(--accent)' : 'var(--ink-3)',
+      transition: 'color .15s'
     }
-  }, React.createElement(Icon, {
+  }, current === it.id && React.createElement("span", {
+    style: {
+      position: 'absolute',
+      top: 0,
+      width: 26,
+      height: 3,
+      borderRadius: '0 0 3px 3px',
+      background: 'var(--accent)'
+    }
+  }), React.createElement(Icon, {
     name: it.icon,
     size: 22,
     stroke: current === it.id ? 2 : 1.5

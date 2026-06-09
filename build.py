@@ -175,6 +175,32 @@ HEAD = """<!doctype html>
     background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.4), transparent 40%);
     pointer-events:none;
   }
+
+  /* ── Native mobile feel ───────────────────────────────────────────────── */
+  html{ -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+  html,body{ overscroll-behavior:none; }      /* no page rubber-band / pull-to-refresh */
+  body{ -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none;
+        text-rendering:optimizeLegibility; }
+  /* remove the 300ms tap delay on anything interactive */
+  button,a,[role="button"],label,select,summary,
+  input[type="button"],input[type="submit"],input[type="checkbox"],input[type="radio"]{
+    touch-action:manipulation;
+  }
+  button,[role="button"]{ -webkit-user-select:none; user-select:none; }
+  /* tactile press feedback on touch devices only (don't fight desktop hover) */
+  @media (hover:none){
+    button:active,[role="button"]:active,a:active{ opacity:.55; transition:opacity .04s ease; }
+  }
+  /* momentum scrolling everywhere */
+  *{ -webkit-overflow-scrolling:touch; }
+  /* native accent colour for form controls */
+  input[type="checkbox"],input[type="radio"],input[type="range"],progress{ accent-color:var(--accent); }
+  /* slim scrollbars on desktop, hidden on phones (like a native app) */
+  ::-webkit-scrollbar{ width:8px;height:8px; }
+  ::-webkit-scrollbar-thumb{ background:var(--border-strong);border-radius:8px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  @media (max-width:1100px){ ::-webkit-scrollbar{ width:0;height:0; } }
+  @media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms!important;transition-duration:.01ms!important;} }
 </style>
 </head>
 <body>

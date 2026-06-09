@@ -11,19 +11,28 @@ const Modal = ({ open, onClose, children, width = 520 }) => {
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
   if (!open) return null;
+  const isMobile = window.innerWidth < 700;
   return ReactDOM.createPortal(
     <div onMouseDown={onClose} style={{
       position:'fixed', inset:0, zIndex:9000,
       background:'rgba(20,20,18,.4)', backdropFilter:'blur(2px)',
-      display:'flex', alignItems:'center', justifyContent:'center',
-      padding:20, animation:'fadeIn .15s ease',
+      display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center',
+      padding: isMobile ? 0 : 20, animation:'fadeIn .15s ease',
     }}>
       <div onMouseDown={e => e.stopPropagation()} style={{
-        background:'var(--surface)', borderRadius:14,
-        width, maxWidth:'100%', maxHeight:'85vh', overflow:'auto',
+        background:'var(--surface)',
+        borderRadius: isMobile ? '18px 18px 0 0' : 14,
+        width: isMobile ? '100%' : width, maxWidth:'100%',
+        maxHeight: isMobile ? '92vh' : '85vh', overflow:'auto',
+        paddingBottom: isMobile ? 'env(safe-area-inset-bottom,0px)' : 0,
         boxShadow:'0 24px 60px rgba(0,0,0,.25), 0 0 0 1px var(--border)',
-        animation:'modalPop .18s cubic-bezier(.2,.8,.3,1)',
-      }}>{children}</div>
+        animation: isMobile ? 'sheetUp .26s cubic-bezier(.2,.8,.3,1)' : 'modalPop .18s cubic-bezier(.2,.8,.3,1)',
+      }}>
+        {isMobile && <div style={{display:'flex',justifyContent:'center',padding:'8px 0 2px'}}>
+          <div style={{width:38,height:4,borderRadius:4,background:'var(--border-strong)'}}/>
+        </div>}
+        {children}
+      </div>
     </div>,
     document.body
   );
@@ -301,6 +310,7 @@ if (typeof document !== 'undefined' && !document.getElementById('anzen-anim')) {
   s.textContent = `
     @keyframes fadeIn { from{opacity:0} to{opacity:1} }
     @keyframes modalPop { from{opacity:0;transform:scale(.96) translateY(8px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    @keyframes sheetUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
     @keyframes drawerSlide { from{transform:translateX(20px);opacity:0} to{transform:translateX(0);opacity:1} }
     @keyframes toastSlide { from{transform:translateY(10px);opacity:0} to{transform:translateY(0);opacity:1} }
     button[data-clickable]:hover { background: var(--surface-muted) !important; }

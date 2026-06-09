@@ -268,10 +268,13 @@ const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
       }}>
         {quickItems.map(it=>(
           <button key={it.id} onClick={()=>onGo(it.id)} style={{
+            position:'relative',
             flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',
             gap:3,border:'none',background:'transparent',cursor:'pointer',padding:'6px 4px',
             color:current===it.id?'var(--accent)':'var(--ink-3)',
+            transition:'color .15s',
           }}>
+            {current===it.id && <span style={{position:'absolute',top:0,width:26,height:3,borderRadius:'0 0 3px 3px',background:'var(--accent)'}}/>}
             <Icon name={it.icon} size={22} stroke={current===it.id?2:1.5}/>
             <span style={{fontSize:9,fontWeight:current===it.id?600:400,letterSpacing:'.02em',maxWidth:56,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
               {ll(it)}
