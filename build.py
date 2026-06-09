@@ -98,7 +98,7 @@ HEAD = """<!doctype html>
     --border-strong: #C9C5BB;
     --ink: #1A1A19;
     --ink-2: #4A4A47;
-    --ink-3: #8A8881;
+    --ink-3: #6E6B62;
     --accent: #1B3A6B;
     --accent-soft: #E4EAF4;
     --gold: #F2B705;
@@ -122,8 +122,8 @@ HEAD = """<!doctype html>
     --border: #272C3C;
     --border-strong: #353C52;
     --ink: #E4E8F2;
-    --ink-2: #8A96B4;
-    --ink-3: #4E587A;
+    --ink-2: #AEB8D2;
+    --ink-3: #828DAD;
     --accent: #5E8AD0;
     --accent-soft: #1F2B45;
     --gold: #F2B705;
