@@ -227,7 +227,7 @@ const BAR_SHORT = {
 
 // Shared mobile header — logo + school name + theme/language toggles.
 // Used in the "More" menu and (with showDate) atop the dashboard.
-const MobileAppHeader = ({ showDate = false }) => {
+const MobileAppHeader = ({ title }) => {
   const { lang, tr, toast, setLang, dark, toggleDark } = useAppActions();
   const ss = window.__schoolSettings || {};
   const cycleLang = () => {
@@ -236,16 +236,13 @@ const MobileAppHeader = ({ showDate = false }) => {
     setLang && setLang(next);
     toast && toast(next==='km'?'ប្តូរ​ទៅ​ភាសា​ខ្មែរ':next==='jp'?'日本語に切り替えました':'Switched to English','good');
   };
-  const dateStr = (typeof todayStr === 'function') ? todayStr() : '';
+  const heading = title || ss.name || 'Anzen';
   const sq = {width:40,height:40,borderRadius:10,border:'1px solid var(--border)',background:'var(--surface-muted)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0};
   return (
-    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10}}>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,height:40}}>
       <div style={{display:'flex',alignItems:'center',gap:10,minWidth:0}}>
         {ss.logo ? <img src={ss.logo} style={{width:30,height:30,borderRadius:7,objectFit:'cover',flexShrink:0}} alt=""/> : <Logo size={30}/>}
-        <div style={{minWidth:0}}>
-          <div style={{fontSize:18,fontWeight:700,fontFamily:'var(--font-display)',lineHeight:1.1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{ss.name || 'Anzen'}</div>
-          {showDate && <div style={{fontSize:12,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.04em',marginTop:2}}>{dateStr}</div>}
-        </div>
+        <div style={{fontSize:18,fontWeight:700,fontFamily:'var(--font-display)',lineHeight:1.1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',minWidth:0}}>{heading}</div>
       </div>
       <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
         <button onClick={toggleDark} aria-label={tr('ផ្ទៃ​ខ្នង','Theme')} title={dark?tr('ប្ដូរ​ទៅ​ភ្លឺ','Switch to light'):tr('ប្ដូរ​ទៅ​ងងឹត','Switch to dark')} style={{...sq,fontSize:18}}>{dark?'🌙':'☀️'}</button>

@@ -13096,7 +13096,7 @@ var BAR_SHORT = {
   }
 };
 var MobileAppHeader = ({
-  showDate = false
+  title
 }) => {
   var {
     lang,
@@ -13113,7 +13113,7 @@ var MobileAppHeader = ({
     setLang && setLang(next);
     toast && toast(next === 'km' ? 'ប្តូរ​ទៅ​ភាសា​ខ្មែរ' : next === 'jp' ? '日本語に切り替えました' : 'Switched to English', 'good');
   };
-  var dateStr = typeof todayStr === 'function' ? todayStr() : '';
+  var heading = title || ss.name || 'Anzen';
   var sq = {
     width: 40,
     height: 40,
@@ -13131,7 +13131,8 @@ var MobileAppHeader = ({
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      gap: 10
+      gap: 10,
+      height: 40
     }
   }, React.createElement("div", {
     style: {
@@ -13154,27 +13155,16 @@ var MobileAppHeader = ({
     size: 30
   }), React.createElement("div", {
     style: {
-      minWidth: 0
-    }
-  }, React.createElement("div", {
-    style: {
       fontSize: 18,
       fontWeight: 700,
       fontFamily: 'var(--font-display)',
       lineHeight: 1.1,
       overflow: 'hidden',
       textOverflow: 'ellipsis',
-      whiteSpace: 'nowrap'
+      whiteSpace: 'nowrap',
+      minWidth: 0
     }
-  }, ss.name || 'Anzen'), showDate && React.createElement("div", {
-    style: {
-      fontSize: 12,
-      color: 'var(--ink-3)',
-      fontFamily: '"JetBrains Mono",monospace',
-      letterSpacing: '.04em',
-      marginTop: 2
-    }
-  }, dateStr))), React.createElement("div", {
+  }, heading)), React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -61641,6 +61631,8 @@ function App() {
   var DetailComp = detailEntry?.Component;
   var renderLayout = () => {
     if (bp.mobile) {
+      var curNav = items.find(i => i.id === current) || (NAV_ITEMS.admin || []).find(i => i.id === current);
+      var mobileTitle = curNav ? lang === 'km' ? curNav.km : lang === 'jp' ? curNav.jp || curNav.en : curNav.en : window.__schoolSettings?.name || 'Anzen';
       return React.createElement("div", {
         style: {
           display: 'flex',
@@ -61649,7 +61641,7 @@ function App() {
           width: '100vw',
           background: 'var(--bg)'
         }
-      }, current === 'dashboard' && React.createElement("div", {
+      }, React.createElement("div", {
         style: {
           flexShrink: 0,
           zIndex: 20,
@@ -61659,7 +61651,7 @@ function App() {
           padding: 'calc(10px + env(safe-area-inset-top,0px)) 14px 10px'
         }
       }, React.createElement(MobileAppHeader, {
-        showDate: true
+        title: mobileTitle
       })), React.createElement("main", {
         style: {
           flex: 1,
