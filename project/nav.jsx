@@ -227,7 +227,7 @@ const BAR_SHORT = {
 
 // Shared mobile header — logo + school name + theme/language toggles.
 // Used in the "More" menu and (with showDate) atop the dashboard.
-const MobileAppHeader = ({ title }) => {
+const MobileAppHeader = ({ title, subtitle }) => {
   const { lang, tr, toast, setLang, dark, toggleDark } = useAppActions();
   const ss = window.__schoolSettings || {};
   const cycleLang = () => {
@@ -239,10 +239,15 @@ const MobileAppHeader = ({ title }) => {
   const heading = title || ss.name || 'Anzen';
   const sq = {width:40,height:40,borderRadius:10,border:'1px solid var(--border)',background:'var(--surface-muted)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0};
   return (
-    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,height:40}}>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,minHeight:40}}>
       <div style={{display:'flex',alignItems:'center',gap:10,minWidth:0}}>
         {ss.logo ? <img src={ss.logo} style={{width:30,height:30,borderRadius:7,objectFit:'cover',flexShrink:0}} alt=""/> : <Logo size={30}/>}
-        <div style={{fontSize:18,fontWeight:700,fontFamily:'var(--font-display)',lineHeight:1.1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',minWidth:0}}>{heading}</div>
+        <div style={{minWidth:0}}>
+          {/* Khmer glyphs stack vertically — use the body Khmer font and a roomy
+              line-height so vowels/subscripts aren't clipped top or bottom. */}
+          <div style={{fontSize:17,fontWeight:700,fontFamily:'var(--font-en),var(--font-km),sans-serif',lineHeight:1.5,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',minWidth:0}}>{heading}</div>
+          {subtitle && <div style={{fontSize:12,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.04em',lineHeight:1.3}}>{subtitle}</div>}
+        </div>
       </div>
       <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
         <button onClick={toggleDark} aria-label={tr('ផ្ទៃ​ខ្នង','Theme')} title={dark?tr('ប្ដូរ​ទៅ​ភ្លឺ','Switch to light'):tr('ប្ដូរ​ទៅ​ងងឹត','Switch to dark')} style={{...sq,fontSize:18}}>{dark?'🌙':'☀️'}</button>

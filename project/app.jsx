@@ -427,15 +427,19 @@ function App() {
   const renderLayout = () => {
     // Mobile: always bottom bar, no sidebar
     if (bp.mobile) {
+      const isDash = current === 'dashboard';
       const curNav = items.find(i => i.id === current) || (NAV_ITEMS.admin || []).find(i => i.id === current);
-      const mobileTitle = curNav
+      const tabName = curNav
         ? (lang === 'km' ? curNav.km : lang === 'jp' ? (curNav.jp || curNav.en) : curNav.en)
         : (window.__schoolSettings?.name || 'Anzen');
+      // Dashboard shows the school name + today's date; other tabs show the tab title.
+      const mobileTitle    = isDash ? (window.__schoolSettings?.name || 'Anzen') : tabName;
+      const mobileSubtitle = isDash ? (typeof todayStr === 'function' ? todayStr() : null) : null;
       return (
         <div style={{display:'flex',flexDirection:'column',height:'100svh',width:'100vw',background:'var(--bg)'}}>
-          {/* Every tab gets the same fixed header — its own title, consistent size */}
+          {/* Every tab gets the same fixed header — its own title */}
           <div style={{flexShrink:0,zIndex:20,background:'var(--surface)',borderBottom:'1px solid var(--border)',boxShadow:'0 1px 10px rgba(0,0,0,.06)',padding:'calc(10px + env(safe-area-inset-top,0px)) 14px 10px'}}>
-            <MobileAppHeader title={mobileTitle}/>
+            <MobileAppHeader title={mobileTitle} subtitle={mobileSubtitle}/>
           </div>
           <main style={{flex:1,overflow:'auto',padding:'12px 14px',paddingBottom:'calc(72px + env(safe-area-inset-bottom,0px))'}}>{screens[current]}</main>
           <MobileBottomBar items={items} current={current} onGo={setCurrent} role={role} onLogout={logout}/>
