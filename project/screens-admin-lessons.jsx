@@ -169,20 +169,23 @@ const AlTextarea = React.forwardRef(({ onFocus, onBlur, ...p }, ref) => (
 (() => {
   if (typeof document === 'undefined' || document.getElementById('al-rte-style')) return;
   const st = document.createElement('style'); st.id = 'al-rte-style';
-  st.textContent = '.al-rte:empty:before{content:attr(data-ph);color:var(--ink-3)}.al-rte:focus{outline:none}.al-rte img{max-width:100%;border-radius:8px;margin:2px 4px;display:inline-block;vertical-align:middle;cursor:zoom-in}.al-rte img:hover{outline:2px solid var(--accent);outline-offset:1px}.al-rte ul{margin:6px 0;padding-left:22px}.al-rte li{margin:2px 0}';
+  st.textContent = '.al-rte:empty:before{content:attr(data-ph);color:var(--ink-3)}.al-rte:focus{outline:none}.al-rte img{max-width:100%;border-radius:8px;margin:2px 4px;display:inline-block;vertical-align:middle;cursor:zoom-in}.al-rte img:hover{outline:2px solid var(--accent);outline-offset:1px}.al-rte ul,.al-rte ol{margin:6px 0;padding-left:24px}.al-rte li{margin:2px 0}.al-rte h1{font-size:22px;font-weight:700;margin:8px 0 4px}.al-rte h2{font-size:18px;font-weight:700;margin:7px 0 4px}.al-rte h3{font-size:16px;font-weight:600;margin:6px 0 3px}.al-rte blockquote{border-left:3px solid var(--accent);margin:6px 0;padding:2px 12px;color:var(--ink-2)}.al-rte a{color:var(--accent);text-decoration:underline}.al-rte hr{border:none;border-top:1px solid var(--border);margin:10px 0}';
   document.head.appendChild(st);
 })();
 
 const RTE_COLORS = ['#111827','#e11d48','#2563eb','#16a34a','#d97706','#7c3aed','#0891b2'];
+const RTE_HILITES = ['#fef08a','#bbf7d0','#bfdbfe','#fbcfe8','#fed7aa'];
 const RTE_SIZES = [{km:'តូច',v:'2'},{km:'ធម្មតា',v:'3'},{km:'ធំ',v:'4'},{km:'ធំ​បំផុត',v:'6'}];
+const RTE_BLOCKS = [{km:'អត្ថបទ​ធម្មតា',v:'<p>'},{km:'ចំណងជើង ១',v:'<h1>'},{km:'ចំណងជើង ២',v:'<h2>'},{km:'ចំណងជើង ៣',v:'<h3>'},{km:'សម្រង់',v:'<blockquote>'}];
 
-const RteBtn = ({ onClick, title, children }) => (
+const RteBtn = ({ onClick, title, children, w }) => (
   <button type="button" title={title} onMouseDown={e=>e.preventDefault()} onClick={onClick} style={{
-    minWidth:32, height:30, padding:'0 8px', borderRadius:6, cursor:'pointer',
+    minWidth:w||30, height:30, padding:'0 7px', borderRadius:6, cursor:'pointer',
     border:'1px solid var(--border)', background:'var(--surface)', color:'var(--ink)',
     fontSize:14, display:'inline-flex', alignItems:'center', justifyContent:'center',
   }}>{children}</button>
 );
+const RteSep = () => <span style={{width:1,height:20,background:'var(--border)',margin:'0 2px',flexShrink:0}}/>;
 
 const RichBodyEditor = React.forwardRef(({ langKey, initialHtml, onChange, onBlur, placeholder }, ref) => {
   const edRef = React.useRef(null);
@@ -195,10 +198,9 @@ const RichBodyEditor = React.forwardRef(({ langKey, initialHtml, onChange, onBlu
     if (edRef.current && edRef.current.innerHTML !== (initialHtml || '')) edRef.current.innerHTML = initialHtml || '';
   }, [langKey]);
   const fire = () => { if (edRef.current) onChange(edRef.current.innerHTML); };
-  const exec = (cmd, val) => { if (edRef.current) edRef.current.focus(); try { document.execCommand(cmd, false, val); } catch(e) {} fire(); };
 
-  // Remember the caret position so an image lands exactly where the user was
-  // typing — even after the file picker steals focus from the editor.
+  // Remember the caret/selection so toolbar actions (and the image picker) apply
+  // to the right place even after a dropdown/picker briefly steals focus.
   const saveSel = () => {
     try {
       const sel = window.getSelection();
@@ -207,6 +209,26 @@ const RichBodyEditor = React.forwardRef(({ langKey, initialHtml, onChange, onBlu
         if (edRef.current && edRef.current.contains(r.commonAncestorContainer)) savedRange.current = r.cloneRange();
       }
     } catch(e) {}
+  };
+  const restoreSel = () => {
+    try {
+      const r = savedRange.current; const el = edRef.current;
+      if (r && el && el.contains(r.commonAncestorContainer)) {
+        const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      }
+    } catch(e) {}
+  };
+  const exec = (cmd, val) => {
+    if (edRef.current) edRef.current.focus();
+    restoreSel();
+    try { document.execCommand('styleWithCSS', false, true); } catch(e) {}
+    try { document.execCommand(cmd, false, val); } catch(e) {}
+    fire();
+  };
+  const setBlock = (tag) => exec('formatBlock', tag);
+  const addLink = () => {
+    const url = (typeof window !== 'undefined' && window.prompt) ? window.prompt('បញ្ចូល​តំណ · Enter link URL', 'https://') : '';
+    if (url && url.trim()) exec('createLink', url.trim());
   };
 
   // Insert the image inline at the saved caret (Word-style: it flows with text).
@@ -259,24 +281,61 @@ const RichBodyEditor = React.forwardRef(({ langKey, initialHtml, onChange, onBlu
   return (
     <div style={{border:'1px solid var(--border)',borderRadius:8,background:'var(--surface)',overflow:'hidden'}}>
       <input ref={fileRef} type="file" accept="image/*" style={{display:'none'}} onChange={pickImage}/>
-      <div style={{display:'flex',flexWrap:'wrap',gap:5,padding:'7px 8px',borderBottom:'1px solid var(--border)',background:'var(--surface-muted)',alignItems:'center'}}>
-        <RteBtn onClick={()=>exec('bold')}      title="Bold"><b>B</b></RteBtn>
-        <RteBtn onClick={()=>exec('italic')}    title="Italic"><i>I</i></RteBtn>
-        <RteBtn onClick={()=>exec('underline')} title="Underline"><span style={{textDecoration:'underline'}}>U</span></RteBtn>
-        <RteBtn onClick={()=>exec('insertUnorderedList')} title="ចំណុច​ត្រួយ · Bullets">•&nbsp;≡</RteBtn>
-        <span style={{width:1,height:20,background:'var(--border)',margin:'0 3px'}}/>
-        <select title="ទំហំ​អក្សរ · Font size" onMouseDown={e=>e.stopPropagation()}
+      <div style={{display:'flex',flexWrap:'wrap',gap:4,padding:'7px 8px',borderBottom:'1px solid var(--border)',background:'var(--surface-muted)',alignItems:'center'}}>
+        {/* Undo / redo */}
+        <RteBtn onClick={()=>exec('undo')} title="មិន​ធ្វើ​វិញ · Undo">↶</RteBtn>
+        <RteBtn onClick={()=>exec('redo')} title="ធ្វើ​ឡើង​វិញ · Redo">↷</RteBtn>
+        <RteSep/>
+        {/* Paragraph / heading style */}
+        <select title="រចនាបថ · Paragraph style" onMouseDown={saveSel}
+          onChange={e=>{ if(e.target.value) setBlock(e.target.value); e.target.selectedIndex=0; }}
+          style={{height:30,borderRadius:6,border:'1px solid var(--border)',background:'var(--surface)',color:'var(--ink)',fontSize:12,padding:'0 6px',cursor:'pointer'}}>
+          <option value="">រចនាបថ</option>
+          {RTE_BLOCKS.map(b=><option key={b.v} value={b.v}>{b.km}</option>)}
+        </select>
+        <select title="ទំហំ​អក្សរ · Font size" onMouseDown={saveSel}
           onChange={e=>{ if(e.target.value) exec('fontSize', e.target.value); e.target.selectedIndex=0; }}
           style={{height:30,borderRadius:6,border:'1px solid var(--border)',background:'var(--surface)',color:'var(--ink)',fontSize:12,padding:'0 6px',cursor:'pointer'}}>
           <option value="">ទំហំ</option>
           {RTE_SIZES.map(s=><option key={s.v} value={s.v}>{s.km}</option>)}
         </select>
-        <span style={{width:1,height:20,background:'var(--border)',margin:'0 3px'}}/>
+        <RteSep/>
+        {/* Character formatting */}
+        <RteBtn onClick={()=>exec('bold')}          title="ដិត · Bold"><b>B</b></RteBtn>
+        <RteBtn onClick={()=>exec('italic')}        title="ទ្រេត · Italic"><i>I</i></RteBtn>
+        <RteBtn onClick={()=>exec('underline')}     title="គូស​បន្ទាត់ · Underline"><span style={{textDecoration:'underline'}}>U</span></RteBtn>
+        <RteBtn onClick={()=>exec('strikeThrough')} title="គូស​ឆូត · Strikethrough"><span style={{textDecoration:'line-through'}}>S</span></RteBtn>
+        <RteSep/>
+        {/* Text colour */}
         {RTE_COLORS.map(c=>(
-          <button key={c} type="button" title="ពណ៌ · Colour" onMouseDown={e=>e.preventDefault()} onClick={()=>exec('foreColor', c)}
-            style={{width:20,height:20,borderRadius:'50%',background:c,border:'1px solid rgba(0,0,0,.2)',cursor:'pointer',padding:0,flexShrink:0}}/>
+          <button key={c} type="button" title="ពណ៌​អក្សរ · Text colour" onMouseDown={e=>e.preventDefault()} onClick={()=>exec('foreColor', c)}
+            style={{width:18,height:18,borderRadius:'50%',background:c,border:'1px solid rgba(0,0,0,.2)',cursor:'pointer',padding:0,flexShrink:0}}/>
         ))}
-        <span style={{width:1,height:20,background:'var(--border)',margin:'0 3px'}}/>
+        {/* Highlight */}
+        {RTE_HILITES.map(c=>(
+          <button key={c} type="button" title="​ពណ៌​ផ្ទៃ​ខាងក្រោយ · Highlight" onMouseDown={e=>e.preventDefault()} onClick={()=>exec('hiliteColor', c)}
+            style={{width:18,height:18,borderRadius:4,background:c,border:'1px solid rgba(0,0,0,.2)',cursor:'pointer',padding:0,flexShrink:0}}/>
+        ))}
+        <RteBtn onClick={()=>exec('hiliteColor','transparent')} title="ដក​ពណ៌​ផ្ទៃ · No highlight" w={26}>⌫</RteBtn>
+        <RteSep/>
+        {/* Alignment */}
+        <RteBtn onClick={()=>exec('justifyLeft')}   title="តម្រឹម​ឆ្វេង · Align left">≡</RteBtn>
+        <RteBtn onClick={()=>exec('justifyCenter')} title="តម្រឹម​កណ្ដាល · Align centre">☰</RteBtn>
+        <RteBtn onClick={()=>exec('justifyRight')}  title="តម្រឹម​ស្ដាំ · Align right">≣</RteBtn>
+        <RteBtn onClick={()=>exec('justifyFull')}   title="តម្រឹម​សងខាង · Justify">▤</RteBtn>
+        <RteSep/>
+        {/* Lists / indent */}
+        <RteBtn onClick={()=>exec('insertUnorderedList')} title="ចំណុច​ត្រួយ · Bullet list">•&nbsp;≡</RteBtn>
+        <RteBtn onClick={()=>exec('insertOrderedList')}   title="លេខ​រៀង · Numbered list">1.</RteBtn>
+        <RteBtn onClick={()=>exec('outdent')} title="បន្ថយ​ការ​ចូល​បន្ទាត់ · Outdent">⇤</RteBtn>
+        <RteBtn onClick={()=>exec('indent')}  title="ចូល​បន្ទាត់ · Indent">⇥</RteBtn>
+        <RteSep/>
+        {/* Link / divider / clear */}
+        <RteBtn onClick={addLink} title="តំណ · Link">🔗</RteBtn>
+        <RteBtn onClick={()=>exec('insertHorizontalRule')} title="បន្ទាត់​ខណ្ឌ · Divider">―</RteBtn>
+        <RteBtn onClick={()=>exec('removeFormat')} title="សម្អាត​ទ្រង់ទ្រាយ · Clear formatting" w={26}>✕</RteBtn>
+        <RteSep/>
+        {/* Image */}
         <button type="button" title="ដាក់​រូប · Insert image at cursor"
           onMouseDown={e=>{ e.preventDefault(); saveSel(); }}
           onClick={()=>fileRef.current && fileRef.current.click()}

@@ -19521,7 +19521,7 @@ Object.assign(window, {
 </script>
 
 <script>
-var LESSON_HTML_RE = /<(p|div|br|ul|ol|li|span|b|i|u|strong|em|font|h[1-6]|img)\b[^>]*>/i;
+var LESSON_HTML_RE = /<(p|div|br|ul|ol|li|span|b|i|u|s|strike|strong|em|mark|a|blockquote|pre|hr|font|h[1-6]|img)\b[^>]*>/i;
 var isLessonHtml = s => LESSON_HTML_RE.test(s || '');
 var escapeLessonHtml = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 var lessonMdToHtml = (md, images) => {
@@ -19575,13 +19575,14 @@ var sanitizeLessonHtml = (html, images) => {
   s = s.replace(/<\s*(script|style)[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, '');
   s = s.replace(/\son\w+\s*=\s*"[^"]*"/gi, '').replace(/\son\w+\s*=\s*'[^']*'/gi, '');
   s = s.replace(/(href|src)\s*=\s*"(\s*javascript:[^"]*)"/gi, '$1="#"');
+  s = s.replace(/<a\s+/gi, '<a target="_blank" rel="noopener noreferrer" ');
   return s;
 };
 (() => {
   if (typeof document === 'undefined' || document.getElementById('lesson-rich-style')) return;
   var st = document.createElement('style');
   st.id = 'lesson-rich-style';
-  st.textContent = '.lesson-rich-body img{max-width:100%;border-radius:8px;margin:4px;display:inline-block;vertical-align:middle;border:1px solid var(--border)}.lesson-rich-body ul{margin:6px 0;padding-left:22px}.lesson-rich-body li{margin:2px 0}.lesson-rich-body div{margin:2px 0}';
+  st.textContent = '.lesson-rich-body img{max-width:100%;border-radius:8px;margin:4px;display:inline-block;vertical-align:middle;border:1px solid var(--border)}.lesson-rich-body ul,.lesson-rich-body ol{margin:6px 0;padding-left:24px}.lesson-rich-body li{margin:2px 0}.lesson-rich-body div{margin:2px 0}.lesson-rich-body h1{font-size:20px;font-weight:700;margin:10px 0 4px}.lesson-rich-body h2{font-size:17px;font-weight:700;margin:9px 0 4px}.lesson-rich-body h3{font-size:15px;font-weight:600;margin:8px 0 3px}.lesson-rich-body blockquote{border-left:3px solid var(--accent);margin:6px 0;padding:2px 12px;color:var(--ink-2)}.lesson-rich-body a{color:var(--accent);text-decoration:underline}.lesson-rich-body hr{border:none;border-top:1px solid var(--border);margin:10px 0}';
   document.head.appendChild(st);
 })();
 var THEORY_TEXTS = [{
@@ -22099,10 +22100,11 @@ var AlTextarea = React.forwardRef(({
   if (typeof document === 'undefined' || document.getElementById('al-rte-style')) return;
   var st = document.createElement('style');
   st.id = 'al-rte-style';
-  st.textContent = '.al-rte:empty:before{content:attr(data-ph);color:var(--ink-3)}.al-rte:focus{outline:none}.al-rte img{max-width:100%;border-radius:8px;margin:2px 4px;display:inline-block;vertical-align:middle;cursor:zoom-in}.al-rte img:hover{outline:2px solid var(--accent);outline-offset:1px}.al-rte ul{margin:6px 0;padding-left:22px}.al-rte li{margin:2px 0}';
+  st.textContent = '.al-rte:empty:before{content:attr(data-ph);color:var(--ink-3)}.al-rte:focus{outline:none}.al-rte img{max-width:100%;border-radius:8px;margin:2px 4px;display:inline-block;vertical-align:middle;cursor:zoom-in}.al-rte img:hover{outline:2px solid var(--accent);outline-offset:1px}.al-rte ul,.al-rte ol{margin:6px 0;padding-left:24px}.al-rte li{margin:2px 0}.al-rte h1{font-size:22px;font-weight:700;margin:8px 0 4px}.al-rte h2{font-size:18px;font-weight:700;margin:7px 0 4px}.al-rte h3{font-size:16px;font-weight:600;margin:6px 0 3px}.al-rte blockquote{border-left:3px solid var(--accent);margin:6px 0;padding:2px 12px;color:var(--ink-2)}.al-rte a{color:var(--accent);text-decoration:underline}.al-rte hr{border:none;border-top:1px solid var(--border);margin:10px 0}';
   document.head.appendChild(st);
 })();
 var RTE_COLORS = ['#111827', '#e11d48', '#2563eb', '#16a34a', '#d97706', '#7c3aed', '#0891b2'];
+var RTE_HILITES = ['#fef08a', '#bbf7d0', '#bfdbfe', '#fbcfe8', '#fed7aa'];
 var RTE_SIZES = [{
   km: 'តូច',
   v: '2'
@@ -22116,19 +22118,36 @@ var RTE_SIZES = [{
   km: 'ធំ​បំផុត',
   v: '6'
 }];
+var RTE_BLOCKS = [{
+  km: 'អត្ថបទ​ធម្មតា',
+  v: '<p>'
+}, {
+  km: 'ចំណងជើង ១',
+  v: '<h1>'
+}, {
+  km: 'ចំណងជើង ២',
+  v: '<h2>'
+}, {
+  km: 'ចំណងជើង ៣',
+  v: '<h3>'
+}, {
+  km: 'សម្រង់',
+  v: '<blockquote>'
+}];
 var RteBtn = ({
   onClick,
   title,
-  children
+  children,
+  w
 }) => React.createElement("button", {
   type: "button",
   title: title,
   onMouseDown: e => e.preventDefault(),
   onClick: onClick,
   style: {
-    minWidth: 32,
+    minWidth: w || 30,
     height: 30,
-    padding: '0 8px',
+    padding: '0 7px',
     borderRadius: 6,
     cursor: 'pointer',
     border: '1px solid var(--border)',
@@ -22140,6 +22159,15 @@ var RteBtn = ({
     justifyContent: 'center'
   }
 }, children);
+var RteSep = () => React.createElement("span", {
+  style: {
+    width: 1,
+    height: 20,
+    background: 'var(--border)',
+    margin: '0 2px',
+    flexShrink: 0
+  }
+});
 var RichBodyEditor = React.forwardRef(({
   langKey,
   initialHtml,
@@ -22157,13 +22185,6 @@ var RichBodyEditor = React.forwardRef(({
   var fire = () => {
     if (edRef.current) onChange(edRef.current.innerHTML);
   };
-  var exec = (cmd, val) => {
-    if (edRef.current) edRef.current.focus();
-    try {
-      document.execCommand(cmd, false, val);
-    } catch (e) {}
-    fire();
-  };
   var saveSel = () => {
     try {
       var sel = window.getSelection();
@@ -22172,6 +22193,33 @@ var RichBodyEditor = React.forwardRef(({
         if (edRef.current && edRef.current.contains(r.commonAncestorContainer)) savedRange.current = r.cloneRange();
       }
     } catch (e) {}
+  };
+  var restoreSel = () => {
+    try {
+      var r = savedRange.current;
+      var el = edRef.current;
+      if (r && el && el.contains(r.commonAncestorContainer)) {
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(r);
+      }
+    } catch (e) {}
+  };
+  var exec = (cmd, val) => {
+    if (edRef.current) edRef.current.focus();
+    restoreSel();
+    try {
+      document.execCommand('styleWithCSS', false, true);
+    } catch (e) {}
+    try {
+      document.execCommand(cmd, false, val);
+    } catch (e) {}
+    fire();
+  };
+  var setBlock = tag => exec('formatBlock', tag);
+  var addLink = () => {
+    var url = typeof window !== 'undefined' && window.prompt ? window.prompt('បញ្ចូល​តំណ · Enter link URL', 'https://') : '';
+    if (url && url.trim()) exec('createLink', url.trim());
   };
   var insertImageAtCaret = dataUrl => {
     var el = edRef.current;
@@ -22242,38 +22290,43 @@ var RichBodyEditor = React.forwardRef(({
     style: {
       display: 'flex',
       flexWrap: 'wrap',
-      gap: 5,
+      gap: 4,
       padding: '7px 8px',
       borderBottom: '1px solid var(--border)',
       background: 'var(--surface-muted)',
       alignItems: 'center'
     }
   }, React.createElement(RteBtn, {
-    onClick: () => exec('bold'),
-    title: "Bold"
-  }, React.createElement("b", null, "B")), React.createElement(RteBtn, {
-    onClick: () => exec('italic'),
-    title: "Italic"
-  }, React.createElement("i", null, "I")), React.createElement(RteBtn, {
-    onClick: () => exec('underline'),
-    title: "Underline"
-  }, React.createElement("span", {
+    onClick: () => exec('undo'),
+    title: "\u1798\u17B7\u1793\u200B\u1792\u17D2\u179C\u17BE\u200B\u179C\u17B7\u1789 \xB7 Undo"
+  }, "\u21B6"), React.createElement(RteBtn, {
+    onClick: () => exec('redo'),
+    title: "\u1792\u17D2\u179C\u17BE\u200B\u17A1\u17BE\u1784\u200B\u179C\u17B7\u1789 \xB7 Redo"
+  }, "\u21B7"), React.createElement(RteSep, null), React.createElement("select", {
+    title: "\u179A\u1785\u1793\u17B6\u1794\u1790 \xB7 Paragraph style",
+    onMouseDown: saveSel,
+    onChange: e => {
+      if (e.target.value) setBlock(e.target.value);
+      e.target.selectedIndex = 0;
+    },
     style: {
-      textDecoration: 'underline'
+      height: 30,
+      borderRadius: 6,
+      border: '1px solid var(--border)',
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      fontSize: 12,
+      padding: '0 6px',
+      cursor: 'pointer'
     }
-  }, "U")), React.createElement(RteBtn, {
-    onClick: () => exec('insertUnorderedList'),
-    title: "\u1785\u17C6\u178E\u17BB\u1785\u200B\u178F\u17D2\u179A\u17BD\u1799 \xB7 Bullets"
-  }, "\u2022\xA0\u2261"), React.createElement("span", {
-    style: {
-      width: 1,
-      height: 20,
-      background: 'var(--border)',
-      margin: '0 3px'
-    }
-  }), React.createElement("select", {
+  }, React.createElement("option", {
+    value: ""
+  }, "\u179A\u1785\u1793\u17B6\u1794\u1790"), RTE_BLOCKS.map(b => React.createElement("option", {
+    key: b.v,
+    value: b.v
+  }, b.km))), React.createElement("select", {
     title: "\u1791\u17C6\u17A0\u17C6\u200B\u17A2\u1780\u17D2\u179F\u179A \xB7 Font size",
-    onMouseDown: e => e.stopPropagation(),
+    onMouseDown: saveSel,
     onChange: e => {
       if (e.target.value) exec('fontSize', e.target.value);
       e.target.selectedIndex = 0;
@@ -22293,22 +22346,35 @@ var RichBodyEditor = React.forwardRef(({
   }, "\u1791\u17C6\u17A0\u17C6"), RTE_SIZES.map(s => React.createElement("option", {
     key: s.v,
     value: s.v
-  }, s.km))), React.createElement("span", {
+  }, s.km))), React.createElement(RteSep, null), React.createElement(RteBtn, {
+    onClick: () => exec('bold'),
+    title: "\u178A\u17B7\u178F \xB7 Bold"
+  }, React.createElement("b", null, "B")), React.createElement(RteBtn, {
+    onClick: () => exec('italic'),
+    title: "\u1791\u17D2\u179A\u17C1\u178F \xB7 Italic"
+  }, React.createElement("i", null, "I")), React.createElement(RteBtn, {
+    onClick: () => exec('underline'),
+    title: "\u1782\u17BC\u179F\u200B\u1794\u1793\u17D2\u1791\u17B6\u178F\u17CB \xB7 Underline"
+  }, React.createElement("span", {
     style: {
-      width: 1,
-      height: 20,
-      background: 'var(--border)',
-      margin: '0 3px'
+      textDecoration: 'underline'
     }
-  }), RTE_COLORS.map(c => React.createElement("button", {
+  }, "U")), React.createElement(RteBtn, {
+    onClick: () => exec('strikeThrough'),
+    title: "\u1782\u17BC\u179F\u200B\u1786\u17BC\u178F \xB7 Strikethrough"
+  }, React.createElement("span", {
+    style: {
+      textDecoration: 'line-through'
+    }
+  }, "S")), React.createElement(RteSep, null), RTE_COLORS.map(c => React.createElement("button", {
     key: c,
     type: "button",
-    title: "\u1796\u178E\u17CC \xB7 Colour",
+    title: "\u1796\u178E\u17CC\u200B\u17A2\u1780\u17D2\u179F\u179A \xB7 Text colour",
     onMouseDown: e => e.preventDefault(),
     onClick: () => exec('foreColor', c),
     style: {
-      width: 20,
-      height: 20,
+      width: 18,
+      height: 18,
       borderRadius: '50%',
       background: c,
       border: '1px solid rgba(0,0,0,.2)',
@@ -22316,14 +22382,61 @@ var RichBodyEditor = React.forwardRef(({
       padding: 0,
       flexShrink: 0
     }
-  })), React.createElement("span", {
+  })), RTE_HILITES.map(c => React.createElement("button", {
+    key: c,
+    type: "button",
+    title: "\u200B\u1796\u178E\u17CC\u200B\u1795\u17D2\u1791\u17C3\u200B\u1781\u17B6\u1784\u1780\u17D2\u179A\u17C4\u1799 \xB7 Highlight",
+    onMouseDown: e => e.preventDefault(),
+    onClick: () => exec('hiliteColor', c),
     style: {
-      width: 1,
-      height: 20,
-      background: 'var(--border)',
-      margin: '0 3px'
+      width: 18,
+      height: 18,
+      borderRadius: 4,
+      background: c,
+      border: '1px solid rgba(0,0,0,.2)',
+      cursor: 'pointer',
+      padding: 0,
+      flexShrink: 0
     }
-  }), React.createElement("button", {
+  })), React.createElement(RteBtn, {
+    onClick: () => exec('hiliteColor', 'transparent'),
+    title: "\u178A\u1780\u200B\u1796\u178E\u17CC\u200B\u1795\u17D2\u1791\u17C3 \xB7 No highlight",
+    w: 26
+  }, "\u232B"), React.createElement(RteSep, null), React.createElement(RteBtn, {
+    onClick: () => exec('justifyLeft'),
+    title: "\u178F\u1798\u17D2\u179A\u17B9\u1798\u200B\u1786\u17D2\u179C\u17C1\u1784 \xB7 Align left"
+  }, "\u2261"), React.createElement(RteBtn, {
+    onClick: () => exec('justifyCenter'),
+    title: "\u178F\u1798\u17D2\u179A\u17B9\u1798\u200B\u1780\u178E\u17D2\u178A\u17B6\u179B \xB7 Align centre"
+  }, "\u2630"), React.createElement(RteBtn, {
+    onClick: () => exec('justifyRight'),
+    title: "\u178F\u1798\u17D2\u179A\u17B9\u1798\u200B\u179F\u17D2\u178A\u17B6\u17C6 \xB7 Align right"
+  }, "\u2263"), React.createElement(RteBtn, {
+    onClick: () => exec('justifyFull'),
+    title: "\u178F\u1798\u17D2\u179A\u17B9\u1798\u200B\u179F\u1784\u1781\u17B6\u1784 \xB7 Justify"
+  }, "\u25A4"), React.createElement(RteSep, null), React.createElement(RteBtn, {
+    onClick: () => exec('insertUnorderedList'),
+    title: "\u1785\u17C6\u178E\u17BB\u1785\u200B\u178F\u17D2\u179A\u17BD\u1799 \xB7 Bullet list"
+  }, "\u2022\xA0\u2261"), React.createElement(RteBtn, {
+    onClick: () => exec('insertOrderedList'),
+    title: "\u179B\u17C1\u1781\u200B\u179A\u17C0\u1784 \xB7 Numbered list"
+  }, "1."), React.createElement(RteBtn, {
+    onClick: () => exec('outdent'),
+    title: "\u1794\u1793\u17D2\u1790\u1799\u200B\u1780\u17B6\u179A\u200B\u1785\u17BC\u179B\u200B\u1794\u1793\u17D2\u1791\u17B6\u178F\u17CB \xB7 Outdent"
+  }, "\u21E4"), React.createElement(RteBtn, {
+    onClick: () => exec('indent'),
+    title: "\u1785\u17BC\u179B\u200B\u1794\u1793\u17D2\u1791\u17B6\u178F\u17CB \xB7 Indent"
+  }, "\u21E5"), React.createElement(RteSep, null), React.createElement(RteBtn, {
+    onClick: addLink,
+    title: "\u178F\u17C6\u178E \xB7 Link"
+  }, "\uD83D\uDD17"), React.createElement(RteBtn, {
+    onClick: () => exec('insertHorizontalRule'),
+    title: "\u1794\u1793\u17D2\u1791\u17B6\u178F\u17CB\u200B\u1781\u178E\u17D2\u178C \xB7 Divider"
+  }, "\u2015"), React.createElement(RteBtn, {
+    onClick: () => exec('removeFormat'),
+    title: "\u179F\u1798\u17D2\u17A2\u17B6\u178F\u200B\u1791\u17D2\u179A\u1784\u17CB\u1791\u17D2\u179A\u17B6\u1799 \xB7 Clear formatting",
+    w: 26
+  }, "\u2715"), React.createElement(RteSep, null), React.createElement("button", {
     type: "button",
     title: "\u178A\u17B6\u1780\u17CB\u200B\u179A\u17BC\u1794 \xB7 Insert image at cursor",
     onMouseDown: e => {

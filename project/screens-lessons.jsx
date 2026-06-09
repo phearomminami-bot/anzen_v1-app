@@ -7,7 +7,7 @@
 // ![](img:ID)) OR rich HTML produced by the WYSIWYG editor. These helpers detect
 // and safely render the HTML variant; defined here (loads before the admin
 // lesson editor) so both screens share one implementation.
-const LESSON_HTML_RE = /<(p|div|br|ul|ol|li|span|b|i|u|strong|em|font|h[1-6]|img)\b[^>]*>/i;
+const LESSON_HTML_RE = /<(p|div|br|ul|ol|li|span|b|i|u|s|strike|strong|em|mark|a|blockquote|pre|hr|font|h[1-6]|img)\b[^>]*>/i;
 const isLessonHtml = (s) => LESSON_HTML_RE.test(s || '');
 const escapeLessonHtml = (s) => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
@@ -45,6 +45,8 @@ const sanitizeLessonHtml = (html, images) => {
   s = s.replace(/<\s*(script|style)[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, '');
   s = s.replace(/\son\w+\s*=\s*"[^"]*"/gi, '').replace(/\son\w+\s*=\s*'[^']*'/gi, '');
   s = s.replace(/(href|src)\s*=\s*"(\s*javascript:[^"]*)"/gi, '$1="#"');
+  // open links safely in a new tab
+  s = s.replace(/<a\s+/gi, '<a target="_blank" rel="noopener noreferrer" ');
   return s;
 };
 
@@ -52,7 +54,7 @@ const sanitizeLessonHtml = (html, images) => {
 (() => {
   if (typeof document === 'undefined' || document.getElementById('lesson-rich-style')) return;
   const st = document.createElement('style'); st.id = 'lesson-rich-style';
-  st.textContent = '.lesson-rich-body img{max-width:100%;border-radius:8px;margin:4px;display:inline-block;vertical-align:middle;border:1px solid var(--border)}.lesson-rich-body ul{margin:6px 0;padding-left:22px}.lesson-rich-body li{margin:2px 0}.lesson-rich-body div{margin:2px 0}';
+  st.textContent = '.lesson-rich-body img{max-width:100%;border-radius:8px;margin:4px;display:inline-block;vertical-align:middle;border:1px solid var(--border)}.lesson-rich-body ul,.lesson-rich-body ol{margin:6px 0;padding-left:24px}.lesson-rich-body li{margin:2px 0}.lesson-rich-body div{margin:2px 0}.lesson-rich-body h1{font-size:20px;font-weight:700;margin:10px 0 4px}.lesson-rich-body h2{font-size:17px;font-weight:700;margin:9px 0 4px}.lesson-rich-body h3{font-size:15px;font-weight:600;margin:8px 0 3px}.lesson-rich-body blockquote{border-left:3px solid var(--accent);margin:6px 0;padding:2px 12px;color:var(--ink-2)}.lesson-rich-body a{color:var(--accent);text-decoration:underline}.lesson-rich-body hr{border:none;border-top:1px solid var(--border);margin:10px 0}';
   document.head.appendChild(st);
 })();
 
