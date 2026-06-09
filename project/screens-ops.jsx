@@ -968,13 +968,13 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
               </div>
             </div>
             <div>
-              <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5}}>{tr('Title (សម្រាប់បង្ហាញនៅលើផ្ទាំងកាលវិភាគ)','Title (shown on the schedule grid)')}</label>
+              <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5}}>Title</label>
               <input value={noteModal.title||''} onChange={e=>setNoteModal(m=>({...m,title:e.target.value}))}
                 placeholder={tr('ឧ. ប្រជុំគ្រូ','e.g. Teacher meeting')} autoFocus
                 style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',fontFamily:'var(--font-km),var(--font-en),inherit'}}/>
             </div>
             <div>
-              <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5}}>{tr('Description (សម្រាប់បង្ហាញនៅពេលចុចពីលើ note ដែលបានកំណត់ហើយ)','Description (shown when the note is opened)')}</label>
+              <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5}}>Description</label>
               <textarea value={noteModal.description||''} onChange={e=>setNoteModal(m=>({...m,description:e.target.value}))} rows={3}
                 placeholder={tr('ឧ. ប្រជុំគ្រូទាំងអស់ នៅបន្ទប់ប្រជុំ ម៉ោង ២ រសៀល','e.g. All-instructor meeting in the conference room at 2pm')}
                 style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',resize:'vertical',fontFamily:'var(--font-km),var(--font-en),inherit'}}/>

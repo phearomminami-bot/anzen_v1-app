@@ -492,9 +492,7 @@ window.__trRegistry = {
   "New note": "ចំណាំ​ថ្មី",
   "Book new lesson": "ណាត់​មេរៀន​ថ្មី",
   "Time": "ម៉ោង",
-  "Title (shown on the schedule grid)": "Title (សម្រាប់បង្ហាញនៅលើផ្ទាំងកាលវិភាគ)",
   "e.g. Teacher meeting": "ឧ. ប្រជុំគ្រូ",
-  "Description (shown when the note is opened)": "Description (សម្រាប់បង្ហាញនៅពេលចុចពីលើ note ដែលបានកំណត់ហើយ)",
   "e.g. All-instructor meeting in the conference room at 2pm": "ឧ. ប្រជុំគ្រូទាំងអស់ នៅបន្ទប់ប្រជុំ ម៉ោង ២ រសៀល",
   "Invite instructors": "អញ្ជើញ​គ្រូ",
   "+ Select instructor": "+ ជ្រើស​គ្រូ",
@@ -17896,7 +17894,7 @@ var ScheduleScreen = ({
       display: 'block',
       marginBottom: 5
     }
-  }, tr('Title (សម្រាប់បង្ហាញនៅលើផ្ទាំងកាលវិភាគ)', 'Title (shown on the schedule grid)')), React.createElement("input", {
+  }, "Title"), React.createElement("input", {
     value: noteModal.title || '',
     onChange: e => setNoteModal(m => ({
       ...m,
@@ -17924,7 +17922,7 @@ var ScheduleScreen = ({
       display: 'block',
       marginBottom: 5
     }
-  }, tr('Description (សម្រាប់បង្ហាញនៅពេលចុចពីលើ note ដែលបានកំណត់ហើយ)', 'Description (shown when the note is opened)')), React.createElement("textarea", {
+  }, "Description"), React.createElement("textarea", {
     value: noteModal.description || '',
     onChange: e => setNoteModal(m => ({
       ...m,
