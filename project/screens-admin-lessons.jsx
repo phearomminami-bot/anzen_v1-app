@@ -169,7 +169,7 @@ const AlTextarea = React.forwardRef(({ onFocus, onBlur, ...p }, ref) => (
 (() => {
   if (typeof document === 'undefined' || document.getElementById('al-rte-style')) return;
   const st = document.createElement('style'); st.id = 'al-rte-style';
-  st.textContent = '.al-rte:empty:before{content:attr(data-ph);color:var(--ink-3)}.al-rte:focus{outline:none}.al-rte img{max-width:100%;border-radius:8px;margin:6px 0;display:block}.al-rte ul{margin:6px 0;padding-left:22px}.al-rte li{margin:2px 0}';
+  st.textContent = '.al-rte:empty:before{content:attr(data-ph);color:var(--ink-3)}.al-rte:focus{outline:none}.al-rte img{max-width:100%;border-radius:8px;margin:2px 4px;display:inline-block;vertical-align:middle;cursor:zoom-in}.al-rte img:hover{outline:2px solid var(--accent);outline-offset:1px}.al-rte ul{margin:6px 0;padding-left:22px}.al-rte li{margin:2px 0}';
   document.head.appendChild(st);
 })();
 
@@ -186,6 +186,8 @@ const RteBtn = ({ onClick, title, children }) => (
 
 const RichBodyEditor = React.forwardRef(({ langKey, initialHtml, onChange, onBlur, placeholder }, ref) => {
   const edRef = React.useRef(null);
+  const fileRef = React.useRef(null);
+  const savedRange = React.useRef(null);
   React.useImperativeHandle(ref, () => edRef.current);
   // Load HTML into the (uncontrolled) editor on mount and whenever the language
   // switches — never on every keystroke, so the caret doesn't jump.
@@ -194,8 +196,69 @@ const RichBodyEditor = React.forwardRef(({ langKey, initialHtml, onChange, onBlu
   }, [langKey]);
   const fire = () => { if (edRef.current) onChange(edRef.current.innerHTML); };
   const exec = (cmd, val) => { if (edRef.current) edRef.current.focus(); try { document.execCommand(cmd, false, val); } catch(e) {} fire(); };
+
+  // Remember the caret position so an image lands exactly where the user was
+  // typing — even after the file picker steals focus from the editor.
+  const saveSel = () => {
+    try {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount) {
+        const r = sel.getRangeAt(0);
+        if (edRef.current && edRef.current.contains(r.commonAncestorContainer)) savedRange.current = r.cloneRange();
+      }
+    } catch(e) {}
+  };
+
+  // Insert the image inline at the saved caret (Word-style: it flows with text).
+  const insertImageAtCaret = (dataUrl) => {
+    const el = edRef.current; if (!el) return;
+    el.focus();
+    const sel = window.getSelection();
+    let range = savedRange.current;
+    if (range && el.contains(range.commonAncestorContainer)) { sel.removeAllRanges(); sel.addRange(range); }
+    range = sel.rangeCount ? sel.getRangeAt(0) : null;
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    img.setAttribute('data-sz', 'm');
+    img.style.width = '60%';
+    if (range && el.contains(range.commonAncestorContainer)) {
+      range.deleteContents();
+      range.insertNode(img);
+      // trailing space so the caret can continue typing right after the picture
+      const space = document.createTextNode(' ');
+      if (img.parentNode) img.parentNode.insertBefore(space, img.nextSibling);
+      const after = document.createRange();
+      after.setStartAfter(space); after.collapse(true);
+      sel.removeAllRanges(); sel.addRange(after);
+    } else {
+      el.appendChild(img);
+    }
+    savedRange.current = null;
+    fire();
+  };
+
+  const pickImage = async (e) => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    try { const url = await compressImageFile(f); insertImageAtCaret(url); } catch(err) {}
+  };
+
+  // Click an embedded image to cycle its size: small ↔ medium ↔ full.
+  const onEditorClick = (e) => {
+    const img = e.target;
+    if (img && img.tagName === 'IMG') {
+      const cur = img.getAttribute('data-sz') || 'm';
+      const next = cur === 's' ? 'm' : cur === 'm' ? 'l' : 's';
+      img.setAttribute('data-sz', next);
+      img.style.width = next === 's' ? '30%' : next === 'l' ? '100%' : '60%';
+      fire();
+    }
+  };
+
   return (
     <div style={{border:'1px solid var(--border)',borderRadius:8,background:'var(--surface)',overflow:'hidden'}}>
+      <input ref={fileRef} type="file" accept="image/*" style={{display:'none'}} onChange={pickImage}/>
       <div style={{display:'flex',flexWrap:'wrap',gap:5,padding:'7px 8px',borderBottom:'1px solid var(--border)',background:'var(--surface-muted)',alignItems:'center'}}>
         <RteBtn onClick={()=>exec('bold')}      title="Bold"><b>B</b></RteBtn>
         <RteBtn onClick={()=>exec('italic')}    title="Italic"><i>I</i></RteBtn>
@@ -213,11 +276,25 @@ const RichBodyEditor = React.forwardRef(({ langKey, initialHtml, onChange, onBlu
           <button key={c} type="button" title="ពណ៌ · Colour" onMouseDown={e=>e.preventDefault()} onClick={()=>exec('foreColor', c)}
             style={{width:20,height:20,borderRadius:'50%',background:c,border:'1px solid rgba(0,0,0,.2)',cursor:'pointer',padding:0,flexShrink:0}}/>
         ))}
+        <span style={{width:1,height:20,background:'var(--border)',margin:'0 3px'}}/>
+        <button type="button" title="ដាក់​រូប · Insert image at cursor"
+          onMouseDown={e=>{ e.preventDefault(); saveSel(); }}
+          onClick={()=>fileRef.current && fileRef.current.click()}
+          style={{height:30,padding:'0 10px',borderRadius:6,cursor:'pointer',border:'1px solid var(--border)',
+            background:'var(--surface)',color:'var(--ink)',fontSize:12,display:'inline-flex',alignItems:'center',gap:6}}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5L8 19"/>
+          </svg>
+          រូប
+        </button>
       </div>
       <div ref={edRef} className="al-rte" contentEditable suppressContentEditableWarning data-ph={placeholder||''}
-        onInput={fire} onBlur={onBlur}
-        style={{minHeight:300,maxHeight:'52vh',overflowY:'auto',padding:'12px 14px',fontSize:15,lineHeight:1.7,
+        onInput={fire} onBlur={()=>{ saveSel(); onBlur && onBlur(); }} onKeyUp={saveSel} onMouseUp={saveSel} onClick={onEditorClick}
+        style={{minHeight:320,maxHeight:'56vh',overflowY:'auto',padding:'12px 14px',fontSize:15,lineHeight:1.8,
           color:'var(--ink)',fontFamily:'var(--font-km),var(--font-en),sans-serif'}}/>
+      <div style={{padding:'6px 12px',fontSize:11,color:'var(--ink-3)',borderTop:'1px solid var(--border)',background:'var(--surface-muted)'}}>
+        🖼 ដាក់​ Cursor នៅ​កន្លែង​ដែល​ចង់​បាន រួច​ចុច​ប៊ូតុង «រូប» · ចុច​លើ​រូប​ដើម្បី​ប្ដូរ​ទំហំ (តូច / មធ្យម / ពេញ)
+      </div>
     </div>
   );
 });
@@ -337,15 +414,6 @@ const TextLessonForm = ({ initial, onSave, onCancel }) => {
   const setCurBody = enMode ? setBodyEn : setBodyKm;
   const curBodyRef = enMode ? bodyEnRef : bodyKmRef;
 
-  // Insert an image at the caret — embeds it directly in the HTML body.
-  const insertImage = (dataUrl) => {
-    const el = curBodyRef.current;
-    if (!el) return;
-    el.focus();
-    try { document.execCommand('insertImage', false, dataUrl); } catch(e) {}
-    setCurBody(el.innerHTML);
-  };
-
   const submit = () => {
     if (!km.trim() && !en.trim()) return;
     onSave({
@@ -374,9 +442,6 @@ const TextLessonForm = ({ initial, onSave, onCancel }) => {
         <RichBodyEditor ref={curBodyRef} langKey={enMode ? 'en' : 'km'} initialHtml={curBody}
           onChange={setCurBody}
           placeholder={enMode ? 'Lesson content…' : 'ខ្លឹមសារ​មេរៀន…'}/>
-        <div style={{display:'flex',gap:8,marginTop:8,alignItems:'center',flexWrap:'wrap'}}>
-          <ImagePickerButton label={tr('ដាក់​រូប','Insert image')} onPick={insertImage}/>
-        </div>
       </AlField>
       {/* English body is hidden — still auto-translated from Khmer on blur and saved. */}
       <div style={{gridColumn:'1 / -1',display:'flex',justifyContent:'flex-end',gap:8,marginTop:8}}>

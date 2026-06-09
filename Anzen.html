@@ -589,7 +589,6 @@ window.__trRegistry = {
   "路上 19h": "路上 19h",
   "Add an Anthropic API key in Settings → AI to auto-translate": "បញ្ចូល Anthropic API Key ក្នុង Settings → AI ដើម្បីបកប្រែស្វ័យប្រវត្តិ",
   "Image upload failed": "បន្ទុក​រូប​មិន​បាន",
-  "Insert image": "ដាក់​រូប",
   "Enter a YouTube ID to preview": "វាយ YouTube ID ដើម្បីមើល",
   "Add video": "បន្ថែម​វីដេអូ",
   "Questions": "សំណួរ",
@@ -19582,7 +19581,7 @@ var sanitizeLessonHtml = (html, images) => {
   if (typeof document === 'undefined' || document.getElementById('lesson-rich-style')) return;
   var st = document.createElement('style');
   st.id = 'lesson-rich-style';
-  st.textContent = '.lesson-rich-body img{max-width:100%;border-radius:8px;margin:8px 0;display:block;border:1px solid var(--border)}.lesson-rich-body ul{margin:6px 0;padding-left:22px}.lesson-rich-body li{margin:2px 0}.lesson-rich-body div{margin:2px 0}';
+  st.textContent = '.lesson-rich-body img{max-width:100%;border-radius:8px;margin:4px;display:inline-block;vertical-align:middle;border:1px solid var(--border)}.lesson-rich-body ul{margin:6px 0;padding-left:22px}.lesson-rich-body li{margin:2px 0}.lesson-rich-body div{margin:2px 0}';
   document.head.appendChild(st);
 })();
 var THEORY_TEXTS = [{
@@ -22100,7 +22099,7 @@ var AlTextarea = React.forwardRef(({
   if (typeof document === 'undefined' || document.getElementById('al-rte-style')) return;
   var st = document.createElement('style');
   st.id = 'al-rte-style';
-  st.textContent = '.al-rte:empty:before{content:attr(data-ph);color:var(--ink-3)}.al-rte:focus{outline:none}.al-rte img{max-width:100%;border-radius:8px;margin:6px 0;display:block}.al-rte ul{margin:6px 0;padding-left:22px}.al-rte li{margin:2px 0}';
+  st.textContent = '.al-rte:empty:before{content:attr(data-ph);color:var(--ink-3)}.al-rte:focus{outline:none}.al-rte img{max-width:100%;border-radius:8px;margin:2px 4px;display:inline-block;vertical-align:middle;cursor:zoom-in}.al-rte img:hover{outline:2px solid var(--accent);outline-offset:1px}.al-rte ul{margin:6px 0;padding-left:22px}.al-rte li{margin:2px 0}';
   document.head.appendChild(st);
 })();
 var RTE_COLORS = ['#111827', '#e11d48', '#2563eb', '#16a34a', '#d97706', '#7c3aed', '#0891b2'];
@@ -22149,6 +22148,8 @@ var RichBodyEditor = React.forwardRef(({
   placeholder
 }, ref) => {
   var edRef = React.useRef(null);
+  var fileRef = React.useRef(null);
+  var savedRange = React.useRef(null);
   React.useImperativeHandle(ref, () => edRef.current);
   React.useEffect(() => {
     if (edRef.current && edRef.current.innerHTML !== (initialHtml || '')) edRef.current.innerHTML = initialHtml || '';
@@ -22163,6 +22164,65 @@ var RichBodyEditor = React.forwardRef(({
     } catch (e) {}
     fire();
   };
+  var saveSel = () => {
+    try {
+      var sel = window.getSelection();
+      if (sel && sel.rangeCount) {
+        var r = sel.getRangeAt(0);
+        if (edRef.current && edRef.current.contains(r.commonAncestorContainer)) savedRange.current = r.cloneRange();
+      }
+    } catch (e) {}
+  };
+  var insertImageAtCaret = dataUrl => {
+    var el = edRef.current;
+    if (!el) return;
+    el.focus();
+    var sel = window.getSelection();
+    var range = savedRange.current;
+    if (range && el.contains(range.commonAncestorContainer)) {
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+    range = sel.rangeCount ? sel.getRangeAt(0) : null;
+    var img = document.createElement('img');
+    img.src = dataUrl;
+    img.setAttribute('data-sz', 'm');
+    img.style.width = '60%';
+    if (range && el.contains(range.commonAncestorContainer)) {
+      range.deleteContents();
+      range.insertNode(img);
+      var space = document.createTextNode(' ');
+      if (img.parentNode) img.parentNode.insertBefore(space, img.nextSibling);
+      var after = document.createRange();
+      after.setStartAfter(space);
+      after.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(after);
+    } else {
+      el.appendChild(img);
+    }
+    savedRange.current = null;
+    fire();
+  };
+  var pickImage = async e => {
+    var f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    try {
+      var url = await compressImageFile(f);
+      insertImageAtCaret(url);
+    } catch (err) {}
+  };
+  var onEditorClick = e => {
+    var img = e.target;
+    if (img && img.tagName === 'IMG') {
+      var cur = img.getAttribute('data-sz') || 'm';
+      var next = cur === 's' ? 'm' : cur === 'm' ? 'l' : 's';
+      img.setAttribute('data-sz', next);
+      img.style.width = next === 's' ? '30%' : next === 'l' ? '100%' : '60%';
+      fire();
+    }
+  };
   return React.createElement("div", {
     style: {
       border: '1px solid var(--border)',
@@ -22170,7 +22230,15 @@ var RichBodyEditor = React.forwardRef(({
       background: 'var(--surface)',
       overflow: 'hidden'
     }
-  }, React.createElement("div", {
+  }, React.createElement("input", {
+    ref: fileRef,
+    type: "file",
+    accept: "image/*",
+    style: {
+      display: 'none'
+    },
+    onChange: pickImage
+  }), React.createElement("div", {
     style: {
       display: 'flex',
       flexWrap: 'wrap',
@@ -22248,25 +22316,88 @@ var RichBodyEditor = React.forwardRef(({
       padding: 0,
       flexShrink: 0
     }
-  }))), React.createElement("div", {
+  })), React.createElement("span", {
+    style: {
+      width: 1,
+      height: 20,
+      background: 'var(--border)',
+      margin: '0 3px'
+    }
+  }), React.createElement("button", {
+    type: "button",
+    title: "\u178A\u17B6\u1780\u17CB\u200B\u179A\u17BC\u1794 \xB7 Insert image at cursor",
+    onMouseDown: e => {
+      e.preventDefault();
+      saveSel();
+    },
+    onClick: () => fileRef.current && fileRef.current.click(),
+    style: {
+      height: 30,
+      padding: '0 10px',
+      borderRadius: 6,
+      cursor: 'pointer',
+      border: '1px solid var(--border)',
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      fontSize: 12,
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 6
+    }
+  }, React.createElement("svg", {
+    width: "14",
+    height: "14",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }, React.createElement("rect", {
+    x: "3",
+    y: "5",
+    width: "18",
+    height: "14",
+    rx: "2"
+  }), React.createElement("circle", {
+    cx: "9",
+    cy: "11",
+    r: "2"
+  }), React.createElement("path", {
+    d: "M21 17l-5-5L8 19"
+  })), "\u179A\u17BC\u1794")), React.createElement("div", {
     ref: edRef,
     className: "al-rte",
     contentEditable: true,
     suppressContentEditableWarning: true,
     "data-ph": placeholder || '',
     onInput: fire,
-    onBlur: onBlur,
+    onBlur: () => {
+      saveSel();
+      onBlur && onBlur();
+    },
+    onKeyUp: saveSel,
+    onMouseUp: saveSel,
+    onClick: onEditorClick,
     style: {
-      minHeight: 300,
-      maxHeight: '52vh',
+      minHeight: 320,
+      maxHeight: '56vh',
       overflowY: 'auto',
       padding: '12px 14px',
       fontSize: 15,
-      lineHeight: 1.7,
+      lineHeight: 1.8,
       color: 'var(--ink)',
       fontFamily: 'var(--font-km),var(--font-en),sans-serif'
     }
-  }));
+  }), React.createElement("div", {
+    style: {
+      padding: '6px 12px',
+      fontSize: 11,
+      color: 'var(--ink-3)',
+      borderTop: '1px solid var(--border)',
+      background: 'var(--surface-muted)'
+    }
+  }, "\uD83D\uDDBC \u178A\u17B6\u1780\u17CB\u200B Cursor \u1793\u17C5\u200B\u1780\u1793\u17D2\u179B\u17C2\u1784\u200B\u178A\u17C2\u179B\u200B\u1785\u1784\u17CB\u200B\u1794\u17B6\u1793 \u179A\u17BD\u1785\u200B\u1785\u17BB\u1785\u200B\u1794\u17CA\u17BC\u178F\u17BB\u1784 \xAB\u179A\u17BC\u1794\xBB \xB7 \u1785\u17BB\u1785\u200B\u179B\u17BE\u200B\u179A\u17BC\u1794\u200B\u178A\u17BE\u1798\u17D2\u1794\u17B8\u200B\u1794\u17D2\u178A\u17BC\u179A\u200B\u1791\u17C6\u17A0\u17C6 (\u178F\u17BC\u1785 / \u1798\u1792\u17D2\u1799\u1798 / \u1796\u17C1\u1789)"));
 });
 var compressImageFile = (file, maxDim = 900, quality = 0.82) => new Promise((resolve, reject) => {
   if (!file || !file.type || !file.type.startsWith('image/')) {
@@ -22415,15 +22546,6 @@ var TextLessonForm = ({
   var curBody = enMode ? bodyEn : bodyKm;
   var setCurBody = enMode ? setBodyEn : setBodyKm;
   var curBodyRef = enMode ? bodyEnRef : bodyKmRef;
-  var insertImage = dataUrl => {
-    var el = curBodyRef.current;
-    if (!el) return;
-    el.focus();
-    try {
-      document.execCommand('insertImage', false, dataUrl);
-    } catch (e) {}
-    setCurBody(el.innerHTML);
-  };
   var submit = () => {
     if (!km.trim() && !en.trim()) return;
     onSave({
@@ -22475,18 +22597,7 @@ var TextLessonForm = ({
     initialHtml: curBody,
     onChange: setCurBody,
     placeholder: enMode ? 'Lesson content…' : 'ខ្លឹមសារ​មេរៀន…'
-  }), React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 8,
-      marginTop: 8,
-      alignItems: 'center',
-      flexWrap: 'wrap'
-    }
-  }, React.createElement(ImagePickerButton, {
-    label: tr('ដាក់​រូប', 'Insert image'),
-    onPick: insertImage
-  }))), React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       gridColumn: '1 / -1',
       display: 'flex',

@@ -52,7 +52,7 @@ const sanitizeLessonHtml = (html, images) => {
 (() => {
   if (typeof document === 'undefined' || document.getElementById('lesson-rich-style')) return;
   const st = document.createElement('style'); st.id = 'lesson-rich-style';
-  st.textContent = '.lesson-rich-body img{max-width:100%;border-radius:8px;margin:8px 0;display:block;border:1px solid var(--border)}.lesson-rich-body ul{margin:6px 0;padding-left:22px}.lesson-rich-body li{margin:2px 0}.lesson-rich-body div{margin:2px 0}';
+  st.textContent = '.lesson-rich-body img{max-width:100%;border-radius:8px;margin:4px;display:inline-block;vertical-align:middle;border:1px solid var(--border)}.lesson-rich-body ul{margin:6px 0;padding-left:22px}.lesson-rich-body li{margin:2px 0}.lesson-rich-body div{margin:2px 0}';
   document.head.appendChild(st);
 })();
 
