@@ -2111,8 +2111,22 @@ const DataBackup = ({ toast, tr }) => {
 
   const handleExportTranslations = () => {
     try {
-      const reg = window.__trRegistry || {};
-      const data = { 'anzen-translations': 'v1', translations: reg };
+      const reg    = window.__trRegistry || {};
+      const groups = window.__trGroups   || {};
+      const ov     = window.__trOverrides || {};
+      const seen = {};
+      // Grouped by screen, applying any current overrides so re-exports keep edits.
+      const out = {};
+      Object.keys(groups).forEach(g => {
+        out[g] = {};
+        Object.keys(groups[g]).forEach(en => { out[g][en] = ov[en] || groups[g][en]; seen[en] = 1; });
+      });
+      // Catch anything registered at runtime that isn't in a screen group.
+      const other = {};
+      Object.keys(reg).forEach(en => { if (!seen[en]) other[en] = ov[en] || reg[en]; });
+      if (Object.keys(other).length) out['ផ្សេងៗ · Other'] = other;
+      const total = Object.values(out).reduce((n,g)=>n+Object.keys(g).length, 0);
+      const data = { 'anzen-translations': 'v2', exportedAt: new Date().toISOString(), count: total, groups: out };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -2120,7 +2134,7 @@ const DataBackup = ({ toast, tr }) => {
       a.download = `anzen-translations-${localDateStr()}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      toast(tr('បាន​ export ការ​បក​ប្រែ ✓', 'Translations exported ✓'), 'good');
+      toast(tr(`បាន​ export ${total} ពាក្យ ✓`, `Exported ${total} phrases ✓`), 'good');
     } catch(e) { toast(tr('Export មានបញ្ហា','Export failed'), 'danger'); }
   };
 
@@ -2131,7 +2145,14 @@ const DataBackup = ({ toast, tr }) => {
     reader.onload = (ev) => {
       try {
         const parsed = JSON.parse(ev.target.result);
-        const translations = parsed.translations || parsed;
+        // Accept the grouped format (v2: { groups: { screen: {en:km} } }) or the
+        // older flat format ({ translations: {en:km} } or a bare {en:km}).
+        let translations = {};
+        if (parsed && parsed.groups && typeof parsed.groups === 'object') {
+          Object.values(parsed.groups).forEach(g => { if (g && typeof g === 'object') Object.assign(translations, g); });
+        } else {
+          translations = parsed.translations || parsed;
+        }
         if (typeof translations !== 'object' || Array.isArray(translations)) throw new Error('invalid');
         window.__trOverrides = { ...(window.__trOverrides || {}), ...translations };
         window.__notifyTrChanged?.();

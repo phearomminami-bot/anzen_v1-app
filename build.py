@@ -37,6 +37,92 @@ def extract_tr_registry(jsx_files: list) -> dict:
                 registry[en] = km
     return registry
 
+# Maps each source file to a human-readable screen group (km · en) for the
+# grouped translation export, plus the order groups should appear in.
+FILE_GROUPS = {
+    "screens-core.jsx":         "ផ្ទាំងគ្រប់គ្រង · Dashboard",
+    "screens-students.jsx":     "សិស្ស · Students",
+    "screens-people.jsx":       "សិស្ស & គ្រូ · Students & Instructors",
+    "screens-ops.jsx":          "កាលវិភាគ · Schedule",
+    "screens-lessons.jsx":      "មេរៀន · Lessons",
+    "screens-admin-lessons.jsx":"កែ​មេរៀន · Lesson editor",
+    "screens-fleet.jsx":        "យានយន្ត · Vehicles",
+    "screens-staff.jsx":        "បុគ្គលិក · Staff",
+    "screens-invoice.jsx":      "វិក្កយបត្រ · Billing",
+    "screens-finance.jsx":      "ហិរញ្ញវត្ថុ · Finance",
+    "screens-announce.jsx":     "ការ​ជូន​ដំណឹង · Announcements",
+    "screens-bookings.jsx":     "ការ​កក់ · Booking",
+    "screens-public.jsx":       "ទំព័រ​សាធារណៈ · Public site",
+    "screens-mobile.jsx":       "ទូរស័ព្ទ · Mobile",
+    "screens-downloads.jsx":    "ទាញ​យក · Downloads",
+    "screens-settings.jsx":     "ការ​កំណត់ · Settings",
+    "forms.jsx":                "ទម្រង់​បញ្ចូល · Forms",
+    "details.jsx":              "ព័ត៌មាន​លម្អិត · Details",
+    "nav.jsx":                  "ការ​រុករក · Navigation",
+    "widgets.jsx":              "ធាតុ​ផ្សំ · Widgets",
+    "ui.jsx":                   "រូបរាង​ទូទៅ · UI",
+    "data.jsx":                 "ទិន្នន័យ · Data",
+    "app.jsx":                  "ទូទៅ · General",
+}
+GROUP_DEFAULT = "ផ្សេងៗ · Other"
+# Order the groups appear in the exported file (screen groups first).
+GROUP_ORDER = [
+    "ផ្ទាំងគ្រប់គ្រង · Dashboard",
+    "សិស្ស · Students",
+    "សិស្ស & គ្រូ · Students & Instructors",
+    "កាលវិភាគ · Schedule",
+    "មេរៀន · Lessons",
+    "កែ​មេរៀន · Lesson editor",
+    "យានយន្ត · Vehicles",
+    "បុគ្គលិក · Staff",
+    "វិក្កយបត្រ · Billing",
+    "ហិរញ្ញវត្ថុ · Finance",
+    "ការ​ជូន​ដំណឹង · Announcements",
+    "ការ​កក់ · Booking",
+    "ទំព័រ​សាធារណៈ · Public site",
+    "ទូរស័ព្ទ · Mobile",
+    "ទាញ​យក · Downloads",
+    "ការ​កំណត់ · Settings",
+    "ទម្រង់​បញ្ចូល · Forms",
+    "ព័ត៌មាន​លម្អិត · Details",
+    "ការ​រុករក · Navigation",
+    "ធាតុ​ផ្សំ · Widgets",
+    "រូបរាង​ទូទៅ · UI",
+    "ទិន្នន័យ · Data",
+    "ទូទៅ · General",
+    GROUP_DEFAULT,
+]
+
+def extract_tr_groups(jsx_files):
+    """Group every tr('km','en') pair by the screen it lives in (first match wins)."""
+    pattern = re.compile(r"tr\(\s*['\"](.+?)['\"]\s*,\s*['\"](.+?)['\"]\s*[,)]", re.DOTALL)
+    raw = {}   # label -> {en: km}
+    seen = set()
+    for jsx_path in jsx_files:
+        label = FILE_GROUPS.get(jsx_path.name, GROUP_DEFAULT)
+        try:
+            content = jsx_path.read_text(encoding='utf-8')
+        except Exception:
+            continue
+        for km, en in pattern.findall(content):
+            if '${' in km or '${' in en:
+                continue
+            km = km.replace('\\n', ' ').strip()
+            en = en.replace('\\n', ' ').strip()
+            if not (en and km) or en in seen:
+                continue
+            seen.add(en)
+            raw.setdefault(label, {})[en] = km
+    # Re-order groups for a tidy export
+    groups = {}
+    for label in GROUP_ORDER:
+        if raw.get(label):
+            groups[label] = raw[label]
+    for label, pairs in raw.items():
+        if label not in groups:
+            groups[label] = pairs
+    return groups
+
 # Order matches the original head's <script> tags — dependencies first.
 JSX_ORDER = [
     "tweaks-panel.jsx",
@@ -272,9 +358,14 @@ TAIL = """
 def main():
     jsx_files = [PROJ / name for name in JSX_ORDER]
 
-    # Extract all tr() pairs before compiling
+    # Extract all tr() pairs before compiling — flat for runtime lookup, grouped
+    # by screen for a tidy translation export.
     registry = extract_tr_registry(jsx_files)
-    registry_js = f'\n<script>\nwindow.__trRegistry = {json.dumps(registry, ensure_ascii=False, indent=2)};\n</script>\n'
+    groups   = extract_tr_groups(jsx_files)
+    registry_js = (
+        f'\n<script>\nwindow.__trRegistry = {json.dumps(registry, ensure_ascii=False, indent=2)};\n'
+        f'window.__trGroups = {json.dumps(groups, ensure_ascii=False, indent=2)};\n</script>\n'
+    )
 
     parts = [HEAD, registry_js]
     total = len(JSX_ORDER)
