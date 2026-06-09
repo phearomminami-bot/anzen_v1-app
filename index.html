@@ -12934,6 +12934,127 @@ var BAR_SHORT = {
     en: 'News'
   }
 };
+var MobileAppHeader = ({
+  showDate = false
+}) => {
+  var {
+    lang,
+    tr,
+    toast,
+    setLang,
+    dark,
+    toggleDark
+  } = useAppActions();
+  var ss = window.__schoolSettings || {};
+  var cycleLang = () => {
+    var order = ['km', 'en', 'jp'];
+    var next = order[(order.indexOf(lang) + 1) % order.length];
+    setLang && setLang(next);
+    toast && toast(next === 'km' ? 'ប្តូរ​ទៅ​ភាសា​ខ្មែរ' : next === 'jp' ? '日本語に切り替えました' : 'Switched to English', 'good');
+  };
+  var dateStr = typeof todayStr === 'function' ? todayStr() : '';
+  var sq = {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    border: '1px solid var(--border)',
+    background: 'var(--surface-muted)',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0
+  };
+  return React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 10
+    }
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      minWidth: 0
+    }
+  }, ss.logo ? React.createElement("img", {
+    src: ss.logo,
+    style: {
+      width: 30,
+      height: 30,
+      borderRadius: 7,
+      objectFit: 'cover',
+      flexShrink: 0
+    },
+    alt: ""
+  }) : React.createElement(Logo, {
+    size: 30
+  }), React.createElement("div", {
+    style: {
+      minWidth: 0
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 18,
+      fontWeight: 700,
+      fontFamily: 'var(--font-display)',
+      lineHeight: 1.1,
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap'
+    }
+  }, ss.name || 'Anzen'), showDate && React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'var(--ink-3)',
+      fontFamily: '"JetBrains Mono",monospace',
+      letterSpacing: '.04em',
+      marginTop: 2
+    }
+  }, dateStr))), React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      flexShrink: 0
+    }
+  }, React.createElement("button", {
+    onClick: toggleDark,
+    "aria-label": tr('ផ្ទៃ​ខ្នង', 'Theme'),
+    title: dark ? tr('ប្ដូរ​ទៅ​ភ្លឺ', 'Switch to light') : tr('ប្ដូរ​ទៅ​ងងឹត', 'Switch to dark'),
+    style: {
+      ...sq,
+      fontSize: 18
+    }
+  }, dark ? '🌙' : '☀️'), React.createElement("button", {
+    onClick: cycleLang,
+    "aria-label": tr('ភាសា', 'Language'),
+    title: tr('ប្ដូរ​ភាសា', 'Change language'),
+    style: {
+      ...sq,
+      color: 'var(--ink-2)'
+    }
+  }, React.createElement("svg", {
+    width: "20",
+    height: "20",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "1.9",
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }, React.createElement("circle", {
+    cx: "12",
+    cy: "12",
+    r: "9"
+  }), React.createElement("path", {
+    d: "M3 12h18"
+  }), React.createElement("path", {
+    d: "M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"
+  })))));
+};
 var MobileBottomBar = ({
   items,
   current,
@@ -12985,96 +13106,11 @@ var MobileBottomBar = ({
   }, React.createElement("div", {
     style: {
       padding: '16px 20px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
       borderBottom: '1px solid var(--border)',
       flexShrink: 0,
       background: 'var(--surface)'
     }
-  }, React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: 10,
-      minWidth: 0
-    }
-  }, ss?.logo ? React.createElement("img", {
-    src: ss.logo,
-    style: {
-      width: 28,
-      height: 28,
-      borderRadius: 6,
-      objectFit: 'cover'
-    },
-    alt: ""
-  }) : React.createElement(Logo, {
-    size: 28
-  }), React.createElement("div", {
-    style: {
-      fontSize: 16,
-      fontWeight: 700,
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
-      whiteSpace: 'nowrap'
-    }
-  }, ss?.name || 'Anzen')), React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: 8,
-      flexShrink: 0
-    }
-  }, React.createElement("button", {
-    onClick: toggleDark,
-    "aria-label": tr('ផ្ទៃ​ខ្នង', 'Theme'),
-    title: dark ? tr('ប្ដូរ​ទៅ​ភ្លឺ', 'Switch to light') : tr('ប្ដូរ​ទៅ​ងងឹត', 'Switch to dark'),
-    style: {
-      width: 40,
-      height: 40,
-      borderRadius: 10,
-      border: '1px solid var(--border)',
-      background: 'var(--surface-muted)',
-      cursor: 'pointer',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontSize: 18
-    }
-  }, dark ? '🌙' : '☀️'), React.createElement("button", {
-    onClick: cycleLang,
-    "aria-label": tr('ភាសា', 'Language'),
-    title: tr('ប្ដូរ​ភាសា', 'Change language'),
-    style: {
-      width: 40,
-      height: 40,
-      borderRadius: 10,
-      border: '1px solid var(--border)',
-      background: 'var(--surface-muted)',
-      cursor: 'pointer',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: 'var(--ink-2)'
-    }
-  }, React.createElement("svg", {
-    width: "20",
-    height: "20",
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: "1.9",
-    strokeLinecap: "round",
-    strokeLinejoin: "round"
-  }, React.createElement("circle", {
-    cx: "12",
-    cy: "12",
-    r: "9"
-  }), React.createElement("path", {
-    d: "M3 12h18"
-  }), React.createElement("path", {
-    d: "M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"
-  }))))), React.createElement("nav", {
+  }, React.createElement(MobileAppHeader, null)), React.createElement("nav", {
     style: {
       flex: 1,
       padding: '10px 14px',
@@ -13895,7 +13931,8 @@ Object.assign(window, {
   Topbar,
   TabsBar,
   UserPill,
-  DarkToggleBtn
+  DarkToggleBtn,
+  MobileAppHeader
 });
 </script>
 
@@ -14101,7 +14138,9 @@ var DashboardAdmin = () => {
       flexDirection: 'column',
       gap: 18
     }
-  }, React.createElement("div", null, React.createElement("div", {
+  }, React.createElement("div", null, bp.mobile ? React.createElement(MobileAppHeader, {
+    showDate: true
+  }) : React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'baseline',
@@ -14577,13 +14616,15 @@ var DashboardInstructor = () => {
       flexDirection: 'column',
       gap: 18
     }
-  }, React.createElement("div", {
+  }, bp.mobile && React.createElement(MobileAppHeader, {
+    showDate: true
+  }), React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'flex-end'
     }
-  }, React.createElement("div", null, React.createElement("div", {
+  }, React.createElement("div", null, !bp.mobile && React.createElement("div", {
     style: {
       fontSize: 11,
       color: 'var(--ink-3)',
@@ -14767,6 +14808,7 @@ var DashboardStudent = ({
     tr,
     lang
   } = useAppActions();
+  var bp = useBreakpoint();
   var me = STUDENTS.find(s => s.id === studentId) || null;
   var u = LOGIN_USERS.student;
   var displayName = me ? lang === 'km' ? me.name : me.en : lang === 'km' ? u.km : u.en;
@@ -14783,7 +14825,9 @@ var DashboardStudent = ({
       flexDirection: 'column',
       gap: 18
     }
-  }, React.createElement("div", {
+  }, bp.mobile && React.createElement(MobileAppHeader, {
+    showDate: true
+  }), React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',

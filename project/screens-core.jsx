@@ -133,14 +133,16 @@ const DashboardAdmin = () => {
   <div style={{display:'flex',flexDirection:'column',gap:18}}>
     {/* ── Header ── */}
     <div>
-      <div style={{display:'flex',alignItems:'baseline',gap:14,flexWrap:'wrap'}}>
-        <div style={{fontSize:28,fontWeight:700,letterSpacing:'-.02em',fontFamily:'var(--font-display)'}}>
-          {ss.name || tr('Anzen','Anzen')}
-        </div>
-        <div style={{fontSize:16,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.04em',fontWeight:400}}>
-          {today}
-        </div>
-      </div>
+      {bp.mobile
+        ? <MobileAppHeader showDate/>
+        : <div style={{display:'flex',alignItems:'baseline',gap:14,flexWrap:'wrap'}}>
+            <div style={{fontSize:28,fontWeight:700,letterSpacing:'-.02em',fontFamily:'var(--font-display)'}}>
+              {ss.name || tr('Anzen','Anzen')}
+            </div>
+            <div style={{fontSize:16,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.04em',fontWeight:400}}>
+              {today}
+            </div>
+          </div>}
       <div style={{fontSize:13,color:'var(--ink-2)',marginTop:5}}>
         {todayLessons.length > 0 || newStudents > 0
           ? tr(
@@ -379,9 +381,10 @@ const DashboardInstructor = () => {
   const doneCnt      = todayLessons.filter(l => l.status==='done').length;
   return (
     <div style={{display:'flex',flexDirection:'column',gap:18}}>
+      {bp.mobile && <MobileAppHeader showDate/>}
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end'}}>
         <div>
-          <div style={{fontSize:11,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.08em'}}>{tr('ច័ន្ទ · មិថុនា 1, 2026','MON · JUNE 1, 2026')}</div>
+          {!bp.mobile && <div style={{fontSize:11,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.08em'}}>{tr('ច័ន្ទ · មិថុនា 1, 2026','MON · JUNE 1, 2026')}</div>}
           <div style={{fontSize:28,fontWeight:700,letterSpacing:'-.02em',marginTop:6,fontFamily:'var(--font-display)'}}>
             {tr('អរុណ​សួស្ដី លោក វិច្ឆេយ្យ · 5 មេរៀន​ថ្ងៃ​នេះ','Good morning, Vichea · 5 lessons today')}
           </div>
@@ -456,6 +459,7 @@ const DashboardInstructor = () => {
 
 const DashboardStudent = ({ studentId }) => {
   const { navigate, toast, tr, lang } = useAppActions();
+  const bp = useBreakpoint();
   const me = STUDENTS.find(s => s.id === studentId) || null;
   const u  = LOGIN_USERS.student;
 
@@ -470,6 +474,7 @@ const DashboardStudent = ({ studentId }) => {
 
   return (
     <div style={{display:'flex',flexDirection:'column',gap:18}}>
+      {bp.mobile && <MobileAppHeader showDate/>}
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end'}}>
         <div>
           <div style={{fontSize:11,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.08em'}}>
