@@ -513,17 +513,21 @@ const NoteDetail = ({ note, onClose }) => {
         <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
           <Badge tone="warn">📌 {tr('ចំណាំ','Note')}</Badge>
         </div>
-        <div style={{fontSize:32,fontWeight:600,marginTop:10,letterSpacing:'-.02em',fontFamily:'var(--font-display)'}}>
-          {note.time || '—'}
-        </div>
-        <div style={{fontSize:13,color:'var(--ink-3)',marginTop:4}}>{dateLabel}</div>
+        {(note.title || note.text) && (
+          <div style={{fontSize:24,fontWeight:700,marginTop:10,letterSpacing:'-.01em',fontFamily:'var(--font-display)'}}>
+            {note.title || note.text}
+          </div>
+        )}
+        <div style={{fontSize:13,color:'var(--ink-3)',marginTop:6}}>{[dateLabel, note.time].filter(Boolean).join(' · ')}</div>
       </div>
 
-      {/* Note text */}
-      <div style={{padding:14,background:'rgba(250,204,21,.12)',border:'1px solid rgba(250,204,21,.5)',borderRadius:10}}>
-        <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace',marginBottom:6}}>NOTE · ចំណាំ</div>
-        <div style={{fontSize:15,color:'var(--ink)',whiteSpace:'pre-wrap',wordBreak:'break-word',lineHeight:1.6}}>{note.text}</div>
-      </div>
+      {/* Description */}
+      {(note.description || (!note.title && note.text)) && (
+        <div style={{padding:14,background:'rgba(250,204,21,.12)',border:'1px solid rgba(250,204,21,.5)',borderRadius:10}}>
+          <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace',marginBottom:6}}>DESCRIPTION · ការ​ពិពណ៌នា</div>
+          <div style={{fontSize:15,color:'var(--ink)',whiteSpace:'pre-wrap',wordBreak:'break-word',lineHeight:1.6}}>{note.description || note.text}</div>
+        </div>
+      )}
 
       {/* Invited instructors */}
       {invited.length > 0 && (

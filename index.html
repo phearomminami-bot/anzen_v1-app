@@ -492,8 +492,13 @@ window.__trRegistry = {
   "New note": "ចំណាំ​ថ្មី",
   "Book new lesson": "ណាត់​មេរៀន​ថ្មី",
   "Time": "ម៉ោង",
-  "e.g. Teacher meeting at 2pm": "ឧ. ប្រជុំគ្រូ ម៉ោង ២ រសៀល",
+  "Title (shown on the schedule grid)": "Title (សម្រាប់បង្ហាញនៅលើផ្ទាំងកាលវិភាគ)",
+  "e.g. Teacher meeting": "ឧ. ប្រជុំគ្រូ",
+  "Description (shown when the note is opened)": "Description (សម្រាប់បង្ហាញនៅពេលចុចពីលើ note ដែលបានកំណត់ហើយ)",
+  "e.g. All-instructor meeting in the conference room at 2pm": "ឧ. ប្រជុំគ្រូទាំងអស់ នៅបន្ទប់ប្រជុំ ម៉ោង ២ រសៀល",
   "Invite instructors": "អញ្ជើញ​គ្រូ",
+  "+ Select instructor": "+ ជ្រើស​គ្រូ",
+  "Remove": "ដក​ចេញ",
   "No instructors": "មិន​មាន​គ្រូ",
   "Maintenance": "កាលវិភាគ​ថែទាំ",
   "Add vehicle": "បន្ថែមរថយន្ត",
@@ -925,7 +930,6 @@ window.__trRegistry = {
   "e.g. License Class B": "ឧ. បណ្ណបើកបរ B",
   "Optional note…": "ផ្សេងៗ…",
   "File (image or PDF)": "ឯកសារ (រូបភាព ឬ PDF)",
-  "Remove": "ដក​ចេញ",
   "Attach image / PDF": "ភ្ជាប់ រូប / PDF",
   "No documents yet – Send an invoice or add manually": "មិន​ទាន់​មាន​ឯកសារ – ផ្ញើ​វិក្កយបត្រ​ ឬ​ បន្ថែម​ដោយ​ដៃ",
   "View file": "មើល​ឯកសារ",
@@ -9586,21 +9590,21 @@ var NoteDetail = ({
     }
   }, React.createElement(Badge, {
     tone: "warn"
-  }, "\uD83D\uDCCC ", tr('ចំណាំ', 'Note'))), React.createElement("div", {
+  }, "\uD83D\uDCCC ", tr('ចំណាំ', 'Note'))), (note.title || note.text) && React.createElement("div", {
     style: {
-      fontSize: 32,
-      fontWeight: 600,
+      fontSize: 24,
+      fontWeight: 700,
       marginTop: 10,
-      letterSpacing: '-.02em',
+      letterSpacing: '-.01em',
       fontFamily: 'var(--font-display)'
     }
-  }, note.time || '—'), React.createElement("div", {
+  }, note.title || note.text), React.createElement("div", {
     style: {
       fontSize: 13,
       color: 'var(--ink-3)',
-      marginTop: 4
+      marginTop: 6
     }
-  }, dateLabel)), React.createElement("div", {
+  }, [dateLabel, note.time].filter(Boolean).join(' · '))), (note.description || !note.title && note.text) && React.createElement("div", {
     style: {
       padding: 14,
       background: 'rgba(250,204,21,.12)',
@@ -9615,7 +9619,7 @@ var NoteDetail = ({
       fontFamily: '"JetBrains Mono",monospace',
       marginBottom: 6
     }
-  }, "NOTE \xB7 \u1785\u17C6\u178E\u17B6\u17C6"), React.createElement("div", {
+  }, "DESCRIPTION \xB7 \u1780\u17B6\u179A\u200B\u1796\u17B7\u1796\u178E\u17CC\u1793\u17B6"), React.createElement("div", {
     style: {
       fontSize: 15,
       color: 'var(--ink)',
@@ -9623,7 +9627,7 @@ var NoteDetail = ({
       wordBreak: 'break-word',
       lineHeight: 1.6
     }
-  }, note.text)), invited.length > 0 && React.createElement("div", {
+  }, note.description || note.text)), invited.length > 0 && React.createElement("div", {
     style: {
       padding: 14,
       background: 'var(--surface-muted)',
@@ -16452,7 +16456,7 @@ var ScheduleWeek = ({
           e.stopPropagation();
           onNoteClick ? onNoteClick(n) : null;
         },
-        title: `${n.time} · ${n.text}`,
+        title: `${n.time} · ${n.title || n.text || ''}`,
         style: {
           position: 'absolute',
           top,
@@ -16492,7 +16496,7 @@ var ScheduleWeek = ({
           textOverflow: 'ellipsis',
           minWidth: 0
         }
-      }, n.text)), invitedNames.length > 0 && React.createElement("div", {
+      }, n.title || n.text)), invitedNames.length > 0 && React.createElement("div", {
         style: {
           fontSize: 9,
           color: '#92700a',
@@ -16916,23 +16920,29 @@ var ScheduleScreen = ({
     if (window.saveAllData) window.saveAllData();
   };
   var submitNote = () => {
-    var text = (noteModal?.text || '').trim();
-    if (!text) {
+    var title = (noteModal?.title || '').trim();
+    var description = (noteModal?.description || '').trim();
+    if (!title && !description) {
       setNoteModal(null);
       return;
     }
     var time = noteModal.time || '';
     var invited = noteModal.invited || [];
+    var text = title || description;
     if (noteModal.id) saveNotes(notes.map(n => n.id === noteModal.id ? {
       ...n,
       date: noteModal.date,
       time,
+      title,
+      description,
       text,
       invited
     } : n));else saveNotes([...notes, {
       id: 'N' + Date.now(),
       date: noteModal.date,
       time,
+      title,
+      description,
       text,
       author: noteModal.author || meName,
       invited
@@ -17023,7 +17033,8 @@ var ScheduleScreen = ({
     date,
     hour,
     time: String(hour).padStart(2, '0') + ':00',
-    text: '',
+    title: '',
+    description: '',
     author: meName,
     invited: []
   });
@@ -17031,7 +17042,8 @@ var ScheduleScreen = ({
     id: n.id,
     date: n.date,
     time: n.time || '',
-    text: n.text,
+    title: n.title || n.text || '',
+    description: n.description || '',
     author: n.author,
     invited: n.invited || []
   });
@@ -17213,7 +17225,8 @@ var ScheduleScreen = ({
       onClick: () => setNoteModal({
         date: allWeekDates[0] || today,
         time: '09:00',
-        text: '',
+        title: '',
+        description: '',
         author: meName,
         invited: []
       }),
@@ -17242,7 +17255,8 @@ var ScheduleScreen = ({
     onClick: () => setNoteModal({
       date: mobileDate,
       time: '09:00',
-      text: '',
+      title: '',
+      description: '',
       author: meName,
       invited: []
     }),
@@ -17570,11 +17584,19 @@ var ScheduleScreen = ({
     }, React.createElement("span", {
       style: {
         fontSize: 13,
+        fontWeight: 600,
         color: 'var(--ink)',
         whiteSpace: 'pre-wrap',
         wordBreak: 'break-word'
       }
-    }, n.text), React.createElement("div", {
+    }, n.title || n.text), n.description && React.createElement("span", {
+      style: {
+        fontSize: 12,
+        color: 'var(--ink-2)',
+        whiteSpace: 'pre-wrap',
+        wordBreak: 'break-word'
+      }
+    }, n.description), React.createElement("div", {
       style: {
         display: 'flex',
         flexWrap: 'wrap',
@@ -17874,15 +17896,42 @@ var ScheduleScreen = ({
       display: 'block',
       marginBottom: 5
     }
-  }, tr('អត្ថបទ', 'Note')), React.createElement("textarea", {
-    value: noteModal.text,
+  }, tr('Title (សម្រាប់បង្ហាញនៅលើផ្ទាំងកាលវិភាគ)', 'Title (shown on the schedule grid)')), React.createElement("input", {
+    value: noteModal.title || '',
     onChange: e => setNoteModal(m => ({
       ...m,
-      text: e.target.value
+      title: e.target.value
+    })),
+    placeholder: tr('ឧ. ប្រជុំគ្រូ', 'e.g. Teacher meeting'),
+    autoFocus: true,
+    style: {
+      width: '100%',
+      padding: '9px 12px',
+      border: '1.5px solid var(--border)',
+      borderRadius: 8,
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      font: 'inherit',
+      fontSize: 13,
+      boxSizing: 'border-box',
+      fontFamily: 'var(--font-km),var(--font-en),inherit'
+    }
+  })), React.createElement("div", null, React.createElement("label", {
+    style: {
+      fontSize: 11,
+      fontWeight: 600,
+      color: 'var(--ink-2)',
+      display: 'block',
+      marginBottom: 5
+    }
+  }, tr('Description (សម្រាប់បង្ហាញនៅពេលចុចពីលើ note ដែលបានកំណត់ហើយ)', 'Description (shown when the note is opened)')), React.createElement("textarea", {
+    value: noteModal.description || '',
+    onChange: e => setNoteModal(m => ({
+      ...m,
+      description: e.target.value
     })),
     rows: 3,
-    placeholder: tr('ឧ. ប្រជុំគ្រូ ម៉ោង ២ រសៀល', 'e.g. Teacher meeting at 2pm'),
-    autoFocus: true,
+    placeholder: tr('ឧ. ប្រជុំគ្រូទាំងអស់ នៅបន្ទប់ប្រជុំ ម៉ោង ២ រសៀល', 'e.g. All-instructor meeting in the conference room at 2pm'),
     style: {
       width: '100%',
       padding: '9px 12px',
@@ -17914,43 +17963,71 @@ var ScheduleScreen = ({
       color: 'var(--accent)',
       fontWeight: 700
     }
-  }, "\xB7 ", (noteModal.invited || []).length)), React.createElement("div", {
+  }, "\xB7 ", (noteModal.invited || []).length)), React.createElement("select", {
+    value: "",
+    onChange: e => {
+      if (e.target.value) toggleInvite(e.target.value);
+    },
+    style: {
+      width: '100%',
+      padding: '9px 12px',
+      border: '1.5px solid var(--border)',
+      borderRadius: 8,
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      font: 'inherit',
+      fontSize: 13,
+      boxSizing: 'border-box',
+      colorScheme: 'light dark'
+    }
+  }, React.createElement("option", {
+    value: ""
+  }, tr('+ ជ្រើស​គ្រូ', '+ Select instructor')), INSTRUCTORS.filter(i => !(noteModal.invited || []).includes(i.id)).map(i => React.createElement("option", {
+    key: i.id,
+    value: i.id
+  }, i.en || i.name))), (noteModal.invited || []).length > 0 && React.createElement("div", {
     style: {
       display: 'flex',
       flexWrap: 'wrap',
       gap: 6,
-      maxHeight: 140,
-      overflowY: 'auto'
+      marginTop: 8
     }
-  }, INSTRUCTORS.map(i => {
-    var on = (noteModal.invited || []).includes(i.id);
-    return React.createElement("button", {
-      key: i.id,
-      onClick: () => toggleInvite(i.id),
+  }, (noteModal.invited || []).map(id => {
+    var i = INSTRUCTORS.find(x => x.id === id);
+    if (!i) return null;
+    return React.createElement("span", {
+      key: id,
       style: {
-        display: 'flex',
+        display: 'inline-flex',
         alignItems: 'center',
         gap: 6,
         padding: '6px 11px',
         borderRadius: 20,
-        cursor: 'pointer',
-        border: '1px solid ' + (on ? 'var(--accent)' : 'var(--border)'),
-        background: on ? 'var(--accent-soft)' : 'var(--surface)',
-        color: on ? 'var(--accent)' : 'var(--ink-2)',
+        border: '1px solid var(--accent)',
+        background: 'var(--accent-soft)',
+        color: 'var(--accent)',
         fontSize: 12,
-        fontWeight: on ? 600 : 400
+        fontWeight: 600
       }
-    }, on && React.createElement(Icon, {
-      name: "check",
-      size: 11,
-      stroke: 3
-    }), lang === 'km' ? i.name : i.en || i.name);
-  }), INSTRUCTORS.length === 0 && React.createElement("span", {
+    }, i.en || i.name, React.createElement("button", {
+      onClick: () => toggleInvite(id),
+      title: tr('ដក​ចេញ', 'Remove'),
+      style: {
+        border: 'none',
+        background: 'none',
+        cursor: 'pointer',
+        color: 'var(--accent)',
+        fontSize: 15,
+        lineHeight: 1,
+        padding: 0
+      }
+    }, "\xD7"));
+  })), INSTRUCTORS.length === 0 && React.createElement("span", {
     style: {
       fontSize: 12,
       color: 'var(--ink-3)'
     }
-  }, tr('មិន​មាន​គ្រូ', 'No instructors')))), React.createElement("div", {
+  }, tr('មិន​មាន​គ្រូ', 'No instructors'))), React.createElement("div", {
     style: {
       fontSize: 11,
       color: 'var(--ink-3)',
