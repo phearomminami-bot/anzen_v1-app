@@ -1140,7 +1140,9 @@ window.__trRegistry = {
   "Shows what instructor and other accounts have created, edited, deleted or entered.": "បង្ហាញ​សកម្មភាព​របស់​គណនី​គ្រូ និង​អ្នក​ប្រើ​ផ្សេងៗ — បង្កើត លុប កែ ឬ​បញ្ចូល​ទិន្នន័យ។",
   "Restore to a date & time": "ស្ដារ​ទិន្នន័យ​តាម​ថ្ងៃ & ម៉ោង",
   "— pick date & time —": "— ជ្រើស​ថ្ងៃ & ម៉ោង —",
-  "No activity yet": "មាន '+snaps.length+' ចំណុច​ស្ដារ​នៅ​លើ​ឧបករណ៍​នេះ · ការ​ស្ដារ​នឹង​ត្រឡប់​ប្រព័ន្ធ​ទាំងមូល​ទៅ​ពេល​នោះ។',\n                snaps.length+' restore points on this device · restoring reverts the whole system to that moment.')}\n          </div>\n        </div>\n      )}\n\n      <div style={{display:'flex',gap:6,flexWrap:'wrap',padding:'0 0 12px'}}>\n        {filters.map(([c,km,en])=>(\n          <button key={c} onClick={()=>setFilter(c)} style={{\n            padding:'4px 12px',\n            background: filter===c?'var(--ink)':'var(--surface-muted)',\n            color: filter===c?'var(--bg)':'var(--ink-2)',\n            border:'1px solid '+(filter===c?'var(--ink)':'var(--border)'),\n            borderRadius:999, fontSize:11, fontWeight:500, cursor:'pointer',\n          }}>{tr(km,en)}</button>\n        ))}\n      </div>\n\n      {shown.length === 0 && (\n        <div style={{padding:40,textAlign:'center',color:'var(--ink-3)',fontSize:13}}>\n          <div style={{fontSize:24,marginBottom:8}}>🕑</div>\n          <div>{tr('មិន​ទាន់​មាន​សកម្មភាព",
+  "— no restore points yet —": "— មិន​ទាន់​មាន​ចំណុច​ស្ដារ —",
+  "Restore points are created automatically as data changes.": "មាន '+snaps.length+' ចំណុច​ស្ដារ​នៅ​លើ​ឧបករណ៍​នេះ · ការ​ស្ដារ​នឹង​ត្រឡប់​ប្រព័ន្ធ​ទាំងមូល​ទៅ​ពេល​នោះ។', snaps.length+' restore points on this device · restoring reverts the whole system to that moment.')\n            : tr('ចំណុច​ស្ដារ​នឹង​ត្រូវ​បាន​បង្កើត​ដោយ​ស្វ័យ​ប្រវត្តិ​នៅ​ពេល​មាន​ការ​ផ្លាស់​ប្ដូរ​ទិន្នន័យ។",
+  "No activity yet": "មិន​ទាន់​មាន​សកម្មភាព",
   "Activity will be recorded here as the system is used": "សកម្មភាព​នឹង​ត្រូវ​កត់ត្រា​នៅ​ទីនេះ",
   "Pushed to cloud ✓": "បានផ្ទេរទិន្នន័យទៅ Cloud ✓",
   "Push failed": "ផ្ទេរមានបញ្ហា — ' + (r?.error||''), 'Push failed — ' + (r?.error||'')), 'danger');\n    } catch (e) { toast(tr('ផ្ទេរមានបញ្ហា",
@@ -54075,6 +54077,13 @@ var AuditLog = () => {
       delete window.__notifyAuditChanged;
     };
   }, []);
+  React.useEffect(() => {
+    try {
+      if (window.saveAllData) window.saveAllData(true);
+      if (window.__captureSnapshot) window.__captureSnapshot(true);
+    } catch (e) {}
+    setVer(n => n + 1);
+  }, []);
   var events = window.__schoolSettings && window.__schoolSettings.activityLog || [];
   var filters = [['all', 'ទាំងអស់', 'All'], ['create', 'បង្កើត', 'Created'], ['edit', 'កែ', 'Edited'], ['delete', 'លុប', 'Deleted'], ['settings', 'កំណត់', 'Settings']];
   var shown = filter === 'all' ? events : events.filter(e => e.action === filter);
@@ -54152,7 +54161,7 @@ var AuditLog = () => {
       color: 'var(--ink-3)',
       marginBottom: 10
     }
-  }, tr('បង្ហាញ​សកម្មភាព​របស់​គណនី​គ្រូ និង​អ្នក​ប្រើ​ផ្សេងៗ — បង្កើត លុប កែ ឬ​បញ្ចូល​ទិន្នន័យ។', 'Shows what instructor and other accounts have created, edited, deleted or entered.')), snaps.length > 0 && React.createElement("div", {
+  }, tr('បង្ហាញ​សកម្មភាព​របស់​គណនី​គ្រូ និង​អ្នក​ប្រើ​ផ្សេងៗ — បង្កើត លុប កែ ឬ​បញ្ចូល​ទិន្នន័យ។', 'Shows what instructor and other accounts have created, edited, deleted or entered.')), React.createElement("div", {
     style: {
       background: 'var(--surface-muted)',
       border: '1px solid var(--border)',
@@ -54178,6 +54187,7 @@ var AuditLog = () => {
   }, React.createElement("select", {
     value: selSnap,
     onChange: e => setSelSnap(e.target.value),
+    disabled: snaps.length === 0,
     style: {
       flex: '1 1 220px',
       minWidth: 0,
@@ -54190,7 +54200,7 @@ var AuditLog = () => {
     }
   }, React.createElement("option", {
     value: ""
-  }, tr('— ជ្រើស​ថ្ងៃ & ម៉ោង —', '— pick date & time —')), snaps.map(s => React.createElement("option", {
+  }, snaps.length ? tr('— ជ្រើស​ថ្ងៃ & ម៉ោង —', '— pick date & time —') : tr('— មិន​ទាន់​មាន​ចំណុច​ស្ដារ —', '— no restore points yet —')), snaps.map(s => React.createElement("option", {
     key: s.id,
     value: s.id
   }, fmtDT(s.ts)))), React.createElement(Btn, {
@@ -54207,7 +54217,7 @@ var AuditLog = () => {
       color: 'var(--ink-3)',
       marginTop: 8
     }
-  }, tr('មាន ' + snaps.length + ' ចំណុច​ស្ដារ​នៅ​លើ​ឧបករណ៍​នេះ · ការ​ស្ដារ​នឹង​ត្រឡប់​ប្រព័ន្ធ​ទាំងមូល​ទៅ​ពេល​នោះ។', snaps.length + ' restore points on this device · restoring reverts the whole system to that moment.'))), React.createElement("div", {
+  }, snaps.length ? tr('មាន ' + snaps.length + ' ចំណុច​ស្ដារ​នៅ​លើ​ឧបករណ៍​នេះ · ការ​ស្ដារ​នឹង​ត្រឡប់​ប្រព័ន្ធ​ទាំងមូល​ទៅ​ពេល​នោះ។', snaps.length + ' restore points on this device · restoring reverts the whole system to that moment.') : tr('ចំណុច​ស្ដារ​នឹង​ត្រូវ​បាន​បង្កើត​ដោយ​ស្វ័យ​ប្រវត្តិ​នៅ​ពេល​មាន​ការ​ផ្លាស់​ប្ដូរ​ទិន្នន័យ។', 'Restore points are created automatically as data changes.'))), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,

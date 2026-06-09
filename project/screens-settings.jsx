@@ -1867,6 +1867,12 @@ const AuditLog = () => {
   const [selSnap, setSelSnap] = React.useState('');
   const [, setVer] = React.useState(0);
   React.useEffect(() => { window.__notifyAuditChanged = () => setVer(n=>n+1); return ()=>{delete window.__notifyAuditChanged;}; }, []);
+  // Make sure there is always at least one restore point to pick from when this
+  // tab is opened (snapshots are otherwise only made on saves/activity).
+  React.useEffect(() => {
+    try { if (window.saveAllData) window.saveAllData(true); if (window.__captureSnapshot) window.__captureSnapshot(true); } catch(e) {}
+    setVer(n=>n+1);
+  }, []);
   const events = (window.__schoolSettings && window.__schoolSettings.activityLog) || [];
   const filters = [['all','ទាំងអស់','All'],['create','បង្កើត','Created'],['edit','កែ','Edited'],['delete','លុប','Deleted'],['settings','កំណត់','Settings']];
   const shown = filter==='all' ? events : events.filter(e => e.action === filter);
@@ -1902,26 +1908,25 @@ const AuditLog = () => {
             'Shows what instructor and other accounts have created, edited, deleted or entered.')}
       </div>
 
-      {/* Restore to a point in time */}
-      {snaps.length > 0 && (
-        <div style={{background:'var(--surface-muted)',border:'1px solid var(--border)',borderRadius:10,padding:'12px 14px',marginBottom:14}}>
-          <div style={{fontSize:13,fontWeight:600,marginBottom:8,display:'flex',alignItems:'center',gap:6}}>
-            ↩ {tr('ស្ដារ​ទិន្នន័យ​តាម​ថ្ងៃ & ម៉ោង','Restore to a date & time')}
-          </div>
-          <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-            <select value={selSnap} onChange={e=>setSelSnap(e.target.value)}
-              style={{flex:'1 1 220px',minWidth:0,padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',fontSize:13}}>
-              <option value="">{tr('— ជ្រើស​ថ្ងៃ & ម៉ោង —','— pick date & time —')}</option>
-              {snaps.map(s => <option key={s.id} value={s.id}>{fmtDT(s.ts)}</option>)}
-            </select>
-            <Btn kind="primary" size="md" onClick={doRestore} style={selSnap?{}:{opacity:.5,pointerEvents:'none'}}>{tr('ស្ដារ','Restore')}</Btn>
-          </div>
-          <div style={{fontSize:11,color:'var(--ink-3)',marginTop:8}}>
-            {tr('មាន '+snaps.length+' ចំណុច​ស្ដារ​នៅ​លើ​ឧបករណ៍​នេះ · ការ​ស្ដារ​នឹង​ត្រឡប់​ប្រព័ន្ធ​ទាំងមូល​ទៅ​ពេល​នោះ។',
-                snaps.length+' restore points on this device · restoring reverts the whole system to that moment.')}
-          </div>
+      {/* Restore to a point in time — always shown */}
+      <div style={{background:'var(--surface-muted)',border:'1px solid var(--border)',borderRadius:10,padding:'12px 14px',marginBottom:14}}>
+        <div style={{fontSize:13,fontWeight:600,marginBottom:8,display:'flex',alignItems:'center',gap:6}}>
+          ↩ {tr('ស្ដារ​ទិន្នន័យ​តាម​ថ្ងៃ & ម៉ោង','Restore to a date & time')}
         </div>
-      )}
+        <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+          <select value={selSnap} onChange={e=>setSelSnap(e.target.value)} disabled={snaps.length===0}
+            style={{flex:'1 1 220px',minWidth:0,padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',fontSize:13}}>
+            <option value="">{snaps.length ? tr('— ជ្រើស​ថ្ងៃ & ម៉ោង —','— pick date & time —') : tr('— មិន​ទាន់​មាន​ចំណុច​ស្ដារ —','— no restore points yet —')}</option>
+            {snaps.map(s => <option key={s.id} value={s.id}>{fmtDT(s.ts)}</option>)}
+          </select>
+          <Btn kind="primary" size="md" onClick={doRestore} style={selSnap?{}:{opacity:.5,pointerEvents:'none'}}>{tr('ស្ដារ','Restore')}</Btn>
+        </div>
+        <div style={{fontSize:11,color:'var(--ink-3)',marginTop:8}}>
+          {snaps.length
+            ? tr('មាន '+snaps.length+' ចំណុច​ស្ដារ​នៅ​លើ​ឧបករណ៍​នេះ · ការ​ស្ដារ​នឹង​ត្រឡប់​ប្រព័ន្ធ​ទាំងមូល​ទៅ​ពេល​នោះ។', snaps.length+' restore points on this device · restoring reverts the whole system to that moment.')
+            : tr('ចំណុច​ស្ដារ​នឹង​ត្រូវ​បាន​បង្កើត​ដោយ​ស្វ័យ​ប្រវត្តិ​នៅ​ពេល​មាន​ការ​ផ្លាស់​ប្ដូរ​ទិន្នន័យ។','Restore points are created automatically as data changes.')}
+        </div>
+      </div>
 
       <div style={{display:'flex',gap:6,flexWrap:'wrap',padding:'0 0 12px'}}>
         {filters.map(([c,km,en])=>(
