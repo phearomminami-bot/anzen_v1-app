@@ -918,10 +918,10 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
         : v==='month'  ? <ScheduleMonth  {...viewProps}/>
         :                <ScheduleAgenda {...viewProps}/>}
 
-      {/* Mobile: PDF export at the bottom */}
+      {/* Mobile: PDF export at the bottom — agenda (list) layout reads cleanly on a phone */}
       {bp.mobile && (
         <Btn kind="ghost" size="md" style={{justifyContent:'center'}}
-          onClick={()=>generateSchedulePDF({lessons:visibleLessons,weekDates:allWeekDates,viewType:'week',labelEn,instFilter,vehFilter,studentFilter})}
+          onClick={()=>generateSchedulePDF({lessons:visibleLessons,weekDates:allWeekDates,viewType:'agenda',labelEn,instFilter,vehFilter,studentFilter})}
           icon={<Icon name="download" size={14}/>}>{tr('ទាញ​យក PDF','Download PDF')}</Btn>
       )}
 
