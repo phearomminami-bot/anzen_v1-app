@@ -525,7 +525,7 @@ window.__trRegistry = {
   "Clear": "សម្អាត",
   "Stop": "ឈប់",
   "Clear all highlights": "លុប​ highlight​ ទាំង​អស់",
-  "Download PDF": "ទាញយក PDF",
+  "Download PDF (month)": "ទាញ​យក PDF (ប្រចាំ​ខែ)",
   "Student colours": "ពណ៌សិស្ស",
   "Graduated": "បានបញ្ចប់",
   "Edit note": "កែ​ចំណាំ",
@@ -771,6 +771,7 @@ window.__trRegistry = {
   "No accidents for this vehicle": "គ្មាន​គ្រោះថ្នាក់​សម្រាប់​យានយន្ត​នេះ",
   "Notes / Remarks": "កំណត់សម្គាល់",
   "Damage, observations, or other notes…": "ការខូចខាត ឬ ចំណាំផ្សេងៗ…",
+  "Download PDF": "ទាញយក PDF",
   "Save inspection ✓": "រក្សាទុក ✓",
   "All vehicles": "រថយន្ត​ទាំងអស់",
   "record(s)": "កំណត់ត្រា",
@@ -1575,7 +1576,7 @@ window.__trGroups = {
     "Clear": "ដោះ​ស្រាយ",
     "Stop": "ឈប់",
     "Clear all highlights": "លុប​ highlight​ ទាំង​អស់",
-    "Download PDF": "ទាញ​យក PDF",
+    "Download PDF (month)": "ទាញ​យក PDF (ប្រចាំ​ខែ)",
     "Student colours": "ពណ៌សិស្ស",
     "Graduated": "បានបញ្ចប់",
     "Edit note": "កែ​ចំណាំ",
@@ -1738,6 +1739,7 @@ window.__trGroups = {
     "No accidents for this vehicle": "គ្មាន​គ្រោះថ្នាក់​សម្រាប់​យានយន្ត​នេះ",
     "Notes / Remarks": "កំណត់សម្គាល់",
     "Damage, observations, or other notes…": "ការខូចខាត ឬ ចំណាំផ្សេងៗ…",
+    "Download PDF": "ទាញយក PDF",
     "Save inspection ✓": "រក្សាទុក ✓",
     "All vehicles": "ទាំងអស់",
     "record(s)": "កំណត់ត្រា",
@@ -19359,20 +19361,24 @@ var ScheduleScreen = ({
     style: {
       justifyContent: 'center'
     },
-    onClick: () => generateSchedulePDF({
-      lessons: visibleLessons,
-      weekDates: allWeekDates,
-      viewType: 'agenda',
-      labelEn,
-      instFilter,
-      vehFilter,
-      studentFilter
-    }),
+    onClick: () => {
+      var mLabel = `${EN_MONTHS[parseInt(mobileDate.slice(5, 7)) - 1]} ${mobileDate.slice(0, 4)}`;
+      generateSchedulePDF({
+        lessons: visibleLessons,
+        weekDates: allWeekDates,
+        viewType: 'month',
+        monthAnchor: mobileDate,
+        labelEn: mLabel,
+        instFilter,
+        vehFilter,
+        studentFilter
+      });
+    },
     icon: React.createElement(Icon, {
       name: "download",
       size: 14
     })
-  }, tr('ទាញ​យក PDF', 'Download PDF')), studentMode ? React.createElement("div", {
+  }, tr('ទាញ​យក PDF (ប្រចាំ​ខែ)', 'Download PDF (month)')), studentMode ? React.createElement("div", {
     style: {
       display: 'flex',
       gap: 18,
@@ -19809,7 +19815,8 @@ var generateSchedulePDF = ({
   labelEn,
   instFilter,
   vehFilter,
-  studentFilter
+  studentFilter,
+  monthAnchor
 }) => {
   var ss = window.__schoolSettings || {};
   var name = ss.name || 'Anzen Driving School';
@@ -19890,6 +19897,48 @@ var generateSchedulePDF = ({
         </div>`;
       }).join('');
     }
+  } else if (viewType === 'month') {
+    var anchor = new Date((monthAnchor || lessons[0] && lessons[0].date || todayStr()) + 'T00:00:00');
+    var Y = anchor.getFullYear(),
+      M = anchor.getMonth();
+    var startDow = (new Date(Y, M, 1).getDay() + 6) % 7;
+    var lastDate = new Date(Y, M + 1, 0).getDate();
+    var weeks = Math.ceil((startDow + lastDate) / 7);
+    var gridStart = new Date(Y, M, 1 - startDow);
+    var pad = n => String(n).padStart(2, '0');
+    var fmtD = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    var byDate = {};
+    lessons.forEach(l => {
+      if (l.status !== 'cancelled') (byDate[l.date] = byDate[l.date] || []).push(l);
+    });
+    var rows = '';
+    for (var w = 0; w < weeks; w++) {
+      var cells = '';
+      for (var c = 0; c < 7; c++) {
+        var d = new Date(gridStart);
+        d.setDate(gridStart.getDate() + w * 7 + c);
+        var inMonth = d.getMonth() === M;
+        var isSun = d.getDay() === 0;
+        var ds = fmtD(d);
+        var dl = (byDate[ds] || []).sort((a, b) => a.h - b.h);
+        var items = dl.slice(0, 6).map(l => {
+          var k = l.color || 'a';
+          var s = STUDENTS.find(x => x.id === l.studentId);
+          var who = s && s.name || (l.type ? l.type.split('·')[0].trim() : '') || '—';
+          return `<div style="font-size:8px;line-height:1.3;margin-top:1px;padding:1px 3px;border-radius:2px;background:${LBG[k] || '#eee'};border-left:2px solid ${LC[k] || '#888'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-print-color-adjust:exact;print-color-adjust:exact"><b>${fmtH(l.h)}</b> ${who}</div>`;
+        }).join('');
+        var more = dl.length > 6 ? `<div style="font-size:7.5px;color:#999;margin-top:1px">+${dl.length - 6}…</div>` : '';
+        cells += `<td style="border:1px solid #ddd;vertical-align:top;padding:3px 4px;height:92px;width:14.28%;background:${inMonth ? isSun ? '#fff7f7' : '#fff' : '#f7f7f5'}">
+          <div style="font-size:11px;font-weight:700;color:${!inMonth ? '#bbb' : isSun ? '#c04040' : '#444'}">${d.getDate()}</div>
+          ${inMonth ? items + more : ''}
+        </td>`;
+      }
+      rows += `<tr>${cells}</tr>`;
+    }
+    bodyHTML = `<table style="width:100%;border-collapse:collapse;table-layout:fixed">
+      <thead><tr>${DAYS.map((dn, i) => `<th style="border:1px solid #ddd;background:${i === 6 ? '#fff0f0' : '#f0f0ee'};color:${i === 6 ? '#c04040' : '#555'};font-size:10px;padding:5px;-webkit-print-color-adjust:exact;print-color-adjust:exact">${dn}</th>`).join('')}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
   } else {
     var allDates = weekDates.length ? weekDates : [];
     bodyHTML = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:11px">
@@ -19926,7 +19975,7 @@ var generateSchedulePDF = ({
     <div>
       <div style="font-size:18px;font-weight:700;color:#1A4F96">${name}</div>
       <div style="font-size:13px;font-weight:600;color:#333;margin-top:2px">
-        ${viewType === 'agenda' ? 'Agenda' : 'Weekly Schedule'} · ${labelEn}
+        ${viewType === 'agenda' ? 'Agenda' : viewType === 'month' ? 'Monthly Schedule' : 'Weekly Schedule'} · ${labelEn}
       </div>
       ${filterInfo ? `<div style="font-size:11px;color:#777;margin-top:2px">Filter: ${filterInfo}</div>` : ''}
     </div>

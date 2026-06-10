@@ -918,11 +918,14 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
         : v==='month'  ? <ScheduleMonth  {...viewProps}/>
         :                <ScheduleAgenda {...viewProps}/>}
 
-      {/* Mobile: PDF export at the bottom — agenda (list) layout reads cleanly on a phone */}
+      {/* Mobile: PDF export at the bottom — full-month landscape calendar for printing */}
       {bp.mobile && (
         <Btn kind="ghost" size="md" style={{justifyContent:'center'}}
-          onClick={()=>generateSchedulePDF({lessons:visibleLessons,weekDates:allWeekDates,viewType:'agenda',labelEn,instFilter,vehFilter,studentFilter})}
-          icon={<Icon name="download" size={14}/>}>{tr('ទាញ​យក PDF','Download PDF')}</Btn>
+          onClick={()=>{
+            const mLabel = `${EN_MONTHS[parseInt(mobileDate.slice(5,7))-1]} ${mobileDate.slice(0,4)}`;
+            generateSchedulePDF({lessons:visibleLessons,weekDates:allWeekDates,viewType:'month',monthAnchor:mobileDate,labelEn:mLabel,instFilter,vehFilter,studentFilter});
+          }}
+          icon={<Icon name="download" size={14}/>}>{tr('ទាញ​យក PDF (ប្រចាំ​ខែ)','Download PDF (month)')}</Btn>
       )}
 
       {studentMode ? (
@@ -1072,7 +1075,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
 };
 
 // ── Schedule PDF Generator ────────────────────────────────────────────────────
-const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter, vehFilter, studentFilter }) => {
+const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter, vehFilter, studentFilter, monthAnchor }) => {
   const ss   = window.__schoolSettings || {};
   const name = ss.name || 'Anzen Driving School';
   const HOURS = Array.from({length:12}, (_,i) => i+7);
@@ -1133,8 +1136,47 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
         </div>`;
       }).join('');
     }
+  } else if (viewType === 'month') {
+    // Full-month wall-calendar grid (Mon–Sun columns, week rows) — landscape print.
+    const anchor = new Date((monthAnchor || (lessons[0] && lessons[0].date) || todayStr()) + 'T00:00:00');
+    const Y = anchor.getFullYear(), M = anchor.getMonth();
+    const startDow = (new Date(Y, M, 1).getDay() + 6) % 7;   // 0 = Mon
+    const lastDate = new Date(Y, M + 1, 0).getDate();
+    const weeks = Math.ceil((startDow + lastDate) / 7);
+    const gridStart = new Date(Y, M, 1 - startDow);
+    const pad = n => String(n).padStart(2, '0');
+    const fmtD = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    const byDate = {};
+    lessons.forEach(l => { if (l.status !== 'cancelled') (byDate[l.date] = byDate[l.date] || []).push(l); });
+    let rows = '';
+    for (let w = 0; w < weeks; w++) {
+      let cells = '';
+      for (let c = 0; c < 7; c++) {
+        const d = new Date(gridStart); d.setDate(gridStart.getDate() + w*7 + c);
+        const inMonth = d.getMonth() === M;
+        const isSun = d.getDay() === 0;
+        const ds = fmtD(d);
+        const dl = (byDate[ds] || []).sort((a,b) => a.h - b.h);
+        const items = dl.slice(0, 6).map(l => {
+          const k = l.color || 'a';
+          const s = STUDENTS.find(x => x.id === l.studentId);
+          const who = (s && s.name) || (l.type ? l.type.split('·')[0].trim() : '') || '—';
+          return `<div style="font-size:8px;line-height:1.3;margin-top:1px;padding:1px 3px;border-radius:2px;background:${LBG[k]||'#eee'};border-left:2px solid ${LC[k]||'#888'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-print-color-adjust:exact;print-color-adjust:exact"><b>${fmtH(l.h)}</b> ${who}</div>`;
+        }).join('');
+        const more = dl.length > 6 ? `<div style="font-size:7.5px;color:#999;margin-top:1px">+${dl.length-6}…</div>` : '';
+        cells += `<td style="border:1px solid #ddd;vertical-align:top;padding:3px 4px;height:92px;width:14.28%;background:${inMonth ? (isSun ? '#fff7f7' : '#fff') : '#f7f7f5'}">
+          <div style="font-size:11px;font-weight:700;color:${!inMonth ? '#bbb' : isSun ? '#c04040' : '#444'}">${d.getDate()}</div>
+          ${inMonth ? items + more : ''}
+        </td>`;
+      }
+      rows += `<tr>${cells}</tr>`;
+    }
+    bodyHTML = `<table style="width:100%;border-collapse:collapse;table-layout:fixed">
+      <thead><tr>${DAYS.map((dn,i)=>`<th style="border:1px solid #ddd;background:${i===6?'#fff0f0':'#f0f0ee'};color:${i===6?'#c04040':'#555'};font-size:10px;padding:5px;-webkit-print-color-adjust:exact;print-color-adjust:exact">${dn}</th>`).join('')}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
   } else {
-    // Week/month table
+    // Week table
     const allDates = weekDates.length ? weekDates : [];
     bodyHTML = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:11px">
       <thead>
@@ -1171,7 +1213,7 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
     <div>
       <div style="font-size:18px;font-weight:700;color:#1A4F96">${name}</div>
       <div style="font-size:13px;font-weight:600;color:#333;margin-top:2px">
-        ${viewType==='agenda'?'Agenda':'Weekly Schedule'} · ${labelEn}
+        ${viewType==='agenda'?'Agenda':viewType==='month'?'Monthly Schedule':'Weekly Schedule'} · ${labelEn}
       </div>
       ${filterInfo ? `<div style="font-size:11px;color:#777;margin-top:2px">Filter: ${filterInfo}</div>` : ''}
     </div>
