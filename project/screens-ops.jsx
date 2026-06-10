@@ -1166,15 +1166,7 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
     </table>`;
   }
 
-  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
-  <title>${name} — Schedule</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-    *{box-sizing:border-box;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}
-    body{margin:0;font-family:Inter,sans-serif;font-size:12px;color:#222;background:#fff}
-    @media print{body{margin:0}@page{size:A4 landscape;margin:12mm}}
-  </style>
-</head><body>
+  const bodyContent = `
   <div style="padding:16px 20px 10px;border-bottom:2px solid #1A4F96;display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px">
     <div>
       <div style="font-size:18px;font-weight:700;color:#1A4F96">${name}</div>
@@ -1196,14 +1188,40 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
     <span style="display:inline-flex;align-items:center;gap:5px"><span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;background:#2A5DB0;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">School</span> ទីតាំង​សាលា</span>
     <span style="display:inline-flex;align-items:center;gap:5px"><span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;background:#B0413E;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">Course</span> ទីលាន​ហ្វឹក​ហាត់</span>
   </div>
-  <div style="padding:0 20px 20px">${bodyHTML}</div>
-</body></html>`;
+  <div style="padding:0 20px 20px">${bodyHTML}</div>`;
 
-  const w = window.open('', '_blank');
-  if (!w) return;
-  w.document.write(html);
-  w.document.close();
-  setTimeout(() => w.print(), 600);
+  // Render in an in-app overlay (not a new window) so the user can always tap
+  // Back to return to the app — a new tab/print view traps users on mobile.
+  const HOST_ID = '__anzenPdfHost';
+  document.getElementById(HOST_ID)?.remove();
+  document.getElementById('__anzenPdfStyle')?.remove();
+
+  const style = document.createElement('style');
+  style.id = '__anzenPdfStyle';
+  style.textContent = `
+    #${HOST_ID}{position:fixed;inset:0;z-index:100000;background:#fff;overflow:auto;-webkit-overflow-scrolling:touch}
+    #${HOST_ID} .pdf-paper{font-family:Inter,'Khmer OS','Battambang',sans-serif;font-size:12px;color:#222;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    @media print{
+      body > *:not(#${HOST_ID}){display:none !important}
+      #${HOST_ID}{position:static !important;overflow:visible !important}
+      #${HOST_ID} .pdf-toolbar{display:none !important}
+      @page{size:A4 landscape;margin:12mm}
+    }`;
+  document.head.appendChild(style);
+
+  const host = document.createElement('div');
+  host.id = HOST_ID;
+  host.innerHTML = `
+    <div class="pdf-toolbar" style="position:sticky;top:0;z-index:2;display:flex;gap:8px;justify-content:space-between;align-items:center;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;background:#1A4F96;color:#fff;box-shadow:0 1px 8px rgba(0,0,0,.25)">
+      <button id="__pdfBack" style="display:inline-flex;align-items:center;gap:6px;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:15px;font-weight:600;padding:10px 16px;border-radius:9px;cursor:pointer">⬅ ត្រឡប់ · Back</button>
+      <button id="__pdfPrint" style="display:inline-flex;align-items:center;gap:6px;border:none;background:#fff;color:#1A4F96;font-size:15px;font-weight:700;padding:10px 16px;border-radius:9px;cursor:pointer">🖨 បោះពុម្ព / PDF</button>
+    </div>
+    <div class="pdf-paper">${bodyContent}</div>`;
+  document.body.appendChild(host);
+
+  const cleanup = () => { host.remove(); style.remove(); };
+  host.querySelector('#__pdfBack').onclick  = cleanup;
+  host.querySelector('#__pdfPrint').onclick = () => { try { window.print(); } catch(e) {} };
 };
 const FleetScreen = ({ role = 'admin' }) => {
   const { toast, openForm, openDetail, navigate, tr } = useAppActions();
