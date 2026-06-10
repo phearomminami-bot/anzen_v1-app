@@ -1157,14 +1157,28 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
         const isSun = d.getDay() === 0;
         const ds = fmtD(d);
         const dl = (byDate[ds] || []).sort((a,b) => a.h - b.h);
-        const items = dl.slice(0, 6).map(l => {
+        const items = dl.slice(0, 8).map(l => {
           const k = l.color || 'a';
           const s = STUDENTS.find(x => x.id === l.studentId);
-          const who = (s && s.name) || (l.type ? l.type.split('·')[0].trim() : '') || '—';
-          return `<div style="font-size:8px;line-height:1.3;margin-top:1px;padding:1px 3px;border-radius:2px;background:${LBG[k]||'#eee'};border-left:2px solid ${LC[k]||'#888'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-print-color-adjust:exact;print-color-adjust:exact"><b>${fmtH(l.h)}</b> ${who}</div>`;
+          const inst = INSTRUCTORS.find(i => i.id === l.instId);
+          const veh = VEHICLES.find(v => v.id === l.veh);
+          const typeLabel = k==='e'?'Theory JP':k==='c'?'Theory KH':k==='d'?'Practical JP':'Practical KH';
+          const loc = locLabelOf(l);
+          const locBg = loc==='School'?'#2A5DB0':loc==='Course'?'#B0413E':'#888';
+          const trans = veh && veh.trans ? veh.trans : '';
+          const bdg = (txt,bg) => `<span style="font-size:6.5px;font-weight:700;padding:0 3px;border-radius:2px;background:${bg};color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">${txt}</span>`;
+          return `<div style="background:${LBG[k]||'#eee'};border-left:2px solid ${LC[k]||'#888'};border-radius:2px;padding:2px 3px;margin-top:2px;font-size:7.5px;line-height:1.3;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+            <div style="display:flex;gap:2px;align-items:center;flex-wrap:wrap">
+              <b style="color:${LC[k]}">${fmtH(l.h)}-${fmtH(l.h+(l.len||1))}</b>
+              <span style="font-weight:700;color:${LC[k]}">${typeLabel}</span>
+              ${loc?bdg(loc,locBg):''}${trans?bdg(trans,trans==='MT'?'#7A3B2B':'#3B7A57'):''}
+            </div>
+            ${s?`<div style="font-weight:600;color:#222">${s.name}</div>`:''}
+            <div style="color:#555">${inst?(inst.en||inst.name||''):'—'}${veh&&veh.plate?' · '+veh.plate:''}</div>
+          </div>`;
         }).join('');
-        const more = dl.length > 6 ? `<div style="font-size:7.5px;color:#999;margin-top:1px">+${dl.length-6}…</div>` : '';
-        cells += `<td style="border:1px solid #ddd;vertical-align:top;padding:3px 4px;height:92px;width:14.28%;background:${inMonth ? (isSun ? '#fff7f7' : '#fff') : '#f7f7f5'}">
+        const more = dl.length > 8 ? `<div style="font-size:7.5px;color:#999;margin-top:1px">+${dl.length-8}…</div>` : '';
+        cells += `<td style="border:1px solid #ddd;vertical-align:top;padding:3px 4px;min-height:78px;width:14.28%;background:${inMonth ? (isSun ? '#fff7f7' : '#fff') : '#f7f7f5'}">
           <div style="font-size:11px;font-weight:700;color:${!inMonth ? '#bbb' : isSun ? '#c04040' : '#444'}">${d.getDate()}</div>
           ${inMonth ? items + more : ''}
         </td>`;
