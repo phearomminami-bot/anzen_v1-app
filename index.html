@@ -516,6 +516,7 @@ window.__trRegistry = {
   "Clear": "សម្អាត",
   "Stop": "ឈប់",
   "Clear all highlights": "លុប​ highlight​ ទាំង​អស់",
+  "Download PDF": "ទាញយក PDF",
   "Student colours": "ពណ៌សិស្ស",
   "Graduated": "បានបញ្ចប់",
   "Edit note": "កែ​ចំណាំ",
@@ -761,7 +762,6 @@ window.__trRegistry = {
   "No accidents for this vehicle": "គ្មាន​គ្រោះថ្នាក់​សម្រាប់​យានយន្ត​នេះ",
   "Notes / Remarks": "កំណត់សម្គាល់",
   "Damage, observations, or other notes…": "ការខូចខាត ឬ ចំណាំផ្សេងៗ…",
-  "Download PDF": "ទាញយក PDF",
   "Save inspection ✓": "រក្សាទុក ✓",
   "All vehicles": "រថយន្ត​ទាំងអស់",
   "record(s)": "កំណត់ត្រា",
@@ -1566,6 +1566,7 @@ window.__trGroups = {
     "Clear": "ដោះ​ស្រាយ",
     "Stop": "ឈប់",
     "Clear all highlights": "លុប​ highlight​ ទាំង​អស់",
+    "Download PDF": "ទាញ​យក PDF",
     "Student colours": "ពណ៌សិស្ស",
     "Graduated": "បានបញ្ចប់",
     "Edit note": "កែ​ចំណាំ",
@@ -1728,7 +1729,6 @@ window.__trGroups = {
     "No accidents for this vehicle": "គ្មាន​គ្រោះថ្នាក់​សម្រាប់​យានយន្ត​នេះ",
     "Notes / Remarks": "កំណត់សម្គាល់",
     "Damage, observations, or other notes…": "ការខូចខាត ឬ ចំណាំផ្សេងៗ…",
-    "Download PDF": "ទាញយក PDF",
     "Save inspection ✓": "រក្សាទុក ✓",
     "All vehicles": "ទាំងអស់",
     "record(s)": "កំណត់ត្រា",
@@ -17491,6 +17491,7 @@ Object.assign(window, {
 </script>
 
 <script>
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 var LESSON_COLORS = {
   a: {
     bg: '#D6E4F5',
@@ -17730,12 +17731,15 @@ var ScheduleWeek = ({
   hlColor = '',
   notes = [],
   onSlotClick,
-  onNoteClick
+  onNoteClick,
+  dayNav = null
 }) => {
   var {
     openDetail,
-    openForm
+    openForm,
+    tr
   } = useAppActions();
+  var dateInputRef = React.useRef(null);
   var hours = Array.from({
     length: 12
   }, (_, i) => i + 7);
@@ -17749,7 +17753,119 @@ var ScheduleWeek = ({
   };
   return React.createElement(Card, {
     pad: 0
-  }, React.createElement("div", {
+  }, dayNav ? (() => {
+    var d0 = new Date((weekDates[0] || today) + 'T00:00:00');
+    var js0 = d0.getDay();
+    var km0 = js0 === 0 ? 6 : js0 - 1;
+    var dowKm = DAYS_KM[km0] || '';
+    var dowEn = (DAYS_EN[km0] || '').toUpperCase();
+    var dd0 = (weekDates[0] || today).slice(8, 10);
+    var monKm = (typeof KM_MONTHS !== 'undefined' ? KM_MONTHS : [])[d0.getMonth()] || d0.getMonth() + 1;
+    return React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '10px 10px',
+        borderBottom: '1px solid var(--border)',
+        background: 'var(--surface-muted)'
+      }
+    }, React.createElement("button", {
+      onClick: dayNav.onPrev,
+      style: {
+        width: 38,
+        height: 38,
+        borderRadius: 9,
+        border: '1px solid var(--border)',
+        background: 'var(--surface)',
+        cursor: 'pointer',
+        fontSize: 15,
+        fontWeight: 600,
+        color: 'var(--ink-2)',
+        flexShrink: 0
+      }
+    }, "\u25C0"), React.createElement("button", {
+      onClick: () => {
+        var el = dateInputRef.current;
+        if (el) {
+          try {
+            el.showPicker ? el.showPicker() : el.click();
+          } catch (e) {
+            el.click();
+          }
+        }
+      },
+      style: {
+        flex: 1,
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 1,
+        padding: '4px 8px',
+        borderRadius: 9,
+        border: '1px solid var(--border)',
+        background: 'var(--surface)',
+        cursor: 'pointer'
+      }
+    }, React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: 'var(--ink-3)',
+        fontFamily: '"JetBrains Mono",monospace',
+        letterSpacing: '.05em'
+      }
+    }, dowEn, " \uD83D\uDCC5"), React.createElement("div", {
+      style: {
+        fontSize: 15,
+        fontWeight: 700,
+        color: dayNav.isToday ? 'var(--accent)' : 'var(--ink)',
+        fontFamily: 'var(--font-km)'
+      }
+    }, parseInt(dd0), " ", dowKm, " \xB7 ", monKm), React.createElement("input", {
+      ref: dateInputRef,
+      type: "date",
+      value: weekDates[0] || today,
+      onChange: e => dayNav.onPick(e.target.value),
+      style: {
+        position: 'absolute',
+        inset: 0,
+        opacity: 0,
+        cursor: 'pointer',
+        width: '100%',
+        height: '100%'
+      }
+    })), React.createElement("button", {
+      onClick: dayNav.onToday,
+      style: {
+        height: 38,
+        padding: '0 12px',
+        borderRadius: 9,
+        border: '1px solid var(--border)',
+        background: dayNav.isToday ? 'var(--accent)' : 'var(--surface)',
+        color: dayNav.isToday ? '#fff' : 'var(--ink-2)',
+        cursor: 'pointer',
+        fontSize: 12,
+        fontWeight: 600,
+        flexShrink: 0
+      }
+    }, tr('ថ្ងៃ​នេះ', 'Today')), React.createElement("button", {
+      onClick: dayNav.onNext,
+      style: {
+        width: 38,
+        height: 38,
+        borderRadius: 9,
+        border: '1px solid var(--border)',
+        background: 'var(--surface)',
+        cursor: 'pointer',
+        fontSize: 15,
+        fontWeight: 600,
+        color: 'var(--ink-2)',
+        flexShrink: 0
+      }
+    }, "\u25B6"));
+  })() : React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: `56px repeat(${weekDates.length},1fr)`,
@@ -18615,6 +18731,12 @@ var ScheduleScreen = ({
     return localDateStr(d);
   };
   var mobileDate = getMobileDate(dayOffset);
+  var setMobileDateAbs = dateStr => {
+    if (!dateStr) return;
+    var a = new Date(dateStr + 'T00:00:00'),
+      b = new Date(today + 'T00:00:00');
+    setDayOffset(Math.round((a - b) / 86400000));
+  };
   var weekDates = bp.mobile ? [mobileDate] : allWeekDates;
   var baseLessons = LESSONS.filter(l => studentMode ? (l.studentId === studentId || l.studentId === '—') && l.status !== 'cancelled' : l.status !== 'cancelled');
   var visibleLessons = !studentMode ? baseLessons.filter(l => (!instFilter || l.instId === instFilter) && (!vehFilter || l.veh === vehFilter) && (!studentFilter || l.studentId === studentFilter)) : baseLessons;
@@ -18864,29 +18986,7 @@ var ScheduleScreen = ({
         size: 14
       })
     }, tr('មេរៀន​ថ្មី', 'New lesson')))
-  }), bp.mobile && React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 8,
-      alignItems: 'center'
-    }
-  }, React.createElement(Btn, {
-    kind: "ghost",
-    size: "md",
-    onClick: () => generateSchedulePDF({
-      lessons: visibleLessons,
-      weekDates: allWeekDates,
-      viewType: 'week',
-      labelEn,
-      instFilter,
-      vehFilter,
-      studentFilter
-    }),
-    icon: React.createElement(Icon, {
-      name: "download",
-      size: 14
-    })
-  }, tr('PDF', 'PDF'))), bp.mobile && React.createElement(MobileDayNav, null), !studentMode && !instructorMode && !bp.mobile && React.createElement("div", {
+  }), !studentMode && !instructorMode && !bp.mobile && React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
@@ -19236,7 +19336,34 @@ var ScheduleScreen = ({
         flexShrink: 0
       }
     }, "\xD7")))));
-  })(), bp.mobile ? React.createElement(ScheduleWeek, viewProps) : v === 'week' ? React.createElement(ScheduleWeek, viewProps) : v === 'month' ? React.createElement(ScheduleMonth, viewProps) : React.createElement(ScheduleAgenda, viewProps), studentMode ? React.createElement("div", {
+  })(), bp.mobile ? React.createElement(ScheduleWeek, _extends({}, viewProps, {
+    dayNav: {
+      onPrev: () => setDayOffset(o => o - 1),
+      onNext: () => setDayOffset(o => o + 1),
+      onToday: () => setDayOffset(0),
+      onPick: dateStr => setMobileDateAbs(dateStr),
+      isToday: mobileDate === today
+    }
+  })) : v === 'week' ? React.createElement(ScheduleWeek, viewProps) : v === 'month' ? React.createElement(ScheduleMonth, viewProps) : React.createElement(ScheduleAgenda, viewProps), bp.mobile && React.createElement(Btn, {
+    kind: "ghost",
+    size: "md",
+    style: {
+      justifyContent: 'center'
+    },
+    onClick: () => generateSchedulePDF({
+      lessons: visibleLessons,
+      weekDates: allWeekDates,
+      viewType: 'week',
+      labelEn,
+      instFilter,
+      vehFilter,
+      studentFilter
+    }),
+    icon: React.createElement(Icon, {
+      name: "download",
+      size: 14
+    })
+  }, tr('ទាញ​យក PDF', 'Download PDF')), studentMode ? React.createElement("div", {
     style: {
       display: 'flex',
       gap: 18,

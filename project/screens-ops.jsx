@@ -144,8 +144,9 @@ const computeLayout = (dayLessons) => {
 };
 
 // ── Week view ──
-const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], highlights = {}, onHighlight, hlColor = '', notes = [], onSlotClick, onNoteClick }) => {
-  const { openDetail, openForm } = useAppActions();
+const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], highlights = {}, onHighlight, hlColor = '', notes = [], onSlotClick, onNoteClick, dayNav = null }) => {
+  const { openDetail, openForm, tr } = useAppActions();
+  const dateInputRef = React.useRef(null);
   const hours = Array.from({length:12}, (_,i)=> i+7); // 7..18
   const today = todayStr();
   const isPaint = !!hlColor;
@@ -153,7 +154,28 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
   const onSlot = (date, h) => { if (onSlotClick) onSlotClick(date, h); else openForm('newLesson',{date,hour:h}); };
   return (
     <Card pad={0}>
-      {/* Header row — map over weekDates so single-day mobile shows correct day */}
+      {/* Mobile: the day header IS the date navigator — tap the date to pick a day */}
+      {dayNav ? (() => {
+        const d0 = new Date((weekDates[0] || today) + 'T00:00:00');
+        const js0 = d0.getDay(); const km0 = js0 === 0 ? 6 : js0 - 1;
+        const dowKm = DAYS_KM[km0] || ''; const dowEn = (DAYS_EN[km0] || '').toUpperCase();
+        const dd0 = (weekDates[0] || today).slice(8,10);
+        const monKm = (typeof KM_MONTHS !== 'undefined' ? KM_MONTHS : [])[d0.getMonth()] || (d0.getMonth()+1);
+        return (
+          <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 10px',borderBottom:'1px solid var(--border)',background:'var(--surface-muted)'}}>
+            <button onClick={dayNav.onPrev} style={{width:38,height:38,borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)',cursor:'pointer',fontSize:15,fontWeight:600,color:'var(--ink-2)',flexShrink:0}}>◀</button>
+            <button onClick={()=>{ const el=dateInputRef.current; if(el){ try{ el.showPicker ? el.showPicker() : el.click(); }catch(e){ el.click(); } } }}
+              style={{flex:1,position:'relative',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:1,padding:'4px 8px',borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)',cursor:'pointer'}}>
+              <div style={{fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.05em'}}>{dowEn} 📅</div>
+              <div style={{fontSize:15,fontWeight:700,color: dayNav.isToday ? 'var(--accent)' : 'var(--ink)',fontFamily:'var(--font-km)'}}>{parseInt(dd0)} {dowKm} · {monKm}</div>
+              <input ref={dateInputRef} type="date" value={weekDates[0] || today} onChange={e=>dayNav.onPick(e.target.value)}
+                style={{position:'absolute',inset:0,opacity:0,cursor:'pointer',width:'100%',height:'100%'}}/>
+            </button>
+            <button onClick={dayNav.onToday} style={{height:38,padding:'0 12px',borderRadius:9,border:'1px solid var(--border)',background: dayNav.isToday ? 'var(--accent)' : 'var(--surface)',color: dayNav.isToday ? '#fff' : 'var(--ink-2)',cursor:'pointer',fontSize:12,fontWeight:600,flexShrink:0}}>{tr('ថ្ងៃ​នេះ','Today')}</button>
+            <button onClick={dayNav.onNext} style={{width:38,height:38,borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)',cursor:'pointer',fontSize:15,fontWeight:600,color:'var(--ink-2)',flexShrink:0}}>▶</button>
+          </div>
+        );
+      })() : (
       <div style={{display:'grid',gridTemplateColumns:`56px repeat(${weekDates.length},1fr)`,borderBottom:'1px solid var(--border)'}}>
         <div/>
         {weekDates.map((date, i) => {
@@ -180,6 +202,7 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
           );
         })}
       </div>
+      )}
       {/* Body */}
       <div style={{display:'grid',gridTemplateColumns:`56px repeat(${weekDates.length},1fr)`,position:'relative'}}>
         {/* Hour labels */}
@@ -612,6 +635,12 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
     return localDateStr(d);   // local date (not UTC) so "today" is correct in UTC+7
   };
   const mobileDate = getMobileDate(dayOffset);
+  // Jump to an arbitrary date picked from the calendar input.
+  const setMobileDateAbs = (dateStr) => {
+    if (!dateStr) return;
+    const a = new Date(dateStr + 'T00:00:00'), b = new Date(today + 'T00:00:00');
+    setDayOffset(Math.round((a - b) / 86400000));
+  };
   const weekDates  = bp.mobile ? [mobileDate] : allWeekDates;
 
   const baseLessons = LESSONS.filter(l =>
@@ -729,16 +758,6 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
           </div>
         )}
       />}
-
-      {/* Mobile: PDF export only (add a lesson/note by tapping a time slot) */}
-      {bp.mobile && (
-        <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          <Btn kind="ghost" size="md" onClick={()=>generateSchedulePDF({lessons:visibleLessons,weekDates:allWeekDates,viewType:'week',labelEn,instFilter,vehFilter,studentFilter})} icon={<Icon name="download" size={14}/>}>{tr('PDF','PDF')}</Btn>
-        </div>
-      )}
-
-      {/* Mobile: day nav bar */}
-      {bp.mobile && <MobileDayNav/>}
 
       {/* Filter bar — admin only, desktop */}
       {!studentMode && !instructorMode && !bp.mobile && (
@@ -888,10 +907,23 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
       })()}
 
       {bp.mobile
-        ? <ScheduleWeek {...viewProps}/>
+        ? <ScheduleWeek {...viewProps} dayNav={{
+            onPrev:  ()=>setDayOffset(o=>o-1),
+            onNext:  ()=>setDayOffset(o=>o+1),
+            onToday: ()=>setDayOffset(0),
+            onPick:  (dateStr)=>setMobileDateAbs(dateStr),
+            isToday: mobileDate===today,
+          }}/>
         : v==='week'   ? <ScheduleWeek   {...viewProps}/>
         : v==='month'  ? <ScheduleMonth  {...viewProps}/>
         :                <ScheduleAgenda {...viewProps}/>}
+
+      {/* Mobile: PDF export at the bottom */}
+      {bp.mobile && (
+        <Btn kind="ghost" size="md" style={{justifyContent:'center'}}
+          onClick={()=>generateSchedulePDF({lessons:visibleLessons,weekDates:allWeekDates,viewType:'week',labelEn,instFilter,vehFilter,studentFilter})}
+          icon={<Icon name="download" size={14}/>}>{tr('ទាញ​យក PDF','Download PDF')}</Btn>
+      )}
 
       {studentMode ? (
         <div style={{display:'flex',gap:18,padding:'8px 4px',fontSize:11,color:'var(--ink-3)'}}>
