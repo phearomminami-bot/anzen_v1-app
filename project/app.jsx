@@ -89,6 +89,7 @@ function App() {
   const [current, setCurrent] = React.useState('dashboard');
   const [drawer, setDrawer] = React.useState(null);
   const [detail, setDetail] = React.useState(null);
+  const [chromeHidden, setChromeHidden] = React.useState(false);
   const [confirmState, setConfirmState] = React.useState(null);
   const [toasts, setToasts] = React.useState([]);
   const [curriculumDone, setCurriculumDone] = React.useState(() => window.__savedCurriculumDone || new Set(CURRICULUM_DONE_DEFAULT));
@@ -354,6 +355,7 @@ function App() {
     closeForm: () => setDrawer(null),
     openDetail: (type, data) => setDetail({ type, data }),
     closeDetail: () => setDetail(null),
+    hideChrome: setChromeHidden,
     confirm: (opts) => setConfirmState(opts),
     closeConfirm: () => setConfirmState(null),
     curriculumDone, setCurriculumDone, curriculumFeedback, setCurriculumFeedback,
@@ -424,6 +426,11 @@ function App() {
   const detailTitle = detail && detailEntry ? detailEntry.titleFn(detail.data) : null;
   const DetailComp = detailEntry?.Component;
 
+  // When a detail (vehicle/student card…) or a form is open, hide the mobile
+  // header/footer chrome so the overlay reads as its own full screen — matches
+  // tablet behaviour and stops the bars from covering the action buttons.
+  const overlayOpen = !!drawer || !!detail || chromeHidden;
+
   const renderLayout = () => {
     // Mobile: always bottom bar, no sidebar
     if (bp.mobile) {
@@ -437,12 +444,14 @@ function App() {
       const mobileSubtitle = isDash ? (typeof todayStr === 'function' ? todayStr() : null) : null;
       return (
         <div style={{display:'flex',flexDirection:'column',height:'100svh',width:'100vw',background:'var(--bg)'}}>
-          {/* Every tab gets the same fixed header — its own title */}
-          <div style={{flexShrink:0,zIndex:20,background:'var(--surface)',borderBottom:'1px solid var(--border)',boxShadow:'0 1px 10px rgba(0,0,0,.06)',padding:'calc(10px + env(safe-area-inset-top,0px)) 14px 10px'}}>
-            <MobileAppHeader title={mobileTitle} subtitle={mobileSubtitle}/>
-          </div>
-          <main style={{flex:1,overflow:'auto',padding:'12px 14px',paddingBottom:'calc(72px + env(safe-area-inset-bottom,0px))'}}>{screens[current]}</main>
-          <MobileBottomBar items={items} current={current} onGo={setCurrent} role={role} onLogout={logout}/>
+          {/* Every tab gets the same fixed header — hidden while a card/form overlay is open */}
+          {!overlayOpen && (
+            <div style={{flexShrink:0,zIndex:20,background:'var(--surface)',borderBottom:'1px solid var(--border)',boxShadow:'0 1px 10px rgba(0,0,0,.06)',padding:'calc(10px + env(safe-area-inset-top,0px)) 14px 10px'}}>
+              <MobileAppHeader title={mobileTitle} subtitle={mobileSubtitle}/>
+            </div>
+          )}
+          <main style={{flex:1,overflow:'auto',padding:'12px 14px',paddingBottom: overlayOpen ? 14 : 'calc(72px + env(safe-area-inset-bottom,0px))'}}>{screens[current]}</main>
+          {!overlayOpen && <MobileBottomBar items={items} current={current} onGo={setCurrent} role={role} onLogout={logout}/>}
         </div>
       );
     }

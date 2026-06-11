@@ -62631,6 +62631,7 @@ function App() {
   var [current, setCurrent] = React.useState('dashboard');
   var [drawer, setDrawer] = React.useState(null);
   var [detail, setDetail] = React.useState(null);
+  var [chromeHidden, setChromeHidden] = React.useState(false);
   var [confirmState, setConfirmState] = React.useState(null);
   var [toasts, setToasts] = React.useState([]);
   var [curriculumDone, setCurriculumDone] = React.useState(() => window.__savedCurriculumDone || new Set(CURRICULUM_DONE_DEFAULT));
@@ -62927,6 +62928,7 @@ function App() {
       data
     }),
     closeDetail: () => setDetail(null),
+    hideChrome: setChromeHidden,
     confirm: opts => setConfirmState(opts),
     closeConfirm: () => setConfirmState(null),
     curriculumDone,
@@ -63033,6 +63035,7 @@ function App() {
   var detailEntry = detail ? DETAILS[detail.type] : null;
   var detailTitle = detail && detailEntry ? detailEntry.titleFn(detail.data) : null;
   var DetailComp = detailEntry?.Component;
+  var overlayOpen = !!drawer || !!detail || chromeHidden;
   var renderLayout = () => {
     if (bp.mobile) {
       var isDash = current === 'dashboard';
@@ -63048,7 +63051,7 @@ function App() {
           width: '100vw',
           background: 'var(--bg)'
         }
-      }, React.createElement("div", {
+      }, !overlayOpen && React.createElement("div", {
         style: {
           flexShrink: 0,
           zIndex: 20,
@@ -63065,9 +63068,9 @@ function App() {
           flex: 1,
           overflow: 'auto',
           padding: '12px 14px',
-          paddingBottom: 'calc(72px + env(safe-area-inset-bottom,0px))'
+          paddingBottom: overlayOpen ? 14 : 'calc(72px + env(safe-area-inset-bottom,0px))'
         }
-      }, screens[current]), React.createElement(MobileBottomBar, {
+      }, screens[current]), !overlayOpen && React.createElement(MobileBottomBar, {
         items: items,
         current: current,
         onGo: setCurrent,
