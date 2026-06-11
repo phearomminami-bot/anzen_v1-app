@@ -174,8 +174,16 @@ HEAD = """<!doctype html>
   /* Register the service worker so the app is an installable PWA with offline
      support (Chrome/Android "Install app", iOS "Add to Home Screen"). */
   if ('serviceWorker' in navigator) {
+    /* Auto-apply a new build: when an updated worker takes control, reload once
+       so users always get the latest code (important for security fixes). */
+    var __swReloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (__swReloaded) return; __swReloaded = true; location.reload();
+    });
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('sw.js').catch(function () {});
+      navigator.serviceWorker.register('sw.js').then(function (reg) {
+        try { reg.update(); } catch (e) {}
+      }).catch(function () {});
     });
   }
 </script>
@@ -336,7 +344,7 @@ window.onerror = function(msg,src,line,col,err){
     "font": "inter",
     "nav": "sidebar",
     "calendar": "week",
-    "role": "admin",
+    "role": "student",
     "lang": "km",
     "fontSize": "md",
     "dark": false

@@ -101,7 +101,7 @@ window.__logActivity = function (action, entity, detail) {
       id: 'L' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       ts: Date.now(),
       user: window.__currentUserName || u.en || u.km || 'Unknown',
-      role: window.__currentRole || 'admin',
+      role: window.__currentRole || 'student',
       action: action || 'edit',          // 'create' | 'edit' | 'delete' | 'settings'
       entity: entity || '',              // e.g. 'student', 'lesson', 'vehicle'
       detail: detail || '',              // human-readable label of the record

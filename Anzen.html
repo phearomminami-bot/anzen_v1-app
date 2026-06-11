@@ -18,8 +18,16 @@
   /* Register the service worker so the app is an installable PWA with offline
      support (Chrome/Android "Install app", iOS "Add to Home Screen"). */
   if ('serviceWorker' in navigator) {
+    /* Auto-apply a new build: when an updated worker takes control, reload once
+       so users always get the latest code (important for security fixes). */
+    var __swReloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (__swReloaded) return; __swReloaded = true; location.reload();
+    });
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('sw.js').catch(function () {});
+      navigator.serviceWorker.register('sw.js').then(function (reg) {
+        try { reg.update(); } catch (e) {}
+      }).catch(function () {});
     });
   }
 </script>
@@ -180,7 +188,7 @@ window.onerror = function(msg,src,line,col,err){
     "font": "inter",
     "nav": "sidebar",
     "calendar": "week",
-    "role": "admin",
+    "role": "student",
     "lang": "km",
     "fontSize": "md",
     "dark": false
@@ -4786,7 +4794,7 @@ window.__logActivity = function (action, entity, detail) {
       id: 'L' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       ts: Date.now(),
       user: window.__currentUserName || u.en || u.km || 'Unknown',
-      role: window.__currentRole || 'admin',
+      role: window.__currentRole || 'student',
       action: action || 'edit',
       entity: entity || '',
       detail: detail || ''
@@ -62693,7 +62701,7 @@ function App() {
     root.style.setProperty('--font-size-base', sz.px + 'px');
     document.body.style.zoom = '';
   }, [t.accent, t.font, t.fontSize, t.dark]);
-  var role = t.role || 'admin';
+  var role = t.role || 'student';
   var lang = t.lang || 'km';
   React.useEffect(() => {
     window.__anzenLang = lang;
@@ -64913,7 +64921,7 @@ var AppTweaks = ({
   label: "Identity \xB7 \u17A2\u178F\u17D2\u178F\u179F\u1789\u17D2\u1789\u17B6\u178E"
 }), React.createElement(TweakRadio, {
   label: "Role \xB7 \u178F\u17BD\u1793\u17B6\u1791\u17B8 (designer preview)",
-  value: t.role || 'admin',
+  value: t.role || 'student',
   options: ['admin', 'instructor', 'student'],
   onChange: v => setRoleAndAuth(v)
 }), React.createElement(TweakSelect, {

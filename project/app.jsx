@@ -129,7 +129,7 @@ function App() {
     document.body.style.zoom = '';
   }, [t.accent, t.font, t.fontSize, t.dark]);
 
-  const role = t.role || 'admin';
+  const role = t.role || 'student';
   const lang = t.lang || 'km';
   // mirror to window so non-context helpers can read it
   React.useEffect(() => { window.__anzenLang = lang; }, [lang]);
@@ -1299,7 +1299,7 @@ const AppTweaks = ({ t, setTweak, setRoleAndAuth }) => (
     <TweakSection label="Identity · អត្តសញ្ញាណ"/>
     <TweakRadio
       label="Role · តួនាទី (designer preview)"
-      value={t.role || 'admin'}
+      value={t.role || 'student'}
       options={['admin','instructor','student']}
       onChange={(v) => setRoleAndAuth(v)}
     />
