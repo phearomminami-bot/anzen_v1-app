@@ -62663,10 +62663,12 @@ function App() {
   var [authed, setAuthed] = React.useState(false);
   var [authChecking, setAuthChecking] = React.useState(() => {
     try {
-      return !!(window.__sbConfigured && window.__sbConfigured());
-    } catch (e) {
-      return false;
-    }
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && /^sb-.*-auth-token/.test(k)) return true;
+      }
+    } catch (e) {}
+    return false;
   });
   var [current, setCurrent] = React.useState('dashboard');
   var [drawer, setDrawer] = React.useState(null);
@@ -62921,8 +62923,13 @@ function App() {
     var cancelled = false;
     var safety = setTimeout(() => {
       if (!cancelled) setAuthChecking(false);
-    }, 5000);
+    }, 8000);
     (async () => {
+      var start = Date.now();
+      while (!(window.__sbConfigured && window.__sbConfigured()) && Date.now() - start < 7000) {
+        if (cancelled) return;
+        await new Promise(r => setTimeout(r, 100));
+      }
       if (!(window.__sbConfigured && window.__sbConfigured())) {
         if (!cancelled) setAuthChecking(false);
         return;

@@ -89,7 +89,18 @@ function App() {
   // True while we check for a remembered Supabase session on load, so we can
   // show a centred logo splash instead of flashing the login screen on reload.
   const [authChecking, setAuthChecking] = React.useState(() => {
-    try { return !!(window.__sbConfigured && window.__sbConfigured()); } catch (e) { return false; }
+    try {
+      // A remembered Supabase session is persisted under an "sb-<ref>-auth-token"
+      // key. Detect it synchronously — independent of the async-loaded sb lib —
+      // so the splash reliably covers the WHOLE restore. Otherwise the app can
+      // render with the default 'admin' role before the real role is confirmed,
+      // briefly leaking admin-only screens to non-admin users on reload.
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && /^sb-.*-auth-token/.test(k)) return true;
+      }
+    } catch (e) {}
+    return false;
   });
   const [current, setCurrent] = React.useState('dashboard');
   const [drawer, setDrawer] = React.useState(null);
@@ -319,8 +330,16 @@ function App() {
   React.useEffect(() => {
     let cancelled = false;
     // Safety: never stay stuck on the splash if the session check hangs.
-    const safety = setTimeout(() => { if (!cancelled) setAuthChecking(false); }, 5000);
+    const safety = setTimeout(() => { if (!cancelled) setAuthChecking(false); }, 8000);
     (async () => {
+      // The Supabase client is created once its library <script> loads, which
+      // can lag on slow mobile networks. Wait for it before deciding there is no
+      // session — so we keep showing the splash (not the default-admin app).
+      const start = Date.now();
+      while (!(window.__sbConfigured && window.__sbConfigured()) && Date.now() - start < 7000) {
+        if (cancelled) return;
+        await new Promise(r => setTimeout(r, 100));
+      }
       if (!(window.__sbConfigured && window.__sbConfigured())) { if (!cancelled) setAuthChecking(false); return; }
       try {
         const session = await window.__sbSession();
