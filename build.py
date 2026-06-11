@@ -181,7 +181,7 @@ HEAD = """<!doctype html>
       if (__swReloaded) return; __swReloaded = true; location.reload();
     });
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('sw.js').then(function (reg) {
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (reg) {
         try { reg.update(); } catch (e) {}
       }).catch(function () {});
     });
