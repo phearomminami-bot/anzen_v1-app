@@ -303,10 +303,15 @@ HEAD = """<!doctype html>
 <div id="root">
   <div id="_boot" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:14px;font-family:system-ui,sans-serif">
     <style>@keyframes _sp{to{transform:rotate(360deg)}}</style>
+    <div id="_bootlogo"></div>
     <div style="width:34px;height:34px;border-radius:50%;border:3px solid #E6E3DC;border-top-color:#1B3A6B;animation:_sp .8s linear infinite"></div>
     <div style="color:#8A8881;font-size:13px;letter-spacing:.02em">Loading…</div>
   </div>
 </div>
+<script>
+/* Show the cached real school logo while the app loads (set after first load). */
+(function(){try{var b=JSON.parse(localStorage.getItem('anzen_brand')||'{}');var e=document.getElementById('_bootlogo');if(e&&b&&b.logo){e.innerHTML='<img src="'+b.logo+'" alt="" style="width:64px;height:64px;border-radius:14px;object-fit:cover;margin-bottom:4px"/>';}}catch(_){}})();
+</script>
 
 <script>
 window.onerror = function(msg,src,line,col,err){

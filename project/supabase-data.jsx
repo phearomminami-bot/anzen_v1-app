@@ -111,6 +111,11 @@
       if (ss && ss.data && Object.keys(ss.data).length)
         window.__schoolSettings = Object.assign({}, window.__schoolSettings || {}, ss.data);
     } catch (e) {}
+    // Cache the real logo/name so the loading splash can show it on next reload.
+    try {
+      const b = window.__schoolSettings || {};
+      if (b.logo || b.name) localStorage.setItem('anzen_brand', JSON.stringify({ logo: b.logo || null, name: b.name || null }));
+    } catch (e) {}
 
     snapshotIds();
     takeContentSnap(); // baseline for change detection

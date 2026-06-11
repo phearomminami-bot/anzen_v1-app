@@ -398,13 +398,19 @@ function App() {
 
   // ─── Restoring a remembered session: show a centred logo, not login ──
   if (authChecking && !authed) {
-    const ss = window.__schoolSettings;
+    const ss = window.__schoolSettings || {};
+    // Fall back to the locally-cached brand so the real logo shows even before
+    // the cloud settings (which hold the logo) have loaded.
+    let brand = {};
+    try { brand = JSON.parse(localStorage.getItem('anzen_brand') || '{}'); } catch (e) {}
+    const logo = ss.logo || brand.logo;
+    const name = ss.name || brand.name || 'Anzen';
     return (
       <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100svh',width:'100vw',gap:16,background:'var(--bg)'}}>
-        {ss && ss.logo
-          ? <img src={ss.logo} alt="" style={{width:64,height:64,borderRadius:14,objectFit:'cover'}}/>
+        {logo
+          ? <img src={logo} alt="" style={{width:64,height:64,borderRadius:14,objectFit:'cover'}}/>
           : <Logo size={56}/>}
-        <div style={{fontSize:15,fontWeight:600,color:'var(--ink-2)',letterSpacing:'.01em'}}>{(ss && ss.name) || 'Anzen'}</div>
+        <div style={{fontSize:15,fontWeight:600,color:'var(--ink-2)',letterSpacing:'.01em'}}>{name}</div>
       </div>
     );
   }

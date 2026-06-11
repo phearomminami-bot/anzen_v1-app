@@ -146,6 +146,8 @@ const saveAllData = (skipCloud) => {
       currDone:     window.__curriculumDone ? [...window.__curriculumDone] : [],
       currFeedback: window.__curriculumFeedback || {},
     }));
+    // Cache the real logo/name so the loading splash shows it on next reload.
+    try { const _b = window.__schoolSettings || {}; if (_b.logo || _b.name) localStorage.setItem('anzen_brand', JSON.stringify({ logo: _b.logo || null, name: _b.name || null })); } catch (e) {}
     window.__autoBackup?.();
     try { window.__captureSnapshot && window.__captureSnapshot(); } catch(e) {}
   } catch(e) {}

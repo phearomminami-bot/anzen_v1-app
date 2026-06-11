@@ -147,10 +147,15 @@
 <div id="root">
   <div id="_boot" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:14px;font-family:system-ui,sans-serif">
     <style>@keyframes _sp{to{transform:rotate(360deg)}}</style>
+    <div id="_bootlogo"></div>
     <div style="width:34px;height:34px;border-radius:50%;border:3px solid #E6E3DC;border-top-color:#1B3A6B;animation:_sp .8s linear infinite"></div>
     <div style="color:#8A8881;font-size:13px;letter-spacing:.02em">Loading…</div>
   </div>
 </div>
+<script>
+/* Show the cached real school logo while the app loads (set after first load). */
+(function(){try{var b=JSON.parse(localStorage.getItem('anzen_brand')||'{}');var e=document.getElementById('_bootlogo');if(e&&b&&b.logo){e.innerHTML='<img src="'+b.logo+'" alt="" style="width:64px;height:64px;border-radius:14px;object-fit:cover;margin-bottom:4px"/>';}}catch(_){}})();
+</script>
 
 <script>
 window.onerror = function(msg,src,line,col,err){
@@ -4831,6 +4836,13 @@ var saveAllData = skipCloud => {
       currDone: window.__curriculumDone ? [...window.__curriculumDone] : [],
       currFeedback: window.__curriculumFeedback || {}
     }));
+    try {
+      var _b = window.__schoolSettings || {};
+      if (_b.logo || _b.name) localStorage.setItem('anzen_brand', JSON.stringify({
+        logo: _b.logo || null,
+        name: _b.name || null
+      }));
+    } catch (e) {}
     window.__autoBackup?.();
     try {
       window.__captureSnapshot && window.__captureSnapshot();
@@ -62137,6 +62149,13 @@ Object.assign(window, {
       } = await window.sb.from('school_settings').select('data').eq('id', 1).single();
       if (ss && ss.data && Object.keys(ss.data).length) window.__schoolSettings = Object.assign({}, window.__schoolSettings || {}, ss.data);
     } catch (e) {}
+    try {
+      var b = window.__schoolSettings || {};
+      if (b.logo || b.name) localStorage.setItem('anzen_brand', JSON.stringify({
+        logo: b.logo || null,
+        name: b.name || null
+      }));
+    } catch (e) {}
     snapshotIds();
     takeContentSnap();
     window.__sbReady = true;
@@ -62993,7 +63012,13 @@ function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [authed, actions, role]);
   if (authChecking && !authed) {
-    var ss = window.__schoolSettings;
+    var ss = window.__schoolSettings || {};
+    var brand = {};
+    try {
+      brand = JSON.parse(localStorage.getItem('anzen_brand') || '{}');
+    } catch (e) {}
+    var logo = ss.logo || brand.logo;
+    var name = ss.name || brand.name || 'Anzen';
     return React.createElement("div", {
       style: {
         display: 'flex',
@@ -63005,8 +63030,8 @@ function App() {
         gap: 16,
         background: 'var(--bg)'
       }
-    }, ss && ss.logo ? React.createElement("img", {
-      src: ss.logo,
+    }, logo ? React.createElement("img", {
+      src: logo,
       alt: "",
       style: {
         width: 64,
@@ -63023,7 +63048,7 @@ function App() {
         color: 'var(--ink-2)',
         letterSpacing: '.01em'
       }
-    }, ss && ss.name || 'Anzen'));
+    }, name));
   }
   if (!authed) {
     return React.createElement(AppActionsContext.Provider, {
