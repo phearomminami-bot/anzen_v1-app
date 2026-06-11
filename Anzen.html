@@ -62678,6 +62678,7 @@ function App() {
     } catch (e) {}
     return false;
   });
+  var [bootReady, setBootReady] = React.useState(false);
   var [current, setCurrent] = React.useState('dashboard');
   var [drawer, setDrawer] = React.useState(null);
   var [detail, setDetail] = React.useState(null);
@@ -62957,6 +62958,34 @@ function App() {
       clearTimeout(safety);
     };
   }, []);
+  React.useEffect(() => {
+    if (!authed) {
+      setBootReady(false);
+      return;
+    }
+    if (!(window.__sbConfigured && window.__sbConfigured())) {
+      setBootReady(true);
+      return;
+    }
+    if (window.__sbReady) {
+      setBootReady(true);
+      return;
+    }
+    var iv = setInterval(() => {
+      if (window.__sbReady) {
+        setBootReady(true);
+        clearInterval(iv);
+      }
+    }, 120);
+    var to = setTimeout(() => {
+      setBootReady(true);
+      clearInterval(iv);
+    }, 6000);
+    return () => {
+      clearInterval(iv);
+      clearTimeout(to);
+    };
+  }, [authed]);
   var setLang = v => setTweak('lang', v);
   var tr = React.useCallback((km, en, jp) => {
     if (typeof km === 'string' && typeof en === 'string') {
@@ -63026,7 +63055,7 @@ function App() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [authed, actions, role]);
-  if (authChecking && !authed) {
+  var renderSplash = () => {
     var ss = window.__schoolSettings || {};
     var brand = {};
     try {
@@ -63064,7 +63093,8 @@ function App() {
         letterSpacing: '.01em'
       }
     }, name));
-  }
+  };
+  if (authChecking && !authed) return renderSplash();
   if (!authed) {
     return React.createElement(AppActionsContext.Provider, {
       value: actions
@@ -63080,6 +63110,7 @@ function App() {
       list: toasts
     }));
   }
+  if (!bootReady) return renderSplash();
   var screens = {
     dashboard: React.createElement(Dashboard, {
       role: role,

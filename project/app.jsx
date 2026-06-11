@@ -102,6 +102,11 @@ function App() {
     } catch (e) {}
     return false;
   });
+  // Becomes true once the first cloud data load finishes (or immediately when
+  // there is no cloud), so we can hold the app behind the splash until role
+  // permissions are loaded — otherwise a non-admin briefly sees the unfiltered
+  // nav (each item's permission defaults to visible) before settings arrive.
+  const [bootReady, setBootReady] = React.useState(false);
   const [current, setCurrent] = React.useState('dashboard');
   const [drawer, setDrawer] = React.useState(null);
   const [detail, setDetail] = React.useState(null);
@@ -352,6 +357,18 @@ function App() {
     })();
     return () => { cancelled = true; clearTimeout(safety); };
   }, []);
+
+  // Once authenticated, keep the splash up until the first cloud data load
+  // (__sbReady) completes, so role permissions are applied before the nav
+  // renders. No cloud configured → ready immediately (settings are local).
+  React.useEffect(() => {
+    if (!authed) { setBootReady(false); return; }
+    if (!(window.__sbConfigured && window.__sbConfigured())) { setBootReady(true); return; }
+    if (window.__sbReady) { setBootReady(true); return; }
+    const iv = setInterval(() => { if (window.__sbReady) { setBootReady(true); clearInterval(iv); } }, 120);
+    const to = setTimeout(() => { setBootReady(true); clearInterval(iv); }, 6000); // safety
+    return () => { clearInterval(iv); clearTimeout(to); };
+  }, [authed]);
   const setLang = (v) => setTweak('lang', v);
 
   // tr() — trilingual helper: tr(km, en, jp?)
@@ -415,11 +432,10 @@ function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [authed, actions, role]);
 
-  // ─── Restoring a remembered session: show a centred logo, not login ──
-  if (authChecking && !authed) {
+  // Centred logo splash — reused while restoring a session AND while the first
+  // cloud data load (role permissions, logo…) is still in flight after login.
+  const renderSplash = () => {
     const ss = window.__schoolSettings || {};
-    // Fall back to the locally-cached brand so the real logo shows even before
-    // the cloud settings (which hold the logo) have loaded.
     let brand = {};
     try { brand = JSON.parse(localStorage.getItem('anzen_brand') || '{}'); } catch (e) {}
     const logo = ss.logo || brand.logo;
@@ -432,7 +448,10 @@ function App() {
         <div style={{fontSize:15,fontWeight:600,color:'var(--ink-2)',letterSpacing:'.01em'}}>{name}</div>
       </div>
     );
-  }
+  };
+
+  // ─── Restoring a remembered session: show a centred logo, not login ──
+  if (authChecking && !authed) return renderSplash();
 
   // ─── Login screen ──────────────────────────────────────────────
   if (!authed) {
@@ -444,6 +463,10 @@ function App() {
       </AppActionsContext.Provider>
     );
   }
+
+  // ─── Logged in, but cloud data (role permissions, logo…) still loading ──
+  // Hold the splash so a non-admin never sees the unfiltered nav for a moment.
+  if (!bootReady) return renderSplash();
 
   // ─── Main app ──────────────────────────────────────────────────
   const screens = {
