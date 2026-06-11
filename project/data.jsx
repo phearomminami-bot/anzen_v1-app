@@ -146,11 +146,12 @@ const saveAllData = (skipCloud) => {
       currDone:     window.__curriculumDone ? [...window.__curriculumDone] : [],
       currFeedback: window.__curriculumFeedback || {},
     }));
-    // Cache the real logo/name so the loading splash shows it on next reload.
-    try { const _b = window.__schoolSettings || {}; if (_b.logo || _b.name) localStorage.setItem('anzen_brand', JSON.stringify({ logo: _b.logo || null, name: _b.name || null })); } catch (e) {}
     window.__autoBackup?.();
     try { window.__captureSnapshot && window.__captureSnapshot(); } catch(e) {}
   } catch(e) {}
+  // Cache the real logo/name in its own tiny key (independent of the big blob
+  // above, which can fail on quota) so the loading splash shows it next reload.
+  try { const _b = window.__schoolSettings || {}; if (_b.logo || _b.name) localStorage.setItem('anzen_brand', JSON.stringify({ logo: _b.logo || null, name: _b.name || null })); } catch (e) {}
   // Mirror the change up to Supabase when connected (debounced inside __sbSyncAll).
   // skipCloud=true for the periodic auto-save — only user-triggered changes push to cloud.
   if (!skipCloud) {

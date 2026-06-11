@@ -4836,17 +4836,17 @@ var saveAllData = skipCloud => {
       currDone: window.__curriculumDone ? [...window.__curriculumDone] : [],
       currFeedback: window.__curriculumFeedback || {}
     }));
-    try {
-      var _b = window.__schoolSettings || {};
-      if (_b.logo || _b.name) localStorage.setItem('anzen_brand', JSON.stringify({
-        logo: _b.logo || null,
-        name: _b.name || null
-      }));
-    } catch (e) {}
     window.__autoBackup?.();
     try {
       window.__captureSnapshot && window.__captureSnapshot();
     } catch (e) {}
+  } catch (e) {}
+  try {
+    var _b = window.__schoolSettings || {};
+    if (_b.logo || _b.name) localStorage.setItem('anzen_brand', JSON.stringify({
+      logo: _b.logo || null,
+      name: _b.name || null
+    }));
   } catch (e) {}
   if (!skipCloud) {
     try {
