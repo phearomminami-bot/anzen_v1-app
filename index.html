@@ -36883,6 +36883,13 @@ var VehicleMobileDetail = ({
   onParkingChange
 }) => {
   useBackHandler(true, onClose);
+  var {
+    hideChrome
+  } = useAppActions();
+  React.useEffect(() => {
+    hideChrome?.(true);
+    return () => hideChrome?.(false);
+  }, []);
   var [inspOpen, setInspOpen] = React.useState(false);
   var [photoIdx, setPhotoIdx] = React.useState(0);
   var [sliding, setSliding] = React.useState(null);
@@ -37853,7 +37860,8 @@ var StudentsScreenV2 = () => {
     toast,
     tr,
     lang,
-    navigate
+    navigate,
+    hideChrome
   } = useAppActions();
   var bp = useBreakpoint();
   var [, forceUpdate] = React.useReducer(n => n + 1, 0);
@@ -37871,6 +37879,12 @@ var StudentsScreenV2 = () => {
     if (mobileEdit) setMobileEdit(false);else if (mobileProfileId) setMobileProfileId(null);
   }, [mobileEdit, mobileProfileId]);
   useBackHandler(bp.mobile && (mobileEdit || mobileProfileId), mobileBack);
+  React.useEffect(() => {
+    if (bp.mobile && mobileProfileId) {
+      hideChrome?.(true);
+      return () => hideChrome?.(false);
+    }
+  }, [bp.mobile, mobileProfileId]);
   React.useEffect(() => {
     window.__notifyStudentsChanged = forceUpdate;
     return () => {

@@ -65,7 +65,7 @@ const MESSAGES_LIST = window.__messagesData;
 
 // ── Main screen ──────────────────────────────────────────────────────────────
 const StudentsScreenV2 = () => {
-  const { openForm, toast, tr, lang, navigate } = useAppActions();
+  const { openForm, toast, tr, lang, navigate, hideChrome } = useAppActions();
   const bp = useBreakpoint();
   const [, forceUpdate] = React.useReducer(n => n + 1, 0);
   const [tab, setTab]         = React.useState('directory');
@@ -83,6 +83,11 @@ const StudentsScreenV2 = () => {
     else if (mobileProfileId) setMobileProfileId(null);
   }, [mobileEdit, mobileProfileId]);
   useBackHandler(bp.mobile && (mobileEdit || mobileProfileId), mobileBack);
+  // Hide the app header/footer while the mobile student card/profile is open,
+  // so the bars don't cover its controls — same behaviour as the vehicle card.
+  React.useEffect(() => {
+    if (bp.mobile && mobileProfileId) { hideChrome?.(true); return () => hideChrome?.(false); }
+  }, [bp.mobile, mobileProfileId]);
 
   React.useEffect(() => {
     window.__notifyStudentsChanged = forceUpdate;
