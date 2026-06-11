@@ -86,6 +86,11 @@ function App() {
   const bp = useBreakpoint();
   useEdgeSwipeBack();   // global: swipe from either screen edge → back
   const [authed, setAuthed] = React.useState(false);
+  // True while we check for a remembered Supabase session on load, so we can
+  // show a centred logo splash instead of flashing the login screen on reload.
+  const [authChecking, setAuthChecking] = React.useState(() => {
+    try { return !!(window.__sbConfigured && window.__sbConfigured()); } catch (e) { return false; }
+  });
   const [current, setCurrent] = React.useState('dashboard');
   const [drawer, setDrawer] = React.useState(null);
   const [detail, setDetail] = React.useState(null);
@@ -313,8 +318,10 @@ function App() {
   // Auto-login if a Supabase session already exists (page reload / return visit).
   React.useEffect(() => {
     let cancelled = false;
+    // Safety: never stay stuck on the splash if the session check hangs.
+    const safety = setTimeout(() => { if (!cancelled) setAuthChecking(false); }, 5000);
     (async () => {
-      if (!(window.__sbConfigured && window.__sbConfigured())) return;
+      if (!(window.__sbConfigured && window.__sbConfigured())) { if (!cancelled) setAuthChecking(false); return; }
       try {
         const session = await window.__sbSession();
         if (session && !cancelled) {
@@ -322,8 +329,9 @@ function App() {
           if (profile && !cancelled) authLogin(profile);
         }
       } catch (e) { /* ignore — show login */ }
+      finally { if (!cancelled) setAuthChecking(false); }
     })();
-    return () => { cancelled = true; };
+    return () => { cancelled = true; clearTimeout(safety); };
   }, []);
   const setLang = (v) => setTweak('lang', v);
 
@@ -387,6 +395,19 @@ function App() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [authed, actions, role]);
+
+  // ─── Restoring a remembered session: show a centred logo, not login ──
+  if (authChecking && !authed) {
+    const ss = window.__schoolSettings;
+    return (
+      <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100svh',width:'100vw',gap:16,background:'var(--bg)'}}>
+        {ss && ss.logo
+          ? <img src={ss.logo} alt="" style={{width:64,height:64,borderRadius:14,objectFit:'cover'}}/>
+          : <Logo size={56}/>}
+        <div style={{fontSize:15,fontWeight:600,color:'var(--ink-2)',letterSpacing:'.01em'}}>{(ss && ss.name) || 'Anzen'}</div>
+      </div>
+    );
+  }
 
   // ─── Login screen ──────────────────────────────────────────────
   if (!authed) {

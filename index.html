@@ -62642,6 +62642,13 @@ function App() {
   var bp = useBreakpoint();
   useEdgeSwipeBack();
   var [authed, setAuthed] = React.useState(false);
+  var [authChecking, setAuthChecking] = React.useState(() => {
+    try {
+      return !!(window.__sbConfigured && window.__sbConfigured());
+    } catch (e) {
+      return false;
+    }
+  });
   var [current, setCurrent] = React.useState('dashboard');
   var [drawer, setDrawer] = React.useState(null);
   var [detail, setDetail] = React.useState(null);
@@ -62893,18 +62900,27 @@ function App() {
   };
   React.useEffect(() => {
     var cancelled = false;
+    var safety = setTimeout(() => {
+      if (!cancelled) setAuthChecking(false);
+    }, 5000);
     (async () => {
-      if (!(window.__sbConfigured && window.__sbConfigured())) return;
+      if (!(window.__sbConfigured && window.__sbConfigured())) {
+        if (!cancelled) setAuthChecking(false);
+        return;
+      }
       try {
         var session = await window.__sbSession();
         if (session && !cancelled) {
           var profile = await window.__sbLoadProfile();
           if (profile && !cancelled) authLogin(profile);
         }
-      } catch (e) {}
+      } catch (e) {} finally {
+        if (!cancelled) setAuthChecking(false);
+      }
     })();
     return () => {
       cancelled = true;
+      clearTimeout(safety);
     };
   }, []);
   var setLang = v => setTweak('lang', v);
@@ -62976,6 +62992,39 @@ function App() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [authed, actions, role]);
+  if (authChecking && !authed) {
+    var ss = window.__schoolSettings;
+    return React.createElement("div", {
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100svh',
+        width: '100vw',
+        gap: 16,
+        background: 'var(--bg)'
+      }
+    }, ss && ss.logo ? React.createElement("img", {
+      src: ss.logo,
+      alt: "",
+      style: {
+        width: 64,
+        height: 64,
+        borderRadius: 14,
+        objectFit: 'cover'
+      }
+    }) : React.createElement(Logo, {
+      size: 56
+    }), React.createElement("div", {
+      style: {
+        fontSize: 15,
+        fontWeight: 600,
+        color: 'var(--ink-2)',
+        letterSpacing: '.01em'
+      }
+    }, ss && ss.name || 'Anzen'));
+  }
   if (!authed) {
     return React.createElement(AppActionsContext.Provider, {
       value: actions
