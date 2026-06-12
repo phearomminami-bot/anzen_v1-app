@@ -1822,7 +1822,10 @@ Use "" for any field that cannot be read clearly.`;
 const NewLessonForm = ({ onClose, ctx = {} }) => {
   const { toast, tr } = useAppActions();
 
-  const defaultDate = ctx.date || todayStr();
+  // Edit mode: when a lesson is passed, pre-fill every field and update it on
+  // save (instead of creating new ones) — so editing uses this same form.
+  const editLesson = ctx.lesson || null;
+  const defaultDate = ctx.date || (editLesson && editLesson.date) || todayStr();
 
   // ── Lesson: pull real lessons from Tab Lessons (window.__lessonsLib) ───────
   const _lib = (typeof window !== 'undefined' && window.__lessonsLib) || {};
@@ -1830,8 +1833,8 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
     { k:'theory',    km:'ទ្រឹស្ដី', en:'Theory · 学科',    color:'c', items: _lib.theoryTexts    || [] },
     { k:'practical', km:'អនុវត្តន៍', en:'Practical · 技能', color:'a', items: _lib.practicalTexts || [] },
   ];
-  const [cat,     setCat]     = React.useState('theory');
-  const [selLessons, setSelLessons] = React.useState([]);   // selected lesson ids
+  const [cat,     setCat]     = React.useState(editLesson ? (editLesson.color==='c' ? 'theory' : 'practical') : 'theory');
+  const [selLessons, setSelLessons] = React.useState(editLesson && Array.isArray(editLesson.lessonIds) ? [...editLesson.lessonIds] : []);   // selected lesson ids
   const catObj = TYPE_CATS.find(c => c.k === cat) || TYPE_CATS[0];
 
   // When category changes, clear the selection
@@ -1840,8 +1843,8 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
   // ── When: multi-date ─────────────────────────────────────────────────────
   const [dates,    setDates]    = React.useState([defaultDate]);
   const [addingDate, setAddingDate] = React.useState('');
-  const [hour,     setHour]     = React.useState(ctx.hour || 9);
-  const [len,      setLen]      = React.useState(2);
+  const [hour,     setHour]     = React.useState(editLesson ? editLesson.h : (ctx.hour || 9));
+  const [len,      setLen]      = React.useState(editLesson ? editLesson.len : 2);
 
   const addDate = (d) => {
     if (!d) return;
@@ -1851,16 +1854,16 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
   const removeDate = (d) => setDates(prev => prev.filter(x => x !== d));
 
   // ── People ────────────────────────────────────────────────────────────────
-  const [studentId, setStudentId] = React.useState(ctx.studentId || '');
-  const [instId,    setInstId]    = React.useState(ctx.instId || '');
-  const [guests,    setGuests]    = React.useState([]);
-  const [vehId,     setVehId]     = React.useState('');
-  const [note,      setNote]      = React.useState('');
+  const [studentId, setStudentId] = React.useState(editLesson ? (editLesson.studentId==='—' ? '' : editLesson.studentId) : (ctx.studentId || ''));
+  const [instId,    setInstId]    = React.useState(editLesson ? editLesson.instId : (ctx.instId || ''));
+  const [guests,    setGuests]    = React.useState(editLesson && Array.isArray(editLesson.guests) ? [...editLesson.guests] : []);
+  const [vehId,     setVehId]     = React.useState(editLesson ? (editLesson.veh==='—' ? '' : editLesson.veh) : '');
+  const [note,      setNote]      = React.useState(editLesson ? (editLesson.note || '') : '');
   const [touched,   setTouched]   = React.useState({});
 
   // ── Location ──────────────────────────────────────────────────────────────
-  const [pickup, setPickup] = React.useState('school');
-  const [locationText, setLocationText] = React.useState('');
+  const [pickup, setPickup] = React.useState(editLesson ? (editLesson.pickup || 'school') : 'school');
+  const [locationText, setLocationText] = React.useState(editLesson ? (editLesson.location || '') : '');
   const LOCATIONS = [
     { v:'school',   km:'សាលា',              en:'School' },
     { v:'yard',     km:'ទីលាន​ហាត់',        en:'Training Course' },
@@ -1873,7 +1876,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
 
   // ── Conflict checks (first date only, as a proxy) ─────────────────────────
   const firstDate = dates[0] || defaultDate;
-  const slotBusy = (l) => l.status !== 'cancelled' && dates.includes(l.date) && l.h < parseInt(hour) + parseFloat(len) && l.h + l.len > parseInt(hour);
+  const slotBusy = (l) => l.status !== 'cancelled' && (!editLesson || l.id !== editLesson.id) && dates.includes(l.date) && l.h < parseInt(hour) + parseFloat(len) && l.h + l.len > parseInt(hour);
   const hasConflict = React.useMemo(() => {
     if (!instId || !dates.length) return false;
     return LESSONS.some(l => (l.instId === instId || (l.guests||[]).includes(instId)) && slotBusy(l));
@@ -1904,6 +1907,31 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
     const selLabel = selObjs.map(u => u.no ? `${u.no} ${tr(u.km,u.en)}` : tr(u.km,u.en)).join(', ');
     const typeName = `${tr(catObj.km, catObj.en)}${selLabel ? ' · ' + selLabel : ''}`;
     const lessonNo = selObjs.map(u => u.no).filter(Boolean).join(', ');   // short code e.g. "学科1" for the calendar
+
+    // ── Edit mode: update the existing lesson in place, then close ──
+    if (editLesson) {
+      const idx = LESSONS.findIndex(l => l.id === editLesson.id);
+      if (idx !== -1) {
+        LESSONS[idx] = { ...LESSONS[idx],
+          date: dates[0] || editLesson.date,
+          h: parseInt(hour), len: parseFloat(len),
+          studentId: studentId || '—',
+          instId,
+          guests: guests.length > 0 ? [...guests] : undefined,
+          veh: vehId || '—',
+          type: typeName, color: catObj.color,
+          lessonIds: [...selLessons], lessonNo,
+          pickup, location: locationText.trim(), note: note.trim(),
+        };
+      }
+      if (window.__notifyLessonsChanged)  window.__notifyLessonsChanged();
+      if (window.__notifyStudentsChanged) window.__notifyStudentsChanged();
+      if (window.__logActivity) window.__logActivity('edit','lesson', ((stu?stu.name+' · ':'') + (lessonNo || typeName || 'lesson')));
+      if (window.saveAllData) window.saveAllData();
+      toast(tr('បាន​រក្សាទុក​ការ​កែ ✓','Lesson updated ✓'),'good');
+      onClose();
+      return;
+    }
 
     dates.forEach(date => {
       LESSONS.push({
@@ -1959,7 +1987,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
   const activeVehs = VEHICLES.filter(v => v.visible !== false);
 
   return (
-    <FormShell onCancel={onClose} onSave={save} saveLabel={tr('កក់​មេរៀន','Schedule lesson')}>
+    <FormShell onCancel={onClose} onSave={save} saveLabel={editLesson ? tr('រក្សាទុក','Save changes') : tr('កក់​មេរៀន','Schedule lesson')}>
 
       {/* ── LESSON ── */}
       <FormSection title="LESSON">

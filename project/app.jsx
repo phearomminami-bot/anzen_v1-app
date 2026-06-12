@@ -53,6 +53,7 @@ if (!window.NOTIFICATIONS) {
 const FORMS = {
   newStudent:     NewStudentForm,
   newLesson:      NewLessonForm,
+  editLesson:     NewLessonForm,
   newInstructor:  NewInstructorForm,
   newVehicle:     NewVehicleForm,
   newInvoice:     NewInvoiceForm,
@@ -62,6 +63,7 @@ const FORMS = {
 const FORM_TITLES = {
   newStudent:     { km:'បន្ថែម​សិស្ស​​​​ថ្មី',           en:'New student'      },
   newLesson:      { km:'កក់​មេរៀន​ថ្មី',               en:'New lesson'        },
+  editLesson:     { km:'កែ​មេរៀន',                     en:'Edit lesson'       },
   newInstructor:  { km:'បន្ថែម​គ្រូ​ថ្មី',             en:'New instructor'    },
   newVehicle:     { km:'បន្ថែម​យានយន្ត​ថ្មី',          en:'New vehicle'       },
   newInvoice:     { km:'បង្កើត​វិក្កយបត្រ​',           en:'New invoice'       },

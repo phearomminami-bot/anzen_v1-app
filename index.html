@@ -287,8 +287,10 @@ window.__trRegistry = {
   "Please select at least one date": "សូម​ជ្រើស​ថ្ងៃ",
   "Instructor has a conflict": "គ្រូ​ រវល់​ម៉ោង​នេះ",
   "Vehicle already booked": "ឡាន​ជាន់​ម៉ោង​គ្នា",
+  "Lesson updated ✓": "បាន​រក្សាទុក​ការ​កែ ✓",
   "📨 Sent to student Telegram ✓": "📨 បានផ្ញើទៅ Telegram សិស្ស ✓",
   "Group": "ក្រុម",
+  "Save changes": "រក្សា​ទុក",
   "Schedule lesson": "កក់​មេរៀន",
   "Select lessons (from Tab Lessons)": "ជ្រើស​មេរៀន (ពី Tab Lessons)",
   "No lessons defined in Tab Lessons": "មិនទាន់មានមេរៀននៅ Tab Lessons",
@@ -834,7 +836,6 @@ window.__trRegistry = {
   "MONTHLY COSTS (optional)": "ការ​ចំណាយ",
   "Fuel cost / mo ($)": "ប្រេង",
   "Total cost / mo ($)": "ថែទាំ + ប្រេង",
-  "Save changes": "រក្សា​ទុក",
   "Enter work type": "សូម​បញ្ចូល​ប្រភេទ​ការងារ",
   "New work order": "បាន​បន្ថែម​ការ​ងារ · ' + id, 'Work order added · ' + id), 'good');\n    onClose();\n  };\n\n  const inp = { style:{width:'100%',padding:'7px 10px',border:'1px solid var(--border)',\n    borderRadius:6,fontSize:13,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',boxSizing:'border-box'} };\n\n  return (\n    <Card>\n      <div style={{fontSize:14,fontWeight:600,marginBottom:14}}>\n        ➕ {tr('បញ្ជា​ការ​ថែទាំ​",
   "Add": "បន្ថែម",
@@ -1805,7 +1806,6 @@ window.__trGroups = {
     "MONTHLY COSTS (optional)": "ការ​ចំណាយ",
     "Fuel cost / mo ($)": "ប្រេង",
     "Total cost / mo ($)": "ថែទាំ + ប្រេង",
-    "Save changes": "រក្សា​ទុក",
     "Enter work type": "សូម​បញ្ចូល​ប្រភេទ​ការងារ",
     "New work order": "បាន​បន្ថែម​ការ​ងារ · ' + id, 'Work order added · ' + id), 'good');\n    onClose();\n  };\n\n  const inp = { style:{width:'100%',padding:'7px 10px',border:'1px solid var(--border)',\n    borderRadius:6,fontSize:13,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',boxSizing:'border-box'} };\n\n  return (\n    <Card>\n      <div style={{fontSize:14,fontWeight:600,marginBottom:14}}>\n        ➕ {tr('បញ្ជា​ការ​ថែទាំ​",
     "Add": "បន្ថែម",
@@ -2366,8 +2366,10 @@ window.__trGroups = {
     "Please select at least one date": "សូម​ជ្រើស​ថ្ងៃ",
     "Instructor has a conflict": "គ្រូ​ រវល់​ម៉ោង​នេះ",
     "Vehicle already booked": "ឡាន​ជាន់​ម៉ោង​គ្នា",
+    "Lesson updated ✓": "បាន​រក្សាទុក​ការ​កែ ✓",
     "📨 Sent to student Telegram ✓": "📨 បានផ្ញើទៅ Telegram សិស្ស ✓",
     "Group": "ក្រុម",
+    "Save changes": "រក្សាទុក",
     "Schedule lesson": "កក់​មេរៀន",
     "Select lessons (from Tab Lessons)": "ជ្រើស​មេរៀន (ពី Tab Lessons)",
     "No lessons defined in Tab Lessons": "មិនទាន់មានមេរៀននៅ Tab Lessons",
@@ -6687,7 +6689,8 @@ var NewLessonForm = ({
     toast,
     tr
   } = useAppActions();
-  var defaultDate = ctx.date || todayStr();
+  var editLesson = ctx.lesson || null;
+  var defaultDate = ctx.date || editLesson && editLesson.date || todayStr();
   var _lib = typeof window !== 'undefined' && window.__lessonsLib || {};
   var TYPE_CATS = [{
     k: 'theory',
@@ -6702,8 +6705,8 @@ var NewLessonForm = ({
     color: 'a',
     items: _lib.practicalTexts || []
   }];
-  var [cat, setCat] = React.useState('theory');
-  var [selLessons, setSelLessons] = React.useState([]);
+  var [cat, setCat] = React.useState(editLesson ? editLesson.color === 'c' ? 'theory' : 'practical' : 'theory');
+  var [selLessons, setSelLessons] = React.useState(editLesson && Array.isArray(editLesson.lessonIds) ? [...editLesson.lessonIds] : []);
   var catObj = TYPE_CATS.find(c => c.k === cat) || TYPE_CATS[0];
   var changeCat = k => {
     setCat(k);
@@ -6711,22 +6714,22 @@ var NewLessonForm = ({
   };
   var [dates, setDates] = React.useState([defaultDate]);
   var [addingDate, setAddingDate] = React.useState('');
-  var [hour, setHour] = React.useState(ctx.hour || 9);
-  var [len, setLen] = React.useState(2);
+  var [hour, setHour] = React.useState(editLesson ? editLesson.h : ctx.hour || 9);
+  var [len, setLen] = React.useState(editLesson ? editLesson.len : 2);
   var addDate = d => {
     if (!d) return;
     if (!dates.includes(d)) setDates(prev => [...prev, d].sort());
     setAddingDate('');
   };
   var removeDate = d => setDates(prev => prev.filter(x => x !== d));
-  var [studentId, setStudentId] = React.useState(ctx.studentId || '');
-  var [instId, setInstId] = React.useState(ctx.instId || '');
-  var [guests, setGuests] = React.useState([]);
-  var [vehId, setVehId] = React.useState('');
-  var [note, setNote] = React.useState('');
+  var [studentId, setStudentId] = React.useState(editLesson ? editLesson.studentId === '—' ? '' : editLesson.studentId : ctx.studentId || '');
+  var [instId, setInstId] = React.useState(editLesson ? editLesson.instId : ctx.instId || '');
+  var [guests, setGuests] = React.useState(editLesson && Array.isArray(editLesson.guests) ? [...editLesson.guests] : []);
+  var [vehId, setVehId] = React.useState(editLesson ? editLesson.veh === '—' ? '' : editLesson.veh : '');
+  var [note, setNote] = React.useState(editLesson ? editLesson.note || '' : '');
   var [touched, setTouched] = React.useState({});
-  var [pickup, setPickup] = React.useState('school');
-  var [locationText, setLocationText] = React.useState('');
+  var [pickup, setPickup] = React.useState(editLesson ? editLesson.pickup || 'school' : 'school');
+  var [locationText, setLocationText] = React.useState(editLesson ? editLesson.location || '' : '');
   var LOCATIONS = [{
     v: 'school',
     km: 'សាលា',
@@ -6757,7 +6760,7 @@ var NewLessonForm = ({
     en: 'Class C'
   }];
   var firstDate = dates[0] || defaultDate;
-  var slotBusy = l => l.status !== 'cancelled' && dates.includes(l.date) && l.h < parseInt(hour) + parseFloat(len) && l.h + l.len > parseInt(hour);
+  var slotBusy = l => l.status !== 'cancelled' && (!editLesson || l.id !== editLesson.id) && dates.includes(l.date) && l.h < parseInt(hour) + parseFloat(len) && l.h + l.len > parseInt(hour);
   var hasConflict = React.useMemo(() => {
     if (!instId || !dates.length) return false;
     return LESSONS.some(l => (l.instId === instId || (l.guests || []).includes(instId)) && slotBusy(l));
@@ -6799,6 +6802,35 @@ var NewLessonForm = ({
     var selLabel = selObjs.map(u => u.no ? `${u.no} ${tr(u.km, u.en)}` : tr(u.km, u.en)).join(', ');
     var typeName = `${tr(catObj.km, catObj.en)}${selLabel ? ' · ' + selLabel : ''}`;
     var lessonNo = selObjs.map(u => u.no).filter(Boolean).join(', ');
+    if (editLesson) {
+      var idx = LESSONS.findIndex(l => l.id === editLesson.id);
+      if (idx !== -1) {
+        LESSONS[idx] = {
+          ...LESSONS[idx],
+          date: dates[0] || editLesson.date,
+          h: parseInt(hour),
+          len: parseFloat(len),
+          studentId: studentId || '—',
+          instId,
+          guests: guests.length > 0 ? [...guests] : undefined,
+          veh: vehId || '—',
+          type: typeName,
+          color: catObj.color,
+          lessonIds: [...selLessons],
+          lessonNo,
+          pickup,
+          location: locationText.trim(),
+          note: note.trim()
+        };
+      }
+      if (window.__notifyLessonsChanged) window.__notifyLessonsChanged();
+      if (window.__notifyStudentsChanged) window.__notifyStudentsChanged();
+      if (window.__logActivity) window.__logActivity('edit', 'lesson', (stu ? stu.name + ' · ' : '') + (lessonNo || typeName || 'lesson'));
+      if (window.saveAllData) window.saveAllData();
+      toast(tr('បាន​រក្សាទុក​ការ​កែ ✓', 'Lesson updated ✓'), 'good');
+      onClose();
+      return;
+    }
     dates.forEach(date => {
       LESSONS.push({
         id: nextLessonId(),
@@ -6844,7 +6876,7 @@ var NewLessonForm = ({
   return React.createElement(FormShell, {
     onCancel: onClose,
     onSave: save,
-    saveLabel: tr('កក់​មេរៀន', 'Schedule lesson')
+    saveLabel: editLesson ? tr('រក្សាទុក', 'Save changes') : tr('កក់​មេរៀន', 'Schedule lesson')
   }, React.createElement(FormSection, {
     title: "LESSON"
   }, React.createElement("div", {
@@ -9302,7 +9334,8 @@ var LessonDetail = ({
     toast,
     confirm,
     role,
-    tr
+    tr,
+    openForm
   } = useAppActions();
   var [ver, setVer] = React.useState(0);
   var [editing, setEditing] = React.useState(false);
@@ -9730,7 +9763,12 @@ var LessonDetail = ({
   }, tr('បិទ', 'Close')), React.createElement(Btn, {
     kind: "ghost",
     size: "md",
-    onClick: () => setEditing(true),
+    onClick: () => {
+      openForm('editLesson', {
+        lesson
+      });
+      onClose && onClose();
+    },
     style: {
       flex: 1,
       justifyContent: 'center'
@@ -9746,7 +9784,12 @@ var LessonDetail = ({
   }, tr('បិទ', 'Close')), React.createElement(Btn, {
     kind: "ghost",
     size: "md",
-    onClick: () => setEditing(true),
+    onClick: () => {
+      openForm('editLesson', {
+        lesson
+      });
+      onClose && onClose();
+    },
     style: {
       flex: 1,
       justifyContent: 'center'
@@ -9762,7 +9805,12 @@ var LessonDetail = ({
   }, tr('លុប​ចោល', 'Cancel')), React.createElement(Btn, {
     kind: "ghost",
     size: "md",
-    onClick: () => setEditing(true),
+    onClick: () => {
+      openForm('editLesson', {
+        lesson
+      });
+      onClose && onClose();
+    },
     style: {
       flex: 1,
       justifyContent: 'center'
@@ -57540,6 +57588,7 @@ if (!window.NOTIFICATIONS) {
 var FORMS = {
   newStudent: NewStudentForm,
   newLesson: NewLessonForm,
+  editLesson: NewLessonForm,
   newInstructor: NewInstructorForm,
   newVehicle: NewVehicleForm,
   newInvoice: NewInvoiceForm,
@@ -57554,6 +57603,10 @@ var FORM_TITLES = {
   newLesson: {
     km: 'កក់​មេរៀន​ថ្មី',
     en: 'New lesson'
+  },
+  editLesson: {
+    km: 'កែ​មេរៀន',
+    en: 'Edit lesson'
   },
   newInstructor: {
     km: 'បន្ថែម​គ្រូ​ថ្មី',

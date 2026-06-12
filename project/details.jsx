@@ -292,7 +292,7 @@ const LessonEditForm = ({ lesson, onSave, onCancel }) => {
 
 // ── Lesson detail ──────────────────────────────────────────────────────────
 const LessonDetail = ({ lesson, onClose }) => {
-  const { toast, confirm, role, tr } = useAppActions();
+  const { toast, confirm, role, tr, openForm } = useAppActions();
   const [ver,     setVer]     = React.useState(0);
   const [editing, setEditing] = React.useState(false);
   if (!lesson) return null;
@@ -474,17 +474,17 @@ const LessonDetail = ({ lesson, onClose }) => {
         ) : isDone ? (
           <>
             <Btn kind="ghost" size="md" onClick={onClose} style={{flex:1,justifyContent:'center'}}>{tr('បិទ','Close')}</Btn>
-            <Btn kind="ghost" size="md" onClick={()=>setEditing(true)} style={{flex:1,justifyContent:'center'}}>✎ {tr('កែ','Edit')}</Btn>
+            <Btn kind="ghost" size="md" onClick={()=>{ openForm('editLesson', { lesson }); onClose && onClose(); }} style={{flex:1,justifyContent:'center'}}>✎ {tr('កែ','Edit')}</Btn>
           </>
         ) : isCancelled ? (
           <>
             <Btn kind="ghost" size="md" onClick={onClose} style={{flex:1,justifyContent:'center'}}>{tr('បិទ','Close')}</Btn>
-            <Btn kind="ghost" size="md" onClick={()=>setEditing(true)} style={{flex:1,justifyContent:'center'}}>✎ {tr('កែ','Edit')}</Btn>
+            <Btn kind="ghost" size="md" onClick={()=>{ openForm('editLesson', { lesson }); onClose && onClose(); }} style={{flex:1,justifyContent:'center'}}>✎ {tr('កែ','Edit')}</Btn>
           </>
         ) : (
           <>
             <Btn kind="ghost" size="md" onClick={cancelLesson} style={{flex:1,justifyContent:'center'}}>{tr('លុប​ចោល','Cancel')}</Btn>
-            <Btn kind="ghost" size="md" onClick={()=>setEditing(true)} style={{flex:1,justifyContent:'center'}}>✎ {tr('កែ','Edit')}</Btn>
+            <Btn kind="ghost" size="md" onClick={()=>{ openForm('editLesson', { lesson }); onClose && onClose(); }} style={{flex:1,justifyContent:'center'}}>✎ {tr('កែ','Edit')}</Btn>
             <Btn kind="primary" size="md" onClick={markDone} icon={<Icon name="check" size={14}/>} style={{flex:1,justifyContent:'center'}}>{tr('ចប់​មេរៀន ✓','Mark done ✓')}</Btn>
           </>
         )}
