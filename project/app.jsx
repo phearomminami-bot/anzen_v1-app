@@ -158,6 +158,9 @@ function App() {
     if (!authed || !window.sb) return;
     const poll = () => {
       if (!window.__sbLoadAll) return;
+      // Skip while local changes are still being pushed, so the reload can't
+      // clobber an un-synced create/edit/delete.
+      if (window.__sbHasPendingSync) return;
       window.__sbLoadAll().catch(() => {});
     };
     const id = setInterval(poll, 30000);

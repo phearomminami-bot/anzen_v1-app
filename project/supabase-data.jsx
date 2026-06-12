@@ -64,17 +64,40 @@
     } catch (e) { console.error('[Anzen] load ' + t, e); return null; }
   };
 
-  const fill = (arr, rows, initialLoad) => {
+  const fill = (arr, rows, initialLoad, table) => {
     if (!rows) return;
     const cloudMap = {};
     rows.forEach(r => { const o = rowObj(r); if (o.id) cloudMap[o.id] = o; });
+    // Baseline = the cloud-confirmed state. Used to protect un-synced LOCAL changes
+    // from being clobbered when a cloud reload races a local edit — which is what
+    // caused new lessons to vanish, edits to revert, and deletes to come back.
+    // On a reload we update the baseline ONLY for rows we adopt from the cloud, so
+    // un-synced local changes stay "different" and still get pushed on next sync.
+    const base = contentSnap[table];
+    const wasSynced = (id) => !!(base && base.has(String(id)));
+    const setBase = (id, val) => { if (!initialLoad && base) base.set(String(id), val); };
     for (let i = arr.length - 1; i >= 0; i--) {
       const id = arr[i].id;
       if (!id) continue;
-      if (cloudMap[id]) { arr[i] = cloudMap[id]; delete cloudMap[id]; }
-      else if (!initialLoad) arr.splice(i, 1);
+      if (cloudMap[id]) {
+        // Keep the local copy if we edited it since the last sync (local edit wins
+        // until it is pushed); otherwise adopt the cloud copy + advance the baseline.
+        const localEdited = wasSynced(id) && base.get(String(id)) !== JSON.stringify(arr[i]);
+        if (!localEdited) { arr[i] = cloudMap[id]; setBase(id, JSON.stringify(cloudMap[id])); }
+        delete cloudMap[id];
+      } else if (!initialLoad) {
+        // Cloud lacks this row. Remove only if we'd synced it before (so it was
+        // genuinely deleted on another device). A fresh local create stays.
+        if (wasSynced(id)) { arr.splice(i, 1); if (base) base.delete(String(id)); }
+      }
     }
-    Object.values(cloudMap).forEach(o => arr.push(o));
+    Object.values(cloudMap).forEach(o => {
+      // Cloud has a row we don't. If we'd synced it before, we deleted it locally —
+      // don't resurrect it (the pending delete will push). Otherwise it's new.
+      if (wasSynced(o.id)) return;
+      arr.push(o);
+      setBase(o.id, JSON.stringify(o));
+    });
   };
 
   // ── LOAD ──────────────────────────────────────────────────────────────────
@@ -85,12 +108,12 @@
     const [stu, ins, veh, les, inv, stf] = await Promise.all(
       ['students', 'instructors', 'vehicles', 'lessons', 'invoices', 'staff'].map(pull));
 
-    fill(window.INSTRUCTORS, ins, initial);
-    fill(window.VEHICLES,    veh, initial);
-    fill(window.STUDENTS,    stu, initial);
-    fill(window.LESSONS,     les, initial);
-    fill(window.INVOICES,    inv, initial);
-    fill(window.STAFF,       stf, initial);
+    fill(window.INSTRUCTORS, ins, initial, 'instructors');
+    fill(window.VEHICLES,    veh, initial, 'vehicles');
+    fill(window.STUDENTS,    stu, initial, 'students');
+    fill(window.LESSONS,     les, initial, 'lessons');
+    fill(window.INVOICES,    inv, initial, 'invoices');
+    fill(window.STAFF,       stf, initial, 'staff');
     if (stf && stf.length) window.__staffData = stf.map(rowObj);
 
     const insp = await pull('vehicle_inspections');
@@ -118,7 +141,10 @@
     } catch (e) {}
 
     snapshotIds();
-    takeContentSnap(); // baseline for change detection
+    // Only reset the whole baseline on the first load. On reloads, fill() advances
+    // the baseline per-row for adopted cloud rows, so un-synced local changes keep
+    // their pending state and still push (instead of being absorbed + lost).
+    if (initial) takeContentSnap();
 
     window.__sbReady = true;
     refreshUI();
@@ -152,10 +178,9 @@
   function scheduleRealtimeReload() {
     clearTimeout(rtTimer);
     rtTimer = setTimeout(() => {
-      if (window.__sbHasPendingSync) {
-        rtTimer = setTimeout(() => { window.__sbLoadAll && window.__sbLoadAll().catch(() => {}); }, 1500);
-        return;
-      }
+      // Never pull from cloud while we still have local changes waiting to push —
+      // a reload could otherwise clobber them. Keep re-checking until the push lands.
+      if (window.__sbHasPendingSync) { scheduleRealtimeReload(); return; }
       window.__sbLoadAll && window.__sbLoadAll().catch(() => {});
     }, 500);
   }
@@ -179,16 +204,20 @@
 
   window.__sbSyncAll = function () {
     if (!window.sb || !window.__sbReady || !window.__sbSyncEnabled) return;
+    // Stays true through the ENTIRE push below (debounce + async upserts), so cloud
+    // reloads keep deferring until our local changes are safely in the cloud.
     window.__sbHasPendingSync = true;
     clearTimeout(syncTimer);
-    syncTimer = setTimeout(() => { window.__sbHasPendingSync = false; doSync(); }, 1200);
+    syncTimer = setTimeout(() => {
+      doSync().catch(() => {}).finally(() => { window.__sbHasPendingSync = false; });
+    }, 1200);
   };
 
   window.__sbPushNow = async function () {
     if (!window.sb) return { ok: false, error: 'not-configured' };
-    window.__sbHasPendingSync = false;
     clearTimeout(syncTimer);
-    return await doSync();
+    try { return await doSync(); }
+    finally { window.__sbHasPendingSync = false; }
   };
 
   async function doSync() {
@@ -248,7 +277,7 @@
       try {
         const { error } = await window.sb.from(table).delete().in('id', removed);
         if (error) console.warn('[Anzen] delete ' + table + ':', error.message);
-        else console.log('[Anzen] deleted from ' + table + ':', removed);
+        else { console.log('[Anzen] deleted from ' + table + ':', removed); removed.forEach(id => { if (contentSnap[table]) contentSnap[table].delete(String(id)); }); }
       } catch (e) { console.warn('[Anzen] delete', table, e); }
     };
 

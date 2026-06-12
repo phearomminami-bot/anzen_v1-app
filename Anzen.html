@@ -57127,33 +57127,51 @@ Object.assign(window, {
       return null;
     }
   };
-  var fill = (arr, rows, initialLoad) => {
+  var fill = (arr, rows, initialLoad, table) => {
     if (!rows) return;
     var cloudMap = {};
     rows.forEach(r => {
       var o = rowObj(r);
       if (o.id) cloudMap[o.id] = o;
     });
+    var base = contentSnap[table];
+    var wasSynced = id => !!(base && base.has(String(id)));
+    var setBase = (id, val) => {
+      if (!initialLoad && base) base.set(String(id), val);
+    };
     for (var i = arr.length - 1; i >= 0; i--) {
       var id = arr[i].id;
       if (!id) continue;
       if (cloudMap[id]) {
-        arr[i] = cloudMap[id];
+        var localEdited = wasSynced(id) && base.get(String(id)) !== JSON.stringify(arr[i]);
+        if (!localEdited) {
+          arr[i] = cloudMap[id];
+          setBase(id, JSON.stringify(cloudMap[id]));
+        }
         delete cloudMap[id];
-      } else if (!initialLoad) arr.splice(i, 1);
+      } else if (!initialLoad) {
+        if (wasSynced(id)) {
+          arr.splice(i, 1);
+          if (base) base.delete(String(id));
+        }
+      }
     }
-    Object.values(cloudMap).forEach(o => arr.push(o));
+    Object.values(cloudMap).forEach(o => {
+      if (wasSynced(o.id)) return;
+      arr.push(o);
+      setBase(o.id, JSON.stringify(o));
+    });
   };
   window.__sbLoadAll = async isInitialLoad => {
     if (!window.sb) return false;
     var initial = isInitialLoad === true || !window.__sbReady;
     var [stu, ins, veh, les, inv, stf] = await Promise.all(['students', 'instructors', 'vehicles', 'lessons', 'invoices', 'staff'].map(pull));
-    fill(window.INSTRUCTORS, ins, initial);
-    fill(window.VEHICLES, veh, initial);
-    fill(window.STUDENTS, stu, initial);
-    fill(window.LESSONS, les, initial);
-    fill(window.INVOICES, inv, initial);
-    fill(window.STAFF, stf, initial);
+    fill(window.INSTRUCTORS, ins, initial, 'instructors');
+    fill(window.VEHICLES, veh, initial, 'vehicles');
+    fill(window.STUDENTS, stu, initial, 'students');
+    fill(window.LESSONS, les, initial, 'lessons');
+    fill(window.INVOICES, inv, initial, 'invoices');
+    fill(window.STAFF, stf, initial, 'staff');
     if (stf && stf.length) window.__staffData = stf.map(rowObj);
     var insp = await pull('vehicle_inspections');
     if (insp) window.__vehicleInspections = insp.map(rowObj);
@@ -57181,7 +57199,7 @@ Object.assign(window, {
       }));
     } catch (e) {}
     snapshotIds();
-    takeContentSnap();
+    if (initial) takeContentSnap();
     window.__sbReady = true;
     refreshUI();
     if (window.__sbSubscribe) window.__sbSubscribe();
@@ -57222,9 +57240,7 @@ Object.assign(window, {
     clearTimeout(rtTimer);
     rtTimer = setTimeout(() => {
       if (window.__sbHasPendingSync) {
-        rtTimer = setTimeout(() => {
-          window.__sbLoadAll && window.__sbLoadAll().catch(() => {});
-        }, 1500);
+        scheduleRealtimeReload();
         return;
       }
       window.__sbLoadAll && window.__sbLoadAll().catch(() => {});
@@ -57254,8 +57270,9 @@ Object.assign(window, {
     window.__sbHasPendingSync = true;
     clearTimeout(syncTimer);
     syncTimer = setTimeout(() => {
-      window.__sbHasPendingSync = false;
-      doSync();
+      doSync().catch(() => {}).finally(() => {
+        window.__sbHasPendingSync = false;
+      });
     }, 1200);
   };
   window.__sbPushNow = async function () {
@@ -57263,9 +57280,12 @@ Object.assign(window, {
       ok: false,
       error: 'not-configured'
     };
-    window.__sbHasPendingSync = false;
     clearTimeout(syncTimer);
-    return await doSync();
+    try {
+      return await doSync();
+    } finally {
+      window.__sbHasPendingSync = false;
+    }
   };
   async function doSync() {
     if (!window.sb) return {
@@ -57327,7 +57347,12 @@ Object.assign(window, {
         var {
           error
         } = await window.sb.from(table).delete().in('id', removed);
-        if (error) console.warn('[Anzen] delete ' + table + ':', error.message);else console.log('[Anzen] deleted from ' + table + ':', removed);
+        if (error) console.warn('[Anzen] delete ' + table + ':', error.message);else {
+          console.log('[Anzen] deleted from ' + table + ':', removed);
+          removed.forEach(id => {
+            if (contentSnap[table]) contentSnap[table].delete(String(id));
+          });
+        }
       } catch (e) {
         console.warn('[Anzen] delete', table, e);
       }
@@ -57744,6 +57769,7 @@ function App() {
     if (!authed || !window.sb) return;
     var poll = () => {
       if (!window.__sbLoadAll) return;
+      if (window.__sbHasPendingSync) return;
       window.__sbLoadAll().catch(() => {});
     };
     var id = setInterval(poll, 30000);
