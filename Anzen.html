@@ -525,10 +525,15 @@ window.__trRegistry = {
   "reviews": "មតិ",
   "Rated": "បាន​វាយ​តម្លៃ",
   "Rate": "វាយ​តម្លៃ",
+  "Copy": "ម៉ូដ​ចម្លង",
+  "Move": "ម៉ូដ​ផ្លាស់​ទី",
   "today": "ថ្ងៃ​នេះ",
   "No lessons scheduled": "គ្មាន​មេរៀន",
   "Available slots": "ម៉ោង​ដែល​អាច​កក់​បាន",
   "Admin": "នាយក",
+  "Pasted copy ✓": "បាន​ដាក់​ច្បាប់​ចម្លង ✓",
+  "Moved ✓": "បាន​ផ្លាស់​ទី ✓",
+  "tap an empty slot to place": "ចុច​ប្រអប់​ទំនេរ​ដើម្បី​ដាក់",
   "◀ Prev": "◀ មុន",
   "Next ▶": "បន្ទាប់ ▶",
   "PDF": "PDF",
@@ -1574,10 +1579,15 @@ window.__trGroups = {
     "Rate": "វាយ​តម្លៃ"
   },
   "កាលវិភាគ · Schedule": {
+    "Copy": "ចម្លង",
+    "Move": "ផ្លាស់ទី",
     "today": "ថ្ងៃ​នេះ",
     "No lessons scheduled": "គ្មាន​មេរៀន",
     "Available slots": "ម៉ោង​ដែល​អាច​កក់​បាន",
     "Admin": "នាយក",
+    "Pasted copy ✓": "បាន​ដាក់​ច្បាប់​ចម្លង ✓",
+    "Moved ✓": "បាន​ផ្លាស់​ទី ✓",
+    "tap an empty slot to place": "ចុច​ប្រអប់​ទំនេរ​ដើម្បី​ដាក់",
     "◀ Prev": "◀ មុន",
     "Next ▶": "បន្ទាប់ ▶",
     "PDF": "PDF",
@@ -16533,7 +16543,12 @@ var ScheduleWeek = ({
   notes = [],
   onSlotClick,
   onNoteClick,
-  dayNav = null
+  dayNav = null,
+  clip = null,
+  onStartCopy,
+  onStartMove,
+  onPlace,
+  onMoveLesson
 }) => {
   var {
     openDetail,
@@ -16757,6 +16772,20 @@ var ScheduleWeek = ({
     var isSun = isSunday(date);
     return React.createElement("div", {
       key: dayIdx,
+      onDragOver: onMoveLesson ? e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      } : undefined,
+      onDrop: onMoveLesson ? e => {
+        e.preventDefault();
+        var id = e.dataTransfer.getData('text/plain');
+        var lesson = LESSONS.find(x => x.id === id);
+        if (!lesson) return;
+        var rect = e.currentTarget.getBoundingClientRect();
+        var nh = 7 + Math.floor((e.clientY - rect.top) / 48);
+        nh = Math.max(7, Math.min(18, nh));
+        onMoveLesson(lesson, date, nh);
+      } : undefined,
       style: {
         position: 'relative',
         borderLeft: '1px solid var(--border)',
@@ -16766,25 +16795,27 @@ var ScheduleWeek = ({
       var hlKey = `${date}:${h}`;
       var hlBg = highlights[hlKey] || '';
       if (!studentMode) {
+        var pasting = !!clip && !!onPlace;
+        var pasteBg = clip?.mode === 'copy' ? 'var(--accent-soft)' : 'rgba(202,138,4,.18)';
         return React.createElement("div", {
           key: h,
           onClick: () => {
-            if (isPaint) onHighlight?.(date, h);else onSlot(date, h);
+            if (isPaint) onHighlight?.(date, h);else if (pasting) onPlace(date, h);else onSlot(date, h);
           },
           style: {
             height: 48,
             borderBottom: '1px solid var(--border)',
-            cursor: isPaint ? 'crosshair' : 'pointer',
+            cursor: isPaint ? 'crosshair' : pasting ? 'copy' : 'pointer',
             background: hlBg || 'transparent',
             transition: 'background .1s'
           },
           onMouseEnter: e => {
-            e.currentTarget.style.background = hlBg ? isPaint ? 'rgba(0,0,0,.08)' : hlBg : isPaint ? hlColor : 'rgba(42,93,176,.05)';
+            e.currentTarget.style.background = hlBg ? isPaint ? 'rgba(0,0,0,.08)' : hlBg : isPaint ? hlColor : pasting ? pasteBg : 'rgba(42,93,176,.05)';
           },
           onMouseLeave: e => {
             e.currentTarget.style.background = hlBg || 'transparent';
           },
-          title: isPaint ? '' : `បន្ថែម​មេរៀន ${String(h).padStart(2, '0')}:00`
+          title: isPaint ? '' : pasting ? `ដាក់​នៅ ${String(h).padStart(2, '0')}:00` : `បន្ថែម​មេរៀន ${String(h).padStart(2, '0')}:00`
         });
       }
       var avail = slotAvailability(date, h);
@@ -16849,8 +16880,15 @@ var ScheduleWeek = ({
       var pct = 100 / total;
       var transLabel = v?.trans || '';
       var locLabel = locLabelOf(l);
-      return React.createElement("button", {
+      return React.createElement("div", {
         key: i,
+        role: "button",
+        tabIndex: 0,
+        draggable: !studentMode && !!onMoveLesson,
+        onDragStart: !studentMode && onMoveLesson ? e => {
+          e.dataTransfer.setData('text/plain', l.id);
+          e.dataTransfer.effectAllowed = 'move';
+        } : undefined,
         onClick: e => {
           e.stopPropagation();
           openDetail('lesson', l);
@@ -16872,9 +16910,63 @@ var ScheduleWeek = ({
           cursor: 'pointer',
           font: 'inherit',
           color: c.text,
-          boxSizing: 'border-box'
+          boxSizing: 'border-box',
+          userSelect: 'none'
         }
-      }, React.createElement("div", {
+      }, !studentMode && onStartCopy && React.createElement("div", {
+        style: {
+          position: 'absolute',
+          top: 2,
+          right: 2,
+          display: 'flex',
+          gap: 2,
+          zIndex: 4
+        }
+      }, React.createElement("button", {
+        title: tr('ចម្លង', 'Copy'),
+        onClick: e => {
+          e.stopPropagation();
+          onStartCopy(l);
+        },
+        style: {
+          width: 16,
+          height: 16,
+          padding: 0,
+          border: 'none',
+          borderRadius: 4,
+          background: 'rgba(255,255,255,.75)',
+          color: '#222',
+          cursor: 'pointer',
+          fontSize: 9,
+          lineHeight: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 1px 2px rgba(0,0,0,.2)'
+        }
+      }, "\u29C9"), React.createElement("button", {
+        title: tr('ផ្លាស់ទី', 'Move'),
+        onClick: e => {
+          e.stopPropagation();
+          onStartMove(l);
+        },
+        style: {
+          width: 16,
+          height: 16,
+          padding: 0,
+          border: 'none',
+          borderRadius: 4,
+          background: 'rgba(255,255,255,.75)',
+          color: '#222',
+          cursor: 'pointer',
+          fontSize: 10,
+          lineHeight: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 1px 2px rgba(0,0,0,.2)'
+        }
+      }, "\u279C")), React.createElement("div", {
         style: {
           display: 'flex',
           gap: 4,
@@ -17397,7 +17489,8 @@ var ScheduleScreen = ({
     navigate,
     tr,
     lang,
-    openDetail
+    openDetail,
+    toast
   } = useAppActions();
   var bp = useBreakpoint();
   var me = (role === 'instructor' ? window.__loggedInInstructorData || LOGIN_USERS.instructor : LOGIN_USERS[role] || LOGIN_USERS.admin) || {};
@@ -17406,6 +17499,7 @@ var ScheduleScreen = ({
   var [weekOffset, setWeekOffset] = React.useState(0);
   var [dayOffset, setDayOffset] = React.useState(0);
   var [ver, setVer] = React.useState(0);
+  var [clip, setClip] = React.useState(null);
   var [instFilter, setInstFilter] = React.useState('');
   var [vehFilter, setVehFilter] = React.useState('');
   var [studentFilter, setStudentFilter] = React.useState('');
@@ -17599,6 +17693,69 @@ var ScheduleScreen = ({
       delete window.__deleteScheduleNote;
     };
   });
+  var reRenderLessons = () => {
+    setVer(n => n + 1);
+    if (window.__notifyLessonsChanged) window.__notifyLessonsChanged();
+  };
+  var startCopy = lesson => setClip({
+    lesson,
+    mode: 'copy'
+  });
+  var startMove = lesson => setClip({
+    lesson,
+    mode: 'move'
+  });
+  var placeLesson = (date, hour) => {
+    if (!clip) return;
+    var L = clip.lesson;
+    if (clip.mode === 'copy') {
+      LESSONS.push({
+        ...L,
+        id: nextLessonId(),
+        date,
+        h: hour,
+        status: 'scheduled',
+        createdBy: window.__currentUserName || '',
+        createdAt: new Date().toISOString()
+      });
+      if (window.__logActivity) window.__logActivity('create', 'lesson', 'copy → ' + date + ' ' + String(hour).padStart(2, '0') + ':00');
+      toast(tr('បាន​ដាក់​ច្បាប់​ចម្លង ✓', 'Pasted copy ✓'), 'good');
+    } else {
+      var idx = LESSONS.findIndex(x => x.id === L.id);
+      if (idx !== -1) LESSONS[idx] = {
+        ...LESSONS[idx],
+        date,
+        h: hour
+      };
+      if (window.__logActivity) window.__logActivity('edit', 'lesson', 'move → ' + date + ' ' + String(hour).padStart(2, '0') + ':00');
+      toast(tr('បាន​ផ្លាស់​ទី ✓', 'Moved ✓'), 'good');
+      setClip(null);
+    }
+    if (window.saveAllData) window.saveAllData();
+    reRenderLessons();
+  };
+  var moveLesson = (lesson, date, hour) => {
+    var idx = LESSONS.findIndex(x => x.id === lesson.id);
+    if (idx === -1) return;
+    if (LESSONS[idx].date === date && LESSONS[idx].h === hour) return;
+    LESSONS[idx] = {
+      ...LESSONS[idx],
+      date,
+      h: hour
+    };
+    if (window.__logActivity) window.__logActivity('edit', 'lesson', 'move → ' + date + ' ' + String(hour).padStart(2, '0') + ':00');
+    if (window.saveAllData) window.saveAllData();
+    toast(tr('បាន​ផ្លាស់​ទី ✓', 'Moved ✓'), 'good');
+    reRenderLessons();
+  };
+  React.useEffect(() => {
+    if (!clip) return;
+    var onKey = e => {
+      if (e.key === 'Escape') setClip(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [clip]);
   var viewProps = {
     lessons: visibleLessons,
     studentMode,
@@ -17608,7 +17765,12 @@ var ScheduleScreen = ({
     hlColor: activeColor,
     notes: visNotes,
     onSlotClick: studentMode ? null : openSlot,
-    onNoteClick: n => openDetail('note', n)
+    onNoteClick: n => openDetail('note', n),
+    clip: studentMode ? null : clip,
+    onStartCopy: studentMode ? null : startCopy,
+    onStartMove: studentMode ? null : startMove,
+    onPlace: studentMode ? null : placeLesson,
+    onMoveLesson: studentMode ? null : moveLesson
   };
   var selStyle = {
     padding: '6px 10px',
@@ -17705,7 +17867,58 @@ var ScheduleScreen = ({
       flexDirection: 'column',
       gap: 14
     }
-  }, !bp.mobile && React.createElement(SectionTitle, {
+  }, clip && React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      padding: '10px 14px',
+      position: 'sticky',
+      top: 0,
+      zIndex: 50,
+      background: clip.mode === 'copy' ? 'var(--accent-soft)' : 'rgba(202,138,4,.14)',
+      border: '1px solid ' + (clip.mode === 'copy' ? 'var(--accent)' : '#ca8a04'),
+      borderRadius: 10
+    }
+  }, React.createElement("span", {
+    style: {
+      fontSize: 16,
+      flexShrink: 0
+    }
+  }, clip.mode === 'copy' ? '⧉' : '➜'), React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0,
+      fontSize: 13,
+      fontWeight: 600,
+      color: 'var(--ink)',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis'
+    }
+  }, clip.mode === 'copy' ? tr('ម៉ូដ​ចម្លង', 'Copy') : tr('ម៉ូដ​ផ្លាស់​ទី', 'Move'), React.createElement("span", {
+    style: {
+      fontWeight: 400
+    }
+  }, ' · ', studentById(clip.lesson.studentId)?.name || (clip.lesson.type || '').split('·')[0].trim()), React.createElement("span", {
+    style: {
+      fontWeight: 400,
+      color: 'var(--ink-3)'
+    }
+  }, ' — ', tr('ចុច​ប្រអប់​ទំនេរ​ដើម្បី​ដាក់', 'tap an empty slot to place'))), React.createElement("button", {
+    onClick: () => setClip(null),
+    style: {
+      flexShrink: 0,
+      padding: '5px 12px',
+      borderRadius: 7,
+      border: '1px solid var(--border)',
+      background: 'var(--surface)',
+      cursor: 'pointer',
+      fontSize: 12,
+      fontWeight: 600,
+      color: 'var(--ink-2)'
+    }
+  }, tr('បោះបង់', 'Cancel'))), !bp.mobile && React.createElement(SectionTitle, {
     km: `កាលវិភាគ · ${labelKm}`,
     en: `${studentMode ? 'My Schedule' : 'Schedule'} · ${labelEn}`,
     action: bp.mobile ? null : React.createElement("div", {

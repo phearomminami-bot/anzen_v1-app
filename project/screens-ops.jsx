@@ -144,7 +144,7 @@ const computeLayout = (dayLessons) => {
 };
 
 // ── Week view ──
-const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], highlights = {}, onHighlight, hlColor = '', notes = [], onSlotClick, onNoteClick, dayNav = null }) => {
+const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], highlights = {}, onHighlight, hlColor = '', notes = [], onSlotClick, onNoteClick, dayNav = null, clip = null, onStartCopy, onStartMove, onPlace, onMoveLesson }) => {
   const { openDetail, openForm, tr } = useAppActions();
   const dateInputRef = React.useRef(null);
   const hours = Array.from({length:12}, (_,i)=> i+7); // 7..18
@@ -224,18 +224,32 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
           const layout = computeLayout([...dayLessons, ...dayNotes]);
           const isSun = isSunday(date);
           return (
-            <div key={dayIdx} style={{position:'relative',borderLeft:'1px solid var(--border)',background:date===today?'rgba(42,93,176,.02)':isSun?'rgba(176,65,62,.04)':'transparent'}}>
+            <div key={dayIdx}
+              onDragOver={onMoveLesson ? (e)=>{ e.preventDefault(); e.dataTransfer.dropEffect='move'; } : undefined}
+              onDrop={onMoveLesson ? (e)=>{
+                e.preventDefault();
+                const id = e.dataTransfer.getData('text/plain');
+                const lesson = LESSONS.find(x => x.id === id);
+                if (!lesson) return;
+                const rect = e.currentTarget.getBoundingClientRect();
+                let nh = 7 + Math.floor((e.clientY - rect.top) / 48);
+                nh = Math.max(7, Math.min(18, nh));
+                onMoveLesson(lesson, date, nh);
+              } : undefined}
+              style={{position:'relative',borderLeft:'1px solid var(--border)',background:date===today?'rgba(42,93,176,.02)':isSun?'rgba(176,65,62,.04)':'transparent'}}>
               {hours.map(h => {
                 const hlKey = `${date}:${h}`;
                 const hlBg = highlights[hlKey] || '';
                 if (!studentMode) {
+                  const pasting = !!clip && !!onPlace;
+                  const pasteBg = clip?.mode==='copy' ? 'var(--accent-soft)' : 'rgba(202,138,4,.18)';
                   return (
                     <div key={h}
-                      onClick={()=>{ if(isPaint) onHighlight?.(date,h); else onSlot(date,h); }}
-                      style={{height:48,borderBottom:'1px solid var(--border)',cursor:isPaint?'crosshair':'pointer',background:hlBg||'transparent',transition:'background .1s'}}
-                      onMouseEnter={e=>{ e.currentTarget.style.background = hlBg ? (isPaint?'rgba(0,0,0,.08)':hlBg) : isPaint?hlColor:'rgba(42,93,176,.05)'; }}
+                      onClick={()=>{ if(isPaint) onHighlight?.(date,h); else if(pasting) onPlace(date,h); else onSlot(date,h); }}
+                      style={{height:48,borderBottom:'1px solid var(--border)',cursor:isPaint?'crosshair':pasting?'copy':'pointer',background:hlBg||'transparent',transition:'background .1s'}}
+                      onMouseEnter={e=>{ e.currentTarget.style.background = hlBg ? (isPaint?'rgba(0,0,0,.08)':hlBg) : isPaint?hlColor:pasting?pasteBg:'rgba(42,93,176,.05)'; }}
                       onMouseLeave={e=>{ e.currentTarget.style.background = hlBg||'transparent'; }}
-                      title={isPaint?'':`បន្ថែម​មេរៀន ${String(h).padStart(2,'0')}:00`}
+                      title={isPaint?'':pasting?`ដាក់​នៅ ${String(h).padStart(2,'0')}:00`:`បន្ថែម​មេរៀន ${String(h).padStart(2,'0')}:00`}
                     />
                   );
                 }
@@ -273,7 +287,10 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                 const transLabel = v?.trans || '';
                 const locLabel   = locLabelOf(l);
                 return (
-                  <button key={i} onClick={e=>{ e.stopPropagation(); openDetail('lesson', l); }} style={{
+                  <div key={i} role="button" tabIndex={0}
+                    draggable={!studentMode && !!onMoveLesson}
+                    onDragStart={(!studentMode && onMoveLesson) ? (e)=>{ e.dataTransfer.setData('text/plain', l.id); e.dataTransfer.effectAllowed='move'; } : undefined}
+                    onClick={e=>{ e.stopPropagation(); openDetail('lesson', l); }} style={{
                     position:'absolute',top,
                     left:`calc(${col * pct}% + 4px)`,
                     width:`calc(${pct}% - 8px)`,
@@ -281,8 +298,16 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                     background:c.bg,border:`1px solid ${c.bd}`,borderLeft:`3px solid ${c.accent}`,
                     borderRadius:6,padding:'4px 6px',overflow:'hidden',
                     fontSize:10.5,textAlign:'left',cursor:'pointer',font:'inherit',color:c.text,
-                    boxSizing:'border-box',
+                    boxSizing:'border-box',userSelect:'none',
                   }}>
+                    {!studentMode && onStartCopy && (
+                      <div style={{position:'absolute',top:2,right:2,display:'flex',gap:2,zIndex:4}}>
+                        <button title={tr('ចម្លង','Copy')} onClick={e=>{ e.stopPropagation(); onStartCopy(l); }}
+                          style={{width:16,height:16,padding:0,border:'none',borderRadius:4,background:'rgba(255,255,255,.75)',color:'#222',cursor:'pointer',fontSize:9,lineHeight:'16px',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 1px 2px rgba(0,0,0,.2)'}}>⧉</button>
+                        <button title={tr('ផ្លាស់ទី','Move')} onClick={e=>{ e.stopPropagation(); onStartMove(l); }}
+                          style={{width:16,height:16,padding:0,border:'none',borderRadius:4,background:'rgba(255,255,255,.75)',color:'#222',cursor:'pointer',fontSize:10,lineHeight:'16px',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 1px 2px rgba(0,0,0,.2)'}}>➜</button>
+                      </div>
+                    )}
                     <div style={{display:'flex',gap:4,alignItems:'baseline',overflow:'hidden',minWidth:0}}>
                       <span style={{fontWeight:700,color:c.text,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',fontSize:10.5,flexShrink:1,minWidth:0}}>
                         {studentMode ? (lessonShort(l) || l.type.split('·')[0].trim()) : (s ? (s.en || s.name) : l.type.split('·')[0].trim())}
@@ -310,7 +335,7 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                         <span style={{fontSize:9,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{v.plate}</span>
                       </div>
                     )}
-                  </button>
+                  </div>
                 );
               })}
               {/* Note blocks — share the grid's column layout so they never
@@ -528,7 +553,7 @@ const ScheduleAgenda = ({ lessons = LESSONS, studentMode = false, weekDates = []
 };
 
 const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
-  const { openForm, navigate, tr, lang, openDetail } = useAppActions();
+  const { openForm, navigate, tr, lang, openDetail, toast } = useAppActions();
   const bp = useBreakpoint();
   // Current logged-in user — the note's author (Google-Calendar style).
   const me = (role === 'instructor' ? (window.__loggedInInstructorData || LOGIN_USERS.instructor) : (LOGIN_USERS[role] || LOGIN_USERS.admin)) || {};
@@ -537,6 +562,8 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   const [weekOffset, setWeekOffset] = React.useState(0);
   const [dayOffset,  setDayOffset]  = React.useState(0);
   const [ver, setVer] = React.useState(0);
+  // Copy / move clipboard for scheduled lessons: { lesson, mode:'copy'|'move' }.
+  const [clip, setClip] = React.useState(null);
   const [instFilter,    setInstFilter]    = React.useState('');
   const [vehFilter,     setVehFilter]     = React.useState('');
   const [studentFilter, setStudentFilter] = React.useState('');
@@ -699,8 +726,51 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
     return () => { delete window.__editScheduleNote; delete window.__deleteScheduleNote; };
   });
 
+  // ── Copy / move scheduled lessons ─────────────────────────────────────────
+  const reRenderLessons = () => { setVer(n => n+1); if (window.__notifyLessonsChanged) window.__notifyLessonsChanged(); };
+  const startCopy = (lesson) => setClip({ lesson, mode:'copy' });
+  const startMove = (lesson) => setClip({ lesson, mode:'move' });
+  // Drop the clipboard lesson onto a slot: copy → duplicate, move → relocate.
+  const placeLesson = (date, hour) => {
+    if (!clip) return;
+    const L = clip.lesson;
+    if (clip.mode === 'copy') {
+      LESSONS.push({ ...L, id: nextLessonId(), date, h: hour,
+        status: 'scheduled', createdBy: window.__currentUserName || '', createdAt: new Date().toISOString() });
+      if (window.__logActivity) window.__logActivity('create','lesson','copy → '+date+' '+String(hour).padStart(2,'0')+':00');
+      toast(tr('បាន​ដាក់​ច្បាប់​ចម្លង ✓','Pasted copy ✓'),'good');   // keep clip → multi-paste
+    } else {
+      const idx = LESSONS.findIndex(x => x.id === L.id);
+      if (idx !== -1) LESSONS[idx] = { ...LESSONS[idx], date, h: hour };
+      if (window.__logActivity) window.__logActivity('edit','lesson','move → '+date+' '+String(hour).padStart(2,'0')+':00');
+      toast(tr('បាន​ផ្លាស់​ទី ✓','Moved ✓'),'good');
+      setClip(null);   // a lesson moves once
+    }
+    if (window.saveAllData) window.saveAllData();
+    reRenderLessons();
+  };
+  // Drag-and-drop move (desktop): relocate a lesson to a new day/hour.
+  const moveLesson = (lesson, date, hour) => {
+    const idx = LESSONS.findIndex(x => x.id === lesson.id);
+    if (idx === -1) return;
+    if (LESSONS[idx].date === date && LESSONS[idx].h === hour) return;
+    LESSONS[idx] = { ...LESSONS[idx], date, h: hour };
+    if (window.__logActivity) window.__logActivity('edit','lesson','move → '+date+' '+String(hour).padStart(2,'0')+':00');
+    if (window.saveAllData) window.saveAllData();
+    toast(tr('បាន​ផ្លាស់​ទី ✓','Moved ✓'),'good');
+    reRenderLessons();
+  };
+  React.useEffect(() => {
+    if (!clip) return;
+    const onKey = (e) => { if (e.key === 'Escape') setClip(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [clip]);
+
   const viewProps = { lessons:visibleLessons, studentMode, weekDates, highlights, onHighlight:handleHighlight, hlColor:activeColor,
-    notes:visNotes, onSlotClick: studentMode ? null : openSlot, onNoteClick: (n)=>openDetail('note', n) };
+    notes:visNotes, onSlotClick: studentMode ? null : openSlot, onNoteClick: (n)=>openDetail('note', n),
+    clip: studentMode ? null : clip, onStartCopy: studentMode ? null : startCopy, onStartMove: studentMode ? null : startMove,
+    onPlace: studentMode ? null : placeLesson, onMoveLesson: studentMode ? null : moveLesson };
 
   const selStyle = {
     padding:'6px 10px',border:'1px solid var(--border)',borderRadius:7,
@@ -734,6 +804,19 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
 
   return (
     <div style={{display:'flex',flexDirection:'column',gap:14}}>
+      {clip && (
+        <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',position:'sticky',top:0,zIndex:50,
+          background: clip.mode==='copy' ? 'var(--accent-soft)' : 'rgba(202,138,4,.14)',
+          border:'1px solid '+(clip.mode==='copy' ? 'var(--accent)' : '#ca8a04'), borderRadius:10}}>
+          <span style={{fontSize:16,flexShrink:0}}>{clip.mode==='copy' ? '⧉' : '➜'}</span>
+          <div style={{flex:1,minWidth:0,fontSize:13,fontWeight:600,color:'var(--ink)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+            {clip.mode==='copy' ? tr('ម៉ូដ​ចម្លង','Copy') : tr('ម៉ូដ​ផ្លាស់​ទី','Move')}
+            <span style={{fontWeight:400}}>{' · '}{(studentById(clip.lesson.studentId)?.name) || (clip.lesson.type||'').split('·')[0].trim()}</span>
+            <span style={{fontWeight:400,color:'var(--ink-3)'}}>{' — '}{tr('ចុច​ប្រអប់​ទំនេរ​ដើម្បី​ដាក់','tap an empty slot to place')}</span>
+          </div>
+          <button onClick={()=>setClip(null)} style={{flexShrink:0,padding:'5px 12px',borderRadius:7,border:'1px solid var(--border)',background:'var(--surface)',cursor:'pointer',fontSize:12,fontWeight:600,color:'var(--ink-2)'}}>{tr('បោះបង់','Cancel')}</button>
+        </div>
+      )}
       {!bp.mobile && <SectionTitle
         km={`កាលវិភាគ · ${labelKm}`}
         en={`${studentMode?'My Schedule':'Schedule'} · ${labelEn}`}
