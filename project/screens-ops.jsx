@@ -1176,7 +1176,7 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
     const inst = INSTRUCTORS.find(i => i.id === l.instId);
     const veh  = VEHICLES.find(v => v.id === l.veh);
     const stu  = STUDENTS.find(s => s.id === l.studentId);
-    const typeLabel = key==='e' ? 'Theory JP' : key==='c' ? 'Theory KH' : key==='d' ? 'Practical JP' : 'Practical KH';
+    const typeLabel = (key==='c' || key==='e') ? 'Theory' : 'Practice';
     const locLabel  = locLabelOf(l);
     const locBg     = locLabel === 'School' ? '#2A5DB0' : locLabel === 'Course' ? '#B0413E' : '#888';
     const transLabel = veh?.trans || '';
@@ -1245,7 +1245,7 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
           const s = STUDENTS.find(x => x.id === l.studentId);
           const inst = INSTRUCTORS.find(i => i.id === l.instId);
           const veh = VEHICLES.find(v => v.id === l.veh);
-          const typeLabel = k==='e'?'Theory JP':k==='c'?'Theory KH':k==='d'?'Practical JP':'Practical KH';
+          const typeLabel = (k==='c' || k==='e') ? 'Theory' : 'Practice';
           const loc = locLabelOf(l);
           const locBg = loc==='School'?'#2A5DB0':loc==='Course'?'#B0413E':'#888';
           const trans = veh && veh.trans ? veh.trans : '';
@@ -1316,11 +1316,11 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
     </div>
     <div style="text-align:right;font-size:10px;color:#aaa">
       <div>Printed: ${new Date().toLocaleDateString()}</div>
-      <div>${lessons.length} lesson${lessons.length!==1?'s':''}</div>
+      <div>${(() => { const th = lessons.reduce((a,l)=>a+(l.len||1),0); return `${th} hour${th!==1?'s':''}`; })()}</div>
     </div>
   </div>
   <div style="display:flex;gap:14px;flex-wrap:wrap;padding:0 20px 10px;font-size:10px;color:#555;align-items:center">
-    ${[['Practical KH','a'],['Theory KH','c'],['Practical JP','d'],['Theory JP','e']].map(([lbl,k])=>
+    ${[['Practice','a'],['Theory','c']].map(([lbl,k])=>
       `<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;border-radius:3px;background:${LBG[k]};border:1px solid ${LC[k]};-webkit-print-color-adjust:exact;print-color-adjust:exact"></span>${lbl}</span>`
     ).join('')}
     <span style="width:1px;height:12px;background:#ddd"></span>
