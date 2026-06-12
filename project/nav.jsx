@@ -49,9 +49,7 @@ const NAV_ITEMS = {
     { id:'finance',     km:'គ្រប់គ្រងហិរញ្ញវត្ថុ',   en:'Finance',            jp:'財務管理',         icon:'chart' },
     { id:'staff',       km:'គ្រប់​គ្រង​បុគ្គលិក',    en:'Staff',              jp:'スタッフ管理',     icon:'users' },
     { id:'announce',    km:'ការជូនដំណឹង',           en:'Announcements',      jp:'お知らせ',         icon:'bell' },
-    { id:'public',      km:'ទំព័រសាធារណៈ',           en:'Public site',        jp:'公開サイト',       icon:'map' },
     { id:'booking',     km:'ការកក់',                en:'Booking flow',       jp:'予約',             icon:'book' },
-    { id:'mobile',      km:'ទូរស័ព្ទ',               en:'Mobile app',         jp:'モバイルアプリ',   icon:'phone' },
     { id:'settings',    km:'ការ​កំណត់',              en:'Settings',           jp:'設定',             icon:'settings' },
   ],
   instructor: [
@@ -67,9 +65,7 @@ const NAV_ITEMS = {
     { id:'finance',     km:'គ្រប់គ្រងហិរញ្ញវត្ថុ',   en:'Finance',            jp:'財務管理',         icon:'chart' },
     { id:'staff',       km:'គ្រប់​គ្រង​បុគ្គលិក',    en:'Staff',              jp:'スタッフ管理',     icon:'users' },
     { id:'announce',    km:'ការជូនដំណឹង',           en:'Announcements',      jp:'お知らせ',         icon:'bell' },
-    { id:'public',      km:'ទំព័រសាធារណៈ',           en:'Public site',        jp:'公開サイト',       icon:'map' },
     { id:'booking',     km:'ការកក់',                en:'Booking flow',       jp:'予約',             icon:'book' },
-    { id:'mobile',      km:'ទូរស័ព្ទ',               en:'Mobile app',         jp:'モバイルアプリ',   icon:'phone' },
     { id:'settings',    km:'ការ​កំណត់',              en:'Settings',           jp:'設定',             icon:'settings' },
   ],
   student: [
@@ -79,7 +75,6 @@ const NAV_ITEMS = {
     { id:'progress',    km:'វឌ្ឍនភាព',              en:'My progress',        jp:'進捗',             icon:'chart' },
     { id:'billing',     km:'ការទូទាត់',              en:'Payments',           jp:'支払い',           icon:'cash' },
     { id:'booking',     km:'កក់មេរៀន',              en:'Book lesson',        jp:'レッスン予約',     icon:'star' },
-    { id:'mobile',      km:'ទូរស័ព្ទ',               en:'Mobile app',         jp:'モバイルアプリ',   icon:'phone' },
     { id:'settings',    km:'ការ​កំណត់',              en:'Settings',           jp:'設定',             icon:'settings' },
   ],
 };

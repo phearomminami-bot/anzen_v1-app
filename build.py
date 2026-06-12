@@ -53,8 +53,6 @@ FILE_GROUPS = {
     "screens-announce.jsx":     "ការ​ជូន​ដំណឹង · Announcements",
     "screens-bookings.jsx":     "ការ​កក់ · Booking",
     "screens-public.jsx":       "ទំព័រ​សាធារណៈ · Public site",
-    "screens-mobile.jsx":       "ទូរស័ព្ទ · Mobile",
-    "screens-downloads.jsx":    "ទាញ​យក · Downloads",
     "screens-settings.jsx":     "ការ​កំណត់ · Settings",
     "forms.jsx":                "ទម្រង់​បញ្ចូល · Forms",
     "details.jsx":              "ព័ត៌មាន​លម្អិត · Details",
@@ -80,8 +78,6 @@ GROUP_ORDER = [
     "ការ​ជូន​ដំណឹង · Announcements",
     "ការ​កក់ · Booking",
     "ទំព័រ​សាធារណៈ · Public site",
-    "ទូរស័ព្ទ · Mobile",
-    "ទាញ​យក · Downloads",
     "ការ​កំណត់ · Settings",
     "ទម្រង់​បញ្ចូល · Forms",
     "ព័ត៌មាន​លម្អិត · Details",
@@ -126,7 +122,6 @@ def extract_tr_groups(jsx_files):
 # Order matches the original head's <script> tags — dependencies first.
 JSX_ORDER = [
     "tweaks-panel.jsx",
-    "ios-frame.jsx",
     "ui.jsx",
     "data.jsx",
     "widgets.jsx",      # Modal/Drawer/Toast/Dropdown + AppActions context
@@ -144,9 +139,7 @@ JSX_ORDER = [
     "screens-invoice.jsx",
     "screens-public.jsx",
     "screens-bookings.jsx",
-    "screens-mobile.jsx",
     "screens-settings.jsx",
-    "screens-downloads.jsx",
     "screens-finance.jsx",
     "screens-announce.jsx",
     "supabase-client.jsx",   # Supabase auth/client helpers (window.sb, __sbSignIn…)

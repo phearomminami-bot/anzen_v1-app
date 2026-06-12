@@ -458,7 +458,6 @@ function App() {
     return (
       <AppActionsContext.Provider value={actions}>
         <LoginScreen onLogin={login} onStudentLogin={loginStudent} onAuthLogin={authLogin}/>
-        <AppTweaks t={t} setTweak={setTweak} setRoleAndAuth={setRoleAndAuth}/>
         <Toasts list={toasts}/>
       </AppActionsContext.Provider>
     );
@@ -479,9 +478,7 @@ function App() {
     progress:    <ProgressScreen role={role} studentId={activeStudentId}/>,
     billing:     <BillingScreen  role={role} studentId={activeStudentId}/>,
     staff:       <StaffScreen role={role}/>,
-    public:      <PublicScreen/>,
     booking:     <BookingScreen studentId={activeStudentId} role={role}/>,
-    mobile:      <MobileScreen/>,
     vehicle:     <VehicleScreen/>,
     finance:     <FinanceScreen role={role}/>,
     announce:    <AnnounceScreen role={role}/>,
@@ -600,7 +597,6 @@ function App() {
         onCancel={() => setConfirmState(null)}
       />
 
-      <AppTweaks t={t} setTweak={setTweak} setRoleAndAuth={setRoleAndAuth}/>
       <Toasts list={toasts}/>
     </AppActionsContext.Provider>
   );
@@ -1317,56 +1313,6 @@ const NotificationsBell = () => {
   );
 };
 
-const AppTweaks = ({ t, setTweak, setRoleAndAuth }) => (
-  <TweaksPanel>
-    <TweakSection label="Identity · អត្តសញ្ញាណ"/>
-    <TweakRadio
-      label="Role · តួនាទី (designer preview)"
-      value={t.role || 'student'}
-      options={['admin','instructor','student']}
-      onChange={(v) => setRoleAndAuth(v)}
-    />
-    <TweakSelect
-      label="Navigation · ប្រភេទរុករក"
-      value={t.nav || 'sidebar'}
-      options={[
-        {value:'sidebar', label:'Sidebar'},
-        {value:'topbar',  label:'Topbar'},
-        {value:'tabs',    label:'Pill tabs'},
-      ]}
-      onChange={(v) => setTweak('nav', v)}
-    />
-    <TweakSection label="Theme · រូបរាង"/>
-    <TweakToggle
-      label="ងងឹត"
-      value={!!t.dark}
-      onChange={(v) => setTweak('dark', v)}
-    />
-    <TweakColor
-      label="Accent · ពណ៌សំខាន់"
-      value={t.accent}
-      options={ACCENT_OPTIONS.map(a => a.v)}
-      onChange={(v) => setTweak('accent', v)}
-    />
-    <TweakSelect
-      label="Type pair · ប្រភេទអក្សរ"
-      value={t.font}
-      options={[
-        {value:'inter',    label:'Inter — clean / default'},
-        {value:'plex',     label:'IBM Plex — neutral / structured'},
-        {value:'fraunces', label:'Fraunces × Inter — editorial'},
-      ]}
-      onChange={(v) => setTweak('font', v)}
-    />
-    <TweakSection label="Calendar · ប្រតិទិន"/>
-    <TweakRadio
-      label="Default view"
-      value={t.calendar || 'week'}
-      options={['week','month','agenda']}
-      onChange={(v) => setTweak('calendar', v)}
-    />
-  </TweaksPanel>
-);
 
 class AppErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { err: null }; }
