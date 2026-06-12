@@ -412,19 +412,14 @@ const StudentsScreenV2 = () => {
     // ── List view ──────────────────────────────────────────────────────────
     return (
       <div style={{display:'flex',flexDirection:'column',gap:10}}>
-        <div style={{display:'flex',justifyContent:'flex-end'}}>
-          <Btn kind="primary" size="md" icon={<Icon name="plus" size={14}/>} onClick={()=>openForm('newStudent')}>{tr('ចុះឈ្មោះ','Enroll')}</Btn>
+        <div style={{display:'flex',justifyContent:'flex-start'}}>
+          <select value={filter} onChange={e=>setFilter(e.target.value)} style={{
+            padding:'9px 12px',borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)',
+            color:'var(--ink)',fontSize:13,fontFamily:'inherit',cursor:'pointer',minWidth:170}}>
+            {filterChips.map(c => <option key={c.id} value={c.id}>{c.l}</option>)}
+          </select>
         </div>
-        <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
-          {filterChips.map(c => (
-            <button key={c.id} onClick={()=>setFilter(c.id)} style={{
-              padding:'5px 12px',borderRadius:999,fontSize:12,fontWeight:500,cursor:'pointer',
-              background: filter===c.id ? 'var(--ink)' : 'var(--surface)',
-              color:       filter===c.id ? 'var(--bg)'  : 'var(--ink-2)',
-              border:'1px solid '+(filter===c.id?'var(--ink)':'var(--border)'),
-            }}>{c.l}</button>
-          ))}
-        </div>
+        <MobileFab onClick={()=>openForm('newStudent')} label={tr('ចុះឈ្មោះ​សិស្ស','Enroll student')}/>
         <div style={{display:'flex',flexDirection:'column',gap:6}}>
           {filtered.length === 0 && (
             <div style={{padding:'40px 16px',textAlign:'center',color:'var(--ink-3)',fontSize:13}}>

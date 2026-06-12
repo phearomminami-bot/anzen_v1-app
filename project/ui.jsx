@@ -483,4 +483,18 @@ window.__autoBackup = async () => {
   } catch {}
 };
 
-Object.assign(window, { Photo, Avatar, UploadAvatar, UploadPhoto, resizeImageFile, Card, Stat, Badge, Btn, Icon, Logo, SectionTitle, Divider, BarRow, Spark, studentById, instById, vehById, can, todayStr, localDateStr, getWeekDates, formatDateShort, studentHours, nextLesson, KM_MONTHS, EN_MONTHS, abGetHandle, abSetHandle, useBreakpoint });
+// Round black floating "+" button — bottom-right, just above the mobile footer.
+const MobileFab = ({ onClick, label }) => (
+  <button onClick={onClick} aria-label={label} title={label} style={{
+    position:'fixed', right:18,
+    bottom:'calc(72px + env(safe-area-inset-bottom,0px))',
+    width:56, height:56, borderRadius:'50%',
+    background:'var(--ink)', color:'#fff', border:'none', cursor:'pointer',
+    display:'flex', alignItems:'center', justifyContent:'center',
+    boxShadow:'0 6px 18px rgba(0,0,0,.32)', zIndex:90,
+  }}>
+    <Icon name="plus" size={26} stroke={2.6}/>
+  </button>
+);
+
+Object.assign(window, { Photo, Avatar, UploadAvatar, UploadPhoto, resizeImageFile, Card, Stat, Badge, Btn, Icon, Logo, SectionTitle, Divider, BarRow, Spark, studentById, instById, vehById, can, todayStr, localDateStr, getWeekDates, formatDateShort, studentHours, nextLesson, KM_MONTHS, EN_MONTHS, abGetHandle, abSetHandle, useBreakpoint, MobileFab });

@@ -873,6 +873,8 @@ window.__trRegistry = {
   "lessons": "មេរៀន",
   "Daily Inspection": "ពិនិត្យប្រចាំថ្ងៃ",
   "Sort": "តម្រៀប",
+  "Sort:": "តម្រៀប៖",
+  "Order": "លំដាប់",
   "No vehicles to display": "មិន​ទាន់​មាន​យានយន្ត",
   "Toggle vehicles visible in Vehicle management": "ធ្វើ​ឲ្យ​យានយន្ត​មើលឃើញ​នៅ​ Vehicle management",
   "Payment recorded": "បានចងចាំការបង់",
@@ -896,8 +898,9 @@ window.__trRegistry = {
   "Tap to toggle status": "ចុច​ដើម្បី​ប្ដូរ​ស្ថានភាព",
   "Missing": "មិន​ទាន់",
   "Lesson": "មេរៀន",
-  "Enroll": "ចុះ​ឈ្មោះ​",
+  "Enroll student": "ចុះឈ្មោះ​សិស្ស",
   "Filter": "តម្រង",
+  "Enroll": "ចុះ​ឈ្មោះ​",
   "Avg mock": "មធ្យម",
   "🎓 Passed": "🎓 ជាប់ប្រឡង",
   "In progress':'neutral": "បានបង់'),'good'); }\n            }}\n          />\n        )}\n        {tab==='progress' && <StudentsProgress students={selected ? [selected] : []} onView={goToProfile} onSave={saveStudentProgress}/>}\n        {tab==='messages' && <StudentMessages activeStudentId={selectedId} students={allStudents}/>}\n        {tab==='docs'     && <StudentDocs students={selected ? [selected] : []} onToggleDoc={(id,field,val) => {\n          const i = STUDENTS.findIndex(s => s.id === id);\n          if (i !== -1) { STUDENTS[i][field] = val; if(window.saveAllData)window.saveAllData(); forceUpdate(); }\n        }}/>}\n      </Card>\n    </div>\n  );\n};\n\nconst studentStatusTone = (s) => ({\n  'New':'accent",
@@ -1445,8 +1448,9 @@ window.__trGroups = {
     "Tap to toggle status": "ចុច​ដើម្បី​ប្ដូរ​ស្ថានភាព",
     "Missing": "មិន​ទាន់",
     "Lesson": "មេរៀន",
-    "Enroll": "ចុះឈ្មោះ",
+    "Enroll student": "ចុះឈ្មោះ​សិស្ស",
     "Filter": "តម្រង",
+    "Enroll": "ចុះឈ្មោះ​សិស្ស",
     "Avg mock": "មធ្យម",
     "🎓 Passed": "🎓 ជាប់ប្រឡង",
     "In progress':'neutral": "បានបង់'),'good'); }\n            }}\n          />\n        )}\n        {tab==='progress' && <StudentsProgress students={selected ? [selected] : []} onView={goToProfile} onSave={saveStudentProgress}/>}\n        {tab==='messages' && <StudentMessages activeStudentId={selectedId} students={allStudents}/>}\n        {tab==='docs'     && <StudentDocs students={selected ? [selected] : []} onToggleDoc={(id,field,val) => {\n          const i = STUDENTS.findIndex(s => s.id === id);\n          if (i !== -1) { STUDENTS[i][field] = val; if(window.saveAllData)window.saveAllData(); forceUpdate(); }\n        }}/>}\n      </Card>\n    </div>\n  );\n};\n\nconst studentStatusTone = (s) => ({\n  'New':'accent",
@@ -1817,6 +1821,8 @@ window.__trGroups = {
     "lessons": "មេរៀន",
     "Daily Inspection": "ពិនិត្យប្រចាំថ្ងៃ",
     "Sort": "តម្រៀប",
+    "Sort:": "តម្រៀប៖",
+    "Order": "លំដាប់",
     "No vehicles to display": "មិន​ទាន់​មាន​យានយន្ត",
     "Toggle vehicles visible in Vehicle management": "ធ្វើ​ឲ្យ​យានយន្ត​មើលឃើញ​នៅ​ Vehicle management"
   },
@@ -3351,6 +3357,35 @@ window.__autoBackup = async () => {
     window.__lastAutoBackup = new Date();
   } catch {}
 };
+var MobileFab = ({
+  onClick,
+  label
+}) => React.createElement("button", {
+  onClick: onClick,
+  "aria-label": label,
+  title: label,
+  style: {
+    position: 'fixed',
+    right: 18,
+    bottom: 'calc(72px + env(safe-area-inset-bottom,0px))',
+    width: 56,
+    height: 56,
+    borderRadius: '50%',
+    background: 'var(--ink)',
+    color: '#fff',
+    border: 'none',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 6px 18px rgba(0,0,0,.32)',
+    zIndex: 90
+  }
+}, React.createElement(Icon, {
+  name: "plus",
+  size: 26,
+  stroke: 2.6
+}));
 Object.assign(window, {
   Photo,
   Avatar,
@@ -3381,7 +3416,8 @@ Object.assign(window, {
   EN_MONTHS,
   abGetHandle,
   abSetHandle,
-  useBreakpoint
+  useBreakpoint,
+  MobileFab
 });
 </script>
 
@@ -36637,26 +36673,40 @@ var VehicleScreen = () => {
         padding: '10px 0 6px',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'flex-start',
-        flexWrap: 'wrap',
-        gap: 6
+        gap: 8
       }
-    }, React.createElement("div", {
+    }, React.createElement("select", {
+      value: sortBy,
+      onChange: e => setSortBy(e.target.value),
       style: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-        flexWrap: 'wrap'
+        padding: '9px 12px',
+        borderRadius: 9,
+        border: '1px solid var(--border)',
+        background: 'var(--surface)',
+        color: 'var(--ink)',
+        fontSize: 13,
+        fontFamily: 'inherit',
+        cursor: 'pointer',
+        minWidth: 160
       }
-    }, React.createElement(SortBar, null), React.createElement(Btn, {
-      kind: "primary",
-      size: "sm",
-      icon: React.createElement(Icon, {
-        name: "plus",
-        size: 13
-      }),
-      onClick: () => openForm('newVehicle')
-    }, tr('បន្ថែម', 'Add')))), visible.length === 0 ? React.createElement("div", {
+    }, SORT_OPTS.map(s => React.createElement("option", {
+      key: s.id,
+      value: s.id
+    }, tr('តម្រៀប៖ ', 'Sort: '), tr(s.km, s.en)))), React.createElement("button", {
+      onClick: () => setSortAsc(x => !x),
+      title: tr('លំដាប់', 'Order'),
+      style: {
+        width: 40,
+        height: 38,
+        borderRadius: 9,
+        border: '1px solid var(--border)',
+        background: 'var(--surface)',
+        color: 'var(--ink-2)',
+        cursor: 'pointer',
+        fontSize: 15,
+        flexShrink: 0
+      }
+    }, sortAsc ? '↑' : '↓')), visible.length === 0 ? React.createElement("div", {
       style: {
         textAlign: 'center',
         padding: '48px 20px',
@@ -36744,7 +36794,10 @@ var VehicleScreen = () => {
       }, React.createElement("path", {
         d: "M1 1l5 5-5 5"
       })));
-    }))));
+    }))), !selected && React.createElement(MobileFab, {
+      onClick: () => openForm('newVehicle'),
+      label: tr('បន្ថែម​យានយន្ត', 'Add vehicle')
+    }));
   }
   return React.createElement("div", {
     style: {
@@ -37563,36 +37616,29 @@ var StudentsScreenV2 = () => {
     }, React.createElement("div", {
       style: {
         display: 'flex',
-        justifyContent: 'flex-end'
+        justifyContent: 'flex-start'
       }
-    }, React.createElement(Btn, {
-      kind: "primary",
-      size: "md",
-      icon: React.createElement(Icon, {
-        name: "plus",
-        size: 14
-      }),
-      onClick: () => openForm('newStudent')
-    }, tr('ចុះឈ្មោះ', 'Enroll'))), React.createElement("div", {
+    }, React.createElement("select", {
+      value: filter,
+      onChange: e => setFilter(e.target.value),
       style: {
-        display: 'flex',
-        gap: 5,
-        flexWrap: 'wrap'
-      }
-    }, filterChips.map(c => React.createElement("button", {
-      key: c.id,
-      onClick: () => setFilter(c.id),
-      style: {
-        padding: '5px 12px',
-        borderRadius: 999,
-        fontSize: 12,
-        fontWeight: 500,
+        padding: '9px 12px',
+        borderRadius: 9,
+        border: '1px solid var(--border)',
+        background: 'var(--surface)',
+        color: 'var(--ink)',
+        fontSize: 13,
+        fontFamily: 'inherit',
         cursor: 'pointer',
-        background: filter === c.id ? 'var(--ink)' : 'var(--surface)',
-        color: filter === c.id ? 'var(--bg)' : 'var(--ink-2)',
-        border: '1px solid ' + (filter === c.id ? 'var(--ink)' : 'var(--border)')
+        minWidth: 170
       }
-    }, c.l))), React.createElement("div", {
+    }, filterChips.map(c => React.createElement("option", {
+      key: c.id,
+      value: c.id
+    }, c.l)))), React.createElement(MobileFab, {
+      onClick: () => openForm('newStudent'),
+      label: tr('ចុះឈ្មោះ​សិស្ស', 'Enroll student')
+    }), React.createElement("div", {
       style: {
         display: 'flex',
         flexDirection: 'column',

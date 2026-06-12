@@ -3247,11 +3247,15 @@ const VehicleScreen = () => {
           <VehicleMobileDetail v={selected} onClose={()=>setSelectedId(null)} tr={tr} onSaved={forceUpdate} onStatusChange={cycleStatus} onParkingChange={cycleParking}/>
         )}
         <div style={{display:'flex',flexDirection:'column',gap:0}}>
-          <div style={{padding:'10px 0 6px',display:'flex',alignItems:'center',justifyContent:'flex-start',flexWrap:'wrap',gap:6}}>
-            <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
-              <SortBar/>
-              <Btn kind="primary" size="sm" icon={<Icon name="plus" size={13}/>} onClick={() => openForm('newVehicle')}>{tr('បន្ថែម','Add')}</Btn>
-            </div>
+          <div style={{padding:'10px 0 6px',display:'flex',alignItems:'center',gap:8}}>
+            <select value={sortBy} onChange={e=>setSortBy(e.target.value)} style={{
+              padding:'9px 12px',borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)',
+              color:'var(--ink)',fontSize:13,fontFamily:'inherit',cursor:'pointer',minWidth:160}}>
+              {SORT_OPTS.map(s => <option key={s.id} value={s.id}>{tr('តម្រៀប៖ ','Sort: ')}{tr(s.km,s.en)}</option>)}
+            </select>
+            <button onClick={()=>setSortAsc(x=>!x)} title={tr('លំដាប់','Order')} style={{
+              width:40,height:38,borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)',
+              color:'var(--ink-2)',cursor:'pointer',fontSize:15,flexShrink:0}}>{sortAsc?'↑':'↓'}</button>
           </div>
           {visible.length === 0 ? (
             <div style={{textAlign:'center',padding:'48px 20px',color:'var(--ink-3)',fontSize:13}}>
@@ -3297,6 +3301,7 @@ const VehicleScreen = () => {
             </Card>
           )}
         </div>
+        {!selected && <MobileFab onClick={() => openForm('newVehicle')} label={tr('បន្ថែម​យានយន្ត','Add vehicle')}/>}
       </>
     );
   }
