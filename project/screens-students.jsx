@@ -1,5 +1,16 @@
 // screens-students.jsx — Students management (fully editable)
 
+// Normalise a class value — single letter ('B'), Khmer letter ('ខ'), or long
+// label ('ខ (ឡានបួនកង់)') — to its letter code, so edit pre-fill and filters
+// stay consistent regardless of how the value was stored.
+const clsLetter = (v) => {
+  if (!v) return 'B';
+  const s = String(v).trim();
+  if (/^[A-E]$/i.test(s)) return s.toUpperCase();
+  const km = { 'ក':'A', 'ខ':'B', 'គ':'C', 'ឃ':'D', 'ង':'E' };
+  return km[s[0]] || 'B';
+};
+
 const extendStudent = (s) => {
   const trans = s.trans || 'AT';
   const pracCount = trans === 'MT' ? 13 : 10;
@@ -164,9 +175,9 @@ const StudentsScreenV2 = () => {
     (filter==='exam'       && s.status==='Road exam soon') ||
     (filter==='cleared'    && s.status==='Cleared') ||
     (filter==='graduated'  && s.exam_result==='pass') ||
-    (filter==='B'          && s.cls.startsWith('B')) ||
-    (filter==='A'          && s.cls.startsWith('A')) ||
-    (filter==='C'          && s.cls.startsWith('C')) ||
+    (filter==='B'          && clsLetter(s.cls)==='B') ||
+    (filter==='A'          && clsLetter(s.cls)==='A') ||
+    (filter==='C'          && clsLetter(s.cls)==='C') ||
     (filter==='t_normal'   && s.studentType==='ធម្មតា') ||
     (filter==='t_special'  && s.studentType==='ពិសេស') ||
     (filter==='t_ssw'      && s.studentType==='SSW')
@@ -523,9 +534,9 @@ const StudentsScreenV2 = () => {
                 {id:'exam',       l:tr('នឹង​ប្រឡង','Exam-ready'),    n: allStudents.filter(s=>s.status==='Road exam soon').length},
                 {id:'cleared',    l:tr('ជាប់','Cleared'),             n: allStudents.filter(s=>s.status==='Cleared').length},
                 {id:'graduated',  l:tr('🎓 ជាប់ប្រឡង','🎓 Passed'),    n: allStudents.filter(s=>s.exam_result==='pass').length},
-                {id:'B', l:'Class B', n: allStudents.filter(s=>s.cls.startsWith('B')).length},
-                {id:'A', l:'Class A', n: allStudents.filter(s=>s.cls.startsWith('A')).length},
-                {id:'C', l:'Class C', n: allStudents.filter(s=>s.cls.startsWith('C')).length},
+                {id:'B', l:'Class B', n: allStudents.filter(s=>clsLetter(s.cls)==='B').length},
+                {id:'A', l:'Class A', n: allStudents.filter(s=>clsLetter(s.cls)==='A').length},
+                {id:'C', l:'Class C', n: allStudents.filter(s=>clsLetter(s.cls)==='C').length},
                 {id:'sep'},
                 {id:'t_normal',  l:tr('ធម្មតា','Regular'),  n: allStudents.filter(s=>s.studentType==='ធម្មតា').length},
                 {id:'t_special', l:tr('ពិសេស','Special'),    n: allStudents.filter(s=>s.studentType==='ពិសេស').length},
@@ -979,7 +990,7 @@ const BiographyCard = ({ s, onSave }) => {
     {l:'ភ្នែកស្ដាំ',      v: s.eye_right                               || '—'},
     {l:'ភ្នែកទាំងពីរ',    v: s.eye_both                                || '—'},
     {l:'វែន​តា',          v: s.glasses                                  || '—'},
-    {l:'អាសយដ្ឋាន',      v: addrParts.length ? addrParts.join(', ')   : '—'},
+    {l:'អាសយដ្ឋាន',      v: (s.address && s.address!=='—') ? s.address : (addrParts.length ? addrParts.join(', ') : '—')},
     {l:'គោលបំណង​សិក្សា', v: s.study_goal                              || '—'},
     {l:'ស្គាល់​សាលា​តាម', v: s.referral                                || '—'},
   ];
@@ -1335,17 +1346,17 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
   const [eyeRight,      setEyeRight]      = React.useState(s.eye_right     || '');
   const [eyeBoth,       setEyeBoth]       = React.useState(s.eye_both      || '');
   const [glasses,       setGlasses]       = React.useState(s.glasses       || 'មិនពាក់');
-  const [addrHouse,     setAddrHouse]     = React.useState(s.addr_house    || '');
-  const [addrStreet,    setAddrStreet]    = React.useState(s.addr_street   || '');
-  const [addrVillage,   setAddrVillage]   = React.useState(s.addr_village  || '');
-  const [addrCommune,   setAddrCommune]   = React.useState(s.addr_commune  || '');
-  const [addrDistrict,  setAddrDistrict]  = React.useState(s.addr_district || s.district || '');
-  const [addrProvince,  setAddrProvince]  = React.useState(s.addr_province || '');
+  // Single address box — start from the saved address, or compose it from any
+  // legacy split address fields so existing data still shows.
+  const [address, setAddress] = React.useState(
+    s.address && s.address !== '—' ? s.address
+    : [s.addr_house, s.addr_street, s.addr_village, s.addr_commune, s.addr_district || s.district, s.addr_province].filter(Boolean).join(', ')
+  );
   const [studyGoal,     setStudyGoal]     = React.useState(s.study_goal    || '');
   const [referral,      setReferral]      = React.useState(s.referral      || '');
   const [studentType,   setStudentType]   = React.useState(s.studentType   || 'ធម្មតា');
 
-  const [cls,     setCls]     = React.useState(s.cls     || 'B');
+  const [cls,     setCls]     = React.useState(clsLetter(s.cls));
   const [trans,   setTrans]   = React.useState(s.trans   || 'AT');
   const [instId,  setInstId]  = React.useState(s.instId  || '');
   const [status,  setStatus]  = React.useState(s.status  || 'New');
@@ -1413,12 +1424,7 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
       eye_right:     eyeRight,
       eye_both:      eyeBoth,
       glasses:       glasses,
-      addr_house:    addrHouse.trim(),
-      addr_street:   addrStreet.trim(),
-      addr_village:  addrVillage.trim(),
-      addr_commune:  addrCommune.trim(),
-      addr_district: addrDistrict.trim(),
-      addr_province: addrProvince.trim(),
+      address:       address.trim(),
       study_goal:    studyGoal,
       referral:      referral,
       studentType,
@@ -1531,13 +1537,6 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
             <option value="ពាក់">{tr('ពាក់','Wears glasses')}</option>
           </select>
         </SEField>
-        <SEField label={tr('គោលបំណង','Study purpose')}>
-          <select {...sel} value={studyGoal} onChange={e=>setStudyGoal(e.target.value)}>
-            <option value="">— {tr('មិន​ទាន់​បញ្ជាក់','Not specified')} —</option>
-            <option value="បើកបរក្នុងស្រុកខ្មែរ">{tr('បើកបរក្នុងស្រុកខ្មែរ','Drive in Cambodia')}</option>
-            <option value="បើកបរនៅបរទេស">{tr('បើកបរនៅបរទេស','Drive abroad')}</option>
-          </select>
-        </SEField>
         <SEField label={tr('ស្គាល់​សាលា​តាម','Referral')}>
           <select {...sel} value={referral} onChange={e=>setReferral(e.target.value)}>
             <option value="">— {tr('មិន​ទាន់​បញ្ជាក់','Not specified')} —</option>
@@ -1551,13 +1550,12 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
       </div>
 
       {secTitle(tr('អាសយដ្ឋាន','ADDRESS'))}
-      <div {...g2}>
-        <SEField label={tr('ផ្ទះ​លេខ','House No.')}><input {...inp} value={addrHouse} onChange={e=>setAddrHouse(e.target.value)} placeholder="123"/></SEField>
-        <SEField label={tr('ផ្លូវ','Street')}><input {...inp} value={addrStreet} onChange={e=>setAddrStreet(e.target.value)} placeholder="ផ្លូវ 310"/></SEField>
-        <SEField label={tr('ភូមិ','Village')}><input {...inp} value={addrVillage} onChange={e=>setAddrVillage(e.target.value)} placeholder="ភូមិ..."/></SEField>
-        <SEField label={tr('ឃុំ/សង្កាត់','Commune')}><input {...inp} value={addrCommune} onChange={e=>setAddrCommune(e.target.value)} placeholder="សង្កាត់..."/></SEField>
-        <SEField label={tr('ស្រុក/ខណ្ឌ','District')}><input {...inp} value={addrDistrict} onChange={e=>setAddrDistrict(e.target.value)} placeholder="ខណ្ឌ..."/></SEField>
-        <SEField label={tr('ខេត្ត/រាជធានី','Province')}><input {...inp} value={addrProvince} onChange={e=>setAddrProvince(e.target.value)} placeholder="ភ្នំពេញ"/></SEField>
+      <div style={{marginBottom:12}}>
+        <SEField label={tr('អាសយដ្ឋាន​ពេញ','Full address')}>
+          <textarea value={address} onChange={e=>setAddress(e.target.value)} rows={2}
+            placeholder={tr('ឧ. ផ្ទះ:១៥ ផ្លូវ៣១០ ភូមិ... ឃុំ/សង្កាត់... ស្រុក/ខណ្ឌ... ខេត្ត/រាជធានី...','e.g. House:15, St.310, Village..., Commune..., District..., Province...')}
+            style={{...inp.style, minHeight:54, resize:'vertical', fontFamily:'inherit'}}/>
+        </SEField>
       </div>
 
       {secTitle(tr('ការ​ចុះ​ឈ្មោះ','ENROLLMENT'))}
@@ -1595,41 +1593,7 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
         </SEField>
         <SEField label={tr('ថ្ងៃ​ចុះ​ឈ្មោះ','Enrolled')}><input {...inp} type="date" value={enrolled} onChange={e=>setEnrolled(e.target.value)}/></SEField>
         <SEField label={tr('ម៉ោងគោល','Target hours')}><input {...inp} type="number" value={target} onChange={e=>setTarget(e.target.value)} min="1" placeholder="40"/></SEField>
-        <SEField label={tr('ម៉ោងបាន','Hours done')}><input {...inp} type="number" value={hours} onChange={e=>setHours(e.target.value)} min="0" placeholder="0"/></SEField>
         <SEField label={tr('ទូទាត់​','Paid')+` ($) / $${studentPrice({trans})}`}><input {...inp} type="number" value={paid} onChange={e=>setPaid(e.target.value)} min="0" max={studentPrice({trans})} placeholder="0"/></SEField>
-        <SEField label={tr('មេរៀន​​','Next lesson')}><input {...inp} value={next} onChange={e=>setNext(e.target.value)} placeholder="Monday 9am / ចន្ទ 9am"/></SEField>
-      </div>
-
-      {secTitle(tr('ជំនាញ','TRAINING SCORES')+' (0–100%)')}
-      <div {...g3}>
-        <SEField label={tr('ច្បាប់​','Theory')+' %'}><input {...inp} type="number" value={theory} onChange={e=>setTheory(e.target.value)} min="0" max="100"/></SEField>
-        <SEField label={tr('ទីលាន','Yard')+' %'}><input {...inp} type="number" value={yard} onChange={e=>setYard(e.target.value)} min="0" max="100"/></SEField>
-        <SEField label={tr('ចត​','Parking')+' %'}><input {...inp} type="number" value={parking} onChange={e=>setParking(e.target.value)} min="0" max="100"/></SEField>
-        <SEField label={tr('ទីក្រុង','City')+' %'}><input {...inp} type="number" value={city} onChange={e=>setCity(e.target.value)} min="0" max="100"/></SEField>
-        <SEField label={tr('ហាយ​វេ','Highway')+' %'}><input {...inp} type="number" value={highway} onChange={e=>setHighway(e.target.value)} min="0" max="100"/></SEField>
-        <SEField label="Mock avg %">
-          <input {...inp} type="number" value={mockAvg} onChange={e=>setMockAvg(e.target.value)} min="0" max="100"
-            style={{...inp.style, background: parseInt(mockAvg)>=85?'color-mix(in oklch,var(--good) 12%,var(--surface))':'var(--surface)'}}/>
-        </SEField>
-      </div>
-
-      {/* Mock history */}
-      <div style={{marginBottom:12}}>
-        <SELbl>Mock test scores history</SELbl>
-        <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:8}}>
-          {mockHistory.map((v,i) => (
-            <div key={i} style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 8px',background:'var(--surface-muted)',border:'1px solid var(--border)',borderRadius:6,fontSize:12}}>
-              <span style={{fontWeight:600,color:v>=85?'var(--good)':v>=70?'var(--ink)':'var(--warn)'}}>{v}%</span>
-              <button onClick={() => removeMockScore(i)} style={{border:'none',background:'none',color:'var(--ink-3)',cursor:'pointer',fontSize:12,lineHeight:1,padding:'0 0 0 4px'}}>×</button>
-            </div>
-          ))}
-          {mockHistory.length === 0 && <span style={{fontSize:12,color:'var(--ink-3)'}}>No scores yet</span>}
-        </div>
-        <div style={{display:'flex',gap:8}}>
-          <input {...inp} style={{...inp.style,width:100}} type="number" value={mockNew} onChange={e=>setMockNew(e.target.value)}
-            onKeyDown={e=>e.key==='Enter'&&addMockScore()} placeholder="0–100" min="0" max="100"/>
-          <Btn kind="ghost" size="sm" onClick={addMockScore}>+ {tr('បន្ថែម​','Add score')}</Btn>
-        </div>
       </div>
 
       {secTitle(tr('ប្រវត្តិសិក្សា','STUDY HISTORY'))}

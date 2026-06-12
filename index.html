@@ -494,7 +494,7 @@ window.__trRegistry = {
   "Yard practice": "ការ​បើក​ក្នុង​ទីលាន",
   "City driving": "ការ​បើក​ក្នុង​ទីក្រុង",
   "In progress": "កំពុង​បន្ត",
-  "Highway": "ហាយ​វេ",
+  "Highway": "ផ្លូវ​លឿន",
   "Road exam": "ប្រឡង​ពិត",
   "PAYMENTS": "ការ​ទូទាត់",
   "paid": "បាន​បង់",
@@ -901,7 +901,7 @@ window.__trRegistry = {
   "Avg mock": "មធ្យម",
   "🎓 Passed": "🎓 ជាប់ប្រឡង",
   "In progress':'neutral": "បានបង់'),'good'); }\n            }}\n          />\n        )}\n        {tab==='progress' && <StudentsProgress students={selected ? [selected] : []} onView={goToProfile} onSave={saveStudentProgress}/>}\n        {tab==='messages' && <StudentMessages activeStudentId={selectedId} students={allStudents}/>}\n        {tab==='docs'     && <StudentDocs students={selected ? [selected] : []} onToggleDoc={(id,field,val) => {\n          const i = STUDENTS.findIndex(s => s.id === id);\n          if (i !== -1) { STUDENTS[i][field] = val; if(window.saveAllData)window.saveAllData(); forceUpdate(); }\n        }}/>}\n      </Card>\n    </div>\n  );\n};\n\nconst studentStatusTone = (s) => ({\n  'New':'accent",
-  "Next lesson": "មេរៀន​​",
+  "Next lesson": "មេរៀន​បន្ទាប់",
   "EXAM READINESS": "ការ​ត្រៀម​ប្រឡង",
   "DOCUMENTS": "ឯកសារ",
   "STUDY HISTORY": "ប្រវត្តិសិក្សា",
@@ -916,35 +916,21 @@ window.__trRegistry = {
   "Glasses": "វែន​តា",
   "No glasses": "មិនពាក់",
   "Wears glasses": "ពាក់",
-  "Study purpose": "គោលបំណង",
-  "Not specified": "មិន​ទាន់​បញ្ជាក់",
-  "Drive in Cambodia": "បើកបរក្នុងស្រុកខ្មែរ",
-  "Drive abroad": "បើកបរនៅបរទេស",
   "Referral": "ស្គាល់​សាលា​តាម",
+  "Not specified": "មិន​ទាន់​បញ្ជាក់",
   "Near school": "នៅជិតសាលា",
   "Friend": "មិត្តភក្ដិ",
   "Family": "គ្រួសារ",
   "Advertisement": "ការផ្សព្វផ្សាយ",
   "Other": "ផ្សេងៗ",
   "ADDRESS": "អាសយដ្ឋាន",
-  "House No.": "ផ្ទះ​លេខ",
-  "Street": "ផ្លូវ",
-  "Village": "ភូមិ",
-  "Commune": "ឃុំ/សង្កាត់",
-  "District": "ស្រុក/ខណ្ឌ",
-  "Province": "ខេត្ត/រាជធានី",
+  "Full address": "អាសយដ្ឋាន​ពេញ",
+  "e.g. House:15, St.310, Village..., Commune..., District..., Province...": "ឧ. ផ្ទះ:១៥ ផ្លូវ៣១០ ភូមិ... ឃុំ/សង្កាត់... ស្រុក/ខណ្ឌ... ខេត្ត/រាជធានី...",
   "ENROLLMENT": "ព័ត៌មាន​ចុះ​ឈ្មោះ",
   "AT · Auto (10 h)": "AT · លេខ​អូតូ (10 ម៉ោង)",
   "MT · Manual (13 h)": "MT · លេខ​ដៃ (13 ម៉ោង)",
   "— Not assigned": "— មិន​ទាន់​",
   "Target hours": "ម៉ោងគោល",
-  "Hours done": "ម៉ោងបាន",
-  "TRAINING SCORES": "ជំនាញ",
-  "Theory": "ទ្រឹស្ដី",
-  "Yard": "ទីលាន",
-  "Parking": "ចត​",
-  "City": "ទីក្រុង",
-  "Add score": "បន្ថែម​",
   "Study start": "ចាប់​ផ្ដើម",
   "Study end": "បញ្ចប់",
   "Exam result": "លទ្ធផល​ប្រឡង",
@@ -961,6 +947,7 @@ window.__trRegistry = {
   "EXAM": "ការ​ប្រឡង",
   "Apply date": "ដាក់​ពាក្យ",
   "Enrollment pipeline": "ដំណើរការ​ចូលរៀន",
+  "Theory": "ទ្រឹស្ដី",
   "Extra": "ថែម",
   "Theory JP": "ទ្រឹស្ដី JP",
   "Practice JP": "អនុវត្តន៍ JP",
@@ -1478,35 +1465,21 @@ window.__trGroups = {
     "Glasses": "វែន​តា",
     "No glasses": "មិនពាក់",
     "Wears glasses": "ពាក់",
-    "Study purpose": "គោលបំណង",
-    "Not specified": "មិន​ទាន់​បញ្ជាក់",
-    "Drive in Cambodia": "បើកបរក្នុងស្រុកខ្មែរ",
-    "Drive abroad": "បើកបរនៅបរទេស",
     "Referral": "ស្គាល់​សាលា​តាម",
+    "Not specified": "មិន​ទាន់​បញ្ជាក់",
     "Near school": "នៅជិតសាលា",
     "Friend": "មិត្តភក្ដិ",
     "Family": "គ្រួសារ",
     "Advertisement": "ការផ្សព្វផ្សាយ",
     "Other": "ផ្សេងៗ",
     "ADDRESS": "អាសយដ្ឋាន",
-    "House No.": "ផ្ទះ​លេខ",
-    "Street": "ផ្លូវ",
-    "Village": "ភូមិ",
-    "Commune": "ឃុំ/សង្កាត់",
-    "District": "ស្រុក/ខណ្ឌ",
-    "Province": "ខេត្ត/រាជធានី",
+    "Full address": "អាសយដ្ឋាន​ពេញ",
+    "e.g. House:15, St.310, Village..., Commune..., District..., Province...": "ឧ. ផ្ទះ:១៥ ផ្លូវ៣១០ ភូមិ... ឃុំ/សង្កាត់... ស្រុក/ខណ្ឌ... ខេត្ត/រាជធានី...",
     "ENROLLMENT": "ការ​ចុះ​ឈ្មោះ",
     "AT · Auto (10 h)": "AT · លេខ​អូតូ (10 ម៉ោង)",
     "MT · Manual (13 h)": "MT · លេខ​ដៃ (13 ម៉ោង)",
     "— Not assigned": "— មិន​ទាន់​",
     "Target hours": "ម៉ោងគោល",
-    "Hours done": "ម៉ោងបាន",
-    "TRAINING SCORES": "ជំនាញ",
-    "Theory": "ច្បាប់​",
-    "Yard": "ទីលាន",
-    "Parking": "ចត​",
-    "City": "ទីក្រុង",
-    "Add score": "បន្ថែម​",
     "Study start": "ចាប់ផ្ដើមសិក្សា",
     "Study end": "បញ្ចប់សិក្សា",
     "Exam result": "លទ្ធផល​ប្រឡង",
@@ -1523,6 +1496,7 @@ window.__trGroups = {
     "EXAM": "ការ​ប្រឡង",
     "Apply date": "ដាក់​ពាក្យ",
     "Enrollment pipeline": "ដំណើរការ​ចូលរៀន",
+    "Theory": "ទ្រឹស្ដី",
     "Extra": "ថែម",
     "Theory JP": "ទ្រឹស្ដី JP",
     "Practice JP": "អនុវត្តន៍ JP",
@@ -6188,18 +6162,11 @@ Use "" for any field that cannot be read clearly.`;
       toast(tr('Password មិន​ដូចគ្នា', 'Passwords do not match'), 'warn');
       return;
     }
-    var clsMap = {
-      A: 'ក (ម៉ូតូ)',
-      B: 'ខ (ឡានបួនកង់)',
-      C: 'គ (ឡានធំ)',
-      D: 'ឃ (ឡានដំណើរ)',
-      E: 'ង (ឡានពាក់ព័ន្ធ)'
-    };
     STUDENTS.push({
       id: nextId,
       name: name.trim(),
       en: nameEn.trim(),
-      cls: clsMap[cls],
+      cls,
       instId: instId || '',
       inst: selectedInst ? selectedInst.en : '—',
       hours: 0,
@@ -36851,6 +36818,19 @@ Object.assign(window, {
 
 <script>
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+var clsLetter = v => {
+  if (!v) return 'B';
+  var s = String(v).trim();
+  if (/^[A-E]$/i.test(s)) return s.toUpperCase();
+  var km = {
+    'ក': 'A',
+    'ខ': 'B',
+    'គ': 'C',
+    'ឃ': 'D',
+    'ង': 'E'
+  };
+  return km[s[0]] || 'B';
+};
 var extendStudent = s => {
   var trans = s.trans || 'AT';
   var pracCount = trans === 'MT' ? 13 : 10;
@@ -37040,7 +37020,7 @@ var StudentsScreenV2 = () => {
     en: 'Documents',
     icon: 'book'
   }];
-  var filtered = allStudents.filter(s => filter === 'all' || filter === 'new' && s.status === 'New' || filter === 'inprogress' && s.status === 'In progress' || filter === 'exam' && s.status === 'Road exam soon' || filter === 'cleared' && s.status === 'Cleared' || filter === 'graduated' && s.exam_result === 'pass' || filter === 'B' && s.cls.startsWith('B') || filter === 'A' && s.cls.startsWith('A') || filter === 'C' && s.cls.startsWith('C') || filter === 't_normal' && s.studentType === 'ធម្មតា' || filter === 't_special' && s.studentType === 'ពិសេស' || filter === 't_ssw' && s.studentType === 'SSW');
+  var filtered = allStudents.filter(s => filter === 'all' || filter === 'new' && s.status === 'New' || filter === 'inprogress' && s.status === 'In progress' || filter === 'exam' && s.status === 'Road exam soon' || filter === 'cleared' && s.status === 'Cleared' || filter === 'graduated' && s.exam_result === 'pass' || filter === 'B' && clsLetter(s.cls) === 'B' || filter === 'A' && clsLetter(s.cls) === 'A' || filter === 'C' && clsLetter(s.cls) === 'C' || filter === 't_normal' && s.studentType === 'ធម្មតា' || filter === 't_special' && s.studentType === 'ពិសេស' || filter === 't_ssw' && s.studentType === 'SSW');
   var examReady = allStudents.filter(s => s.status === 'Road exam soon').length;
   if (bp.mobile) {
     var STATUS_COLOR = {
@@ -37860,15 +37840,15 @@ var StudentsScreenV2 = () => {
   }, {
     id: 'B',
     l: 'Class B',
-    n: allStudents.filter(s => s.cls.startsWith('B')).length
+    n: allStudents.filter(s => clsLetter(s.cls) === 'B').length
   }, {
     id: 'A',
     l: 'Class A',
-    n: allStudents.filter(s => s.cls.startsWith('A')).length
+    n: allStudents.filter(s => clsLetter(s.cls) === 'A').length
   }, {
     id: 'C',
     l: 'Class C',
-    n: allStudents.filter(s => s.cls.startsWith('C')).length
+    n: allStudents.filter(s => clsLetter(s.cls) === 'C').length
   }, {
     id: 'sep'
   }, {
@@ -38867,7 +38847,7 @@ var BiographyCard = ({
     v: s.glasses || '—'
   }, {
     l: 'អាសយដ្ឋាន',
-    v: addrParts.length ? addrParts.join(', ') : '—'
+    v: s.address && s.address !== '—' ? s.address : addrParts.length ? addrParts.join(', ') : '—'
   }, {
     l: 'គោលបំណង​សិក្សា',
     v: s.study_goal || '—'
@@ -39749,16 +39729,11 @@ var StudentEditPanel = ({
   var [eyeRight, setEyeRight] = React.useState(s.eye_right || '');
   var [eyeBoth, setEyeBoth] = React.useState(s.eye_both || '');
   var [glasses, setGlasses] = React.useState(s.glasses || 'មិនពាក់');
-  var [addrHouse, setAddrHouse] = React.useState(s.addr_house || '');
-  var [addrStreet, setAddrStreet] = React.useState(s.addr_street || '');
-  var [addrVillage, setAddrVillage] = React.useState(s.addr_village || '');
-  var [addrCommune, setAddrCommune] = React.useState(s.addr_commune || '');
-  var [addrDistrict, setAddrDistrict] = React.useState(s.addr_district || s.district || '');
-  var [addrProvince, setAddrProvince] = React.useState(s.addr_province || '');
+  var [address, setAddress] = React.useState(s.address && s.address !== '—' ? s.address : [s.addr_house, s.addr_street, s.addr_village, s.addr_commune, s.addr_district || s.district, s.addr_province].filter(Boolean).join(', '));
   var [studyGoal, setStudyGoal] = React.useState(s.study_goal || '');
   var [referral, setReferral] = React.useState(s.referral || '');
   var [studentType, setStudentType] = React.useState(s.studentType || 'ធម្មតា');
-  var [cls, setCls] = React.useState(s.cls || 'B');
+  var [cls, setCls] = React.useState(clsLetter(s.cls));
   var [trans, setTrans] = React.useState(s.trans || 'AT');
   var [instId, setInstId] = React.useState(s.instId || '');
   var [status, setStatus] = React.useState(s.status || 'New');
@@ -39823,12 +39798,7 @@ var StudentEditPanel = ({
       eye_right: eyeRight,
       eye_both: eyeBoth,
       glasses: glasses,
-      addr_house: addrHouse.trim(),
-      addr_street: addrStreet.trim(),
-      addr_village: addrVillage.trim(),
-      addr_commune: addrCommune.trim(),
-      addr_district: addrDistrict.trim(),
-      addr_province: addrProvince.trim(),
+      address: address.trim(),
       study_goal: studyGoal,
       referral: referral,
       studentType,
@@ -40075,17 +40045,6 @@ var StudentEditPanel = ({
   }, tr('មិនពាក់', 'No glasses')), React.createElement("option", {
     value: "\u1796\u17B6\u1780\u17CB"
   }, tr('ពាក់', 'Wears glasses')))), React.createElement(SEField, {
-    label: tr('គោលបំណង', 'Study purpose')
-  }, React.createElement("select", _extends({}, sel, {
-    value: studyGoal,
-    onChange: e => setStudyGoal(e.target.value)
-  }), React.createElement("option", {
-    value: ""
-  }, "\u2014 ", tr('មិន​ទាន់​បញ្ជាក់', 'Not specified'), " \u2014"), React.createElement("option", {
-    value: "\u1794\u17BE\u1780\u1794\u179A\u1780\u17D2\u1793\u17BB\u1784\u179F\u17D2\u179A\u17BB\u1780\u1781\u17D2\u1798\u17C2\u179A"
-  }, tr('បើកបរក្នុងស្រុកខ្មែរ', 'Drive in Cambodia')), React.createElement("option", {
-    value: "\u1794\u17BE\u1780\u1794\u179A\u1793\u17C5\u1794\u179A\u1791\u17C1\u179F"
-  }, tr('បើកបរនៅបរទេស', 'Drive abroad')))), React.createElement(SEField, {
     label: tr('ស្គាល់​សាលា​តាម', 'Referral')
   }, React.createElement("select", _extends({}, sel, {
     value: referral,
@@ -40102,43 +40061,24 @@ var StudentEditPanel = ({
     value: "\u1780\u17B6\u179A\u1795\u17D2\u179F\u1796\u17D2\u179C\u1795\u17D2\u179F\u17B6\u1799"
   }, tr('ការផ្សព្វផ្សាយ', 'Advertisement')), React.createElement("option", {
     value: "\u1795\u17D2\u179F\u17C1\u1784\u17D7"
-  }, tr('ផ្សេងៗ', 'Other'))))), secTitle(tr('អាសយដ្ឋាន', 'ADDRESS')), React.createElement("div", g2, React.createElement(SEField, {
-    label: tr('ផ្ទះ​លេខ', 'House No.')
-  }, React.createElement("input", _extends({}, inp, {
-    value: addrHouse,
-    onChange: e => setAddrHouse(e.target.value),
-    placeholder: "123"
-  }))), React.createElement(SEField, {
-    label: tr('ផ្លូវ', 'Street')
-  }, React.createElement("input", _extends({}, inp, {
-    value: addrStreet,
-    onChange: e => setAddrStreet(e.target.value),
-    placeholder: "\u1795\u17D2\u179B\u17BC\u179C 310"
-  }))), React.createElement(SEField, {
-    label: tr('ភូមិ', 'Village')
-  }, React.createElement("input", _extends({}, inp, {
-    value: addrVillage,
-    onChange: e => setAddrVillage(e.target.value),
-    placeholder: "\u1797\u17BC\u1798\u17B7..."
-  }))), React.createElement(SEField, {
-    label: tr('ឃុំ/សង្កាត់', 'Commune')
-  }, React.createElement("input", _extends({}, inp, {
-    value: addrCommune,
-    onChange: e => setAddrCommune(e.target.value),
-    placeholder: "\u179F\u1784\u17D2\u1780\u17B6\u178F\u17CB..."
-  }))), React.createElement(SEField, {
-    label: tr('ស្រុក/ខណ្ឌ', 'District')
-  }, React.createElement("input", _extends({}, inp, {
-    value: addrDistrict,
-    onChange: e => setAddrDistrict(e.target.value),
-    placeholder: "\u1781\u178E\u17D2\u178C..."
-  }))), React.createElement(SEField, {
-    label: tr('ខេត្ត/រាជធានី', 'Province')
-  }, React.createElement("input", _extends({}, inp, {
-    value: addrProvince,
-    onChange: e => setAddrProvince(e.target.value),
-    placeholder: "\u1797\u17D2\u1793\u17C6\u1796\u17C1\u1789"
-  })))), secTitle(tr('ការ​ចុះ​ឈ្មោះ', 'ENROLLMENT')), React.createElement("div", g2, React.createElement(SEField, {
+  }, tr('ផ្សេងៗ', 'Other'))))), secTitle(tr('អាសយដ្ឋាន', 'ADDRESS')), React.createElement("div", {
+    style: {
+      marginBottom: 12
+    }
+  }, React.createElement(SEField, {
+    label: tr('អាសយដ្ឋាន​ពេញ', 'Full address')
+  }, React.createElement("textarea", {
+    value: address,
+    onChange: e => setAddress(e.target.value),
+    rows: 2,
+    placeholder: tr('ឧ. ផ្ទះ:១៥ ផ្លូវ៣១០ ភូមិ... ឃុំ/សង្កាត់... ស្រុក/ខណ្ឌ... ខេត្ត/រាជធានី...', 'e.g. House:15, St.310, Village..., Commune..., District..., Province...'),
+    style: {
+      ...inp.style,
+      minHeight: 54,
+      resize: 'vertical',
+      fontFamily: 'inherit'
+    }
+  }))), secTitle(tr('ការ​ចុះ​ឈ្មោះ', 'ENROLLMENT')), React.createElement("div", g2, React.createElement(SEField, {
     label: tr('ថ្នាក់', 'Class')
   }, React.createElement("select", _extends({}, sel, {
     value: cls,
@@ -40200,14 +40140,6 @@ var StudentEditPanel = ({
     min: "1",
     placeholder: "40"
   }))), React.createElement(SEField, {
-    label: tr('ម៉ោងបាន', 'Hours done')
-  }, React.createElement("input", _extends({}, inp, {
-    type: "number",
-    value: hours,
-    onChange: e => setHours(e.target.value),
-    min: "0",
-    placeholder: "0"
-  }))), React.createElement(SEField, {
     label: tr('ទូទាត់​', 'Paid') + ` ($) / $${studentPrice({
       trans
     })}`
@@ -40220,130 +40152,7 @@ var StudentEditPanel = ({
       trans
     }),
     placeholder: "0"
-  }))), React.createElement(SEField, {
-    label: tr('មេរៀន​​', 'Next lesson')
-  }, React.createElement("input", _extends({}, inp, {
-    value: next,
-    onChange: e => setNext(e.target.value),
-    placeholder: "Monday 9am / \u1785\u1793\u17D2\u1791 9am"
-  })))), secTitle(tr('ជំនាញ', 'TRAINING SCORES') + ' (0–100%)'), React.createElement("div", g3, React.createElement(SEField, {
-    label: tr('ច្បាប់​', 'Theory') + ' %'
-  }, React.createElement("input", _extends({}, inp, {
-    type: "number",
-    value: theory,
-    onChange: e => setTheory(e.target.value),
-    min: "0",
-    max: "100"
-  }))), React.createElement(SEField, {
-    label: tr('ទីលាន', 'Yard') + ' %'
-  }, React.createElement("input", _extends({}, inp, {
-    type: "number",
-    value: yard,
-    onChange: e => setYard(e.target.value),
-    min: "0",
-    max: "100"
-  }))), React.createElement(SEField, {
-    label: tr('ចត​', 'Parking') + ' %'
-  }, React.createElement("input", _extends({}, inp, {
-    type: "number",
-    value: parking,
-    onChange: e => setParking(e.target.value),
-    min: "0",
-    max: "100"
-  }))), React.createElement(SEField, {
-    label: tr('ទីក្រុង', 'City') + ' %'
-  }, React.createElement("input", _extends({}, inp, {
-    type: "number",
-    value: city,
-    onChange: e => setCity(e.target.value),
-    min: "0",
-    max: "100"
-  }))), React.createElement(SEField, {
-    label: tr('ហាយ​វេ', 'Highway') + ' %'
-  }, React.createElement("input", _extends({}, inp, {
-    type: "number",
-    value: highway,
-    onChange: e => setHighway(e.target.value),
-    min: "0",
-    max: "100"
-  }))), React.createElement(SEField, {
-    label: "Mock avg %"
-  }, React.createElement("input", _extends({}, inp, {
-    type: "number",
-    value: mockAvg,
-    onChange: e => setMockAvg(e.target.value),
-    min: "0",
-    max: "100",
-    style: {
-      ...inp.style,
-      background: parseInt(mockAvg) >= 85 ? 'color-mix(in oklch,var(--good) 12%,var(--surface))' : 'var(--surface)'
-    }
-  })))), React.createElement("div", {
-    style: {
-      marginBottom: 12
-    }
-  }, React.createElement(SELbl, null, "Mock test scores history"), React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 6,
-      flexWrap: 'wrap',
-      marginBottom: 8
-    }
-  }, mockHistory.map((v, i) => React.createElement("div", {
-    key: i,
-    style: {
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: 4,
-      padding: '3px 8px',
-      background: 'var(--surface-muted)',
-      border: '1px solid var(--border)',
-      borderRadius: 6,
-      fontSize: 12
-    }
-  }, React.createElement("span", {
-    style: {
-      fontWeight: 600,
-      color: v >= 85 ? 'var(--good)' : v >= 70 ? 'var(--ink)' : 'var(--warn)'
-    }
-  }, v, "%"), React.createElement("button", {
-    onClick: () => removeMockScore(i),
-    style: {
-      border: 'none',
-      background: 'none',
-      color: 'var(--ink-3)',
-      cursor: 'pointer',
-      fontSize: 12,
-      lineHeight: 1,
-      padding: '0 0 0 4px'
-    }
-  }, "\xD7"))), mockHistory.length === 0 && React.createElement("span", {
-    style: {
-      fontSize: 12,
-      color: 'var(--ink-3)'
-    }
-  }, "No scores yet")), React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 8
-    }
-  }, React.createElement("input", _extends({}, inp, {
-    style: {
-      ...inp.style,
-      width: 100
-    },
-    type: "number",
-    value: mockNew,
-    onChange: e => setMockNew(e.target.value),
-    onKeyDown: e => e.key === 'Enter' && addMockScore(),
-    placeholder: "0\u2013100",
-    min: "0",
-    max: "100"
-  })), React.createElement(Btn, {
-    kind: "ghost",
-    size: "sm",
-    onClick: addMockScore
-  }, "+ ", tr('បន្ថែម​', 'Add score')))), secTitle(tr('ប្រវត្តិសិក្សា', 'STUDY HISTORY')), React.createElement("div", g2, React.createElement(SEField, {
+  })))), secTitle(tr('ប្រវត្តិសិក្សា', 'STUDY HISTORY')), React.createElement("div", g2, React.createElement(SEField, {
     label: tr('ចាប់ផ្ដើមសិក្សា', 'Study start')
   }, React.createElement("input", _extends({}, inp, {
     type: "date",

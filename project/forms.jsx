@@ -1499,11 +1499,10 @@ Use "" for any field that cannot be read clearly.`;
     if (!pwOk)    { toast(tr('Password ≥ ៤ ​​តួ','Min 4 chars'), 'warn'); return; }
     if (!pwMatch) { toast(tr('Password មិន​ដូចគ្នា','Passwords do not match'), 'warn'); return; }
 
-    const clsMap = {A:'ក (ម៉ូតូ)', B:'ខ (ឡានបួនកង់)', C:'គ (ឡានធំ)', D:'ឃ (ឡានដំណើរ)', E:'ង (ឡានពាក់ព័ន្ធ)'};
     STUDENTS.push({
       id: nextId,
       name: name.trim(), en: nameEn.trim(),
-      cls: clsMap[cls],
+      cls,
       instId: instId || '',
       inst: selectedInst ? selectedInst.en : '—',
       hours: 0, target: studyHrs || 30,
