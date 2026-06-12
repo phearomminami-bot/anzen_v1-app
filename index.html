@@ -362,11 +362,18 @@ window.__trRegistry = {
   "Scheduled": "កំណត់​ពេល",
   "Done ✓": "រួច​រាល់",
   "Cancelled": "លុបចោល",
+  "Theory": "ទ្រឹស្ដី",
+  "Practical": "ការ​អនុ​វត្ត​ន៍",
   "Cancel this lesson?": "លុប​ចោល​មេរៀន?",
   "Are you sure? The lesson will be cancelled and the student notified.": "អ្នក​ប្រាកដ​ទេ? មេរៀន​នឹង​ត្រូវ​បាន​លុប​ចោល ហើយ​សិស្ស​នឹង​ទទួល​ជូន​ដំណឹង។",
   "Cancel lesson": "លុប",
   "Lesson cancelled": "បាន​លុប​ចោល​មេរៀន",
   "Done": "ចប់",
+  "Hour": "ម៉ោងទី",
+  "STUDENT": "សិស្ស",
+  "INSTRUCTOR": "គ្រូ",
+  "VEHICLE": "យានយន្ត",
+  "GUEST INSTRUCTORS": "គ្រូ​ភ្ញៀវ",
   "Created by": "បង្កើត​ដោយ",
   "Close": "បិទ",
   "Contacting instructor…": "សាក​ទំនាក់​គ្រូ…",
@@ -950,7 +957,6 @@ window.__trRegistry = {
   "EXAM": "ការ​ប្រឡង",
   "Apply date": "ដាក់​ពាក្យ",
   "Enrollment pipeline": "ដំណើរការ​ចូលរៀន",
-  "Theory": "ទ្រឹស្ដី",
   "Extra": "ថែម",
   "Theory JP": "ទ្រឹស្ដី JP",
   "Practice JP": "អនុវត្តន៍ JP",
@@ -1005,7 +1011,6 @@ window.__trRegistry = {
   "Discount": "បញ្ចុះ​តម្លៃ",
   "Net": "សុទ្ធ",
   "Tax": "ពន្ធ",
-  "Practical": "ការ​អនុ​វត្ត​ន៍",
   "Lesson booked!": "បាន​កក់​មេរៀន​ដោយ​ជោគ​ជ័យ!",
   "Lesson confirmed!": "ការ​កក់​ត្រូវ​បាន​បញ្ជាក់!",
   "View in schedule": "មើល​ក្នុង​កាល​វិភាគ",
@@ -1500,7 +1505,6 @@ window.__trGroups = {
     "EXAM": "ការ​ប្រឡង",
     "Apply date": "ដាក់​ពាក្យ",
     "Enrollment pipeline": "ដំណើរការ​ចូលរៀន",
-    "Theory": "ទ្រឹស្ដី",
     "Extra": "ថែម",
     "Theory JP": "ទ្រឹស្ដី JP",
     "Practice JP": "អនុវត្តន៍ JP",
@@ -2081,7 +2085,6 @@ window.__trGroups = {
     "POLICY": "គោលនយោបាយ"
   },
   "ទំព័រ​សាធារណៈ · Public site": {
-    "Practical": "ការ​អនុ​វត្ត​ន៍",
     "Lesson booked!": "បាន​កក់​មេរៀន​ដោយ​ជោគ​ជ័យ!",
     "Lesson confirmed!": "ការ​កក់​ត្រូវ​បាន​បញ្ជាក់!",
     "View in schedule": "មើល​ក្នុង​កាល​វិភាគ",
@@ -2423,11 +2426,18 @@ window.__trGroups = {
     "Scheduled": "កំណត់​ពេល",
     "Done ✓": "រួច​រាល់",
     "Cancelled": "លុប​ចោល",
+    "Theory": "ទ្រឹស្ដី",
+    "Practical": "អនុវត្ត",
     "Cancel this lesson?": "លុប​ចោល​មេរៀន?",
     "Are you sure? The lesson will be cancelled and the student notified.": "អ្នក​ប្រាកដ​ទេ? មេរៀន​នឹង​ត្រូវ​បាន​លុប​ចោល ហើយ​សិស្ស​នឹង​ទទួល​ជូន​ដំណឹង។",
     "Cancel lesson": "លុប",
     "Lesson cancelled": "បាន​លុប​ចោល​មេរៀន",
     "Done": "រួច​រាល់",
+    "Hour": "ម៉ោងទី",
+    "STUDENT": "សិស្ស",
+    "INSTRUCTOR": "គ្រូ",
+    "VEHICLE": "យានយន្ត",
+    "GUEST INSTRUCTORS": "គ្រូ​ភ្ញៀវ",
     "Created by": "បង្កើត​ដោយ",
     "Close": "ត្រឡប់",
     "Contacting instructor…": "សាក​ទំនាក់​គ្រូ…",
@@ -9338,7 +9348,8 @@ var LessonDetail = ({
     confirm,
     role,
     tr,
-    openForm
+    openForm,
+    lang
   } = useAppActions();
   var [ver, setVer] = React.useState(0);
   var [editing, setEditing] = React.useState(false);
@@ -9355,6 +9366,27 @@ var LessonDetail = ({
   var isDone = lesson.status === 'done';
   var isCancelled = lesson.status === 'cancelled';
   var locLabel = locLabelFor(lesson.pickup);
+  var typeLabel = lesson.color === 'c' || lesson.color === 'e' ? tr('ទ្រឹស្ដី', 'Theory') : tr('អនុវត្ត', 'Practical');
+  var locName = (typeof LESSON_LOCATIONS !== 'undefined' ? LESSON_LOCATIONS : []).find(l => l.v === lesson.pickup)?.en || lesson.pickup || '—';
+  var hourRange = (() => {
+    var sid = lesson.studentId;
+    if (!sid || sid === '—') return '';
+    var mine = (typeof LESSONS !== 'undefined' ? LESSONS : []).filter(l => l.studentId === sid && l.status !== 'cancelled').sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')) || (a.h || 0) - (b.h || 0));
+    var acc = 0,
+      start = null;
+    for (var l of mine) {
+      if (l.id === lesson.id) {
+        start = acc + 1;
+        break;
+      }
+      acc += Math.max(1, Math.round(l.len || 1));
+    }
+    if (start == null) return '';
+    var n = Math.max(1, Math.round(lesson.len || 1));
+    return Array.from({
+      length: n
+    }, (_, i) => start + i).join(', ');
+  })();
   var markDone = () => {
     lesson.status = 'done';
     if (s) {
@@ -9391,7 +9423,7 @@ var LessonDetail = ({
       onClose();
     }
   });
-  var dateLabel = lesson.date ? formatDateShort(lesson.date, 'en') : '';
+  var dateLabel = lesson.date ? formatDateShort(lesson.date, lang) : '';
   if (editing) {
     return React.createElement(LessonEditForm, {
       lesson: lesson,
@@ -9417,7 +9449,7 @@ var LessonDetail = ({
     }
   }, React.createElement(Badge, {
     tone: lesson.color === 'e' ? 'warn' : lesson.color === 'c' ? 'neutral' : lesson.color === 'd' ? 'good' : 'accent'
-  }, lesson.color === 'e' ? 'Theory JP' : lesson.color === 'c' ? 'Theory KH' : lesson.color === 'd' ? 'Practical JP' : 'Practical KH'), isDone && React.createElement(Badge, {
+  }, typeLabel), isDone && React.createElement(Badge, {
     tone: "good"
   }, tr('រួច​រាល់', 'Done')), isCancelled && React.createElement(Badge, {
     tone: "danger"
@@ -9437,7 +9469,24 @@ var LessonDetail = ({
       color: 'var(--ink-3)',
       marginTop: 4
     }
-  }, dateLabel, " \xB7 ", lesson.type, " \xB7 ", lesson.len, "h")), React.createElement("div", {
+  }, dateLabel, " \xB7 ", typeLabel, " \xB7 ", lesson.len, lang === 'km' ? ' ម៉ោង' : 'h'), hourRange && React.createElement("div", {
+    style: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 5,
+      marginTop: 8,
+      padding: '3px 10px',
+      borderRadius: 7,
+      background: 'var(--accent-soft)',
+      color: 'var(--accent)',
+      fontSize: 12,
+      fontWeight: 600,
+      width: 'fit-content'
+    }
+  }, React.createElement(Icon, {
+    name: "cal",
+    size: 12
+  }), " ", tr('ម៉ោងទី', 'Hour'), " ", hourRange)), React.createElement("div", {
     style: {
       padding: 14,
       background: 'var(--surface-muted)',
@@ -9472,7 +9521,7 @@ var LessonDetail = ({
       letterSpacing: '.05em',
       fontFamily: '"JetBrains Mono",monospace'
     }
-  }, "LOCATION \xB7 \u1791\u17B8\u178F\u17B6\u17C6\u1784"), React.createElement("div", {
+  }, tr('ទីតាំង', 'LOCATION')), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
@@ -9484,7 +9533,7 @@ var LessonDetail = ({
       fontSize: 13,
       fontWeight: 500
     }
-  }, locLabel), lesson.pickup === 'school' && React.createElement("span", {
+  }, locName), lesson.pickup === 'school' && React.createElement("span", {
     style: {
       fontSize: 10,
       fontWeight: 700,
@@ -9541,13 +9590,13 @@ var LessonDetail = ({
       letterSpacing: '.05em',
       fontFamily: '"JetBrains Mono",monospace'
     }
-  }, "STUDENT"), React.createElement("div", {
+  }, tr('សិស្ស', 'STUDENT')), React.createElement("div", {
     style: {
       fontSize: 13,
       fontWeight: 500,
       marginTop: 2
     }
-  }, s?.name || tr('ក្រុម', 'Group')), React.createElement("div", {
+  }, s?.en || s?.name || tr('ក្រុម', 'Group')), React.createElement("div", {
     style: {
       fontSize: 11,
       color: 'var(--ink-3)'
@@ -9584,13 +9633,13 @@ var LessonDetail = ({
       letterSpacing: '.05em',
       fontFamily: '"JetBrains Mono",monospace'
     }
-  }, "INSTRUCTOR \xB7 \u1782\u17D2\u179A\u17BC"), React.createElement("div", {
+  }, tr('គ្រូ', 'INSTRUCTOR')), React.createElement("div", {
     style: {
       fontSize: 13,
       fontWeight: 500,
       marginTop: 2
     }
-  }, it?.name || '—'), React.createElement("div", {
+  }, it?.en || it?.name || '—'), React.createElement("div", {
     style: {
       fontSize: 11,
       color: 'var(--ink-3)'
@@ -9620,7 +9669,7 @@ var LessonDetail = ({
       letterSpacing: '.05em',
       fontFamily: '"JetBrains Mono",monospace'
     }
-  }, "VEHICLE \xB7 \u1799\u17B6\u1793\u1799\u1793\u17D2\u178F"), React.createElement("div", {
+  }, tr('យានយន្ត', 'VEHICLE')), React.createElement("div", {
     style: {
       fontSize: 13,
       fontWeight: 500,
@@ -9664,7 +9713,7 @@ var LessonDetail = ({
       fontFamily: '"JetBrains Mono",monospace',
       marginBottom: 8
     }
-  }, "GUEST INSTRUCTORS \xB7 \u1782\u17D2\u179A\u17BC\u200B\u1797\u17D2\u1789\u17C0\u179C"), React.createElement("div", {
+  }, tr('គ្រូ​ភ្ញៀវ', 'GUEST INSTRUCTORS')), React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',

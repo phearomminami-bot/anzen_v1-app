@@ -292,7 +292,7 @@ const LessonEditForm = ({ lesson, onSave, onCancel }) => {
 
 // ── Lesson detail ──────────────────────────────────────────────────────────
 const LessonDetail = ({ lesson, onClose }) => {
-  const { toast, confirm, role, tr, openForm } = useAppActions();
+  const { toast, confirm, role, tr, openForm, lang } = useAppActions();
   const [ver,     setVer]     = React.useState(0);
   const [editing, setEditing] = React.useState(false);
   if (!lesson) return null;
@@ -305,6 +305,23 @@ const LessonDetail = ({ lesson, onClose }) => {
   const isCancelled = lesson.status === 'cancelled';
 
   const locLabel = locLabelFor(lesson.pickup);
+  // Khmer-pure labels (except names): lesson type + English location name.
+  const typeLabel = (lesson.color==='c' || lesson.color==='e') ? tr('ទ្រឹស្ដី','Theory') : tr('អនុវត្ត','Practical');
+  const locName = ((typeof LESSON_LOCATIONS !== 'undefined' ? LESSON_LOCATIONS : []).find(l => l.v === lesson.pickup)?.en) || lesson.pickup || '—';
+  // Cumulative hour number(s) for this lesson within the student's whole schedule.
+  // e.g. the 5th hour → "5"; a 2-hour lesson starting at hour 5 → "5, 6".
+  const hourRange = (() => {
+    const sid = lesson.studentId;
+    if (!sid || sid === '—') return '';
+    const mine = (typeof LESSONS !== 'undefined' ? LESSONS : [])
+      .filter(l => l.studentId === sid && l.status !== 'cancelled')
+      .sort((a,b) => String(a.date||'').localeCompare(String(b.date||'')) || ((a.h||0) - (b.h||0)));
+    let acc = 0, start = null;
+    for (const l of mine) { if (l.id === lesson.id) { start = acc + 1; break; } acc += Math.max(1, Math.round(l.len||1)); }
+    if (start == null) return '';
+    const n = Math.max(1, Math.round(lesson.len||1));
+    return Array.from({length:n}, (_,i) => start + i).join(', ');
+  })();
 
   const markDone = () => {
     lesson.status = 'done';
@@ -343,7 +360,7 @@ const LessonDetail = ({ lesson, onClose }) => {
     },
   });
 
-  const dateLabel = lesson.date ? formatDateShort(lesson.date, 'en') : '';
+  const dateLabel = lesson.date ? formatDateShort(lesson.date, lang) : '';
 
   if (editing) {
     return <LessonEditForm lesson={lesson} onSave={() => { setEditing(false); setVer(n=>n+1); }} onCancel={() => setEditing(false)}/>;
@@ -355,7 +372,7 @@ const LessonDetail = ({ lesson, onClose }) => {
       <div>
         <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
           <Badge tone={lesson.color==='e'?'warn':lesson.color==='c'?'neutral':lesson.color==='d'?'good':'accent'}>
-            {lesson.color==='e'?'Theory JP':lesson.color==='c'?'Theory KH':lesson.color==='d'?'Practical JP':'Practical KH'}
+            {typeLabel}
           </Badge>
           {isDone      && <Badge tone="good">{tr('រួច​រាល់','Done')}</Badge>}
           {isCancelled && <Badge tone="danger">{tr('លុប​ចោល','Cancelled')}</Badge>}
@@ -365,8 +382,13 @@ const LessonDetail = ({ lesson, onClose }) => {
           {String(lesson.h).padStart(2,'0')}:00–{String(lesson.h + lesson.len).padStart(2,'0')}:00
         </div>
         <div style={{fontSize:13,color:'var(--ink-3)',marginTop:4}}>
-          {dateLabel} · {lesson.type} · {lesson.len}h
+          {dateLabel} · {typeLabel} · {lesson.len}{lang==='km' ? ' ម៉ោង' : 'h'}
         </div>
+        {hourRange && (
+          <div style={{display:'inline-flex',alignItems:'center',gap:5,marginTop:8,padding:'3px 10px',borderRadius:7,background:'var(--accent-soft)',color:'var(--accent)',fontSize:12,fontWeight:600,width:'fit-content'}}>
+            <Icon name="cal" size={12}/> {tr('ម៉ោងទី','Hour')} {hourRange}
+          </div>
+        )}
       </div>
 
       {/* Location */}
@@ -375,9 +397,9 @@ const LessonDetail = ({ lesson, onClose }) => {
           <Icon name="flag" size={15}/>
         </div>
         <div style={{flex:1}}>
-          <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace'}}>LOCATION · ទីតាំង</div>
+          <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace'}}>{tr('ទីតាំង','LOCATION')}</div>
           <div style={{display:'flex',gap:8,alignItems:'center',marginTop:2}}>
-            <div style={{fontSize:13,fontWeight:500}}>{locLabel}</div>
+            <div style={{fontSize:13,fontWeight:500}}>{locName}</div>
             {lesson.pickup === 'school' && <span style={{fontSize:10,fontWeight:700,padding:'1px 7px',borderRadius:4,background:'#E5EBF5',color:'#2A5DB0',fontFamily:'"JetBrains Mono",monospace'}}>School</span>}
             {lesson.pickup === 'yard'   && <span style={{fontSize:10,fontWeight:700,padding:'1px 7px',borderRadius:4,background:'#E2EFE7',color:'#3B7A57',fontFamily:'"JetBrains Mono",monospace'}}>Course</span>}
           </div>
@@ -390,8 +412,8 @@ const LessonDetail = ({ lesson, onClose }) => {
           <div style={{padding:14,background:'var(--surface-muted)',borderRadius:10,display:'flex',gap:10,alignItems:'center'}}>
             {s ? <Avatar tag={s.photo} size={40}/> : <div style={{width:40,height:40,borderRadius:999,background:'var(--border)'}}/>}
             <div style={{minWidth:0,flex:1}}>
-              <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace'}}>STUDENT</div>
-              <div style={{fontSize:13,fontWeight:500,marginTop:2}}>{s?.name || tr('ក្រុម','Group')}</div>
+              <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace'}}>{tr('សិស្ស','STUDENT')}</div>
+              <div style={{fontSize:13,fontWeight:500,marginTop:2}}>{s?.en || s?.name || tr('ក្រុម','Group')}</div>
               <div style={{fontSize:11,color:'var(--ink-3)'}}>{s?.id || '—'}</div>
             </div>
           </div>
@@ -399,8 +421,8 @@ const LessonDetail = ({ lesson, onClose }) => {
         <div style={{padding:14,background:'var(--surface-muted)',borderRadius:10,display:'flex',gap:10,alignItems:'center',gridColumn:isStudent?'span 2':undefined}}>
           {it ? <Avatar tag={it.photo} size={40}/> : <div style={{width:40,height:40,borderRadius:999,background:'var(--border)'}}/>}
           <div style={{minWidth:0,flex:1}}>
-            <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace'}}>INSTRUCTOR · គ្រូ</div>
-            <div style={{fontSize:13,fontWeight:500,marginTop:2}}>{it?.name || '—'}</div>
+            <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace'}}>{tr('គ្រូ','INSTRUCTOR')}</div>
+            <div style={{fontSize:13,fontWeight:500,marginTop:2}}>{it?.en || it?.name || '—'}</div>
             <div style={{fontSize:11,color:'var(--ink-3)'}}>★ {it?.rating} · {it?.lang}</div>
           </div>
         </div>
@@ -411,7 +433,7 @@ const LessonDetail = ({ lesson, onClose }) => {
         <div style={{padding:14,background:'var(--surface-muted)',borderRadius:10,display:'flex',gap:10,alignItems:'center'}}>
           <Photo tag={v.photo} w={56} h={42} r={6}/>
           <div style={{flex:1}}>
-            <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace'}}>VEHICLE · យានយន្ត</div>
+            <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace'}}>{tr('យានយន្ត','VEHICLE')}</div>
             <div style={{fontSize:13,fontWeight:500,marginTop:2}}>{v.make}</div>
             <div style={{display:'flex',gap:6,alignItems:'center',marginTop:3,flexWrap:'wrap'}}>
               <span style={{fontSize:11,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{v.plate} · {v.cls}</span>
@@ -431,7 +453,7 @@ const LessonDetail = ({ lesson, onClose }) => {
       {/* Guest instructors */}
       {lesson.guests && lesson.guests.length > 0 && (
         <div style={{padding:14,background:'var(--surface-muted)',borderRadius:10}}>
-          <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace',marginBottom:8}}>GUEST INSTRUCTORS · គ្រូ​ភ្ញៀវ</div>
+          <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace',marginBottom:8}}>{tr('គ្រូ​ភ្ញៀវ','GUEST INSTRUCTORS')}</div>
           <div style={{display:'flex',flexDirection:'column',gap:8}}>
             {lesson.guests.map(gid => {
               const gi = instById(gid);
