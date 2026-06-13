@@ -27,7 +27,7 @@ const ALL_PAYMENT_METHODS = [
   {id:'Cash',  l:'សាច់​ប្រាក់', k:'cash'},
   {id:'Bank',  l:'ផ្ទេរ',       k:'bank'},
   {id:'PiPay', l:'Pi Pay',             k:'pipay'},
-  {id:'Card',  l:'Credit card',        k:'card'},
+  {id:'Card',  l:'កាត​ឥណទាន',          k:'card'},
 ];
 
 const getAddons = () => {
@@ -100,8 +100,8 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
   const EXTRA_HOUR_PRICE = plan.price;
 
   const planLine = isExtraInvoice
-    ? { id:'extra', km:'ម៉ោងបន្ថែម', sub:`${extraHours} × $${EXTRA_HOUR_PRICE} / ម៉ោង · per hour`, qty: extraHours, price: EXTRA_HOUR_PRICE }
-    : { id: plan.id, km: `Class ${plan.cls} · ${plan.km}`, sub: `${plan.hrs} ម៉ោងបង្រៀន`, qty: 1, price: plan.price };
+    ? { id:'extra', km:'ម៉ោងបន្ថែម', sub:`${extraHours} × $${EXTRA_HOUR_PRICE} / ម៉ោង`, qty: extraHours, price: EXTRA_HOUR_PRICE }
+    : { id: plan.id, km: `ថ្នាក់ ${clsKm(plan.cls)} · ${plan.km}`, sub: `${plan.hrs} ម៉ោងបង្រៀន`, qty: 1, price: plan.price };
   const lines = [planLine, ...addons.filter(a => a.qty > 0)];
   const subtotal    = lines.reduce((s, l) => s + l.qty * l.price, 0);
   const discountAmt = Math.round(subtotal * discountPct / 100);
@@ -185,7 +185,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
   };
 
   return (
-    <div style={{display:'flex',flexDirection:'column',gap:14}}>
+    <div style={{display:'flex',flexDirection:'column',gap:14,maxWidth:'100%',overflowX:'hidden'}}>
       <SectionTitle
         km="បង្កើត​វិក្កយបត្រ​ថ្មី"
         en={`Create invoice · ${invId} · ${sent ? 'sent' : 'draft'}`}
@@ -221,15 +221,15 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
         </div>
       )}
 
-      <div style={{display:'grid',gridTemplateColumns:bp.mobile?'1fr':'1.05fr 1fr',gap:14,alignItems:'start'}}>
+      <div style={{display:'grid',gridTemplateColumns:bp.mobile?'1fr':'1.05fr 1fr',gap:14,alignItems:'start',minWidth:0}}>
         {/* ── LEFT: form ── */}
-        <div style={{display:'flex',flexDirection:'column',gap:14}}>
+        <div style={{display:'flex',flexDirection:'column',gap:14,minWidth:0}}>
 
           {/* student */}
           <Card label={tr('សិស្ស','BILL TO')}>
-            <div style={{display:'flex',gap:14}}>
+            <div style={{display:'flex',gap:14,minWidth:0}}>
               <Photo tag={student?.photo} w={64} h={64} r={999}/>
-              <div style={{flex:1}}>
+              <div style={{flex:1,minWidth:0}}>
                 <div style={{position:'relative'}}>
                   <select value={studentId} onChange={e => setStudentId(e.target.value)} style={{
                     appearance:'none', width:'100%',
@@ -243,7 +243,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
                       const prevCount = INVOICES.filter(inv => inv.student === s.id).length;
                       return (
                         <option key={s.id} value={s.id}>
-                          {prevCount > 0 ? `● ` : ''}{s.name} · {s.en} · {s.id}
+                          {prevCount > 0 ? `● ` : ''}{s.en || s.name} · {s.id}
                         </option>
                       );
                     })}
@@ -259,7 +259,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
                         border:'1px solid var(--accent)', display:'inline-flex', alignItems:'center', gap:6,
                       }}>
                         <span style={{fontWeight:700}}>●</span>
-                        {`បានធ្វើ​វិក្កយបត្រ ${prevInvs.length} ហើយ · ${prevInvs.length} invoice${prevInvs.length>1?'s':''} already sent`}
+                        {`បាន​ធ្វើ​វិក្កយបត្រ​រួច ${prevInvs.length} លើក`}
                       </div>
                     );
                   })()}
@@ -288,13 +288,13 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
                     borderRadius:10, cursor:'pointer',
                   }}>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
-                      <Badge tone={sel?'accent':'neutral'}>{p.isExtra ? '+ ម៉ោង' : `Class ${p.cls}`}</Badge>
+                      <Badge tone={sel?'accent':'neutral'}>{p.isExtra ? '+ ម៉ោង' : `ថ្នាក់ ${clsKm(p.cls)}`}</Badge>
                       <span style={{fontSize:12,fontWeight:500,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{p.km}</span>
                     </div>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginTop:10}}>
-                      <span style={{fontSize:11,color:'var(--ink-3)'}}>{p.isExtra ? 'តាម​ម៉ោង' : `${p.hrs} ម៉ោង · ${p.hrs}h`}</span>
+                      <span style={{fontSize:11,color:'var(--ink-3)'}}>{p.isExtra ? 'តាម​ម៉ោង' : `${p.hrs} ម៉ោង`}</span>
                       <span style={{fontSize:20,fontWeight:600,fontFamily:'var(--font-display)'}}>
-                        ${p.price}{p.isExtra && <span style={{fontSize:11,color:'var(--ink-3)',fontWeight:400}}>/h</span>}
+                        ${p.price}{p.isExtra && <span style={{fontSize:11,color:'var(--ink-3)',fontWeight:400}}>/ម៉ោង</span>}
                       </span>
                     </div>
                     {p.inc && <div style={{fontSize:10,color:'var(--ink-3)',marginTop:4,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{p.inc}</div>}
@@ -323,7 +323,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
                   </div>
                 </div>
                 <div style={{marginTop:12,display:'flex',gap:6,flexWrap:'wrap',alignItems:'center'}}>
-                  <span style={{fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.06em',marginRight:4}}>QUICK</span>
+                  <span style={{fontSize:10,color:'var(--ink-3)',fontFamily:'var(--font-km),sans-serif',marginRight:4}}>រហ័ស</span>
                   {[1,2,5,10,20].map(n => (
                     <button key={n} onClick={() => setExtraHours(n)} style={{
                       padding:'4px 10px',
@@ -348,7 +348,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
                 }}>
                   <div>
                     <div style={{fontSize:13,fontWeight:a.qty>0?500:400,color:a.qty>0?'var(--ink)':'var(--ink-2)'}}>{a.km}</div>
-                    <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2,fontVariantNumeric:'tabular-nums'}}>${a.price} / unit</div>
+                    <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2,fontVariantNumeric:'tabular-nums'}}>${a.price} / ឯកតា</div>
                   </div>
                   <InvStepper value={a.qty} onChange={v => setAddonQty(a.id, v)}/>
                   <div style={{textAlign:'right',fontSize:14,fontWeight:600,fontVariantNumeric:'tabular-nums',color:a.qty>0?'var(--ink)':'var(--ink-3)'}}>
@@ -395,7 +395,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
                   ))}
                 </div>
                 <div style={{marginTop:6,fontSize:11,color:'var(--ink-3)',textAlign:'right',fontVariantNumeric:'tabular-nums'}}>
-                  = +${taxAmt.toFixed(2)} · <span style={{color:'var(--accent)',cursor:'pointer'}} onClick={()=>navigate('settings')}>Settings VAT: {ss.vat||10}%</span>
+                  = +${taxAmt.toFixed(2)} · <span style={{color:'var(--accent)',cursor:'pointer'}} onClick={()=>navigate('settings')}>VAT ​ក្នុង​ការ​កំណត់: {ss.vat||10}%</span>
                 </div>
               </div>
               <div>
@@ -618,8 +618,8 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
 
 // ── Private helpers (prefixed to avoid collision with other screens) ──────────
 const InvFieldLabel = ({ km, en }) => (
-  <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.06em',textTransform:'uppercase',fontFamily:'"JetBrains Mono",monospace'}}>
-    {km} <span style={{opacity:.7}}>· {en}</span>
+  <div style={{fontSize:11,color:'var(--ink-3)',fontFamily:'var(--font-km),sans-serif',fontWeight:600}}>
+    {km}
   </div>
 );
 

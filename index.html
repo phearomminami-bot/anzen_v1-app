@@ -43781,7 +43781,7 @@ var ALL_PAYMENT_METHODS = [{
   k: 'pipay'
 }, {
   id: 'Card',
-  l: 'Credit card',
+  l: 'កាត​ឥណទាន',
   k: 'card'
 }];
 var getAddons = () => {
@@ -43874,12 +43874,12 @@ var NewInvoiceScreen = ({
   var planLine = isExtraInvoice ? {
     id: 'extra',
     km: 'ម៉ោងបន្ថែម',
-    sub: `${extraHours} × $${EXTRA_HOUR_PRICE} / ម៉ោង · per hour`,
+    sub: `${extraHours} × $${EXTRA_HOUR_PRICE} / ម៉ោង`,
     qty: extraHours,
     price: EXTRA_HOUR_PRICE
   } : {
     id: plan.id,
-    km: `Class ${plan.cls} · ${plan.km}`,
+    km: `ថ្នាក់ ${clsKm(plan.cls)} · ${plan.km}`,
     sub: `${plan.hrs} ម៉ោងបង្រៀន`,
     qty: 1,
     price: plan.price
@@ -43993,7 +43993,9 @@ var NewInvoiceScreen = ({
     style: {
       display: 'flex',
       flexDirection: 'column',
-      gap: 14
+      gap: 14,
+      maxWidth: '100%',
+      overflowX: 'hidden'
     }
   }, React.createElement(SectionTitle, {
     km: "\u1794\u1784\u17D2\u1780\u17BE\u178F\u200B\u179C\u17B7\u1780\u17D2\u1780\u1799\u1794\u178F\u17D2\u179A\u200B\u1790\u17D2\u1798\u17B8",
@@ -44070,20 +44072,23 @@ var NewInvoiceScreen = ({
       display: 'grid',
       gridTemplateColumns: bp.mobile ? '1fr' : '1.05fr 1fr',
       gap: 14,
-      alignItems: 'start'
+      alignItems: 'start',
+      minWidth: 0
     }
   }, React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
-      gap: 14
+      gap: 14,
+      minWidth: 0
     }
   }, React.createElement(Card, {
     label: tr('សិស្ស', 'BILL TO')
   }, React.createElement("div", {
     style: {
       display: 'flex',
-      gap: 14
+      gap: 14,
+      minWidth: 0
     }
   }, React.createElement(Photo, {
     tag: student?.photo,
@@ -44092,7 +44097,8 @@ var NewInvoiceScreen = ({
     r: 999
   }), React.createElement("div", {
     style: {
-      flex: 1
+      flex: 1,
+      minWidth: 0
     }
   }, React.createElement("div", {
     style: {
@@ -44119,7 +44125,7 @@ var NewInvoiceScreen = ({
     return React.createElement("option", {
       key: s.id,
       value: s.id
-    }, prevCount > 0 ? `● ` : '', s.name, " \xB7 ", s.en, " \xB7 ", s.id);
+    }, prevCount > 0 ? `● ` : '', s.en || s.name, " \xB7 ", s.id);
   })), (() => {
     var prevInvs = INVOICES.filter(inv => inv.student === studentId);
     if (!prevInvs.length) return null;
@@ -44140,7 +44146,7 @@ var NewInvoiceScreen = ({
       style: {
         fontWeight: 700
       }
-    }, "\u25CF"), `បានធ្វើ​វិក្កយបត្រ ${prevInvs.length} ហើយ · ${prevInvs.length} invoice${prevInvs.length > 1 ? 's' : ''} already sent`);
+    }, "\u25CF"), `បាន​ធ្វើ​វិក្កយបត្រ​រួច ${prevInvs.length} លើក`);
   })(), React.createElement(Icon, {
     name: "chev",
     size: 14,
@@ -44201,7 +44207,7 @@ var NewInvoiceScreen = ({
       }
     }, React.createElement(Badge, {
       tone: sel ? 'accent' : 'neutral'
-    }, p.isExtra ? '+ ម៉ោង' : `Class ${p.cls}`), React.createElement("span", {
+    }, p.isExtra ? '+ ម៉ោង' : `ថ្នាក់ ${clsKm(p.cls)}`), React.createElement("span", {
       style: {
         fontSize: 12,
         fontWeight: 500,
@@ -44221,7 +44227,7 @@ var NewInvoiceScreen = ({
         fontSize: 11,
         color: 'var(--ink-3)'
       }
-    }, p.isExtra ? 'តាម​ម៉ោង' : `${p.hrs} ម៉ោង · ${p.hrs}h`), React.createElement("span", {
+    }, p.isExtra ? 'តាម​ម៉ោង' : `${p.hrs} ម៉ោង`), React.createElement("span", {
       style: {
         fontSize: 20,
         fontWeight: 600,
@@ -44233,7 +44239,7 @@ var NewInvoiceScreen = ({
         color: 'var(--ink-3)',
         fontWeight: 400
       }
-    }, "/h"))), p.inc && React.createElement("div", {
+    }, "/\u1798\u17C9\u17C4\u1784"))), p.inc && React.createElement("div", {
       style: {
         fontSize: 10,
         color: 'var(--ink-3)',
@@ -44294,11 +44300,10 @@ var NewInvoiceScreen = ({
     style: {
       fontSize: 10,
       color: 'var(--ink-3)',
-      fontFamily: '"JetBrains Mono",monospace',
-      letterSpacing: '.06em',
+      fontFamily: 'var(--font-km),sans-serif',
       marginRight: 4
     }
-  }, "QUICK"), [1, 2, 5, 10, 20].map(n => React.createElement("button", {
+  }, "\u179A\u17A0\u17D0\u179F"), [1, 2, 5, 10, 20].map(n => React.createElement("button", {
     key: n,
     onClick: () => setExtraHours(n),
     style: {
@@ -44342,7 +44347,7 @@ var NewInvoiceScreen = ({
       marginTop: 2,
       fontVariantNumeric: 'tabular-nums'
     }
-  }, "$", a.price, " / unit")), React.createElement(InvStepper, {
+  }, "$", a.price, " / \u17AF\u1780\u178F\u17B6")), React.createElement(InvStepper, {
     value: a.qty,
     onChange: v => setAddonQty(a.id, v)
   }), React.createElement("div", {
@@ -44440,7 +44445,7 @@ var NewInvoiceScreen = ({
       cursor: 'pointer'
     },
     onClick: () => navigate('settings')
-  }, "Settings VAT: ", ss.vat || 10, "%"))), React.createElement("div", null, React.createElement(InvFieldLabel, {
+  }, "VAT \u200B\u1780\u17D2\u1793\u17BB\u1784\u200B\u1780\u17B6\u179A\u200B\u1780\u17C6\u178E\u178F\u17CB: ", ss.vat || 10, "%"))), React.createElement("div", null, React.createElement(InvFieldLabel, {
     km: "\u1790\u17D2\u1784\u17C3\u200B\u200B\u1785\u17C1\u1789\u200B\u179C\u17B7\u1780\u17D2\u1780\u1799\u1794\u178F\u17D2\u179A",
     en: "Issue date"
   }), React.createElement(InvDateField, {
@@ -44942,17 +44947,12 @@ var InvFieldLabel = ({
   en
 }) => React.createElement("div", {
   style: {
-    fontSize: 10,
+    fontSize: 11,
     color: 'var(--ink-3)',
-    letterSpacing: '.06em',
-    textTransform: 'uppercase',
-    fontFamily: '"JetBrains Mono",monospace'
+    fontFamily: 'var(--font-km),sans-serif',
+    fontWeight: 600
   }
-}, km, " ", React.createElement("span", {
-  style: {
-    opacity: .7
-  }
-}, "\xB7 ", en));
+}, km);
 var InvDateField = ({
   value,
   accent
