@@ -7,10 +7,10 @@ const FONT_OPTIONS = {
 };
 
 const FONT_SIZE_OPTIONS = [
-  { v:'sm', label:'តូច',          en:'Small',       px:12, zoom:0.857 },
-  { v:'md', label:'ធម្មតា',       en:'Normal',      px:14, zoom:1     },
-  { v:'lg', label:'ធំ',           en:'Large',       px:16, zoom:1.143 },
-  { v:'xl', label:'ធំ​ណាស់',     en:'Extra large', px:18, zoom:1.286 },
+  { v:'sm', label:'តូច',          en:'Small',       px:13, zoom:0.929 },
+  { v:'md', label:'ធម្មតា',       en:'Normal',      px:15, zoom:1.071 },
+  { v:'lg', label:'ធំ',           en:'Large',       px:17, zoom:1.214 },
+  { v:'xl', label:'ធំ​ណាស់',     en:'Extra large', px:19, zoom:1.357 },
 ];
 
 const ACCENT_OPTIONS = [

@@ -183,7 +183,7 @@ HEAD = """<!doctype html>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Moul&family=Battambang:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Moul&family=Battambang:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
   :root{
@@ -231,9 +231,11 @@ HEAD = """<!doctype html>
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--ink);
     font-family:var(--font-en),var(--font-km);
-    font-size:var(--font-size-base,14px);line-height:1.45;
+    font-size:var(--font-size-base,15px);line-height:1.5;
     -webkit-font-smoothing:antialiased}
-  :lang(km),.km{font-family:var(--font-km)}
+  /* Khmer (Battambang) reads thin at small sizes — default to a medium weight
+     so body text is heavier/easier to read. Inline fontWeight still overrides. */
+  :lang(km),.km{font-family:var(--font-km);font-weight:500}
   button{font:inherit;color:inherit}
   ::selection{background:var(--accent-soft)}
 
@@ -241,12 +243,14 @@ HEAD = """<!doctype html>
   select,
   select option {
     font-family: var(--font-km), sans-serif;
-    font-size: 16px;
+    font-size: 17px;
     line-height: 1.6;
+    font-weight: 500;
   }
   input, textarea {
     font-family: var(--font-km), var(--font-en), sans-serif;
-    font-size: 16px;
+    font-size: 17px;
+    font-weight: 500;
   }
 
   /* photo placeholder */
