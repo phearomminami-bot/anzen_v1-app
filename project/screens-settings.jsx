@@ -30,7 +30,7 @@ if (!window.__schoolSettings) {
       {id:1, km:'ការប្រឡងផ្លូវ',  en:'Road exam fee',         price:25},
       {id:2, km:'មេរៀន​បន្ថែម',    en:'Extra lesson (1h)',      price:18},
       {id:3, km:'ការ​ប្រឡង​សាក​', en:'Mock test pack (×5)',    price:30},
-      {id:4, km:'ឯកសារ permit',    en:'Permit paperwork',       price:15},
+      {id:4, km:'ឯកសារ​ប័ណ្ណ​បើកបរ',    en:'Permit paperwork',       price:15},
       {id:5, km:'សៀវភៅ​សិក្សា',   en:'Study handbook (KH/EN)', price:8},
     ],
     studentForm: {
@@ -69,7 +69,7 @@ if (!window.__schoolSettings.addons) {
     {id:1, km:'ការប្រឡងផ្លូវ',  en:'Road exam fee',         price:25},
     {id:2, km:'មេរៀន​បន្ថែម',    en:'Extra lesson (1h)',      price:18},
     {id:3, km:'ការ​ប្រឡង​សាក​', en:'Mock test pack (×5)',    price:30},
-    {id:4, km:'ឯកសារ permit',    en:'Permit paperwork',       price:15},
+    {id:4, km:'ឯកសារ​ប័ណ្ណ​បើកបរ',    en:'Permit paperwork',       price:15},
     {id:5, km:'សៀវភៅ​សិក្សា',   en:'Study handbook (KH/EN)', price:8},
   ];
 }

@@ -43803,7 +43803,7 @@ var getAddons = () => {
     price: 30
   }, {
     id: 'ad-4',
-    km: 'ឯកសារ permit',
+    km: 'ឯកសារ​ប័ណ្ណ​បើកបរ',
     qty: 0,
     price: 15
   }, {
@@ -43814,7 +43814,7 @@ var getAddons = () => {
   }];
   return addons.map(a => ({
     id: `ad-${a.id}`,
-    km: a.km + (a.en ? ' · ' + a.en : ''),
+    km: a.km,
     qty: 0,
     price: a.price
   }));
@@ -43837,22 +43837,23 @@ var NewInvoiceScreen = ({
   var [planId, setPlanId] = React.useState(() => plans[0]?.id || 'plan-1');
   var [discountPct, setDiscountPct] = React.useState(0);
   var [extraHours, setExtraHours] = React.useState(0);
-  var [taxPct, setTaxPct] = React.useState(() => parseInt(ss.vat) || 10);
+  var [taxPct, setTaxPct] = React.useState(0);
   var [paymentMethod, setPaymentMethod] = React.useState(() => paymentMethods[0]?.id || 'ABA');
   var [paymentTerm, setPaymentTerm] = React.useState('on-receipt');
   var [invId] = React.useState(() => 'INV-' + new Date().getFullYear() + '-' + String(Date.now()).slice(-4));
-  React.useEffect(() => {
-    setTaxPct(parseInt(window.__schoolSettings?.vat) || 10);
-  }, [settingsVersion]);
   React.useEffect(() => {
     var currentPlans = getPlans();
     if (currentPlans.length > 0 && !currentPlans.find(p => p.id === planId)) {
       setPlanId(currentPlans[0].id);
     }
   }, [settingsVersion]);
-  var [issueDate] = React.useState('មិថុនា 1, 2026');
-  var [dueDate] = React.useState('មិថុនា 15, 2026');
-  var [notes, setNotes] = React.useState('សូមអរគុណចំពោះការជឿទុកចិត្ត។ Welcome to Anzen!');
+  var [issueDate] = React.useState(() => new Date().toISOString().slice(0, 10));
+  var [dueDate, setDueDate] = React.useState(() => {
+    var d = new Date();
+    d.setDate(d.getDate() + 7);
+    return d.toISOString().slice(0, 10);
+  });
+  var [notes, setNotes] = React.useState('សូម​អរគុណ​ចំពោះ​ការ​ជឿ​ទុក​ចិត្ត​លើ​សាលា​យើង។');
   var [addons, setAddons] = React.useState(() => getAddons());
   React.useEffect(() => {
     setAddons(getAddons());
@@ -44032,42 +44033,7 @@ var NewInvoiceScreen = ({
         borderColor: 'var(--good)'
       } : {}
     }, sent ? '✓ Sent' : tr('ផ្ញើ​​ទៅ​សិស្ស', 'Send to student')))
-  }), bp.mobile && React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 8
-    }
-  }, sent && React.createElement(Btn, {
-    kind: "ghost",
-    size: "lg",
-    icon: React.createElement(Icon, {
-      name: "download",
-      size: 15
-    }),
-    onClick: printInvoice,
-    style: {
-      flex: 1,
-      justifyContent: 'center',
-      color: 'var(--good)',
-      borderColor: 'var(--good)'
-    }
-  }, "PDF"), React.createElement(Btn, {
-    kind: "primary",
-    size: "lg",
-    icon: React.createElement(Icon, {
-      name: "arrow",
-      size: 15
-    }),
-    onClick: handleSend,
-    style: {
-      flex: 1,
-      justifyContent: 'center',
-      ...(sent ? {
-        background: 'var(--good)',
-        borderColor: 'var(--good)'
-      } : {})
-    }
-  }, sent ? '✓ Sent' : tr('ផ្ញើ​​ទៅ​សិស្ស', 'Send to student'))), React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: bp.mobile ? '1fr' : '1.05fr 1fr',
@@ -44161,24 +44127,30 @@ var NewInvoiceScreen = ({
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
-      gap: 8,
-      marginTop: 10,
-      fontSize: 11,
+      gap: '10px 14px',
+      marginTop: 12
+    }
+  }, [['ID', student?.id], ['ថ្នាក់', clsKm(student?.cls)], ['ទូរស័ព្ទ', student?.phone || '—'], ['គ្រូ', student?.inst || '—']].map(([k, v], i) => React.createElement("div", {
+    key: i,
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 1,
+      minWidth: 0,
+      textAlign: 'left'
+    }
+  }, React.createElement("span", {
+    style: {
+      fontSize: 10,
       color: 'var(--ink-3)'
     }
-  }, React.createElement(Row, {
-    k: "ID",
-    v: student?.id
-  }), React.createElement(Row, {
-    k: "\u1790\u17D2\u1793\u17B6\u1780\u17CB",
-    v: clsKm(student?.cls)
-  }), React.createElement(Row, {
-    k: "\u1791\u17BC\u179A\u179F\u17D0\u1796\u17D2\u1791",
-    v: student?.phone || '+855 12 345 678'
-  }), React.createElement(Row, {
-    k: "\u1782\u17D2\u179A\u17BC",
-    v: student?.inst
-  }))))), React.createElement(Card, {
+  }, k), React.createElement("span", {
+    style: {
+      fontSize: 13,
+      fontWeight: 500,
+      color: 'var(--ink)'
+    }
+  }, v || '—'))))))), React.createElement(Card, {
     label: tr('វគ្គ​សិក្សា', 'COURSE PLAN')
   }, React.createElement("div", {
     style: {
@@ -44192,18 +44164,26 @@ var NewInvoiceScreen = ({
       key: p.id,
       onClick: () => setPlanId(p.id),
       style: {
-        padding: 14,
+        padding: '9px 11px',
         textAlign: 'left',
         background: sel ? 'var(--accent-soft)' : 'var(--surface)',
-        border: '2px solid ' + (sel ? 'var(--accent)' : 'var(--border)'),
-        borderRadius: 10,
-        cursor: 'pointer'
+        border: '1.5px solid ' + (sel ? 'var(--accent)' : 'var(--border)'),
+        borderRadius: 8,
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 8
+      }
+    }, React.createElement("div", {
+      style: {
+        minWidth: 0
       }
     }, React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
-        gap: 8
+        gap: 6
       }
     }, React.createElement(Badge, {
       tone: sel ? 'accent' : 'neutral'
@@ -44217,38 +44197,25 @@ var NewInvoiceScreen = ({
       }
     }, p.km)), React.createElement("div", {
       style: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'baseline',
-        marginTop: 10
+        fontSize: 10,
+        color: 'var(--ink-3)',
+        marginTop: 2
       }
-    }, React.createElement("span", {
+    }, p.isExtra ? 'តាម​ម៉ោង' : `${p.hrs} ម៉ោង`)), React.createElement("span", {
       style: {
-        fontSize: 11,
-        color: 'var(--ink-3)'
-      }
-    }, p.isExtra ? 'តាម​ម៉ោង' : `${p.hrs} ម៉ោង`), React.createElement("span", {
-      style: {
-        fontSize: 20,
-        fontWeight: 600,
-        fontFamily: 'var(--font-display)'
+        fontSize: 16,
+        fontWeight: 700,
+        fontFamily: 'var(--font-display)',
+        whiteSpace: 'nowrap',
+        flexShrink: 0
       }
     }, "$", p.price, p.isExtra && React.createElement("span", {
       style: {
-        fontSize: 11,
+        fontSize: 10,
         color: 'var(--ink-3)',
         fontWeight: 400
       }
-    }, "/\u1798\u17C9\u17C4\u1784"))), p.inc && React.createElement("div", {
-      style: {
-        fontSize: 10,
-        color: 'var(--ink-3)',
-        marginTop: 4,
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
-      }
-    }, p.inc));
+    }, "/\u1798\u17C9\u17C4\u1784")));
   })), isExtraInvoice && React.createElement("div", {
     style: {
       marginTop: 14,
@@ -44419,7 +44386,7 @@ var NewInvoiceScreen = ({
       fontWeight: 600,
       cursor: 'pointer'
     }
-  }, v, "%", v === (parseInt(ss.vat) || 10) && React.createElement("span", {
+  }, v, "%", v === 0 && React.createElement("span", {
     style: {
       position: 'absolute',
       top: -6,
@@ -44455,7 +44422,8 @@ var NewInvoiceScreen = ({
     en: "Due date"
   }), React.createElement(InvDateField, {
     value: dueDate,
-    accent: true
+    accent: true,
+    onChange: setDueDate
   })))), React.createElement(Card, {
     label: tr('ការ​ទូទាត់', 'PAYMENT')
   }, React.createElement(InvFieldLabel, {
@@ -44757,11 +44725,11 @@ var NewInvoiceScreen = ({
       marginTop: 6,
       lineHeight: 1.7
     }
-  }, "Issued \xB7 ", issueDate, React.createElement("br", null), "Due \xB7 ", React.createElement("b", {
+  }, "Issued \xB7 ", fmtInvDate(issueDate), React.createElement("br", null), "Due \xB7 ", React.createElement("b", {
     style: {
       color: 'var(--accent)'
     }
-  }, dueDate), React.createElement("br", null), "Terms \xB7 ", paymentTerm === 'on-receipt' ? 'Due on receipt' : paymentTerm === 'net-7' ? 'Net 7' : paymentTerm === 'net-15' ? 'Net 15' : 'Installments (×3)', React.createElement("br", null), "Method \xB7 ", paymentMethod))), React.createElement("div", {
+  }, fmtInvDate(dueDate)), React.createElement("br", null), "Terms \xB7 ", paymentTerm === 'on-receipt' ? 'Due on receipt' : paymentTerm === 'net-7' ? 'Net 7' : paymentTerm === 'net-15' ? 'Net 15' : 'Installments (×3)', React.createElement("br", null), "Method \xB7 ", paymentMethod))), React.createElement("div", {
     style: {
       marginTop: 22
     }
@@ -44940,7 +44908,43 @@ var NewInvoiceScreen = ({
     kind: "ghost",
     size: "sm",
     onClick: () => navigate('settings')
-  }, "\u200B Settings")))));
+  }, "\u200B Settings")))), bp.mobile && React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      marginTop: 2
+    }
+  }, sent && React.createElement(Btn, {
+    kind: "ghost",
+    size: "lg",
+    icon: React.createElement(Icon, {
+      name: "download",
+      size: 15
+    }),
+    onClick: printInvoice,
+    style: {
+      flex: 1,
+      justifyContent: 'center',
+      color: 'var(--good)',
+      borderColor: 'var(--good)'
+    }
+  }, "PDF"), React.createElement(Btn, {
+    kind: "primary",
+    size: "lg",
+    icon: React.createElement(Icon, {
+      name: "arrow",
+      size: 15
+    }),
+    onClick: handleSend,
+    style: {
+      flex: 1,
+      justifyContent: 'center',
+      ...(sent ? {
+        background: 'var(--good)',
+        borderColor: 'var(--good)'
+      } : {})
+    }
+  }, sent ? '✓ Sent' : tr('ផ្ញើ​​ទៅ​សិស្ស', 'Send to student'))));
 };
 var InvFieldLabel = ({
   km,
@@ -44953,11 +44957,20 @@ var InvFieldLabel = ({
     fontWeight: 600
   }
 }, km);
+var INV_KM_MONTHS = ['មករា', 'កុម្ភៈ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា', 'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ'];
+var fmtInvDate = iso => {
+  if (!iso) return '—';
+  var d = new Date(String(iso).slice(0, 10) + 'T00:00:00');
+  if (isNaN(d.getTime())) return iso;
+  return `${INV_KM_MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+};
 var InvDateField = ({
   value,
-  accent
+  accent,
+  onChange
 }) => React.createElement("div", {
   style: {
+    position: 'relative',
     marginTop: 6,
     padding: '10px 12px',
     background: 'var(--surface)',
@@ -44974,9 +44987,31 @@ var InvDateField = ({
 }), React.createElement("span", {
   style: {
     fontSize: 13,
-    fontWeight: 500
+    fontWeight: 500,
+    flex: 1
   }
-}, value));
+}, fmtInvDate(value)), onChange && React.createElement(Icon, {
+  name: "chev",
+  size: 13,
+  stroke: 1.5,
+  style: {
+    transform: 'rotate(90deg)',
+    opacity: .5
+  }
+}), onChange && React.createElement("input", {
+  type: "date",
+  value: String(value).slice(0, 10),
+  onChange: e => onChange(e.target.value),
+  style: {
+    position: 'absolute',
+    inset: 0,
+    width: '100%',
+    height: '100%',
+    opacity: 0,
+    cursor: 'pointer',
+    border: 'none'
+  }
+}));
 var InvStepper = ({
   value,
   onChange
@@ -45145,8 +45180,8 @@ var buildInvoiceHtml = snap => {
     <div>
       <div style="color:#888;font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;">Dates</div>
       <div style="margin-top:6px;line-height:1.7;">
-        Issued · ${issueDate}<br>
-        Due · <strong style="color:#2a5db0;">${dueDate}</strong><br>
+        Issued · ${fmtInvDate(issueDate)}<br>
+        Due · <strong style="color:#2a5db0;">${fmtInvDate(dueDate)}</strong><br>
         Terms · ${termLabel}<br>
         Method · ${paymentMethod}
       </div>
@@ -48278,7 +48313,7 @@ if (!window.__schoolSettings) {
       price: 30
     }, {
       id: 4,
-      km: 'ឯកសារ permit',
+      km: 'ឯកសារ​ប័ណ្ណ​បើកបរ',
       en: 'Permit paperwork',
       price: 15
     }, {
@@ -48381,7 +48416,7 @@ if (!window.__schoolSettings.addons) {
     price: 30
   }, {
     id: 4,
-    km: 'ឯកសារ permit',
+    km: 'ឯកសារ​ប័ណ្ណ​បើកបរ',
     en: 'Permit paperwork',
     price: 15
   }, {

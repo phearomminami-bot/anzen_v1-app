@@ -36,12 +36,12 @@ const getAddons = () => {
     {id:'ad-1', km:'ការប្រឡងផ្លូវ',         qty:0, price:25},
     {id:'ad-2', km:'មេរៀន​បន្ថែម',        qty:0, price:18},
     {id:'ad-3', km:'ការ​ប្រឡង​សាក​',    qty:0, price:30},
-    {id:'ad-4', km:'ឯកសារ permit',        qty:0, price:15},
+    {id:'ad-4', km:'ឯកសារ​ប័ណ្ណ​បើកបរ',        qty:0, price:15},
     {id:'ad-5', km:'សៀវភៅ​សិក្សា',   qty:0, price:8},
   ];
   return addons.map(a => ({
     id: `ad-${a.id}`,
-    km: a.km + (a.en ? ' · ' + a.en : ''),
+    km: a.km,                       // Khmer only — English no longer appended
     qty: 0,
     price: a.price,
   }));
@@ -61,17 +61,12 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
   const [planId, setPlanId] = React.useState(() => plans[0]?.id || 'plan-1');
   const [discountPct, setDiscountPct] = React.useState(0);
   const [extraHours, setExtraHours] = React.useState(0);
-  const [taxPct, setTaxPct] = React.useState(() => parseInt(ss.vat) || 10);
+  const [taxPct, setTaxPct] = React.useState(0);   // default no VAT — user opts in
   const [paymentMethod, setPaymentMethod] = React.useState(() => paymentMethods[0]?.id || 'ABA');
   const [paymentTerm, setPaymentTerm] = React.useState('on-receipt');
 
   // Stable invoice ID for this session
   const [invId] = React.useState(() => 'INV-' + new Date().getFullYear() + '-' + String(Date.now()).slice(-4));
-
-  // Sync VAT rate when settings change
-  React.useEffect(() => {
-    setTaxPct(parseInt(window.__schoolSettings?.vat) || 10);
-  }, [settingsVersion]);
 
   // If selected plan was deleted from settings, reset to first
   React.useEffect(() => {
@@ -80,9 +75,12 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
       setPlanId(currentPlans[0].id);
     }
   }, [settingsVersion]);
-  const [issueDate] = React.useState('មិថុនា 1, 2026');
-  const [dueDate] = React.useState('មិថុនា 15, 2026');
-  const [notes, setNotes] = React.useState('សូមអរគុណចំពោះការជឿទុកចិត្ត។ Welcome to Anzen!');
+  // Issue date = today (auto). Due date defaults to +7 days but is editable.
+  const [issueDate] = React.useState(() => new Date().toISOString().slice(0, 10));
+  const [dueDate, setDueDate] = React.useState(() => {
+    const d = new Date(); d.setDate(d.getDate() + 7); return d.toISOString().slice(0, 10);
+  });
+  const [notes, setNotes] = React.useState('សូម​អរគុណ​ចំពោះ​ការ​ជឿ​ទុក​ចិត្ត​លើ​សាលា​យើង។');
   const [addons, setAddons] = React.useState(() => getAddons());
 
   // Re-derive add-ons when Settings change
@@ -205,22 +203,6 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
         )}
       />
 
-      {/* Mobile: single full-width action so the header stays uncluttered */}
-      {bp.mobile && (
-        <div style={{display:'flex',gap:8}}>
-          {sent && (
-            <Btn kind="ghost" size="lg" icon={<Icon name="download" size={15}/>} onClick={printInvoice}
-              style={{flex:1,justifyContent:'center',color:'var(--good)',borderColor:'var(--good)'}}>
-              PDF
-            </Btn>
-          )}
-          <Btn kind="primary" size="lg" icon={<Icon name="arrow" size={15}/>}
-            onClick={handleSend} style={{flex:1,justifyContent:'center',...(sent ? {background:'var(--good)',borderColor:'var(--good)'} : {})}}>
-            {sent ? '✓ Sent' : tr('ផ្ញើ​​ទៅ​សិស្ស','Send to student')}
-          </Btn>
-        </div>
-      )}
-
       <div style={{display:'grid',gridTemplateColumns:bp.mobile?'1fr':'1.05fr 1fr',gap:14,alignItems:'start',minWidth:0}}>
         {/* ── LEFT: form ── */}
         <div style={{display:'flex',flexDirection:'column',gap:14,minWidth:0}}>
@@ -265,11 +247,16 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
                   })()}
                   <Icon name="chev" size={14} style={{position:'absolute',right:12,top:14,transform:'rotate(90deg)',pointerEvents:'none'}}/>
                 </div>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginTop:10,fontSize:11,color:'var(--ink-3)'}}>
-                  <Row k="ID"        v={student?.id}/>
-                  <Row k="ថ្នាក់"    v={clsKm(student?.cls)}/>
-                  <Row k="ទូរស័ព្ទ"  v={student?.phone || '+855 12 345 678'}/>
-                  <Row k="គ្រូ"      v={student?.inst}/>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px 14px',marginTop:12}}>
+                  {[['ID', student?.id],
+                    ['ថ្នាក់', clsKm(student?.cls)],
+                    ['ទូរស័ព្ទ', student?.phone || '—'],
+                    ['គ្រូ', student?.inst || '—']].map(([k, v], i) => (
+                    <div key={i} style={{display:'flex',flexDirection:'column',gap:1,minWidth:0,textAlign:'left'}}>
+                      <span style={{fontSize:10,color:'var(--ink-3)'}}>{k}</span>
+                      <span style={{fontSize:13,fontWeight:500,color:'var(--ink)'}}>{v || '—'}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -282,22 +269,22 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
                 const sel = planId === p.id;
                 return (
                   <button key={p.id} onClick={() => setPlanId(p.id)} style={{
-                    padding:14, textAlign:'left',
+                    padding:'9px 11px', textAlign:'left',
                     background: sel ? 'var(--accent-soft)' : 'var(--surface)',
-                    border: '2px solid ' + (sel ? 'var(--accent)' : 'var(--border)'),
-                    borderRadius:10, cursor:'pointer',
+                    border: '1.5px solid ' + (sel ? 'var(--accent)' : 'var(--border)'),
+                    borderRadius:8, cursor:'pointer',
+                    display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,
                   }}>
-                    <div style={{display:'flex',alignItems:'center',gap:8}}>
-                      <Badge tone={sel?'accent':'neutral'}>{p.isExtra ? '+ ម៉ោង' : `ថ្នាក់ ${clsKm(p.cls)}`}</Badge>
-                      <span style={{fontSize:12,fontWeight:500,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{p.km}</span>
+                    <div style={{minWidth:0}}>
+                      <div style={{display:'flex',alignItems:'center',gap:6}}>
+                        <Badge tone={sel?'accent':'neutral'}>{p.isExtra ? '+ ម៉ោង' : `ថ្នាក់ ${clsKm(p.cls)}`}</Badge>
+                        <span style={{fontSize:12,fontWeight:500,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{p.km}</span>
+                      </div>
+                      <div style={{fontSize:10,color:'var(--ink-3)',marginTop:2}}>{p.isExtra ? 'តាម​ម៉ោង' : `${p.hrs} ម៉ោង`}</div>
                     </div>
-                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginTop:10}}>
-                      <span style={{fontSize:11,color:'var(--ink-3)'}}>{p.isExtra ? 'តាម​ម៉ោង' : `${p.hrs} ម៉ោង`}</span>
-                      <span style={{fontSize:20,fontWeight:600,fontFamily:'var(--font-display)'}}>
-                        ${p.price}{p.isExtra && <span style={{fontSize:11,color:'var(--ink-3)',fontWeight:400}}>/ម៉ោង</span>}
-                      </span>
-                    </div>
-                    {p.inc && <div style={{fontSize:10,color:'var(--ink-3)',marginTop:4,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{p.inc}</div>}
+                    <span style={{fontSize:16,fontWeight:700,fontFamily:'var(--font-display)',whiteSpace:'nowrap',flexShrink:0}}>
+                      ${p.price}{p.isExtra && <span style={{fontSize:10,color:'var(--ink-3)',fontWeight:400}}>/ម៉ោង</span>}
+                    </span>
                   </button>
                 );
               })}
@@ -390,7 +377,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
                       borderRadius:6, fontSize:12, fontWeight:600, cursor:'pointer',
                     }}>
                       {v}%
-                      {v === (parseInt(ss.vat)||10) && <span style={{position:'absolute',top:-6,right:-4,fontSize:8,background:'var(--accent)',color:'#fff',borderRadius:99,padding:'1px 3px',fontWeight:700}}>✓</span>}
+                      {v === 0 && <span style={{position:'absolute',top:-6,right:-4,fontSize:8,background:'var(--accent)',color:'#fff',borderRadius:99,padding:'1px 3px',fontWeight:700}}>✓</span>}
                     </button>
                   ))}
                 </div>
@@ -404,7 +391,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
               </div>
               <div>
                 <InvFieldLabel km="ថ្ងៃ​​ផុត​កំណត់" en="Due date"/>
-                <InvDateField value={dueDate} accent/>
+                <InvDateField value={dueDate} accent onChange={setDueDate}/>
               </div>
             </div>
           </Card>
@@ -545,8 +532,8 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
               <div>
                 <div style={{color:'var(--ink-3)',fontSize:9,letterSpacing:'.08em',textTransform:'uppercase',fontFamily:'"JetBrains Mono",monospace'}}>Dates</div>
                 <div style={{marginTop:6,lineHeight:1.7}}>
-                  Issued · {issueDate}<br/>
-                  Due · <b style={{color:'var(--accent)'}}>{dueDate}</b><br/>
+                  Issued · {fmtInvDate(issueDate)}<br/>
+                  Due · <b style={{color:'var(--accent)'}}>{fmtInvDate(dueDate)}</b><br/>
                   Terms · {paymentTerm==='on-receipt'?'Due on receipt':paymentTerm==='net-7'?'Net 7':paymentTerm==='net-15'?'Net 15':'Installments (×3)'}<br/>
                   Method · {paymentMethod}
                 </div>
@@ -612,6 +599,22 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
         </div>
         )}
       </div>
+
+      {/* Mobile: send action pinned at the very bottom of the form */}
+      {bp.mobile && (
+        <div style={{display:'flex',gap:8,marginTop:2}}>
+          {sent && (
+            <Btn kind="ghost" size="lg" icon={<Icon name="download" size={15}/>} onClick={printInvoice}
+              style={{flex:1,justifyContent:'center',color:'var(--good)',borderColor:'var(--good)'}}>
+              PDF
+            </Btn>
+          )}
+          <Btn kind="primary" size="lg" icon={<Icon name="arrow" size={15}/>}
+            onClick={handleSend} style={{flex:1,justifyContent:'center',...(sent ? {background:'var(--good)',borderColor:'var(--good)'} : {})}}>
+            {sent ? '✓ Sent' : tr('ផ្ញើ​​ទៅ​សិស្ស','Send to student')}
+          </Btn>
+        </div>
+      )}
     </div>
   );
 };
@@ -623,8 +626,18 @@ const InvFieldLabel = ({ km, en }) => (
   </div>
 );
 
-const InvDateField = ({ value, accent }) => (
+// value is an ISO date (YYYY-MM-DD); shown formatted in Khmer.
+// When onChange is given, a transparent native date picker overlays the field.
+const INV_KM_MONTHS = ['មករា','កុម្ភៈ','មីនា','មេសា','ឧសភា','មិថុនា','កក្កដា','សីហា','កញ្ញា','តុលា','វិច្ឆិកា','ធ្នូ'];
+const fmtInvDate = (iso) => {
+  if (!iso) return '—';
+  const d = new Date(String(iso).slice(0,10) + 'T00:00:00');
+  if (isNaN(d.getTime())) return iso;
+  return `${INV_KM_MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+};
+const InvDateField = ({ value, accent, onChange }) => (
   <div style={{
+    position:'relative',
     marginTop:6, padding:'10px 12px',
     background:'var(--surface)',
     border:'1px solid '+(accent?'var(--accent)':'var(--border)'),
@@ -633,7 +646,12 @@ const InvDateField = ({ value, accent }) => (
     color: accent ? 'var(--accent)' : 'var(--ink)',
   }}>
     <Icon name="cal" size={14}/>
-    <span style={{fontSize:13,fontWeight:500}}>{value}</span>
+    <span style={{fontSize:13,fontWeight:500,flex:1}}>{fmtInvDate(value)}</span>
+    {onChange && <Icon name="chev" size={13} stroke={1.5} style={{transform:'rotate(90deg)',opacity:.5}}/>}
+    {onChange && (
+      <input type="date" value={String(value).slice(0,10)} onChange={e => onChange(e.target.value)}
+        style={{position:'absolute',inset:0,width:'100%',height:'100%',opacity:0,cursor:'pointer',border:'none'}}/>
+    )}
   </div>
 );
 
@@ -764,8 +782,8 @@ const buildInvoiceHtml = (snap) => {
     <div>
       <div style="color:#888;font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;">Dates</div>
       <div style="margin-top:6px;line-height:1.7;">
-        Issued · ${issueDate}<br>
-        Due · <strong style="color:#2a5db0;">${dueDate}</strong><br>
+        Issued · ${fmtInvDate(issueDate)}<br>
+        Due · <strong style="color:#2a5db0;">${fmtInvDate(dueDate)}</strong><br>
         Terms · ${termLabel}<br>
         Method · ${paymentMethod}
       </div>
