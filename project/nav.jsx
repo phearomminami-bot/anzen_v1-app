@@ -285,8 +285,8 @@ const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
               <button key={it.id} onClick={()=>{onGo(it.id);close();}} style={{
                 display:'flex',alignItems:'center',gap:14,width:'100%',padding:'13px 14px',marginBottom:4,
                 border:'none',background:current===it.id?'var(--surface-muted)':'transparent',
-                borderRadius:10,cursor:'pointer',fontSize:14,textAlign:'left',fontFamily:'inherit',
-                color:current===it.id?'var(--ink)':'var(--ink-2)',fontWeight:current===it.id?600:400,
+                borderRadius:10,cursor:'pointer',fontSize:16,textAlign:'left',fontFamily:'inherit',
+                color:current===it.id?'var(--ink)':'var(--ink-2)',fontWeight:current===it.id?700:500,
               }}>
                 <Icon name={it.icon} size={20} stroke={current===it.id?2:1.5}/>
                 {ll(it)}

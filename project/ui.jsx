@@ -133,11 +133,11 @@ const Card = ({ children, style, pad = 16, label, action }) => {
       gap:10, marginBottom:10, minHeight:24,
     }}>
       {label ? <div style={{
-        fontSize: isKhmer ? 12 : 10, fontWeight: 700, lineHeight: 1.4,
+        fontSize: isKhmer ? 16 : 10, fontWeight: 700, lineHeight: 1.4,
         fontFamily: isKhmer ? 'var(--font-km), sans-serif' : '"JetBrains Mono", monospace',
         letterSpacing: isKhmer ? 'normal' : '.08em',
         textTransform: isKhmer ? 'none' : 'uppercase',
-        color:'var(--ink-3)',
+        color: isKhmer ? 'var(--ink)' : 'var(--ink-3)',
       }}>{label}</div> : <span/>}
       {action}
     </div>}

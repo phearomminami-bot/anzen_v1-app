@@ -2869,13 +2869,13 @@ var Card = ({
     }
   }, label ? React.createElement("div", {
     style: {
-      fontSize: isKhmer ? 12 : 10,
+      fontSize: isKhmer ? 16 : 10,
       fontWeight: 700,
       lineHeight: 1.4,
       fontFamily: isKhmer ? 'var(--font-km), sans-serif' : '"JetBrains Mono", monospace',
       letterSpacing: isKhmer ? 'normal' : '.08em',
       textTransform: isKhmer ? 'none' : 'uppercase',
-      color: 'var(--ink-3)'
+      color: isKhmer ? 'var(--ink)' : 'var(--ink-3)'
     }
   }, label) : React.createElement("span", null), action), children);
 };
@@ -13362,11 +13362,11 @@ var MobileBottomBar = ({
       background: current === it.id ? 'var(--surface-muted)' : 'transparent',
       borderRadius: 10,
       cursor: 'pointer',
-      fontSize: 14,
+      fontSize: 16,
       textAlign: 'left',
       fontFamily: 'inherit',
       color: current === it.id ? 'var(--ink)' : 'var(--ink-2)',
-      fontWeight: current === it.id ? 600 : 400
+      fontWeight: current === it.id ? 700 : 500
     }
   }, React.createElement(Icon, {
     name: it.icon,
