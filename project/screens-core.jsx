@@ -3,14 +3,25 @@
 // P = Practical (អនុវត្តន៍), T = Theory (ទ្រឹស្ដី); KH/JP = language track.
 const LESSON_TYPE_LABEL = { a:'P KH', b:'P KH', c:'T KH', d:'P JP', e:'T JP' };
 const LESSON_TYPE_FULL  = { a:'Practical KH', b:'Practical KH', c:'Theory KH', d:'Practical JP', e:'Theory JP' };
-const LessonBadge = ({ color }) => {
-  const c = (typeof LESSON_COLORS !== 'undefined' ? LESSON_COLORS : {})[color] || { bg:'var(--accent-soft)', fg:'var(--accent)', bd:'var(--accent)' };
+// Teaching-location badge (School / Course / …) shown on a lesson row.
+const LESSON_LOC_BADGE = {
+  school: { l:'School',  bg:'#E5EBF5', fg:'#2A5DB0', bd:'#C7D6EE' },
+  yard:   { l:'Course',  bg:'#F4DEDD', fg:'#B0413E', bd:'#E6C7C5' },
+  apply:  { l:'Apply',   bg:'#EDE7F6', fg:'#6B3FA0', bd:'#D9CCEC' },
+  exam:   { l:'Exam',    bg:'#FCE8D5', fg:'#B5650E', bd:'#F0D2B0' },
+  classA: { l:'Class A', bg:'#E2EFE7', fg:'#3B7A57', bd:'#C9E2D3' },
+  classB: { l:'Class B', bg:'#E2EFE7', fg:'#3B7A57', bd:'#C9E2D3' },
+  classC: { l:'Class C', bg:'#E2EFE7', fg:'#3B7A57', bd:'#C9E2D3' },
+};
+const LessonBadge = ({ l }) => {
+  const loc = LESSON_LOC_BADGE[l?.pickup] ||
+    { l: (l?.location && l.location.trim()) || l?.pickup || '—', bg:'var(--surface-muted)', fg:'var(--ink-2)', bd:'var(--border)' };
   return (
-    <span title={LESSON_TYPE_FULL[color] || 'Lesson'} style={{
-      fontSize:10,fontWeight:700,padding:'2px 7px',borderRadius:5,whiteSpace:'nowrap',flexShrink:0,
-      background:c.bg, color:c.fg, border:`1px solid ${c.bd}`,
+    <span title={loc.l} style={{
+      fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:5,whiteSpace:'nowrap',flexShrink:0,
+      background:loc.bg, color:loc.fg, border:`1px solid ${loc.bd}`,
       fontFamily:'"JetBrains Mono",monospace',
-    }}>{LESSON_TYPE_LABEL[color] || 'Lesson'}</span>
+    }}>{loc.l}</span>
   );
 };
 
@@ -117,14 +128,15 @@ const DashboardAdmin = () => {
           <div style={{minWidth:0}}>
             <div style={{fontSize: compact ? 12 : 13, fontWeight:500,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',
               color: isNow ? 'var(--good)' : 'var(--ink)'}}>
-              {s ? s.name : l.type ? l.type.split('·')[0].trim() : '—'}
+              {s ? (s.en || s.name) : l.type ? l.type.split('·')[0].trim() : '—'}
             </div>
             <div style={{fontSize:10,color:'var(--ink-3)',marginTop:1,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
-              {it?.name || it?.en || '—'}{v?.plate ? ` · ${v.plate}` : ''}
+              {it?.en || it?.name || '—'}
+              {v?.plate && <span style={{color: v.trans==='MT' ? '#B0413E' : '#2A5DB0', fontWeight:600}}> · {v.plate}</span>}
             </div>
           </div>
         </div>
-        {!compact && <LessonBadge color={l.color}/>}
+        {!compact && <LessonBadge l={l}/>}
       </button>
     );
   };

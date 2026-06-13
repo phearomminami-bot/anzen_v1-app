@@ -14176,29 +14176,74 @@ var LESSON_TYPE_FULL = {
   d: 'Practical JP',
   e: 'Theory JP'
 };
+var LESSON_LOC_BADGE = {
+  school: {
+    l: 'School',
+    bg: '#E5EBF5',
+    fg: '#2A5DB0',
+    bd: '#C7D6EE'
+  },
+  yard: {
+    l: 'Course',
+    bg: '#F4DEDD',
+    fg: '#B0413E',
+    bd: '#E6C7C5'
+  },
+  apply: {
+    l: 'Apply',
+    bg: '#EDE7F6',
+    fg: '#6B3FA0',
+    bd: '#D9CCEC'
+  },
+  exam: {
+    l: 'Exam',
+    bg: '#FCE8D5',
+    fg: '#B5650E',
+    bd: '#F0D2B0'
+  },
+  classA: {
+    l: 'Class A',
+    bg: '#E2EFE7',
+    fg: '#3B7A57',
+    bd: '#C9E2D3'
+  },
+  classB: {
+    l: 'Class B',
+    bg: '#E2EFE7',
+    fg: '#3B7A57',
+    bd: '#C9E2D3'
+  },
+  classC: {
+    l: 'Class C',
+    bg: '#E2EFE7',
+    fg: '#3B7A57',
+    bd: '#C9E2D3'
+  }
+};
 var LessonBadge = ({
-  color
+  l
 }) => {
-  var c = (typeof LESSON_COLORS !== 'undefined' ? LESSON_COLORS : {})[color] || {
-    bg: 'var(--accent-soft)',
-    fg: 'var(--accent)',
-    bd: 'var(--accent)'
+  var loc = LESSON_LOC_BADGE[l?.pickup] || {
+    l: l?.location && l.location.trim() || l?.pickup || '—',
+    bg: 'var(--surface-muted)',
+    fg: 'var(--ink-2)',
+    bd: 'var(--border)'
   };
   return React.createElement("span", {
-    title: LESSON_TYPE_FULL[color] || 'Lesson',
+    title: loc.l,
     style: {
       fontSize: 10,
       fontWeight: 700,
-      padding: '2px 7px',
+      padding: '2px 8px',
       borderRadius: 5,
       whiteSpace: 'nowrap',
       flexShrink: 0,
-      background: c.bg,
-      color: c.fg,
-      border: `1px solid ${c.bd}`,
+      background: loc.bg,
+      color: loc.fg,
+      border: `1px solid ${loc.bd}`,
       fontFamily: '"JetBrains Mono",monospace'
     }
-  }, LESSON_TYPE_LABEL[color] || 'Lesson');
+  }, loc.l);
 };
 var DashboardAdmin = () => {
   var {
@@ -14344,7 +14389,7 @@ var DashboardAdmin = () => {
         textOverflow: 'ellipsis',
         color: isNow ? 'var(--good)' : 'var(--ink)'
       }
-    }, s ? s.name : l.type ? l.type.split('·')[0].trim() : '—'), React.createElement("div", {
+    }, s ? s.en || s.name : l.type ? l.type.split('·')[0].trim() : '—'), React.createElement("div", {
       style: {
         fontSize: 10,
         color: 'var(--ink-3)',
@@ -14353,8 +14398,13 @@ var DashboardAdmin = () => {
         overflow: 'hidden',
         textOverflow: 'ellipsis'
       }
-    }, it?.name || it?.en || '—', v?.plate ? ` · ${v.plate}` : ''))), !compact && React.createElement(LessonBadge, {
-      color: l.color
+    }, it?.en || it?.name || '—', v?.plate && React.createElement("span", {
+      style: {
+        color: v.trans === 'MT' ? '#B0413E' : '#2A5DB0',
+        fontWeight: 600
+      }
+    }, " \xB7 ", v.plate)))), !compact && React.createElement(LessonBadge, {
+      l: l
     }));
   };
   return React.createElement("div", {
