@@ -332,7 +332,7 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                     )}
                     {height >= 60 && v?.plate && (
                       <div style={{marginTop:2}}>
-                        <span style={{fontSize:9,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{v.plate}</span>
+                        <span style={{fontSize:9,fontWeight:600,color:c.text,opacity:.82,fontFamily:'"JetBrains Mono",monospace'}}>{v.plate}</span>
                       </div>
                     )}
                   </div>
