@@ -1004,8 +1004,6 @@ window.__trRegistry = {
   "Attach image / PDF": "ភ្ជាប់ រូប / PDF",
   "No documents yet – Send an invoice or add manually": "មិន​ទាន់​មាន​ឯកសារ – ផ្ញើ​វិក្កយបត្រ​ ឬ​ បន្ថែម​ដោយ​ដៃ",
   "View file": "មើល​ឯកសារ",
-  "Discard": "បោះបង់",
-  "Save draft": "រក្សា​​ជា​ឯកសារ",
   "Send to student": "ផ្ញើ​​ទៅ​សិស្ស",
   "BILL TO": "សិស្ស",
   "COURSE PLAN": "វគ្គ​សិក្សា",
@@ -1059,6 +1057,7 @@ window.__trRegistry = {
   "System settings": "កំណត់​ប្រព័ន្ធ",
   "Changes saved ✓": "បានរក្សាទុករួចហើយ ✓",
   "Changes discarded": "បានបោះបង់ការ​កែ​ប្រែ",
+  "Discard": "បោះបង់",
   "Backup started…": "ការ​បម្រុង​ទុក​​ចាប់​ផ្ដើម…",
   "IDENTITY": "អត្តសញ្ញាណ",
   "CONTACT": "ការ​ទាក់​ទង​សាធារណៈ",
@@ -1935,8 +1934,6 @@ window.__trGroups = {
     "Reason": "មូល​ហេតុ"
   },
   "វិក្កយបត្រ · Billing": {
-    "Discard": "បោះបង់",
-    "Save draft": "រក្សា​​ជា​ឯកសារ",
     "Send to student": "ផ្ញើ​​ទៅ​សិស្ស",
     "BILL TO": "សិស្ស",
     "COURSE PLAN": "វគ្គ​សិក្សា",
@@ -2118,6 +2115,7 @@ window.__trGroups = {
     "System settings": "កំណត់​ប្រព័ន្ធ",
     "Changes saved ✓": "បានរក្សាទុករួចហើយ ✓",
     "Changes discarded": "បានបោះបង់ការ​កែ​ប្រែ",
+    "Discard": "បោះបង់",
     "Backup started…": "ការ​បម្រុង​ទុក​​ចាប់​ផ្ដើម…",
     "IDENTITY": "អត្តសញ្ញាណ",
     "CONTACT": "ការ​ទាក់​ទង​សាធារណៈ",
@@ -44000,34 +43998,14 @@ var NewInvoiceScreen = ({
   }, React.createElement(SectionTitle, {
     km: "\u1794\u1784\u17D2\u1780\u17BE\u178F\u200B\u179C\u17B7\u1780\u17D2\u1780\u1799\u1794\u178F\u17D2\u179A\u200B\u1790\u17D2\u1798\u17B8",
     en: `Create invoice · ${invId} · ${sent ? 'sent' : 'draft'}`,
-    action: React.createElement("div", {
+    action: bp.mobile ? null : React.createElement("div", {
       style: {
         display: 'flex',
         gap: 8,
         flexWrap: 'wrap',
         justifyContent: 'flex-end'
       }
-    }, React.createElement(Btn, {
-      kind: "ghost",
-      size: "md",
-      onClick: handleDiscard
-    }, tr('បោះបង់', 'Discard')), React.createElement(Btn, {
-      kind: "ghost",
-      size: "md",
-      icon: React.createElement(Icon, {
-        name: "book",
-        size: 14
-      }),
-      onClick: handleDraft
-    }, savedDraft ? '✓ Saved draft' : tr('រក្សា​​ជា​ឯកសារ', 'Save draft')), React.createElement(Btn, {
-      kind: "ghost",
-      size: "md",
-      icon: React.createElement(Icon, {
-        name: "search",
-        size: 14
-      }),
-      onClick: printInvoice
-    }, "PDF \xB7 Preview"), sent && React.createElement(Btn, {
+    }, sent && React.createElement(Btn, {
       kind: "ghost",
       size: "md",
       icon: React.createElement(Icon, {
@@ -44052,7 +44030,42 @@ var NewInvoiceScreen = ({
         borderColor: 'var(--good)'
       } : {}
     }, sent ? '✓ Sent' : tr('ផ្ញើ​​ទៅ​សិស្ស', 'Send to student')))
-  }), React.createElement("div", {
+  }), bp.mobile && React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8
+    }
+  }, sent && React.createElement(Btn, {
+    kind: "ghost",
+    size: "lg",
+    icon: React.createElement(Icon, {
+      name: "download",
+      size: 15
+    }),
+    onClick: printInvoice,
+    style: {
+      flex: 1,
+      justifyContent: 'center',
+      color: 'var(--good)',
+      borderColor: 'var(--good)'
+    }
+  }, "PDF"), React.createElement(Btn, {
+    kind: "primary",
+    size: "lg",
+    icon: React.createElement(Icon, {
+      name: "arrow",
+      size: 15
+    }),
+    onClick: handleSend,
+    style: {
+      flex: 1,
+      justifyContent: 'center',
+      ...(sent ? {
+        background: 'var(--good)',
+        borderColor: 'var(--good)'
+      } : {})
+    }
+  }, sent ? '✓ Sent' : tr('ផ្ញើ​​ទៅ​សិស្ស', 'Send to student'))), React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: bp.mobile ? '1fr' : '1.05fr 1fr',
@@ -44152,7 +44165,7 @@ var NewInvoiceScreen = ({
     v: student?.id
   }), React.createElement(Row, {
     k: "\u1790\u17D2\u1793\u17B6\u1780\u17CB",
-    v: student?.cls
+    v: clsKm(student?.cls)
   }), React.createElement(Row, {
     k: "\u1791\u17BC\u179A\u179F\u17D0\u1796\u17D2\u1791",
     v: student?.phone || '+855 12 345 678'
@@ -46499,6 +46512,7 @@ var BookingsScreen = () => {
     toast,
     tr
   } = useAppActions();
+  var bp = useBreakpoint();
   var [bookings, setBookings] = React.useState(window.__bookingData);
   var [tab, setTab] = React.useState('queue');
   var [filter, setFilter] = React.useState('all');
@@ -46572,7 +46586,7 @@ var BookingsScreen = () => {
   }, React.createElement(SectionTitle, {
     km: "\u1780\u17B6\u179A\u1782\u17D2\u179A\u1794\u17CB\u1782\u17D2\u179A\u1784\u1780\u17B6\u179A\u1780\u1780\u17CB",
     en: `Bookings · ${bookings.filter(b => b.status === 'Confirmed').length} confirmed · ${pendingCount} pending`,
-    action: React.createElement("div", {
+    action: bp.mobile ? null : React.createElement("div", {
       style: {
         display: 'flex',
         gap: 8
@@ -46601,8 +46615,8 @@ var BookingsScreen = () => {
   }), React.createElement("div", {
     style: {
       display: 'grid',
-      gridTemplateColumns: 'repeat(5,1fr)',
-      gap: 12
+      gridTemplateColumns: bp.mobile ? 'repeat(2,1fr)' : 'repeat(5,1fr)',
+      gap: bp.mobile ? 8 : 12
     }
   }, React.createElement(Card, null, React.createElement(Stat, {
     label: tr('ការ​កក់​សកម្ម', 'Active'),
@@ -46631,7 +46645,9 @@ var BookingsScreen = () => {
       borderBottom: '1px solid var(--border)',
       display: 'flex',
       gap: 4,
-      alignItems: 'center'
+      alignItems: 'center',
+      overflowX: 'auto',
+      WebkitOverflowScrolling: 'touch'
     }
   }, tabs.map(t => {
     var badge = t.id === 'requests' ? pendingCount : null;
@@ -46764,6 +46780,9 @@ var BookingsScreen = () => {
       studentId: selected.student
     }),
     onCall: s => toast(`📞 ${s?.phone || '+855 12 345 678'}`, 'info')
+  }), bp.mobile && React.createElement(MobileFab, {
+    onClick: () => openForm('newLesson'),
+    label: tr('ការ​កក់​ដោយ​ដៃ', 'Manual book')
   }));
 };
 var BkList = ({
@@ -46774,20 +46793,8 @@ var BkList = ({
   var {
     tr
   } = useAppActions();
-  return React.createElement("div", null, React.createElement("div", {
-    style: {
-      padding: '10px 16px',
-      display: 'grid',
-      gridTemplateColumns: '130px 1.4fr 1.2fr 1fr 0.9fr 1fr 0.8fr 24px',
-      gap: 14,
-      fontSize: 10,
-      letterSpacing: '.08em',
-      color: 'var(--ink-3)',
-      fontFamily: '"JetBrains Mono",monospace',
-      textTransform: 'uppercase',
-      borderBottom: '1px solid var(--border)'
-    }
-  }, React.createElement("div", null, "Date \xB7 Time"), React.createElement("div", null, "Student"), React.createElement("div", null, "Type"), React.createElement("div", null, "Instructor"), React.createElement("div", null, "Vehicle"), React.createElement("div", null, "Status"), React.createElement("div", null, "Source"), React.createElement("div", null)), bookings.length === 0 && React.createElement("div", {
+  var bp = useBreakpoint();
+  var empty = bookings.length === 0 && React.createElement("div", {
     style: {
       padding: 48,
       textAlign: 'center',
@@ -46804,7 +46811,105 @@ var BkList = ({
       fontSize: 11,
       marginTop: 6
     }
-  }, "Use \"Manual book\" to add the first booking")), bookings.map((b, i) => {
+  }, "Use \"Manual book\" to add the first booking"));
+  if (bp.mobile) {
+    return React.createElement("div", {
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        padding: '12px 12px'
+      }
+    }, empty, bookings.map(b => {
+      var s = studentById(b.student);
+      var ins = instById(b.inst);
+      var v = vehById(b.veh);
+      return React.createElement("button", {
+        key: b.id,
+        onClick: () => onSelect(b),
+        style: {
+          width: '100%',
+          textAlign: 'left',
+          border: '1px solid var(--border)',
+          borderRadius: 10,
+          background: selected?.id === b.id ? 'var(--surface-muted)' : 'var(--surface)',
+          padding: '11px 12px',
+          cursor: 'pointer',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 8
+        }
+      }, React.createElement("div", {
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10
+        }
+      }, React.createElement(Avatar, {
+        tag: s?.photo,
+        size: 34
+      }), React.createElement("div", {
+        style: {
+          flex: 1,
+          minWidth: 0
+        }
+      }, React.createElement("div", {
+        style: {
+          fontSize: 14,
+          fontWeight: 600,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }
+      }, s?.en || s?.name || '—'), React.createElement("div", {
+        style: {
+          fontSize: 11,
+          color: 'var(--ink-3)'
+        }
+      }, s?.id, " \xB7 ", clsKm(s?.cls))), React.createElement(Badge, {
+        tone: bookingStatusTone(b.status)
+      }, b.status)), React.createElement("div", {
+        style: {
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '4px 12px',
+          fontSize: 11,
+          color: 'var(--ink-2)'
+        }
+      }, React.createElement("span", {
+        style: {
+          fontWeight: 600,
+          color: 'var(--ink)',
+          fontVariantNumeric: 'tabular-nums'
+        }
+      }, b.date, " \xB7 ", b.time, " \xB7 ", b.len, "h"), b.type && React.createElement("span", null, b.type), ins?.en && React.createElement("span", null, "\uD83D\uDC64 ", ins.en), v?.plate && React.createElement("span", {
+        style: {
+          fontFamily: '"JetBrains Mono",monospace'
+        }
+      }, v.plate), React.createElement("span", {
+        style: {
+          color: 'var(--ink-3)',
+          fontFamily: '"JetBrains Mono",monospace',
+          textTransform: 'uppercase',
+          letterSpacing: '.04em'
+        }
+      }, sourceLabel(b.source))));
+    }));
+  }
+  return React.createElement("div", null, React.createElement("div", {
+    style: {
+      padding: '10px 16px',
+      display: 'grid',
+      gridTemplateColumns: '130px 1.4fr 1.2fr 1fr 0.9fr 1fr 0.8fr 24px',
+      gap: 14,
+      fontSize: 10,
+      letterSpacing: '.08em',
+      color: 'var(--ink-3)',
+      fontFamily: '"JetBrains Mono",monospace',
+      textTransform: 'uppercase',
+      borderBottom: '1px solid var(--border)'
+    }
+  }, React.createElement("div", null, "Date \xB7 Time"), React.createElement("div", null, "Student"), React.createElement("div", null, "Type"), React.createElement("div", null, "Instructor"), React.createElement("div", null, "Vehicle"), React.createElement("div", null, "Status"), React.createElement("div", null, "Source"), React.createElement("div", null)), empty, bookings.map((b, i) => {
     var s = studentById(b.student);
     var ins = instById(b.inst);
     var v = vehById(b.veh);
@@ -46859,7 +46964,7 @@ var BkList = ({
         fontSize: 11,
         color: 'var(--ink-3)'
       }
-    }, s?.id, " \xB7 ", s?.cls))), React.createElement("div", {
+    }, s?.id, " \xB7 ", clsKm(s?.cls)))), React.createElement("div", {
       style: {
         fontSize: 12,
         color: 'var(--ink-2)'
@@ -47022,6 +47127,7 @@ var BkDetail = ({
   onReschedule,
   onCall
 }) => {
+  var bp = useBreakpoint();
   if (!b) return null;
   var s = studentById(b.student);
   var ins = instById(b.inst);
@@ -47036,7 +47142,8 @@ var BkDetail = ({
       borderBottom: '1px solid var(--border)',
       display: 'flex',
       alignItems: 'center',
-      gap: 14
+      gap: bp.mobile ? 8 : 14,
+      flexWrap: 'wrap'
     }
   }, React.createElement("div", {
     style: {
@@ -47099,7 +47206,7 @@ var BkDetail = ({
     style: {
       padding: 18,
       display: 'grid',
-      gridTemplateColumns: '1.3fr 1fr 1fr 1fr',
+      gridTemplateColumns: bp.mobile ? '1fr' : '1.3fr 1fr 1fr 1fr',
       gap: 16
     }
   }, React.createElement("div", null, React.createElement("div", {
@@ -47395,12 +47502,13 @@ var BkPending = ({
   onApprove,
   onDecline
 }) => {
+  var bp = useBreakpoint();
   var pending = bookings.filter(b => b.status === 'Pending');
   return React.createElement("div", {
     style: {
-      padding: 18,
+      padding: bp.mobile ? 12 : 18,
       display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
+      gridTemplateColumns: bp.mobile ? '1fr' : '1fr 1fr',
       gap: 14
     }
   }, pending.map(b => {
@@ -47828,10 +47936,11 @@ var BkWaitlist = ({
   var {
     toast
   } = useAppActions();
+  var bp = useBreakpoint();
   var waitlist = window.__waitlistData || [];
   return React.createElement("div", {
     style: {
-      padding: 18
+      padding: bp.mobile ? 12 : 18
     }
   }, React.createElement("div", {
     style: {
@@ -47843,7 +47952,8 @@ var BkWaitlist = ({
     style: {
       border: '1px solid var(--border)',
       borderRadius: 10,
-      overflow: 'hidden'
+      overflow: 'hidden',
+      overflowX: 'auto'
     }
   }, waitlist.length === 0 && React.createElement("div", {
     style: {
@@ -47867,7 +47977,8 @@ var BkWaitlist = ({
         gridTemplateColumns: '30px 1.5fr 1.5fr 1fr 1fr auto',
         gap: 14,
         alignItems: 'center',
-        borderTop: i ? '1px solid var(--border)' : 'none'
+        borderTop: i ? '1px solid var(--border)' : 'none',
+        minWidth: bp.mobile ? 560 : 'auto'
       }
     }, React.createElement("div", {
       style: {
@@ -47929,11 +48040,12 @@ var BkCancellations = () => {
   var {
     tr
   } = useAppActions();
+  var bp = useBreakpoint();
   return React.createElement("div", {
     style: {
-      padding: 18,
+      padding: bp.mobile ? 12 : 18,
       display: 'grid',
-      gridTemplateColumns: '1.4fr 1fr',
+      gridTemplateColumns: bp.mobile ? '1fr' : '1.4fr 1fr',
       gap: 14
     }
   }, React.createElement("div", null, React.createElement("div", {

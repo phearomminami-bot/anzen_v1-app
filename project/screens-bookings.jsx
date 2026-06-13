@@ -12,6 +12,7 @@ const sourceLabel = s => ({app:'App', phone:'Phone', reception:'Reception', walk
 // ── Main admin screen ────────────────────────────────────────────────────────
 const BookingsScreen = () => {
   const { openForm, toast, tr } = useAppActions();
+  const bp = useBreakpoint();
   const [bookings, setBookings] = React.useState(window.__bookingData);
   const [tab, setTab]       = React.useState('queue');
   const [filter, setFilter] = React.useState('all');
@@ -61,7 +62,7 @@ const BookingsScreen = () => {
       <SectionTitle
         km="ការគ្រប់គ្រងការកក់"
         en={`Bookings · ${bookings.filter(b=>b.status==='Confirmed').length} confirmed · ${pendingCount} pending`}
-        action={
+        action={bp.mobile ? null : (
           <div style={{display:'flex',gap:8}}>
             <Btn kind="ghost" size="md" icon={<Icon name="cal" size={14}/>}
               onClick={() => toast('Calendar view មិន​ទាន់​អាច​ប្រើ','warn')}>
@@ -75,11 +76,11 @@ const BookingsScreen = () => {
               {tr('ការ​កក់​ដោយ​ដៃ','Manual book')}
             </Btn>
           </div>
-        }
+        )}
       />
 
-      {/* KPI strip */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:12}}>
+      {/* KPI strip — 2 columns on mobile so the cards don't crush */}
+      <div style={{display:'grid',gridTemplateColumns:bp.mobile?'repeat(2,1fr)':'repeat(5,1fr)',gap:bp.mobile?8:12}}>
         <Card><Stat label={tr('ការ​កក់​សកម្ម','Active')}        value={bookings.filter(b=>['Confirmed','Pending','Rescheduled'].includes(b.status)).length}/></Card>
         <Card><Stat label={tr('សំណើ​​រង់ចាំ','Pending')}         value={pendingCount} sub="ត្រូវ​​អនុម័ត"/></Card>
         <Card><Stat label={tr('ការ​ប្រឡង​ផ្លូវ','Road exams')}  value={bookings.filter(b=>b.type&&b.type.toLowerCase().includes('exam')&&b.status==='Confirmed').length} sub="Confirmed"/></Card>
@@ -89,7 +90,7 @@ const BookingsScreen = () => {
 
       <Card pad={0}>
         {/* Sub-tabs */}
-        <div style={{padding:'10px 14px',borderBottom:'1px solid var(--border)',display:'flex',gap:4,alignItems:'center'}}>
+        <div style={{padding:'10px 14px',borderBottom:'1px solid var(--border)',display:'flex',gap:4,alignItems:'center',overflowX:'auto',WebkitOverflowScrolling:'touch'}}>
           {tabs.map(t => {
             const badge = t.id==='requests' ? pendingCount : null;
             return (
@@ -164,6 +165,7 @@ const BookingsScreen = () => {
           onReschedule={() => openForm('newLesson', {studentId: selected.student})}
           onCall={s => toast(`📞 ${s?.phone || '+855 12 345 678'}`, 'info')}/>
       )}
+      {bp.mobile && <MobileFab onClick={() => openForm('newLesson')} label={tr('ការ​កក់​ដោយ​ដៃ','Manual book')}/>}
     </div>
   );
 };
@@ -171,19 +173,60 @@ const BookingsScreen = () => {
 // ── List view ────────────────────────────────────────────────────────────────
 const BkList = ({ bookings, onSelect, selected }) => {
   const { tr } = useAppActions();
+  const bp = useBreakpoint();
+
+  const empty = bookings.length === 0 && (
+    <div style={{padding:48,textAlign:'center',color:'var(--ink-3)',fontSize:13}}>
+      <div style={{fontSize:28,marginBottom:10}}>📅</div>
+      <div>មិន​ទាន់​មាន​ការ​កក់ · No bookings yet</div>
+      <div style={{fontSize:11,marginTop:6}}>Use "Manual book" to add the first booking</div>
+    </div>
+  );
+
+  // ── Mobile: stacked cards instead of a wide 8-column table ────────────────
+  if (bp.mobile) {
+    return (
+      <div style={{display:'flex',flexDirection:'column',gap:8,padding:'12px 12px'}}>
+        {empty}
+        {bookings.map(b => {
+          const s   = studentById(b.student);
+          const ins = instById(b.inst);
+          const v   = vehById(b.veh);
+          return (
+            <button key={b.id} onClick={() => onSelect(b)} style={{
+              width:'100%',textAlign:'left',border:'1px solid var(--border)',borderRadius:10,
+              background: selected?.id===b.id ? 'var(--surface-muted)' : 'var(--surface)',
+              padding:'11px 12px',cursor:'pointer',display:'flex',flexDirection:'column',gap:8,
+            }}>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <Avatar tag={s?.photo} size={34}/>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:14,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s?.en || s?.name || '—'}</div>
+                  <div style={{fontSize:11,color:'var(--ink-3)'}}>{s?.id} · {clsKm(s?.cls)}</div>
+                </div>
+                <Badge tone={bookingStatusTone(b.status)}>{b.status}</Badge>
+              </div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:'4px 12px',fontSize:11,color:'var(--ink-2)'}}>
+                <span style={{fontWeight:600,color:'var(--ink)',fontVariantNumeric:'tabular-nums'}}>{b.date} · {b.time} · {b.len}h</span>
+                {b.type && <span>{b.type}</span>}
+                {ins?.en && <span>👤 {ins.en}</span>}
+                {v?.plate && <span style={{fontFamily:'"JetBrains Mono",monospace'}}>{v.plate}</span>}
+                <span style={{color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',textTransform:'uppercase',letterSpacing:'.04em'}}>{sourceLabel(b.source)}</span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
   <div>
     <div style={{padding:'10px 16px',display:'grid',gridTemplateColumns:'130px 1.4fr 1.2fr 1fr 0.9fr 1fr 0.8fr 24px',gap:14,fontSize:10,letterSpacing:'.08em',color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',textTransform:'uppercase',borderBottom:'1px solid var(--border)'}}>
       <div>Date · Time</div><div>Student</div><div>Type</div>
       <div>Instructor</div><div>Vehicle</div><div>Status</div><div>Source</div><div></div>
     </div>
-    {bookings.length === 0 && (
-      <div style={{padding:48,textAlign:'center',color:'var(--ink-3)',fontSize:13}}>
-        <div style={{fontSize:28,marginBottom:10}}>📅</div>
-        <div>មិន​ទាន់​មាន​ការ​កក់ · No bookings yet</div>
-        <div style={{fontSize:11,marginTop:6}}>Use "Manual book" to add the first booking</div>
-      </div>
-    )}
+    {empty}
     {bookings.map((b,i) => {
       const s   = studentById(b.student);
       const ins = instById(b.inst);
@@ -204,7 +247,7 @@ const BkList = ({ bookings, onSelect, selected }) => {
             <Avatar tag={s?.photo} size={28}/>
             <div style={{minWidth:0}}>
               <div style={{fontSize:12,fontWeight:500,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s?.name}</div>
-              <div style={{fontSize:11,color:'var(--ink-3)'}}>{s?.id} · {s?.cls}</div>
+              <div style={{fontSize:11,color:'var(--ink-3)'}}>{s?.id} · {clsKm(s?.cls)}</div>
             </div>
           </div>
           <div style={{fontSize:12,color:'var(--ink-2)'}}>{b.type}</div>
@@ -266,6 +309,7 @@ const BkTimeline = ({ bookings }) => {
 
 // ── Booking detail panel ─────────────────────────────────────────────────────
 const BkDetail = ({ b, onApprove, onDecline, onCancel, onReschedule, onCall }) => {
+  const bp = useBreakpoint();
   if (!b) return null;
   const s   = studentById(b.student);
   const ins = instById(b.inst);
@@ -274,7 +318,7 @@ const BkDetail = ({ b, onApprove, onDecline, onCancel, onReschedule, onCall }) =
   const isActive  = ['Confirmed','Rescheduled'].includes(b.status);
   return (
     <Card pad={0}>
-      <div style={{padding:'14px 18px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:14}}>
+      <div style={{padding:'14px 18px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:bp.mobile?8:14,flexWrap:'wrap'}}>
         <div style={{padding:'8px 14px',background:'var(--ink)',color:'var(--bg)',borderRadius:8,fontFamily:'"JetBrains Mono",monospace',fontSize:13,fontWeight:600}}>{b.id}</div>
         <Badge tone={bookingStatusTone(b.status)}>{b.status}</Badge>
         <div style={{fontSize:11,color:'var(--ink-3)'}}>បាន​បង្កើត · created {b.created} · via {sourceLabel(b.source)}</div>
@@ -291,7 +335,7 @@ const BkDetail = ({ b, onApprove, onDecline, onCancel, onReschedule, onCall }) =
         </>}
       </div>
 
-      <div style={{padding:18,display:'grid',gridTemplateColumns:'1.3fr 1fr 1fr 1fr',gap:16}}>
+      <div style={{padding:18,display:'grid',gridTemplateColumns:bp.mobile?'1fr':'1.3fr 1fr 1fr 1fr',gap:16}}>
         {/* Booking info */}
         <div>
           <div style={{font:'500 10px/1 "JetBrains Mono",monospace',letterSpacing:'.08em',textTransform:'uppercase',color:'var(--ink-3)',marginBottom:10}}>ការ​កក់ · BOOKING</div>
@@ -402,9 +446,10 @@ const BkDetail = ({ b, onApprove, onDecline, onCancel, onReschedule, onCall }) =
 
 // ── Pending requests ─────────────────────────────────────────────────────────
 const BkPending = ({ bookings, onApprove, onDecline }) => {
+  const bp = useBreakpoint();
   const pending = bookings.filter(b => b.status === 'Pending');
   return (
-    <div style={{padding:18,display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+    <div style={{padding:bp.mobile?12:18,display:'grid',gridTemplateColumns:bp.mobile?'1fr':'1fr 1fr',gap:14}}>
       {pending.map(b => {
         const s   = studentById(b.student);
         const ins = instById(b.inst);
@@ -583,11 +628,12 @@ const BkAvailability = () => {
 // ── Waitlist ─────────────────────────────────────────────────────────────────
 const BkWaitlist = ({ openForm }) => {
   const { toast } = useAppActions();
+  const bp = useBreakpoint();
   const waitlist = window.__waitlistData || [];
   return (
-    <div style={{padding:18}}>
+    <div style={{padding:bp.mobile?12:18}}>
       <div style={{fontSize:14,fontWeight:600,marginBottom:14}}>បញ្ជី​រង់ចាំ​ · Waitlist · សិស្ស​​​ដែល​​ចង់​បាន​​ម៉ោង​មិន​ទាន់​មាន</div>
-      <div style={{border:'1px solid var(--border)',borderRadius:10,overflow:'hidden'}}>
+      <div style={{border:'1px solid var(--border)',borderRadius:10,overflow:'hidden',overflowX:'auto'}}>
         {waitlist.length === 0 && (
           <div style={{padding:40,textAlign:'center',color:'var(--ink-3)',fontSize:13}}>
             <div style={{fontSize:24,marginBottom:8}}>✓</div>
@@ -597,7 +643,7 @@ const BkWaitlist = ({ openForm }) => {
         {waitlist.map((w, i) => {
           const s = studentById(w.s);
           return (
-            <div key={i} style={{padding:'14px 16px',display:'grid',gridTemplateColumns:'30px 1.5fr 1.5fr 1fr 1fr auto',gap:14,alignItems:'center',borderTop:i?'1px solid var(--border)':'none'}}>
+            <div key={i} style={{padding:'14px 16px',display:'grid',gridTemplateColumns:'30px 1.5fr 1.5fr 1fr 1fr auto',gap:14,alignItems:'center',borderTop:i?'1px solid var(--border)':'none',minWidth:bp.mobile?560:'auto'}}>
               <div style={{fontSize:14,fontWeight:700,fontFamily:'var(--font-display)',color:'var(--ink-3)'}}>{i+1}</div>
               <div style={{display:'flex',gap:10,alignItems:'center'}}>
                 <Avatar tag={s?.photo} size={32}/>
@@ -627,8 +673,9 @@ const BkWaitlist = ({ openForm }) => {
 // ── Cancellations ─────────────────────────────────────────────────────────────
 const BkCancellations = () => {
   const { tr } = useAppActions();
+  const bp = useBreakpoint();
   return (
-  <div style={{padding:18,display:'grid',gridTemplateColumns:'1.4fr 1fr',gap:14}}>
+  <div style={{padding:bp.mobile?12:18,display:'grid',gridTemplateColumns:bp.mobile?'1fr':'1.4fr 1fr',gap:14}}>
     <div>
       <div style={{fontSize:14,fontWeight:600,marginBottom:12}}>ការ​លុបចោល & ផ្លាស់​ប្ដូរ​ថ្មីៗ​ · Recent cancellations & changes</div>
       <div style={{border:'1px solid var(--border)',borderRadius:10,overflow:'hidden'}}>

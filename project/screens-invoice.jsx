@@ -189,15 +189,8 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
       <SectionTitle
         km="បង្កើត​វិក្កយបត្រ​ថ្មី"
         en={`Create invoice · ${invId} · ${sent ? 'sent' : 'draft'}`}
-        action={
+        action={bp.mobile ? null : (
           <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'flex-end'}}>
-            <Btn kind="ghost" size="md" onClick={handleDiscard}>{tr('បោះបង់','Discard')}</Btn>
-            <Btn kind="ghost" size="md" icon={<Icon name="book" size={14}/>} onClick={handleDraft}>
-              {savedDraft ? '✓ Saved draft' : tr('រក្សា​​ជា​ឯកសារ','Save draft')}
-            </Btn>
-            <Btn kind="ghost" size="md" icon={<Icon name="search" size={14}/>} onClick={printInvoice}>
-              PDF · Preview
-            </Btn>
             {sent && (
               <Btn kind="ghost" size="md" icon={<Icon name="download" size={14}/>} onClick={printInvoice}
                 style={{color:'var(--good)',borderColor:'var(--good)'}}>
@@ -209,8 +202,24 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
               {sent ? '✓ Sent' : tr('ផ្ញើ​​ទៅ​សិស្ស','Send to student')}
             </Btn>
           </div>
-        }
+        )}
       />
+
+      {/* Mobile: single full-width action so the header stays uncluttered */}
+      {bp.mobile && (
+        <div style={{display:'flex',gap:8}}>
+          {sent && (
+            <Btn kind="ghost" size="lg" icon={<Icon name="download" size={15}/>} onClick={printInvoice}
+              style={{flex:1,justifyContent:'center',color:'var(--good)',borderColor:'var(--good)'}}>
+              PDF
+            </Btn>
+          )}
+          <Btn kind="primary" size="lg" icon={<Icon name="arrow" size={15}/>}
+            onClick={handleSend} style={{flex:1,justifyContent:'center',...(sent ? {background:'var(--good)',borderColor:'var(--good)'} : {})}}>
+            {sent ? '✓ Sent' : tr('ផ្ញើ​​ទៅ​សិស្ស','Send to student')}
+          </Btn>
+        </div>
+      )}
 
       <div style={{display:'grid',gridTemplateColumns:bp.mobile?'1fr':'1.05fr 1fr',gap:14,alignItems:'start'}}>
         {/* ── LEFT: form ── */}
@@ -258,7 +267,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
                 </div>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginTop:10,fontSize:11,color:'var(--ink-3)'}}>
                   <Row k="ID"        v={student?.id}/>
-                  <Row k="ថ្នាក់"    v={student?.cls}/>
+                  <Row k="ថ្នាក់"    v={clsKm(student?.cls)}/>
                   <Row k="ទូរស័ព្ទ"  v={student?.phone || '+855 12 345 678'}/>
                   <Row k="គ្រូ"      v={student?.inst}/>
                 </div>
