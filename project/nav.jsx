@@ -232,7 +232,7 @@ const MobileAppHeader = ({ title, subtitle }) => {
     toast && toast(next==='km'?'ប្តូរ​ទៅ​ភាសា​ខ្មែរ':next==='jp'?'日本語に切り替えました':'Switched to English','good');
   };
   const heading = title || ss.name || 'Anzen';
-  const sq = {width:40,height:40,borderRadius:10,border:'1px solid var(--border)',background:'var(--surface-muted)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0};
+  const sq = {width:40,height:40,borderRadius:10,border:'none',background:'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0};
   return (
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,minHeight:40}}>
       <div style={{display:'flex',alignItems:'center',gap:10,minWidth:0}}>
