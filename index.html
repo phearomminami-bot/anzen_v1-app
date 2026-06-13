@@ -14398,12 +14398,15 @@ var DashboardAdmin = () => {
         overflow: 'hidden',
         textOverflow: 'ellipsis'
       }
-    }, it?.en || it?.name || '—', v?.plate && React.createElement("span", {
+    }, it?.en || it?.name || '—'), v?.plate && React.createElement("div", {
       style: {
-        color: v.trans === 'MT' ? '#B0413E' : '#2A5DB0',
-        fontWeight: 600
+        fontSize: 10,
+        marginTop: 1,
+        fontWeight: 600,
+        fontFamily: '"JetBrains Mono",monospace',
+        color: v.trans === 'MT' ? '#B0413E' : '#2A5DB0'
       }
-    }, " \xB7 ", v.plate)))), !compact && React.createElement(LessonBadge, {
+    }, v.plate))), !compact && React.createElement(LessonBadge, {
       l: l
     }));
   };

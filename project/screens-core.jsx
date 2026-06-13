@@ -132,8 +132,11 @@ const DashboardAdmin = () => {
             </div>
             <div style={{fontSize:10,color:'var(--ink-3)',marginTop:1,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
               {it?.en || it?.name || '—'}
-              {v?.plate && <span style={{color: v.trans==='MT' ? '#B0413E' : '#2A5DB0', fontWeight:600}}> · {v.plate}</span>}
             </div>
+            {v?.plate && (
+              <div style={{fontSize:10,marginTop:1,fontWeight:600,fontFamily:'"JetBrains Mono",monospace',
+                color: v.trans==='MT' ? '#B0413E' : '#2A5DB0'}}>{v.plate}</div>
+            )}
           </div>
         </div>
         {!compact && <LessonBadge l={l}/>}
