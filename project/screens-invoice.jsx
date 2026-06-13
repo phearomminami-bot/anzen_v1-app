@@ -251,21 +251,14 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
                 </div>
               </div>
             </div>
-            {/* Student details — full card width, left-aligned with the card.
-                Instructor gets its own full-width row so the name never wraps. */}
-            <div style={{marginTop:14,display:'flex',flexDirection:'column',gap:10}}>
-              <div style={{display:'grid',gridTemplateColumns:'1.1fr 0.6fr 1.2fr',gap:12}}>
-                {[['ID', student?.id], ['ថ្នាក់', clsKm(student?.cls)], ['ទូរស័ព្ទ', student?.phone || '—']].map(([k, v], i) => (
-                  <div key={i} style={{display:'flex',flexDirection:'column',gap:1,minWidth:0}}>
-                    <span style={{fontSize:10,color:'var(--ink-3)'}}>{k}</span>
-                    <span style={{fontSize:13,fontWeight:500,color:'var(--ink)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{v || '—'}</span>
-                  </div>
-                ))}
-              </div>
-              <div style={{display:'flex',flexDirection:'column',gap:1}}>
-                <span style={{fontSize:10,color:'var(--ink-3)'}}>គ្រូ</span>
-                <span style={{fontSize:13,fontWeight:500,color:'var(--ink)'}}>{student?.inst || '—'}</span>
-              </div>
+            {/* Student details — full card width, left-aligned with the card. */}
+            <div style={{marginTop:14,display:'grid',gridTemplateColumns:'1.1fr 0.6fr 1.2fr',gap:12}}>
+              {[['ID', student?.id], ['ថ្នាក់', clsKm(student?.cls)], ['ទូរស័ព្ទ', student?.phone || '—']].map(([k, v], i) => (
+                <div key={i} style={{display:'flex',flexDirection:'column',gap:1,minWidth:0}}>
+                  <span style={{fontSize:10,color:'var(--ink-3)'}}>{k}</span>
+                  <span style={{fontSize:13,fontWeight:500,color:'var(--ink)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{v || '—'}</span>
+                </div>
+              ))}
             </div>
           </Card>
 
@@ -607,12 +600,14 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
         )}
       </div>
 
-      {/* Mobile: send action pinned to the bottom of the screen (above nav) */}
+      {/* Mobile: send action sits flush on top of the footer nav. Its bar
+          overlaps the footer slightly; the footer (higher z-index) covers the
+          overlap, so there's no gap whatever the footer's exact height. */}
       {bp.mobile && (
         <div style={{
           position:'fixed', left:0, right:0,
-          bottom:'calc(72px + env(safe-area-inset-bottom,0px))',
-          padding:'8px 14px', background:'var(--bg)',
+          bottom:'calc(48px + env(safe-area-inset-bottom,0px))',
+          padding:'8px 14px', background:'var(--surface)',
           borderTop:'1px solid var(--border)', zIndex:60,
           display:'flex', gap:8,
         }}>
