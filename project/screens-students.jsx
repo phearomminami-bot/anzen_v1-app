@@ -10,6 +10,13 @@ const clsLetter = (v) => {
   const km = { 'ក':'A', 'ខ':'B', 'គ':'C', 'ឃ':'D', 'ង':'E' };
   return km[s[0]] || 'B';
 };
+// Khmer class letter for display ('ខ' not the long 'ខ (ឡានបួនកង់)' label),
+// so the list shows exactly the letter that was entered in the form.
+const CLS_KM = { 'A':'ក', 'B':'ខ', 'C':'គ', 'D':'ឃ', 'E':'ង' };
+const clsKm = (v) => CLS_KM[clsLetter(v)] || 'ខ';
+// English student-type label for the list badge.
+const ST_TYPE_EN = { 'ធម្មតា':'Regular', 'ពិសេស':'Special', 'SSW':'SSW' };
+const stTypeEn = (t) => ST_TYPE_EN[t] || 'Regular';
 
 const extendStudent = (s) => {
   const trans = s.trans || 'AT';
@@ -187,10 +194,6 @@ const StudentsScreenV2 = () => {
 
   // ── Mobile: list + CV profile ──────────────────────────────────────────────
   if (bp.mobile) {
-    const STATUS_COLOR = {
-      'New': '#2A5DB0', 'In progress': '#3B7A57', 'Road exam soon': '#E8A800',
-      'Cleared': '#4A7A1A', 'Passed': '#4A7A1A',
-    };
     const filterChips = [
       {id:'all', l:tr('ទាំងអស់','All')},
       {id:'new', l:tr('ថ្មី','New')},
@@ -427,7 +430,7 @@ const StudentsScreenV2 = () => {
             </div>
           )}
           {filtered.map(s => {
-            const sColor = STATUS_COLOR[s.status] || 'var(--ink-3)';
+            const tMeta = ST_TYPE_META[s.studentType] || ST_TYPE_META['ធម្មតា'];
             return (
               <div key={s.id} style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:10,overflow:'hidden'}}>
                 <button onClick={()=>{ setMobileProfileId(s.id); setOpenSections({bio:true}); }} style={{
@@ -436,16 +439,16 @@ const StudentsScreenV2 = () => {
                 }}>
                   <Avatar tag={s.photo} size={36}/>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:14,fontWeight:600,fontFamily:'var(--font-km)',lineHeight:1.3,
+                    <div style={{fontSize:14,fontWeight:600,lineHeight:1.3,
                       whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
-                      {lang==='km' ? s.name : (s.en || s.name)}
+                      {s.en || s.name}
                     </div>
-                    <div style={{fontSize:11,color:'var(--ink-3)',marginTop:1}}>{s.id} · {s.cls}</div>
+                    <div style={{fontSize:11,color:'var(--ink-3)',marginTop:1}}>{s.id} · {clsKm(s.cls)}</div>
                   </div>
                   <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
-                    <div style={{fontSize:10,fontWeight:600,padding:'2px 8px',borderRadius:20,
-                      background:sColor+'18',color:sColor,border:`1px solid ${sColor}40`}}>
-                      {tr(s.status, s.status)}
+                    <div style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:20,
+                      background:tMeta.bg,color:tMeta.color,border:`1px solid ${tMeta.color}33`}}>
+                      {stTypeEn(s.studentType)}
                     </div>
                     <div style={{fontSize:13,color:'var(--ink-3)'}}>›</div>
                   </div>

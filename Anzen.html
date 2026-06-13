@@ -13231,9 +13231,9 @@ var MobileAppHeader = ({
     }
   }, React.createElement("div", {
     style: {
-      fontSize: 17,
+      fontSize: 18,
       fontWeight: 700,
-      fontFamily: 'var(--font-en),var(--font-km),sans-serif',
+      fontFamily: 'var(--font-km),var(--font-en),sans-serif',
       lineHeight: 1.5,
       overflow: 'hidden',
       textOverflow: 'ellipsis',
@@ -36961,6 +36961,20 @@ var clsLetter = v => {
   };
   return km[s[0]] || 'B';
 };
+var CLS_KM = {
+  'A': 'ក',
+  'B': 'ខ',
+  'C': 'គ',
+  'D': 'ឃ',
+  'E': 'ង'
+};
+var clsKm = v => CLS_KM[clsLetter(v)] || 'ខ';
+var ST_TYPE_EN = {
+  'ធម្មតា': 'Regular',
+  'ពិសេស': 'Special',
+  'SSW': 'SSW'
+};
+var stTypeEn = t => ST_TYPE_EN[t] || 'Regular';
 var extendStudent = s => {
   var trans = s.trans || 'AT';
   var pracCount = trans === 'MT' ? 13 : 10;
@@ -37153,13 +37167,6 @@ var StudentsScreenV2 = () => {
   var filtered = allStudents.filter(s => filter === 'all' || filter === 'new' && s.status === 'New' || filter === 'inprogress' && s.status === 'In progress' || filter === 'exam' && s.status === 'Road exam soon' || filter === 'cleared' && s.status === 'Cleared' || filter === 'graduated' && s.exam_result === 'pass' || filter === 'B' && clsLetter(s.cls) === 'B' || filter === 'A' && clsLetter(s.cls) === 'A' || filter === 'C' && clsLetter(s.cls) === 'C' || filter === 't_normal' && s.studentType === 'ធម្មតា' || filter === 't_special' && s.studentType === 'ពិសេស' || filter === 't_ssw' && s.studentType === 'SSW');
   var examReady = allStudents.filter(s => s.status === 'Road exam soon').length;
   if (bp.mobile) {
-    var STATUS_COLOR = {
-      'New': '#2A5DB0',
-      'In progress': '#3B7A57',
-      'Road exam soon': '#E8A800',
-      'Cleared': '#4A7A1A',
-      'Passed': '#4A7A1A'
-    };
     var filterChips = [{
       id: 'all',
       l: tr('ទាំងអស់', 'All')
@@ -37729,7 +37736,7 @@ var StudentsScreenV2 = () => {
         fontSize: 13
       }
     }, tr('គ្មាន​សិស្ស', 'No students')), filtered.map(s => {
-      var sColor = STATUS_COLOR[s.status] || 'var(--ink-3)';
+      var tMeta = ST_TYPE_META[s.studentType] || ST_TYPE_META['ធម្មតា'];
       return React.createElement("div", {
         key: s.id,
         style: {
@@ -37768,19 +37775,18 @@ var StudentsScreenV2 = () => {
         style: {
           fontSize: 14,
           fontWeight: 600,
-          fontFamily: 'var(--font-km)',
           lineHeight: 1.3,
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis'
         }
-      }, lang === 'km' ? s.name : s.en || s.name), React.createElement("div", {
+      }, s.en || s.name), React.createElement("div", {
         style: {
           fontSize: 11,
           color: 'var(--ink-3)',
           marginTop: 1
         }
-      }, s.id, " \xB7 ", s.cls)), React.createElement("div", {
+      }, s.id, " \xB7 ", clsKm(s.cls))), React.createElement("div", {
         style: {
           display: 'flex',
           alignItems: 'center',
@@ -37790,14 +37796,14 @@ var StudentsScreenV2 = () => {
       }, React.createElement("div", {
         style: {
           fontSize: 10,
-          fontWeight: 600,
+          fontWeight: 700,
           padding: '2px 8px',
           borderRadius: 20,
-          background: sColor + '18',
-          color: sColor,
-          border: `1px solid ${sColor}40`
+          background: tMeta.bg,
+          color: tMeta.color,
+          border: `1px solid ${tMeta.color}33`
         }
-      }, tr(s.status, s.status)), React.createElement("div", {
+      }, stTypeEn(s.studentType)), React.createElement("div", {
         style: {
           fontSize: 13,
           color: 'var(--ink-3)'

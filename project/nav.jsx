@@ -240,7 +240,7 @@ const MobileAppHeader = ({ title, subtitle }) => {
         <div style={{minWidth:0}}>
           {/* Khmer glyphs stack vertically — use the body Khmer font and a roomy
               line-height so vowels/subscripts aren't clipped top or bottom. */}
-          <div style={{fontSize:17,fontWeight:700,fontFamily:'var(--font-en),var(--font-km),sans-serif',lineHeight:1.5,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',minWidth:0}}>{heading}</div>
+          <div style={{fontSize:18,fontWeight:700,fontFamily:'var(--font-km),var(--font-en),sans-serif',lineHeight:1.5,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',minWidth:0}}>{heading}</div>
           {subtitle && <div style={{fontSize:12,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.04em',lineHeight:1.3}}>{subtitle}</div>}
         </div>
       </div>
