@@ -270,10 +270,12 @@ const FormSection = ({ title, children }) => (
 );
 
 const FormShell = ({ children, onCancel, onSave, saveLabel = 'រក្សាទុក', cancelLabel = 'បោះបង់' }) => (
-  <div style={{display:'flex',flexDirection:'column',height:'100%'}}>
-    <div style={{flex:1,minHeight:0,overflow:'auto',padding:'20px 32px'}}>{children}</div>
+  <div style={{display:'flex',flexDirection:'column',minHeight:'100%'}}>
+    <div style={{flex:'1 0 auto',padding:'20px 32px'}}>{children}</div>
+    {/* Sticky footer — stays visible while the body scrolls */}
     <div style={{
-      padding:'18px 32px', borderTop:'1px solid var(--border)',
+      position:'sticky', bottom:0, zIndex:3,
+      padding:'14px 32px', borderTop:'1px solid var(--border)',
       background:'var(--surface-muted)', flexShrink:0,
       display:'flex',justifyContent:'flex-end',gap:10,
     }}>
@@ -2579,136 +2581,73 @@ const NewVehicleForm = ({ onClose }) => {
     onClose();
   };
 
-  const D = NV_D; const iSt = NV_iSt; const lSt = NV_lSt;
-  const grid4 = NV_grid4; const grid2 = NV_grid2; const F = NvField;
+  const iSt = NV_iSt;
+  const g2 = { display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 };
   const meta = NV_VTYPE_META[vType];
   const currentMakes  = getMakes(vType);
   const currentModels = getModels(vType, make);
 
   return (
-    <div style={{background:D.bg, padding:'26px 30px', color:D.text,
-      fontFamily:'var(--font-km),var(--font-en),sans-serif', minHeight:'100%'}}>
-
-      {/* Type selector */}
-      <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20, flexWrap:'wrap', gap:10}}>
+    <FormShell onCancel={onClose} onSave={save} saveLabel={tr('បង្កើត','Create')}>
+      {/* Vehicle type selector */}
+      <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:10}}>
         <span style={{fontSize:12, fontWeight:500, color:'var(--ink-3)', fontFamily:'"JetBrains Mono",monospace'}}>{nextId}</span>
         <div style={{display:'flex', gap:4, background:'var(--surface-muted)', borderRadius:10, padding:4}}>
           {Object.entries(NV_VTYPE_META).map(([k, m]) => (
             <button key={k} onClick={()=>switchType(k)} style={{
-              padding:'7px 16px', borderRadius:7, border:'none', cursor:'pointer',
-              background: vType===k ? D.accent : 'transparent',
+              padding:'7px 14px', borderRadius:7, border:'none', cursor:'pointer',
+              background: vType===k ? 'var(--accent)' : 'transparent',
               color: vType===k ? '#fff' : 'var(--ink-2)',
               fontSize:13, fontFamily:'var(--font-km),sans-serif', fontWeight: vType===k ? 600 : 400,
               transition:'all .15s', display:'flex', alignItems:'center', gap:5,
-            }}>
-              {m.icon} {m.km}
-            </button>
+            }}>{m.icon} {m.km}</button>
           ))}
         </div>
       </div>
 
-      {/* Row 1: Make | Model | Year | Color */}
-      <div style={grid4}>
-        <F label={`ម៉ាក${vType==='moto'?' (Brand)':vType==='tuktuk'?' (Brand)':' *'}`}>
-          <ComboInput style={iSt} value={make} onChange={setMake} options={currentMakes}/>
-        </F>
-        <F label="ម៉ូដែល">
-          <ComboInput style={iSt} value={model} onChange={setModel} options={currentModels}/>
-        </F>
-        <F label="ឆ្នាំផលិត">
-          <ComboInput style={iSt} value={year} onChange={setYear} options={years}/>
-        </F>
-        <F label="ពណ៌">
-          <ComboInput style={iSt} value={color} onChange={setColor} options={NV_COLORS.map(c=>c.v)}/>
-        </F>
-      </div>
-
-      {/* Row 2: Province + Plate + Trans (trans hidden for moto) */}
-      <div style={{marginBottom:14}}>
-        <label style={lSt}>លេខចុះ​បញ្ជី *</label>
-        <div style={{display:'flex', gap:8}}>
-          <ComboInput style={{...iSt, flex:'none', width:200}} value={province} onChange={setProvince} options={NV_PROVINCES}/>
-          <input style={{...iSt, flex:1}} value={plate} onChange={e=>setPlate(e.target.value)}
-            placeholder={vType==='moto'?'1M-1234':'2BK-1234'}/>
-          {vType !== 'moto' && (
-            <ComboInput style={{...iSt, flex:'none', width:140}} value={trans} onChange={setTrans}
-              options={NV_TRANS.map(t=>t.v)} placeholder="AT / MT"/>
-          )}
+      <FormSection title={tr('ព័ត៌មាន​យានយន្ត','VEHICLE')}>
+        <div style={g2}>
+          <Field label={tr('ម៉ាក','Make')+' *'}><ComboInput style={iSt} value={make} onChange={setMake} options={currentMakes}/></Field>
+          <Field label={tr('ម៉ូដែល','Model')}><ComboInput style={iSt} value={model} onChange={setModel} options={currentModels}/></Field>
+          <Field label={tr('ឆ្នាំ​ផលិត','Year')}><ComboInput style={iSt} value={year} onChange={setYear} options={years}/></Field>
+          <Field label={tr('ពណ៌','Color')}><ComboInput style={iSt} value={color} onChange={setColor} options={NV_COLORS.map(c=>c.v)}/></Field>
         </div>
-      </div>
+        <Field label={tr('លេខ​ចុះ​បញ្ជី','License plate')+' *'}>
+          <div style={{display:'flex', gap:8}}>
+            <ComboInput style={{...iSt, flex:'1 1 0', minWidth:0}} value={province} onChange={setProvince} options={NV_PROVINCES}/>
+            <input style={{...iSt, flex:'1 1 0', minWidth:0}} value={plate} onChange={e=>setPlate(e.target.value)} placeholder={vType==='moto'?'1M-1234':'2BK-1234'}/>
+            {vType !== 'moto' && <ComboInput style={{...iSt, flex:'0 0 84px'}} value={trans} onChange={setTrans} options={NV_TRANS.map(t=>t.v)}/>}
+          </div>
+        </Field>
+      </FormSection>
 
-      {/* Row 3: Odometer | Fuel | Seats (hidden for moto) | CC */}
-      <div style={{display:'grid', gridTemplateColumns: vType==='moto'?'1fr 1fr 1fr':'repeat(4,1fr)', gap:12, marginBottom:14}}>
-        <F label="លេខ Odometer (KM)">
-          <input style={iSt} type="number" min="0" value={km}
-            onChange={e=>setKm(e.target.value)} placeholder="12000"/>
-        </F>
-        <F label="ប្រភេទប្រេង">
-          <ComboInput style={iSt} value={fuelType} onChange={setFuelType} options={NV_FUELS.map(f=>f.v)}/>
-        </F>
-        {vType !== 'moto' && (
-          <F label={`ចំនួន​កៅអ៊ី${vType==='tuktuk'?' (2-6)':' (Seats)'}`}>
-            <input style={iSt} type="number" min="1" max={vType==='tuktuk'?'6':'60'}
-              value={seats} onChange={e=>setSeats(e.target.value)}
-              placeholder={vType==='tuktuk'?'4':'4'}/>
-          </F>
-        )}
-        <F label="ម៉ាស៊ីន (CC)">
-          <input style={iSt} type="number" min="0" value={cc}
-            onChange={e=>setCc(e.target.value)}
-            placeholder={vType==='moto'?'150':vType==='tuktuk'?'200':'2400'}/>
-        </F>
-      </div>
+      <FormSection title={tr('បច្ចេកទេស','SPECS')}>
+        <div style={g2}>
+          <Field label={tr('លេខ Odometer (KM)','Odometer (KM)')}><input style={iSt} type="number" min="0" value={km} onChange={e=>setKm(e.target.value)} placeholder="12000"/></Field>
+          <Field label={tr('ប្រភេទ​ប្រេង','Fuel')}><ComboInput style={iSt} value={fuelType} onChange={setFuelType} options={NV_FUELS.map(f=>f.v)}/></Field>
+          {vType !== 'moto' && <Field label={tr('ចំនួន​កៅអី','Seats')}><input style={iSt} type="number" min="1" max={vType==='tuktuk'?'6':'60'} value={seats} onChange={e=>setSeats(e.target.value)} placeholder="4"/></Field>}
+          <Field label={tr('ម៉ាស៊ីន (CC)','Engine (CC)')}><input style={iSt} type="number" min="0" value={cc} onChange={e=>setCc(e.target.value)} placeholder={vType==='moto'?'150':vType==='tuktuk'?'200':'2400'}/></Field>
+        </div>
+        <div style={g2}>
+          <Field label={tr('លេខ​តួ (Chassis)','Chassis No.')}><input style={iSt} value={chassis} onChange={e=>setChassis(e.target.value)} placeholder="JTDKB20U…"/></Field>
+          <Field label={tr('លេខ​ម៉ាស៊ីន','Engine No.')}><input style={iSt} value={engineNum} onChange={e=>setEngineNum(e.target.value)} placeholder="1NZ3801512"/></Field>
+          <Field label={tr('ថ្ងៃ​ចុះ​បញ្ជី','Registered')}><input style={iSt} type="date" value={regDate} onChange={e=>setRegDate(e.target.value)}/></Field>
+          <Field label={tr('ថ្ងៃ​ផុត​កំណត់','Expiry')}><input style={iSt} type="date" value={expDate} onChange={e=>setExpDate(e.target.value)}/></Field>
+        </div>
+      </FormSection>
 
-      {/* Row 4: Chassis | Engine | Reg date | Expiry */}
-      <div style={grid4}>
-        <F label="លេខតួ (Chassis)"><input style={iSt} value={chassis} onChange={e=>setChassis(e.target.value)} placeholder="JTDKB20U…"/></F>
-        <F label="លេខម៉ាស៊ីន"><input style={iSt} value={engineNum} onChange={e=>setEngineNum(e.target.value)} placeholder="1NZ3801512"/></F>
-        <F label="ថ្ងៃចុះ​បញ្ជី​ដំបូង"><input style={iSt} type="date" value={regDate} onChange={e=>setRegDate(e.target.value)}/></F>
-        <F label="ថ្ងៃ​ផុត​កំណត"><input style={iSt} type="date" value={expDate} onChange={e=>setExpDate(e.target.value)}/></F>
-      </div>
-
-      {/* Row 5: Notes + Status */}
-      <div style={grid2}>
-        <F label="ចំណារ" full={false}>
-          <textarea style={{...iSt, minHeight:72, resize:'vertical', lineHeight:1.5}}
-            value={notes} onChange={e=>setNotes(e.target.value)}
-            placeholder={`ពិពណ៌នា​អំពី​${meta.km}…`}/>
-        </F>
-        <F label="ស្ថានភាព">
+      <FormSection title={tr('ផ្សេងៗ','OTHER')}>
+        <Field label={tr('ស្ថានភាព','Status')}>
           <select style={iSt} value={status} onChange={e=>setStatus(e.target.value)}>
             {NV_STATUSES.map(s => <option key={s.v} value={s.v}>{s.l}</option>)}
           </select>
-        </F>
-      </div>
-
-      {/* Divider */}
-      <div style={{borderTop:`1px solid ${D.border}`, marginBottom:18}}/>
-
-      {/* Buttons */}
-      <div style={{display:'flex', gap:10}}>
-        <button onClick={save} style={{
-          display:'inline-flex', alignItems:'center', gap:8, padding:'10px 22px',
-          borderRadius:8, cursor:'pointer', background:'var(--accent)',
-          border:'none', color:'#fff',
-          fontSize:13, fontWeight:600, fontFamily:'inherit', transition:'opacity .15s',
-        }}
-          onMouseEnter={e=>e.currentTarget.style.opacity='.9'}
-          onMouseLeave={e=>e.currentTarget.style.opacity='1'}>
-          💾 រក្សា​ទុក
-        </button>
-        <button onClick={onClose} style={{
-          display:'inline-flex', alignItems:'center', gap:8, padding:'10px 22px',
-          borderRadius:8, cursor:'pointer', background:'var(--surface)',
-          border:'1px solid var(--border)', color:'var(--ink-2)',
-          fontSize:13, fontWeight:500, fontFamily:'inherit', transition:'border-color .15s',
-        }}
-          onMouseEnter={e=>e.currentTarget.style.borderColor='var(--border-strong)'}
-          onMouseLeave={e=>e.currentTarget.style.borderColor='var(--border)'}>
-          ✕ បោះបង់
-        </button>
-      </div>
-    </div>
+        </Field>
+        <Field label={tr('ចំណារ','Notes')}>
+          <textarea style={{...iSt, height:'auto', minHeight:72, resize:'vertical', lineHeight:1.5, padding:'10px 14px'}}
+            value={notes} onChange={e=>setNotes(e.target.value)} placeholder={`${tr('ពិពណ៌នា','Notes')}…`}/>
+        </Field>
+      </FormSection>
+    </FormShell>
   );
 };
 
