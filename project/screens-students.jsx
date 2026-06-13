@@ -18,6 +18,85 @@ const clsKm = (v) => CLS_KM[clsLetter(v)] || 'ខ';
 const ST_TYPE_EN = { 'ធម្មតា':'Regular', 'ពិសេស':'Special', 'SSW':'SSW' };
 const stTypeEn = (t) => ST_TYPE_EN[t] || 'Regular';
 
+// Pure-Khmer lesson type label (no English/Japanese), derived from the colour
+// code so it's consistent regardless of what was stored in l.type.
+const lessonTypeKm = (l) => {
+  if (!l) return 'មេរៀន';
+  if (l.color === 'c' || l.color === 'e') return 'ទ្រឹស្ដី';
+  return 'អនុវត្តន៍';
+};
+
+// Expandable lesson row: tap to rate, note strengths/weaknesses and add a
+// comment. Saves back onto the lesson via onSave.
+const CvLessonRow = ({ l, tr, onSave }) => {
+  const [open, setOpen]           = React.useState(false);
+  const [rating, setRating]       = React.useState(l.rating || 0);
+  const [didWell, setDidWell]     = React.useState(l.didWell || '');
+  const [toImprove, setToImprove] = React.useState(l.toImprove || '');
+  const [note, setNote]           = React.useState(l.note || '');
+  const [done, setDone]           = React.useState(l.status === 'done');
+  const fieldStyle = { width:'100%', padding:'8px 10px', border:'1px solid var(--border)', borderRadius:8, fontSize:13, fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)', boxSizing:'border-box', resize:'vertical' };
+  const lbl = { fontSize:11, color:'var(--ink-3)', fontWeight:600, margin:'10px 0 4px' };
+  const save = () => { onSave(l, { rating, didWell: didWell.trim(), toImprove: toImprove.trim(), note: note.trim(), status: done ? 'done' : 'pending' }); setOpen(false); };
+  return (
+    <div style={{borderBottom:'1px solid var(--border)'}}>
+      <button onClick={()=>setOpen(o=>!o)} style={{
+        width:'100%', textAlign:'left', background:'transparent', border:'none', cursor:'pointer',
+        padding:'10px 0', display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:10,
+      }}>
+        <div style={{minWidth:0}}>
+          <div style={{fontSize:12.5,fontWeight:600,color:'var(--ink)'}}>{l.date}</div>
+          <div style={{fontSize:12,color:'var(--ink-2)',marginTop:1}}>{lessonTypeKm(l)}</div>
+          {(l.rating > 0) && <div style={{fontSize:12,color:'var(--gold)',marginTop:1,letterSpacing:1}}>{'★'.repeat(l.rating)}<span style={{color:'var(--border-strong)'}}>{'★'.repeat(5-l.rating)}</span></div>}
+          {l.note && !open && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2,fontStyle:'italic',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{l.note}</div>}
+        </div>
+        <span style={{fontSize:11,color:done?'var(--good)':'var(--ink-3)',fontWeight:500,flexShrink:0,display:'flex',alignItems:'center',gap:4}}>
+          {done?tr('រួចរាល់','Done'):tr('កំពុង','Pending')}
+          <span style={{transition:'transform .2s',transform:open?'rotate(180deg)':'none',color:'var(--ink-3)'}}>▾</span>
+        </span>
+      </button>
+      {open && (
+        <div style={{padding:'4px 0 14px'}}>
+          <div style={lbl}>{tr('ស្ថានភាព','Status')}</div>
+          <div style={{display:'flex',gap:6}}>
+            {[[false,tr('កំពុង','Pending')],[true,tr('រួចរាល់','Done')]].map(([v,t])=>(
+              <button key={String(v)} onClick={()=>setDone(v)} style={{
+                flex:1,padding:'7px 0',borderRadius:7,cursor:'pointer',fontSize:12,fontWeight:600,fontFamily:'inherit',
+                border:`1.5px solid ${done===v?'var(--accent)':'var(--border)'}`,
+                background:done===v?'var(--accent-soft)':'var(--surface)',color:done===v?'var(--accent)':'var(--ink-2)',
+              }}>{t}</button>
+            ))}
+          </div>
+
+          <div style={lbl}>{tr('វាយតម្លៃ','Rating')}</div>
+          <div style={{display:'flex',gap:6}}>
+            {[1,2,3,4,5].map(n=>(
+              <button key={n} onClick={()=>setRating(n===rating?0:n)} style={{
+                background:'none',border:'none',cursor:'pointer',padding:0,fontSize:26,lineHeight:1,
+                color: n<=rating ? 'var(--gold)' : 'var(--border-strong)',
+              }}>★</button>
+            ))}
+          </div>
+
+          <div style={lbl}>{tr('ធ្វើ​បាន​ល្អ','Did well')}</div>
+          <input value={didWell} onChange={e=>setDidWell(e.target.value)} placeholder={tr('ឧ. បញ្ជា​ចង្កូត​បាន​ល្អ','e.g. good steering control')} style={fieldStyle}/>
+
+          <div style={lbl}>{tr('ខ្វះខាត​ត្រូវ​កែ','Needs work')}</div>
+          <input value={toImprove} onChange={e=>setToImprove(e.target.value)} placeholder={tr('ឧ. ត្រូវ​ហ្វឹកហាត់​ចតរថយន្ត','e.g. practise parking')} style={fieldStyle}/>
+
+          <div style={lbl}>{tr('មតិ​បន្ថែម','Comment')}</div>
+          <textarea value={note} onChange={e=>setNote(e.target.value)} rows={2} placeholder={tr('💬 មតិ​គ្រូ​លើ​មេរៀន​នេះ...','💬 Instructor comment...')} style={fieldStyle}/>
+
+          <button onClick={save} style={{
+            width:'100%',marginTop:12,padding:'10px',borderRadius:8,border:'none',
+            background:'var(--accent)',color:'#fff',cursor:'pointer',fontSize:13,fontWeight:600,
+          }}>{tr('រក្សា​ទុក​មតិ','Save feedback')}</button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const extendStudent = (s) => {
   const trans = s.trans || 'AT';
   const pracCount = trans === 'MT' ? 13 : 10;
@@ -155,6 +234,18 @@ const StudentsScreenV2 = () => {
     forceUpdate();
   };
 
+  // Save an instructor evaluation/feedback back onto a lesson (rating, notes,
+  // status). Persists to localStorage + cloud via saveAllData.
+  const saveLessonFeedback = (lesson, fields) => {
+    const i = LESSONS.findIndex(l => l.id === lesson.id);
+    if (i !== -1) {
+      Object.assign(LESSONS[i], fields);
+      if (window.saveAllData) window.saveAllData();
+      forceUpdate();
+      toast(tr('បាន​រក្សា​ទុក​មតិ ✓', 'Feedback saved ✓'), 'good');
+    }
+  };
+
   const deleteStudent = (id) => {
     const i = STUDENTS.findIndex(s => s.id === id);
     if (i !== -1) STUDENTS.splice(i, 1);
@@ -264,7 +355,9 @@ const StudentsScreenV2 = () => {
       const pct = s.target > 0 ? Math.min(100, Math.round((s.hours / s.target) * 100)) : 0;
       const price = studentPrice(s);
       const paidAmt = Math.round((s.paid || 0) * price);
-      const studentLessons = LESSONS.filter(l => l.studentId === s.id).slice().reverse().slice(0, 12);
+      const studentLessons = LESSONS.filter(l => l.studentId === s.id).slice()
+        .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))
+        .slice(0, 12);
 
       return (
         <div style={{display:'flex',flexDirection:'column'}}>
@@ -391,16 +484,7 @@ const StudentsScreenV2 = () => {
                 {tr('មិន​ទាន់​មាន​មេរៀន','No lessons yet')}
               </div>
             ) : studentLessons.map((l,i) => (
-              <div key={i} style={{padding:'8px 0',borderBottom:'1px solid var(--border)',fontSize:12}}>
-                <div style={{display:'flex',justifyContent:'space-between',marginBottom:2}}>
-                  <span style={{fontWeight:600,color:'var(--ink)'}}>{l.date}</span>
-                  <span style={{color:l.status==='done'?'var(--good)':'var(--ink-3)',fontWeight:500}}>
-                    {l.status==='done'?tr('រួចរាល់','Done'):tr('កំពុង','Pending')}
-                  </span>
-                </div>
-                <div style={{color:'var(--ink-2)'}}>{l.type || tr('មេរៀន','Lesson')}</div>
-                {l.note && <div style={{color:'var(--ink-3)',marginTop:2,fontStyle:'italic'}}>{l.note}</div>}
-              </div>
+              <CvLessonRow key={l.id || i} l={l} tr={tr} onSave={saveLessonFeedback}/>
             ))}
             <button onClick={()=>bookLesson(s)} style={{
               width:'100%',marginTop:12,padding:'10px',borderRadius:8,
