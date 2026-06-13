@@ -57046,6 +57046,7 @@ Object.assign(window, {
     snap('instructors', window.INSTRUCTORS || []);
     snap('staff', window.__staffData || []);
   };
+  var _loadErrors = 0;
   var pull = async t => {
     try {
       var {
@@ -57054,11 +57055,13 @@ Object.assign(window, {
       } = await window.sb.from(t).select('*');
       if (error) {
         console.error('[Anzen] load ' + t + ':', error.message);
+        _loadErrors++;
         return null;
       }
       return data || [];
     } catch (e) {
       console.error('[Anzen] load ' + t, e);
+      _loadErrors++;
       return null;
     }
   };
@@ -57100,7 +57103,12 @@ Object.assign(window, {
   window.__sbLoadAll = async isInitialLoad => {
     if (!window.sb) return false;
     var initial = isInitialLoad === true || !window.__sbReady;
+    _loadErrors = 0;
     var [stu, ins, veh, les, inv, stf] = await Promise.all(['students', 'instructors', 'vehicles', 'lessons', 'invoices', 'staff'].map(pull));
+    var coreAllFailed = stu === null && ins === null && veh === null && les === null;
+    if (coreAllFailed) {
+      return false;
+    }
     fill(window.INSTRUCTORS, ins, initial, 'instructors');
     fill(window.VEHICLES, veh, initial, 'vehicles');
     fill(window.STUDENTS, stu, initial, 'students');
@@ -57139,6 +57147,29 @@ Object.assign(window, {
     refreshUI();
     if (window.__sbSubscribe) window.__sbSubscribe();
     return true;
+  };
+  window.__sbLoadAllRetry = async isInitialLoad => {
+    var start = Date.now();
+    while (!window.sb && Date.now() - start < 8000) {
+      await new Promise(r => setTimeout(r, 150));
+    }
+    if (!window.sb) return false;
+    var delays = [0, 1000, 2000, 4000, 8000];
+    var _loop = async function (i) {
+        if (delays[i]) await new Promise(r => setTimeout(r, delays[i]));
+        try {
+          var ok = await window.__sbLoadAll(isInitialLoad);
+          if (ok) return {
+            v: true
+          };
+        } catch (e) {}
+      },
+      _ret;
+    for (var i = 0; i < delays.length; i++) {
+      _ret = await _loop(i);
+      if (_ret) return _ret.v;
+    }
+    return false;
   };
   function refreshUI() {
     ['__notifyStudentsChanged', '__notifyInstructorsChanged', '__notifyLessonsChanged', '__notifyStaffChanged', '__notifySettingsChanged', '__notifyLessonsLibChanged', '__notifyVehiclesChanged'].forEach(h => {
@@ -57646,6 +57677,17 @@ var DETAILS = {
   }
 };
 function App() {
+  React.useMemo(() => {
+    try {
+      if (window.__sbReady) return;
+      var b = JSON.parse(localStorage.getItem('anzen_brand') || '{}');
+      if (b && (b.logo || b.name)) {
+        var ss = window.__schoolSettings = window.__schoolSettings || {};
+        if (b.logo) ss.logo = b.logo;
+        if (b.name) ss.name = b.name;
+      }
+    } catch (e) {}
+  }, []);
   var [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   var bp = useBreakpoint();
   useEdgeSwipeBack();
@@ -57830,9 +57872,10 @@ function App() {
     setAuthed(true);
     setCurrent('dashboard');
     window.__anzenStudentId = null;
-    if (window.__sbLoadAll) {
-      window.__sbLoadAll().then(() => {
-        if (window.__sbPushNow) window.__sbPushNow();
+    var loadAll = window.__sbLoadAllRetry || window.__sbLoadAll;
+    if (loadAll) {
+      loadAll().then(ok => {
+        if (ok && window.__sbPushNow) window.__sbPushNow();
       }).catch(() => {});
     }
   };
@@ -57874,8 +57917,9 @@ function App() {
     }
     setAuthed(true);
     setCurrent('dashboard');
-    if (window.__sbLoadAll) {
-      window.__sbLoadAll().then(() => {
+    var loadAll = window.__sbLoadAllRetry || window.__sbLoadAll;
+    if (loadAll) {
+      loadAll().then(() => {
         if (r === 'student' && profile?.linked_id) {
           var s = STUDENTS.find(x => x.id === profile.linked_id);
           if (s) setLoggedInStudentUser(s);

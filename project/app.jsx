@@ -84,6 +84,23 @@ const DETAILS = {
 };
 
 function App() {
+  // Keep the school's custom logo/name visible even when the cloud settings
+  // haven't loaded this session (offline / slow Supabase). The cloud load later
+  // Object.assign's over this, so real settings always win; we only fill gaps.
+  // The cache is written only from a real cloud load, so it always reflects the
+  // school's true branding — prefer it over the hard-coded "Anzen" default until
+  // a fresh cloud load arrives (which Object.assign's over these values).
+  React.useMemo(() => {
+    try {
+      if (window.__sbReady) return; // cloud already loaded → trust live settings
+      const b = JSON.parse(localStorage.getItem('anzen_brand') || '{}');
+      if (b && (b.logo || b.name)) {
+        const ss = window.__schoolSettings = window.__schoolSettings || {};
+        if (b.logo) ss.logo = b.logo;
+        if (b.name) ss.name = b.name;
+      }
+    } catch (e) {}
+  }, []);
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const bp = useBreakpoint();
   useEdgeSwipeBack();   // global: swipe from either screen edge → back
@@ -267,9 +284,10 @@ function App() {
     // On local login: load from Supabase first (fill() keeps local if local has more rows),
     // then push merged state back so Supabase is always current.
     // __sbReady=true is set inside __sbLoadAll, enabling auto-sync for future saves.
-    if (window.__sbLoadAll) {
-      window.__sbLoadAll().then(() => {
-        if (window.__sbPushNow) window.__sbPushNow();
+    const loadAll = window.__sbLoadAllRetry || window.__sbLoadAll;
+    if (loadAll) {
+      loadAll().then((ok) => {
+        if (ok && window.__sbPushNow) window.__sbPushNow();
       }).catch(() => {});
     }
   };
@@ -308,8 +326,9 @@ function App() {
     setAuthed(true);
     setCurrent('dashboard');
     // Pull all data from Supabase for this session (Phase 2).
-    if (window.__sbLoadAll) {
-      window.__sbLoadAll()
+    const loadAll = window.__sbLoadAllRetry || window.__sbLoadAll;
+    if (loadAll) {
+      loadAll()
         .then(() => {
           if (r === 'student' && profile?.linked_id) {
             const s = STUDENTS.find(x => x.id === profile.linked_id); if (s) setLoggedInStudentUser(s);

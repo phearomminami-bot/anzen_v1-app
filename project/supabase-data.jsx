@@ -56,12 +56,13 @@
   };
 
   // ── Helpers ───────────────────────────────────────────────────────────────
+  let _loadErrors = 0; // counts failed pulls in the current __sbLoadAll pass
   const pull = async (t) => {
     try {
       const { data, error } = await window.sb.from(t).select('*');
-      if (error) { console.error('[Anzen] load ' + t + ':', error.message); return null; }
+      if (error) { console.error('[Anzen] load ' + t + ':', error.message); _loadErrors++; return null; }
       return data || [];
-    } catch (e) { console.error('[Anzen] load ' + t, e); return null; }
+    } catch (e) { console.error('[Anzen] load ' + t, e); _loadErrors++; return null; }
   };
 
   const fill = (arr, rows, initialLoad, table) => {
@@ -105,8 +106,15 @@
     if (!window.sb) return false;
     const initial = (isInitialLoad === true) || !window.__sbReady;
 
+    _loadErrors = 0;
     const [stu, ins, veh, les, inv, stf] = await Promise.all(
       ['students', 'instructors', 'vehicles', 'lessons', 'invoices', 'staff'].map(pull));
+
+    // If every core table failed (network/auth down on a cold session), don't
+    // adopt the empty result or mark ready — let the caller retry so we never
+    // strand the user on a blank "default" app while the cloud data still exists.
+    const coreAllFailed = (stu === null && ins === null && veh === null && les === null);
+    if (coreAllFailed) { return false; }
 
     fill(window.INSTRUCTORS, ins, initial, 'instructors');
     fill(window.VEHICLES,    veh, initial, 'vehicles');
@@ -150,6 +158,28 @@
     refreshUI();
     if (window.__sbSubscribe) window.__sbSubscribe();
     return true;
+  };
+
+  // Resilient load: waits for the Supabase client to come up (its library
+  // <script> can lag on mobile), then retries the load on transient failure
+  // with exponential backoff. Prevents a single failed cold-start request from
+  // dropping the user into a blank, default-branded app.
+  window.__sbLoadAllRetry = async (isInitialLoad) => {
+    // Wait for the client library/credentials to be ready (up to ~8s).
+    const start = Date.now();
+    while (!window.sb && Date.now() - start < 8000) {
+      await new Promise(r => setTimeout(r, 150));
+    }
+    if (!window.sb) return false;
+    const delays = [0, 1000, 2000, 4000, 8000];
+    for (let i = 0; i < delays.length; i++) {
+      if (delays[i]) await new Promise(r => setTimeout(r, delays[i]));
+      try {
+        const ok = await window.__sbLoadAll(isInitialLoad);
+        if (ok) return true;
+      } catch (e) { /* retry */ }
+    }
+    return false;
   };
 
   // ── UI refresh ────────────────────────────────────────────────────────────
