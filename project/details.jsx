@@ -308,13 +308,16 @@ const LessonDetail = ({ lesson, onClose }) => {
   // Khmer-pure labels (except names): lesson type + English location name.
   const typeLabel = (lesson.color==='c' || lesson.color==='e') ? tr('ទ្រឹស្ដី','Theory') : tr('អនុវត្ត','Practical');
   const locName = ((typeof LESSON_LOCATIONS !== 'undefined' ? LESSON_LOCATIONS : []).find(l => l.v === lesson.pickup)?.en) || lesson.pickup || '—';
-  // Cumulative hour number(s) for this lesson within the student's whole schedule.
-  // e.g. the 5th hour → "5"; a 2-hour lesson starting at hour 5 → "5, 6".
+  // Cumulative hour number(s) for this lesson, counted SEPARATELY per type —
+  // Theory hours and Practical hours each have their own running count.
+  // e.g. the 5th theory hour → "5"; a 2-hour lesson at theory-hour 5 → "5, 6".
+  const isTheory = (l) => l.color === 'c' || l.color === 'e';
   const hourRange = (() => {
     const sid = lesson.studentId;
     if (!sid || sid === '—') return '';
+    const sameType = isTheory(lesson);
     const mine = (typeof LESSONS !== 'undefined' ? LESSONS : [])
-      .filter(l => l.studentId === sid && l.status !== 'cancelled')
+      .filter(l => l.studentId === sid && l.status !== 'cancelled' && isTheory(l) === sameType)
       .sort((a,b) => String(a.date||'').localeCompare(String(b.date||'')) || ((a.h||0) - (b.h||0)));
     let acc = 0, start = null;
     for (const l of mine) { if (l.id === lesson.id) { start = acc + 1; break; } acc += Math.max(1, Math.round(l.len||1)); }

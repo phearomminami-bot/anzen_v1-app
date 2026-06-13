@@ -9335,10 +9335,12 @@ var LessonDetail = ({
   var locLabel = locLabelFor(lesson.pickup);
   var typeLabel = lesson.color === 'c' || lesson.color === 'e' ? tr('ទ្រឹស្ដី', 'Theory') : tr('អនុវត្ត', 'Practical');
   var locName = (typeof LESSON_LOCATIONS !== 'undefined' ? LESSON_LOCATIONS : []).find(l => l.v === lesson.pickup)?.en || lesson.pickup || '—';
+  var isTheory = l => l.color === 'c' || l.color === 'e';
   var hourRange = (() => {
     var sid = lesson.studentId;
     if (!sid || sid === '—') return '';
-    var mine = (typeof LESSONS !== 'undefined' ? LESSONS : []).filter(l => l.studentId === sid && l.status !== 'cancelled').sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')) || (a.h || 0) - (b.h || 0));
+    var sameType = isTheory(lesson);
+    var mine = (typeof LESSONS !== 'undefined' ? LESSONS : []).filter(l => l.studentId === sid && l.status !== 'cancelled' && isTheory(l) === sameType).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')) || (a.h || 0) - (b.h || 0));
     var acc = 0,
       start = null;
     for (var l of mine) {
