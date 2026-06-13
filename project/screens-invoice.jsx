@@ -183,25 +183,27 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
   };
 
   return (
-    <div style={{display:'flex',flexDirection:'column',gap:14,maxWidth:'100%',overflowX:'hidden'}}>
-      <SectionTitle
-        km="បង្កើត​វិក្កយបត្រ​ថ្មី"
-        en={`Create invoice · ${invId} · ${sent ? 'sent' : 'draft'}`}
-        action={bp.mobile ? null : (
-          <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'flex-end'}}>
-            {sent && (
-              <Btn kind="ghost" size="md" icon={<Icon name="download" size={14}/>} onClick={printInvoice}
-                style={{color:'var(--good)',borderColor:'var(--good)'}}>
-                Download PDF
+    <div style={{display:'flex',flexDirection:'column',gap:14,maxWidth:'100%',overflowX:'hidden',paddingBottom: bp.mobile ? 70 : 0}}>
+      {!bp.mobile && (
+        <SectionTitle
+          km="បង្កើត​វិក្កយបត្រ​ថ្មី"
+          en={`Create invoice · ${invId} · ${sent ? 'sent' : 'draft'}`}
+          action={
+            <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'flex-end'}}>
+              {sent && (
+                <Btn kind="ghost" size="md" icon={<Icon name="download" size={14}/>} onClick={printInvoice}
+                  style={{color:'var(--good)',borderColor:'var(--good)'}}>
+                  Download PDF
+                </Btn>
+              )}
+              <Btn kind="primary" size="md" icon={<Icon name="arrow" size={14}/>}
+                onClick={handleSend} style={sent ? {background:'var(--good)',borderColor:'var(--good)'} : {}}>
+                {sent ? '✓ Sent' : tr('ផ្ញើ​​ទៅ​សិស្ស','Send to student')}
               </Btn>
-            )}
-            <Btn kind="primary" size="md" icon={<Icon name="arrow" size={14}/>}
-              onClick={handleSend} style={sent ? {background:'var(--good)',borderColor:'var(--good)'} : {}}>
-              {sent ? '✓ Sent' : tr('ផ្ញើ​​ទៅ​សិស្ស','Send to student')}
-            </Btn>
-          </div>
-        )}
-      />
+            </div>
+          }
+        />
+      )}
 
       <div style={{display:'grid',gridTemplateColumns:bp.mobile?'1fr':'1.05fr 1fr',gap:14,alignItems:'start',minWidth:0}}>
         {/* ── LEFT: form ── */}
@@ -225,7 +227,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
                       const prevCount = INVOICES.filter(inv => inv.student === s.id).length;
                       return (
                         <option key={s.id} value={s.id}>
-                          {prevCount > 0 ? `● ` : ''}{s.en || s.name} · {s.id}
+                          {prevCount > 0 ? `● ` : ''}{s.en || s.name}
                         </option>
                       );
                     })}
@@ -247,17 +249,22 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
                   })()}
                   <Icon name="chev" size={14} style={{position:'absolute',right:12,top:14,transform:'rotate(90deg)',pointerEvents:'none'}}/>
                 </div>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px 14px',marginTop:12}}>
-                  {[['ID', student?.id],
-                    ['ថ្នាក់', clsKm(student?.cls)],
-                    ['ទូរស័ព្ទ', student?.phone || '—'],
-                    ['គ្រូ', student?.inst || '—']].map(([k, v], i) => (
-                    <div key={i} style={{display:'flex',flexDirection:'column',gap:1,minWidth:0,textAlign:'left'}}>
-                      <span style={{fontSize:10,color:'var(--ink-3)'}}>{k}</span>
-                      <span style={{fontSize:13,fontWeight:500,color:'var(--ink)'}}>{v || '—'}</span>
-                    </div>
-                  ))}
-                </div>
+              </div>
+            </div>
+            {/* Student details — full card width, left-aligned with the card.
+                Instructor gets its own full-width row so the name never wraps. */}
+            <div style={{marginTop:14,display:'flex',flexDirection:'column',gap:10}}>
+              <div style={{display:'grid',gridTemplateColumns:'1.1fr 0.6fr 1.2fr',gap:12}}>
+                {[['ID', student?.id], ['ថ្នាក់', clsKm(student?.cls)], ['ទូរស័ព្ទ', student?.phone || '—']].map(([k, v], i) => (
+                  <div key={i} style={{display:'flex',flexDirection:'column',gap:1,minWidth:0}}>
+                    <span style={{fontSize:10,color:'var(--ink-3)'}}>{k}</span>
+                    <span style={{fontSize:13,fontWeight:500,color:'var(--ink)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{v || '—'}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{display:'flex',flexDirection:'column',gap:1}}>
+                <span style={{fontSize:10,color:'var(--ink-3)'}}>គ្រូ</span>
+                <span style={{fontSize:13,fontWeight:500,color:'var(--ink)'}}>{student?.inst || '—'}</span>
               </div>
             </div>
           </Card>
@@ -600,9 +607,15 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
         )}
       </div>
 
-      {/* Mobile: send action pinned at the very bottom of the form */}
+      {/* Mobile: send action pinned to the bottom of the screen (above nav) */}
       {bp.mobile && (
-        <div style={{display:'flex',gap:8,marginTop:2}}>
+        <div style={{
+          position:'fixed', left:0, right:0,
+          bottom:'calc(72px + env(safe-area-inset-bottom,0px))',
+          padding:'8px 14px', background:'var(--bg)',
+          borderTop:'1px solid var(--border)', zIndex:60,
+          display:'flex', gap:8,
+        }}>
           {sent && (
             <Btn kind="ghost" size="lg" icon={<Icon name="download" size={15}/>} onClick={printInvoice}
               style={{flex:1,justifyContent:'center',color:'var(--good)',borderColor:'var(--good)'}}>
