@@ -311,7 +311,9 @@ const InstructorsScreen = ({ role = 'admin' }) => {
     />}
 
     <div style={{display:'grid',gridTemplateColumns: bp.mobile ? 'repeat(auto-fill,minmax(160px,1fr))' : 'repeat(auto-fill,minmax(300px,1fr))',gap: bp.mobile ? 10 : 14}}>
-      {INSTRUCTORS.filter(i => i.visible !== false).map(i => {
+      {INSTRUCTORS.filter(i => i.visible !== false)
+        .sort((a, b) => String(a.id||'').localeCompare(String(b.id||''), undefined, { numeric:true }))
+        .map(i => {
         const sf = (window.__staffData||[]).find(s => s.instId === i.id || s.en === i.en);
         const phone = (sf?.phone && sf.phone !== '—' ? sf.phone : null) || (i.phone && i.phone !== '—' ? i.phone : null);
         const email = (sf?.email && sf.email !== '—' ? sf.email : null) || (i.email && i.email !== '—' ? i.email : null);

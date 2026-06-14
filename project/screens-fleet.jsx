@@ -3165,7 +3165,7 @@ const VehicleScreen = () => {
   const bp = useBreakpoint();
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   const [selectedId, setSelectedId] = React.useState(null);
-  const [sortBy,  setSortBy]  = React.useState('plate');
+  const [sortBy,  setSortBy]  = React.useState('id');
   const [sortAsc, setSortAsc] = React.useState(true);
   React.useEffect(() => {
     const prev = window.__notifyVehiclesChanged;
@@ -3182,11 +3182,13 @@ const VehicleScreen = () => {
       const d = (STATUS_ORDER[a.status]||9) - (STATUS_ORDER[b.status]||9);
       return sortAsc ? d : -d;
     }
-    const va = (sortBy === 'make' ? a.make : sortBy === 'cls' ? a.cls : a.plate) || '';
-    const vb = (sortBy === 'make' ? b.make : sortBy === 'cls' ? b.cls : b.plate) || '';
-    return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+    const va = (sortBy === 'make' ? a.make : sortBy === 'cls' ? a.cls : sortBy === 'id' ? a.id : a.plate) || '';
+    const vb = (sortBy === 'make' ? b.make : sortBy === 'cls' ? b.cls : sortBy === 'id' ? b.id : b.plate) || '';
+    const d = String(va).localeCompare(String(vb), undefined, { numeric:true });
+    return sortAsc ? d : -d;
   });
   const SORT_OPTS = [
+    { id:'id',     km:'លេខរៀង',   en:'ID'    },
     { id:'plate',  km:'ផ្លាកលេខ', en:'Plate' },
     { id:'make',   km:'ឈ្មោះ',    en:'Make'  },
     { id:'status', km:'ស្ថានភាព', en:'Status'},

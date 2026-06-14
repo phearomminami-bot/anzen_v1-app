@@ -16163,7 +16163,9 @@ var InstructorsScreen = ({
       gridTemplateColumns: bp.mobile ? 'repeat(auto-fill,minmax(160px,1fr))' : 'repeat(auto-fill,minmax(300px,1fr))',
       gap: bp.mobile ? 10 : 14
     }
-  }, INSTRUCTORS.filter(i => i.visible !== false).map(i => {
+  }, INSTRUCTORS.filter(i => i.visible !== false).sort((a, b) => String(a.id || '').localeCompare(String(b.id || ''), undefined, {
+    numeric: true
+  })).map(i => {
     var sf = (window.__staffData || []).find(s => s.instId === i.id || s.en === i.en);
     var phone = (sf?.phone && sf.phone !== '—' ? sf.phone : null) || (i.phone && i.phone !== '—' ? i.phone : null);
     var email = (sf?.email && sf.email !== '—' ? sf.email : null) || (i.email && i.email !== '—' ? i.email : null);
@@ -36651,7 +36653,7 @@ var VehicleScreen = () => {
   var bp = useBreakpoint();
   var [, forceUpdate] = React.useReducer(x => x + 1, 0);
   var [selectedId, setSelectedId] = React.useState(null);
-  var [sortBy, setSortBy] = React.useState('plate');
+  var [sortBy, setSortBy] = React.useState('id');
   var [sortAsc, setSortAsc] = React.useState(true);
   React.useEffect(() => {
     var prev = window.__notifyVehiclesChanged;
@@ -36670,14 +36672,21 @@ var VehicleScreen = () => {
   };
   var sorted = [...visible].sort((a, b) => {
     if (sortBy === 'status') {
-      var d = (STATUS_ORDER[a.status] || 9) - (STATUS_ORDER[b.status] || 9);
-      return sortAsc ? d : -d;
+      var _d = (STATUS_ORDER[a.status] || 9) - (STATUS_ORDER[b.status] || 9);
+      return sortAsc ? _d : -_d;
     }
-    var va = (sortBy === 'make' ? a.make : sortBy === 'cls' ? a.cls : a.plate) || '';
-    var vb = (sortBy === 'make' ? b.make : sortBy === 'cls' ? b.cls : b.plate) || '';
-    return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+    var va = (sortBy === 'make' ? a.make : sortBy === 'cls' ? a.cls : sortBy === 'id' ? a.id : a.plate) || '';
+    var vb = (sortBy === 'make' ? b.make : sortBy === 'cls' ? b.cls : sortBy === 'id' ? b.id : b.plate) || '';
+    var d = String(va).localeCompare(String(vb), undefined, {
+      numeric: true
+    });
+    return sortAsc ? d : -d;
   });
   var SORT_OPTS = [{
+    id: 'id',
+    km: 'លេខរៀង',
+    en: 'ID'
+  }, {
     id: 'plate',
     km: 'ផ្លាកលេខ',
     en: 'Plate'
@@ -37385,7 +37394,9 @@ var StudentsScreenV2 = () => {
       delete window.__notifyStudentsChanged;
     };
   }, [forceUpdate]);
-  var allStudents = STUDENTS.map(extendStudent);
+  var allStudents = STUDENTS.map(extendStudent).sort((a, b) => String(a.id || '').localeCompare(String(b.id || ''), undefined, {
+    numeric: true
+  }));
   var selected = allStudents.find(s => s.id === selectedId) || allStudents[0];
   var goToProfile = s => {
     setSelectedId(s.id);

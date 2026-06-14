@@ -238,7 +238,8 @@ const StudentsScreenV2 = () => {
     return () => { delete window.__notifyStudentsChanged; };
   }, [forceUpdate]);
 
-  const allStudents = STUDENTS.map(extendStudent);
+  const allStudents = STUDENTS.map(extendStudent)
+    .sort((a, b) => String(a.id||'').localeCompare(String(b.id||''), undefined, { numeric:true }));
   const selected    = allStudents.find(s => s.id === selectedId) || allStudents[0];
 
   const goToProfile  = (s) => { setSelectedId(s.id); setTab('profile'); setEditing(false); };
