@@ -204,15 +204,54 @@
   }
 
   // ── Realtime ──────────────────────────────────────────────────────────────
+  // Reload ONLY the table that changed — not every table. A full select('*')
+  // across all tables re-downloads every base64 photo + the logo on each edit,
+  // which is what burned through the free-tier egress quota.
+  const TABLE_ARR = {
+    students: () => window.STUDENTS, instructors: () => window.INSTRUCTORS,
+    vehicles: () => window.VEHICLES, lessons: () => window.LESSONS,
+    invoices: () => window.INVOICES, staff: () => window.STAFF,
+  };
+  window.__sbLoadTable = async (t) => {
+    if (!window.sb || !window.__sbReady) return;
+    if (t === 'vehicle_inspections') {
+      const insp = await pull(t); if (insp) { window.__vehicleInspections = insp.map(rowObj); refreshUI(); }
+      return;
+    }
+    const getArr = TABLE_ARR[t];
+    if (!getArr) { return window.__sbLoadAll && window.__sbLoadAll(); }
+    const rows = await pull(t);
+    if (rows === null) return;               // network error — skip this reload
+    fill(getArr(), rows, false, t);
+    if (t === 'staff') window.__staffData = rows.map(rowObj);
+    snapshotIds();
+    refreshUI();
+  };
+
   let rtTimer = null;
-  function scheduleRealtimeReload() {
+  const rtTables = new Set();
+  let rtPendingHidden = false;
+  function scheduleRealtimeReload(table) {
+    if (table) rtTables.add(table);
+    // Tab hidden → nobody's looking, so don't spend egress. Reload once on return.
+    if (typeof document !== 'undefined' && document.hidden) { rtPendingHidden = true; return; }
     clearTimeout(rtTimer);
     rtTimer = setTimeout(() => {
-      // Never pull from cloud while we still have local changes waiting to push —
-      // a reload could otherwise clobber them. Keep re-checking until the push lands.
+      // Never pull while local changes are still waiting to push.
       if (window.__sbHasPendingSync) { scheduleRealtimeReload(); return; }
-      window.__sbLoadAll && window.__sbLoadAll().catch(() => {});
-    }, 500);
+      const tables = [...rtTables]; rtTables.clear();
+      // Many tables at once → one full reload beats several round-trips.
+      if (tables.length === 0 || tables.length >= 4) {
+        window.__sbLoadAll && window.__sbLoadAll().catch(() => {});
+      } else {
+        tables.forEach(t => window.__sbLoadTable(t).catch(() => {}));
+      }
+    }, 1200);
+  }
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && rtPendingHidden) { rtPendingHidden = false; scheduleRealtimeReload(); }
+    });
   }
 
   window.__sbSubscribe = function () {
@@ -223,7 +262,7 @@
       try {
         window.sb
           .channel('anzen-rt-' + table)
-          .on('postgres_changes', { event: '*', schema: 'public', table }, scheduleRealtimeReload)
+          .on('postgres_changes', { event: '*', schema: 'public', table }, () => scheduleRealtimeReload(table))
           .subscribe(status => { if (status === 'SUBSCRIBED') console.log('[Anzen] RT:', table); });
       } catch (e) { console.warn('[Anzen] RT subscribe failed:', table, e); }
     });

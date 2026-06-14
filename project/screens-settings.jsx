@@ -330,9 +330,15 @@ const SchoolInfo = ({ onDirty }) => {
   const handleLogoFile = e => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => { up(setLogo,'logo')(ev.target.result); };
-    reader.readAsDataURL(file);
+    // Shrink the logo before storing — it lives in school_settings and is pulled
+    // on every full load, so a multi-MB original would waste a lot of egress.
+    if (window.resizeImageFile) {
+      window.resizeImageFile(file, 256, 256).then(url => up(setLogo,'logo')(url));
+    } else {
+      const reader = new FileReader();
+      reader.onload = ev => { up(setLogo,'logo')(ev.target.result); };
+      reader.readAsDataURL(file);
+    }
   };
 
   const removeLogo = () => { up(setLogo,'logo')(null); };

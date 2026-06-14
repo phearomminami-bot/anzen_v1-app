@@ -1654,7 +1654,7 @@ const FvDetailRow = ({ v, onEdit, forceUpdate }) => {
     reader.onload = (ev) => {
       const dataUrl = ev.target.result;
       if (window.resizeImageFile) {
-        window.resizeImageFile(file, 1200, 900).then(url => commitPhoto(url));
+        window.resizeImageFile(file, 720, 540).then(url => commitPhoto(url));
       } else {
         commitPhoto(dataUrl);
       }
@@ -2511,7 +2511,7 @@ const FvIncidentForm = ({ vehicles, onClose, forceUpdate }) => {
     files.slice(0, 6 - photos.length).forEach(f => {
       if (!f.type.startsWith('image/')) return;
       const add = (d) => setPhotos(p => p.length < 6 ? [...p, d] : p);
-      if (window.resizeImageFile) window.resizeImageFile(f, 1280, 1280).then(add).catch(() => { const r=new FileReader(); r.onload=()=>add(r.result); r.readAsDataURL(f); });
+      if (window.resizeImageFile) window.resizeImageFile(f, 800, 800).then(add).catch(() => { const r=new FileReader(); r.onload=()=>add(r.result); r.readAsDataURL(f); });
       else { const r = new FileReader(); r.onload = () => add(r.result); r.readAsDataURL(f); }
     });
   };

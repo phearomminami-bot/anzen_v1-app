@@ -38,7 +38,7 @@ const resizeImageFile = (file, maxW = 400, maxH = 400) => new Promise(resolve =>
       canvas.width  = Math.round(img.width  * ratio);
       canvas.height = Math.round(img.height * ratio);
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL('image/jpeg', 0.82));
+      resolve(canvas.toDataURL('image/jpeg', 0.72));
     };
     img.src = e.target.result;
   };

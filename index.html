@@ -2706,7 +2706,7 @@ var resizeImageFile = (file, maxW = 400, maxH = 400) => new Promise(resolve => {
       canvas.width = Math.round(img.width * ratio);
       canvas.height = Math.round(img.height * ratio);
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL('image/jpeg', 0.82));
+      resolve(canvas.toDataURL('image/jpeg', 0.72));
     };
     img.src = e.target.result;
   };
@@ -33386,7 +33386,7 @@ var FvDetailRow = ({
     reader.onload = ev => {
       var dataUrl = ev.target.result;
       if (window.resizeImageFile) {
-        window.resizeImageFile(file, 1200, 900).then(url => commitPhoto(url));
+        window.resizeImageFile(file, 720, 540).then(url => commitPhoto(url));
       } else {
         commitPhoto(dataUrl);
       }
@@ -35183,7 +35183,7 @@ var FvIncidentForm = ({
     files.slice(0, 6 - photos.length).forEach(f => {
       if (!f.type.startsWith('image/')) return;
       var add = d => setPhotos(p => p.length < 6 ? [...p, d] : p);
-      if (window.resizeImageFile) window.resizeImageFile(f, 1280, 1280).then(add).catch(() => {
+      if (window.resizeImageFile) window.resizeImageFile(f, 800, 800).then(add).catch(() => {
         var r = new FileReader();
         r.onload = () => add(r.result);
         r.readAsDataURL(f);
@@ -49378,11 +49378,15 @@ var SchoolInfo = ({
   var handleLogoFile = e => {
     var file = e.target.files?.[0];
     if (!file) return;
-    var reader = new FileReader();
-    reader.onload = ev => {
-      up(setLogo, 'logo')(ev.target.result);
-    };
-    reader.readAsDataURL(file);
+    if (window.resizeImageFile) {
+      window.resizeImageFile(file, 256, 256).then(url => up(setLogo, 'logo')(url));
+    } else {
+      var reader = new FileReader();
+      reader.onload = ev => {
+        up(setLogo, 'logo')(ev.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
   var removeLogo = () => {
     up(setLogo, 'logo')(null);
@@ -57810,16 +57814,66 @@ Object.assign(window, {
       if (key && lib[key]) lib[key].push(rowObj(r));
     });
   }
+  var TABLE_ARR = {
+    students: () => window.STUDENTS,
+    instructors: () => window.INSTRUCTORS,
+    vehicles: () => window.VEHICLES,
+    lessons: () => window.LESSONS,
+    invoices: () => window.INVOICES,
+    staff: () => window.STAFF
+  };
+  window.__sbLoadTable = async t => {
+    if (!window.sb || !window.__sbReady) return;
+    if (t === 'vehicle_inspections') {
+      var insp = await pull(t);
+      if (insp) {
+        window.__vehicleInspections = insp.map(rowObj);
+        refreshUI();
+      }
+      return;
+    }
+    var getArr = TABLE_ARR[t];
+    if (!getArr) {
+      return window.__sbLoadAll && window.__sbLoadAll();
+    }
+    var rows = await pull(t);
+    if (rows === null) return;
+    fill(getArr(), rows, false, t);
+    if (t === 'staff') window.__staffData = rows.map(rowObj);
+    snapshotIds();
+    refreshUI();
+  };
   var rtTimer = null;
-  function scheduleRealtimeReload() {
+  var rtTables = new Set();
+  var rtPendingHidden = false;
+  function scheduleRealtimeReload(table) {
+    if (table) rtTables.add(table);
+    if (typeof document !== 'undefined' && document.hidden) {
+      rtPendingHidden = true;
+      return;
+    }
     clearTimeout(rtTimer);
     rtTimer = setTimeout(() => {
       if (window.__sbHasPendingSync) {
         scheduleRealtimeReload();
         return;
       }
-      window.__sbLoadAll && window.__sbLoadAll().catch(() => {});
-    }, 500);
+      var tables = [...rtTables];
+      rtTables.clear();
+      if (tables.length === 0 || tables.length >= 4) {
+        window.__sbLoadAll && window.__sbLoadAll().catch(() => {});
+      } else {
+        tables.forEach(t => window.__sbLoadTable(t).catch(() => {}));
+      }
+    }, 1200);
+  }
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && rtPendingHidden) {
+        rtPendingHidden = false;
+        scheduleRealtimeReload();
+      }
+    });
   }
   window.__sbSubscribe = function () {
     if (!window.sb || window.__sbSubscribed) return;
@@ -57831,7 +57885,7 @@ Object.assign(window, {
           event: '*',
           schema: 'public',
           table
-        }, scheduleRealtimeReload).subscribe(status => {
+        }, () => scheduleRealtimeReload(table)).subscribe(status => {
           if (status === 'SUBSCRIBED') console.log('[Anzen] RT:', table);
         });
       } catch (e) {
