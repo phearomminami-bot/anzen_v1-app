@@ -14658,7 +14658,7 @@ var DashboardAdmin = () => {
       }
     }, (() => {
       var sorted = todayLessons.slice().sort((a, b) => a.h - b.h);
-      var cols = sorted.length > 5 ? 2 : 1;
+      var cols = !bp.mobile && sorted.length > 5 ? 2 : 1;
       var half = Math.ceil(sorted.length / 2);
       return React.createElement("div", {
         style: {
@@ -14721,7 +14721,7 @@ var DashboardAdmin = () => {
       }));
     })(), (() => {
       var sorted = tomorrowLessons.slice().sort((a, b) => a.h - b.h);
-      var cols = sorted.length > 5 ? 2 : 1;
+      var cols = !bp.mobile && sorted.length > 5 ? 2 : 1;
       var half = Math.ceil(sorted.length / 2);
       return React.createElement("div", {
         style: {

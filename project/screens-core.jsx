@@ -259,7 +259,7 @@ const DashboardAdmin = () => {
           {/* Column 1 — Today */}
           {(() => {
             const sorted = todayLessons.slice().sort((a,b)=>a.h-b.h);
-            const cols = sorted.length > 5 ? 2 : 1;
+            const cols = (!bp.mobile && sorted.length > 5) ? 2 : 1;
             const half = Math.ceil(sorted.length / 2);
             return (
               <div style={{display:'flex',flexDirection:'column',gap:8}}>
@@ -288,7 +288,7 @@ const DashboardAdmin = () => {
           {/* Column 2 — Tomorrow */}
           {(() => {
             const sorted = tomorrowLessons.slice().sort((a,b)=>a.h-b.h);
-            const cols = sorted.length > 5 ? 2 : 1;
+            const cols = (!bp.mobile && sorted.length > 5) ? 2 : 1;
             const half = Math.ceil(sorted.length / 2);
             return (
               <div style={{display:'flex',flexDirection:'column',gap:8}}>
