@@ -18,6 +18,12 @@ const clsKm = (v) => CLS_KM[clsLetter(v)] || 'ខ';
 const ST_TYPE_EN = { 'ធម្មតា':'Regular', 'ពិសេស':'Special', 'SSW':'SSW' };
 const stTypeEn = (t) => ST_TYPE_EN[t] || 'Regular';
 
+// A student is "graduated" once explicitly marked finished. Graduated students
+// are hidden from the active lists/pickers but kept under the "Completed" filter.
+// Reversible — clearing the flag restores them everywhere.
+const isGraduated = (s) => !!(s && s.graduated);
+if (typeof window !== 'undefined') window.__isGraduated = isGraduated;
+
 // Pure-Khmer lesson type label (no English/Japanese), derived from the colour
 // code so it's consistent regardless of what was stored in l.type.
 const lessonTypeKm = (l) => {
@@ -171,12 +177,12 @@ const StudentsScreenV2 = () => {
   const [selectedId, setSelectedId] = React.useState(STUDENTS[0]?.id);
   const [editing, setEditing] = React.useState(false);
   const [mobileProfileId, setMobileProfileId] = React.useState(null);
-  const [mobileEdit, setMobileEdit] = React.useState(false);
+  const [mobileEdit, setMobileEdit] = React.useState(null);  // holds the section id being edited, or null
   const [openSections, setOpenSections] = React.useState({bio:true});
 
   // Swipe from the left edge → go back (edit → profile → list)
   const mobileBack = React.useCallback(() => {
-    if (mobileEdit) setMobileEdit(false);
+    if (mobileEdit) setMobileEdit(null);
     else if (mobileProfileId) setMobileProfileId(null);
   }, [mobileEdit, mobileProfileId]);
   useBackHandler(bp.mobile && (mobileEdit || mobileProfileId), mobileBack);
@@ -234,6 +240,18 @@ const StudentsScreenV2 = () => {
     forceUpdate();
   };
 
+  // Mark a student as graduated / restore them — fully reversible.
+  const toggleGraduate = (stu) => {
+    const i = STUDENTS.findIndex(x => x.id === stu.id);
+    if (i === -1) return;
+    STUDENTS[i].graduated = !STUDENTS[i].graduated;
+    if (window.saveAllData) window.saveAllData();
+    forceUpdate();
+    toast(STUDENTS[i].graduated
+      ? tr('បាន​សម្គាល់​ថា​បញ្ចប់​ការសិក្សា ✓', 'Marked as graduated ✓')
+      : tr('បាន​យក​មក​សិក្សា​វិញ', 'Restored to active'), 'good');
+  };
+
   // Save an instructor evaluation/feedback back onto a lesson (rating, notes,
   // status). Persists to localStorage + cloud via saveAllData.
   const saveLessonFeedback = (lesson, fields) => {
@@ -266,21 +284,24 @@ const StudentsScreenV2 = () => {
     {id:'docs',      km:'ឯកសារ',        en:'Documents',  icon:'book'},
   ];
 
-  const filtered = allStudents.filter(s =>
-    filter==='all'        ||
-    (filter==='new'        && s.status==='New') ||
-    (filter==='inprogress' && s.status==='In progress') ||
-    (filter==='exam'       && s.status==='Road exam soon') ||
-    (filter==='cleared'    && s.status==='Cleared') ||
-    (filter==='graduated'  && s.exam_result==='pass') ||
-    (filter==='B'          && clsLetter(s.cls)==='B') ||
-    (filter==='A'          && clsLetter(s.cls)==='A') ||
-    (filter==='C'          && clsLetter(s.cls)==='C') ||
-    (filter==='t_normal'   && s.studentType==='ធម្មតា') ||
-    (filter==='t_special'  && s.studentType==='ពិសេស') ||
-    (filter==='t_ssw'      && s.studentType==='SSW') ||
-    (filter==='finished'   && (s.status==='Cleared' || s.exam_result==='pass'))
-  );
+  const filtered = allStudents.filter(s => {
+    if (filter === 'finished') return isGraduated(s);
+    if (isGraduated(s)) return false;   // graduated → hidden from every other view
+    return (
+      filter==='all'        ||
+      (filter==='new'        && s.status==='New') ||
+      (filter==='inprogress' && s.status==='In progress') ||
+      (filter==='exam'       && s.status==='Road exam soon') ||
+      (filter==='cleared'    && s.status==='Cleared') ||
+      (filter==='graduated'  && s.exam_result==='pass') ||
+      (filter==='B'          && clsLetter(s.cls)==='B') ||
+      (filter==='A'          && clsLetter(s.cls)==='A') ||
+      (filter==='C'          && clsLetter(s.cls)==='C') ||
+      (filter==='t_normal'   && s.studentType==='ធម្មតា') ||
+      (filter==='t_special'  && s.studentType==='ពិសេស') ||
+      (filter==='t_ssw'      && s.studentType==='SSW')
+    );
+  });
 
   const examReady = allStudents.filter(s => s.status==='Road exam soon').length;
 
@@ -307,7 +328,7 @@ const StudentsScreenV2 = () => {
             <span style={{flex:1,minWidth:0,fontSize:14,fontWeight:700,fontFamily:'var(--font-km)',color:'var(--ink)'}}>
               {tr(km, en)}
             </span>
-            {action}
+            {isOpen && action}
             <span style={{fontSize:13,color:'var(--ink-3)',transition:'transform .2s',flexShrink:0,
               transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)'}}>▾</span>
           </div>
@@ -319,15 +340,15 @@ const StudentsScreenV2 = () => {
         </div>
       );
     };
-    // Small "Edit" toggle that lives in a section header (click to show the
-    // editor, click again to hide it).
-    const SectionEditBtn = () => (
-      <button onClick={(e)=>{ e.stopPropagation(); setOpenSections(p=>({...p,bio:true})); setMobileEdit(v=>!v); }}
+    // Per-section "Edit" toggle — only rendered once a section is expanded.
+    // Click to reveal the editor inside that section, click again to hide it.
+    const SectionEditBtn = ({sec}) => (
+      <button onClick={(e)=>{ e.stopPropagation(); setMobileEdit(m => m===sec ? null : sec); }}
         style={{display:'flex',alignItems:'center',gap:4,padding:'5px 10px',borderRadius:7,flexShrink:0,
-          border:'1px solid '+(mobileEdit?'var(--accent)':'var(--border)'),
-          background:mobileEdit?'var(--accent)':'var(--surface)',
-          color:mobileEdit?'#fff':'var(--ink-2)',cursor:'pointer',fontSize:12,fontWeight:600,fontFamily:'inherit'}}>
-        <Icon name="users" size={12}/>{mobileEdit ? tr('បិទ','Close') : tr('កែ','Edit')}
+          border:'1px solid '+(mobileEdit===sec?'var(--accent)':'var(--border)'),
+          background:mobileEdit===sec?'var(--accent)':'var(--surface)',
+          color:mobileEdit===sec?'#fff':'var(--ink-2)',cursor:'pointer',fontSize:12,fontWeight:600,fontFamily:'inherit'}}>
+        <Icon name="users" size={12}/>{mobileEdit===sec ? tr('បិទ','Close') : tr('កែ','Edit')}
       </button>
     );
 
@@ -350,6 +371,14 @@ const StudentsScreenV2 = () => {
       const studentLessons = LESSONS.filter(l => l.studentId === s.id).slice()
         .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))
         .slice(0, 12);
+      const grad = isGraduated(s);
+      // Shared edit form — rendered inside whichever section is being edited.
+      const editForm = (
+        <StudentEditPanel key={s.id} s={s}
+          onSave={(u)=>{ saveStudent(u); setMobileEdit(null); }}
+          onCancel={()=>setMobileEdit(null)}
+          onDelete={(id)=>{ deleteStudent(id); setMobileEdit(null); setMobileProfileId(null); }}/>
+      );
 
       return (
         <div style={{display:'flex',flexDirection:'column'}}>
@@ -366,14 +395,21 @@ const StudentsScreenV2 = () => {
             </div>
           </div>
 
+          {/* Graduation toggle — hides the student from active lists when on */}
+          <button onClick={()=>toggleGraduate(s)} style={{
+            display:'flex',alignItems:'center',justifyContent:'center',gap:8,width:'100%',marginBottom:12,
+            padding:'10px',borderRadius:9,cursor:'pointer',fontSize:13,fontWeight:600,fontFamily:'inherit',
+            border:'1.5px solid '+(grad?'var(--good)':'var(--border-strong)'),
+            background:grad?'var(--good)':'var(--surface)', color:grad?'#fff':'var(--ink-2)',
+          }}>
+            <Icon name={grad?'check':'star'} size={15} stroke={2.2}/>
+            {grad ? tr('បាន​បញ្ចប់​ការសិក្សា — ចុច​ដើម្បី​យក​មក​វិញ','Graduated — tap to restore')
+                  : tr('សម្គាល់​ថា​បាន​បញ្ចប់​ការសិក្សា','Mark as graduated')}
+          </button>
+
           {/* Section 1: Photo & bio — edit toggle lives in the header */}
-          <CvSection id="bio" km="រូបថត និង ប្រវត្តិរូបសង្ខេប" en="Photo & Bio" action={<SectionEditBtn/>}>
-            {mobileEdit ? (
-              <StudentEditPanel key={s.id} s={s}
-                onSave={(u)=>{ saveStudent(u); setMobileEdit(false); }}
-                onCancel={()=>setMobileEdit(false)}
-                onDelete={(id)=>{ deleteStudent(id); setMobileEdit(false); setMobileProfileId(null); }}/>
-            ) : (<>
+          <CvSection id="bio" km="រូបថត និង ប្រវត្តិរូបសង្ខេប" en="Photo & Bio" action={<SectionEditBtn sec="bio"/>}>
+            {mobileEdit==='bio' ? editForm : (<>
             <div style={{display:'flex',gap:14,marginBottom:12,alignItems:'flex-start'}}>
               <div style={{textAlign:'center',flexShrink:0}}>
                 <UploadAvatar id={s.id} photo={s.photo} size={72} onUpload={savePhoto}/>
@@ -401,7 +437,8 @@ const StudentsScreenV2 = () => {
           </CvSection>
 
           {/* Section 2: Enrollment & payment */}
-          <CvSection id="payment" km="ចុះឈ្មោះ និង កាបង់ប្រាក់" en="Enrollment & Payment">
+          <CvSection id="payment" km="ចុះឈ្មោះ និង កាបង់ប្រាក់" en="Enrollment & Payment" action={<SectionEditBtn sec="payment"/>}>
+            {mobileEdit==='payment' ? editForm : (<>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px 14px',marginBottom:12}}>
               <InfoPair label={tr('ថ្ងៃចុះឈ្មោះ','Reg. date')} val={s.regDate}/>
               <InfoPair label={tr('ថ្លៃ​វគ្គ','Course fee')} val={`$${price}`}/>
@@ -427,10 +464,12 @@ const StudentsScreenV2 = () => {
                 ))}
               </div>
             )}
+            </>)}
           </CvSection>
 
           {/* Section 3: Study history */}
-          <CvSection id="study" km="ប្រវត្តសិក្សា" en="Study History">
+          <CvSection id="study" km="ប្រវត្តសិក្សា" en="Study History" action={<SectionEditBtn sec="study"/>}>
+            {mobileEdit==='study' ? editForm : (<>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px 14px',marginBottom:12}}>
               <InfoPair label={tr('ចាប់ផ្ដើម','Start')} val={s.study_start || s.regDate}/>
               <InfoPair label={tr('បញ្ចប់','Completion')} val={s.study_end}/>
@@ -446,6 +485,7 @@ const StudentsScreenV2 = () => {
             <div style={{height:6,background:'var(--surface-muted)',borderRadius:999,overflow:'hidden'}}>
               <div style={{width:`${pct}%`,height:'100%',background:'var(--accent)',borderRadius:999}}/>
             </div>
+            </>)}
           </CvSection>
 
           {/* Section 4: Documents */}

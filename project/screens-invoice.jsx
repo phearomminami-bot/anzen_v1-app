@@ -223,7 +223,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
                     borderRadius:8, fontSize:14, fontWeight:500, fontFamily:'inherit', color:'var(--ink)',
                     cursor:'default',
                   }}>
-                    {STUDENTS.map(s => {
+                    {STUDENTS.filter(s => !(window.__isGraduated && window.__isGraduated(s))).map(s => {
                       const prevCount = INVOICES.filter(inv => inv.student === s.id).length;
                       return (
                         <option key={s.id} value={s.id}>

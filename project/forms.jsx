@@ -2110,7 +2110,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
           <Field label={tr('សិស្ស','Student')} full>
             <Select value={studentId} onChange={e=>setStudentId(e.target.value)}>
               <option value="">{tr('ក្រុម / មិន​ផ្ទាល់​ខ្លួន','Group / not individual')}</option>
-              {STUDENTS.map(s=>(
+              {STUDENTS.filter(s => !(window.__isGraduated && window.__isGraduated(s)) || s.id===studentId).map(s=>(
                 <option key={s.id} value={s.id}>{s.en || s.name}</option>
               ))}
             </Select>

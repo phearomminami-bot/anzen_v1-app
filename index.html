@@ -910,10 +910,14 @@ window.__trRegistry = {
   "💬 Instructor comment...": "💬 មតិ​គ្រូ​លើ​មេរៀន​នេះ...",
   "Save feedback": "រក្សា​ទុក​មតិ",
   "Payment recorded": "បានចងចាំការបង់",
+  "Marked as graduated ✓": "បាន​សម្គាល់​ថា​បញ្ចប់​ការសិក្សា ✓",
+  "Restored to active": "បាន​យក​មក​សិក្សា​វិញ",
   "Feedback saved ✓": "បាន​រក្សា​ទុក​មតិ ✓",
   "Student removed": "បានលុបសិស្ស",
   "Completed": "រួច​រាល់",
   "Back": "ត្រឡប់",
+  "Graduated — tap to restore": "បាន​បញ្ចប់​ការសិក្សា — ចុច​ដើម្បី​យក​មក​វិញ",
+  "Mark as graduated": "សម្គាល់​ថា​បាន​បញ្ចប់​ការសិក្សា",
   "Age": "អាយុ",
   "y": "ឆ្នាំ",
   "Trans.": "ប្រអប់លេខ",
@@ -1462,10 +1466,14 @@ window.__trGroups = {
     "💬 Instructor comment...": "💬 មតិ​គ្រូ​លើ​មេរៀន​នេះ...",
     "Save feedback": "រក្សា​ទុក​មតិ",
     "Payment recorded": "បានចងចាំការបង់",
+    "Marked as graduated ✓": "បាន​សម្គាល់​ថា​បញ្ចប់​ការសិក្សា ✓",
+    "Restored to active": "បាន​យក​មក​សិក្សា​វិញ",
     "Feedback saved ✓": "បាន​រក្សា​ទុក​មតិ ✓",
     "Student removed": "បានលុបសិស្ស",
     "Completed": "បាន​បញ្ចប់",
     "Back": "ត្រឡប់",
+    "Graduated — tap to restore": "បាន​បញ្ចប់​ការសិក្សា — ចុច​ដើម្បី​យក​មក​វិញ",
+    "Mark as graduated": "សម្គាល់​ថា​បាន​បញ្ចប់​ការសិក្សា",
     "Age": "អាយុ",
     "y": "ឆ្នាំ",
     "Trans.": "ប្រអប់លេខ",
@@ -7172,7 +7180,7 @@ var NewLessonForm = ({
     onChange: e => setStudentId(e.target.value)
   }, React.createElement("option", {
     value: ""
-  }, tr('ក្រុម / មិន​ផ្ទាល់​ខ្លួន', 'Group / not individual')), STUDENTS.map(s => React.createElement("option", {
+  }, tr('ក្រុម / មិន​ផ្ទាល់​ខ្លួន', 'Group / not individual')), STUDENTS.filter(s => !(window.__isGraduated && window.__isGraduated(s)) || s.id === studentId).map(s => React.createElement("option", {
     key: s.id,
     value: s.id
   }, s.en || s.name)))), React.createElement(Field, {
@@ -36985,6 +36993,8 @@ var ST_TYPE_EN = {
   'SSW': 'SSW'
 };
 var stTypeEn = t => ST_TYPE_EN[t] || 'Regular';
+var isGraduated = s => !!(s && s.graduated);
+if (typeof window !== 'undefined') window.__isGraduated = isGraduated;
 var lessonTypeKm = l => {
   if (!l) return 'មេរៀន';
   if (l.color === 'c' || l.color === 'e') return 'ទ្រឹស្ដី';
@@ -37257,12 +37267,12 @@ var StudentsScreenV2 = () => {
   var [selectedId, setSelectedId] = React.useState(STUDENTS[0]?.id);
   var [editing, setEditing] = React.useState(false);
   var [mobileProfileId, setMobileProfileId] = React.useState(null);
-  var [mobileEdit, setMobileEdit] = React.useState(false);
+  var [mobileEdit, setMobileEdit] = React.useState(null);
   var [openSections, setOpenSections] = React.useState({
     bio: true
   });
   var mobileBack = React.useCallback(() => {
-    if (mobileEdit) setMobileEdit(false);else if (mobileProfileId) setMobileProfileId(null);
+    if (mobileEdit) setMobileEdit(null);else if (mobileProfileId) setMobileProfileId(null);
   }, [mobileEdit, mobileProfileId]);
   useBackHandler(bp.mobile && (mobileEdit || mobileProfileId), mobileBack);
   React.useEffect(() => {
@@ -37331,6 +37341,14 @@ var StudentsScreenV2 = () => {
     if (window.saveAllData) window.saveAllData();
     forceUpdate();
   };
+  var toggleGraduate = stu => {
+    var i = STUDENTS.findIndex(x => x.id === stu.id);
+    if (i === -1) return;
+    STUDENTS[i].graduated = !STUDENTS[i].graduated;
+    if (window.saveAllData) window.saveAllData();
+    forceUpdate();
+    toast(STUDENTS[i].graduated ? tr('បាន​សម្គាល់​ថា​បញ្ចប់​ការសិក្សា ✓', 'Marked as graduated ✓') : tr('បាន​យក​មក​សិក្សា​វិញ', 'Restored to active'), 'good');
+  };
   var saveLessonFeedback = (lesson, fields) => {
     var i = LESSONS.findIndex(l => l.id === lesson.id);
     if (i !== -1) {
@@ -37381,7 +37399,11 @@ var StudentsScreenV2 = () => {
     en: 'Documents',
     icon: 'book'
   }];
-  var filtered = allStudents.filter(s => filter === 'all' || filter === 'new' && s.status === 'New' || filter === 'inprogress' && s.status === 'In progress' || filter === 'exam' && s.status === 'Road exam soon' || filter === 'cleared' && s.status === 'Cleared' || filter === 'graduated' && s.exam_result === 'pass' || filter === 'B' && clsLetter(s.cls) === 'B' || filter === 'A' && clsLetter(s.cls) === 'A' || filter === 'C' && clsLetter(s.cls) === 'C' || filter === 't_normal' && s.studentType === 'ធម្មតា' || filter === 't_special' && s.studentType === 'ពិសេស' || filter === 't_ssw' && s.studentType === 'SSW' || filter === 'finished' && (s.status === 'Cleared' || s.exam_result === 'pass'));
+  var filtered = allStudents.filter(s => {
+    if (filter === 'finished') return isGraduated(s);
+    if (isGraduated(s)) return false;
+    return filter === 'all' || filter === 'new' && s.status === 'New' || filter === 'inprogress' && s.status === 'In progress' || filter === 'exam' && s.status === 'Road exam soon' || filter === 'cleared' && s.status === 'Cleared' || filter === 'graduated' && s.exam_result === 'pass' || filter === 'B' && clsLetter(s.cls) === 'B' || filter === 'A' && clsLetter(s.cls) === 'A' || filter === 'C' && clsLetter(s.cls) === 'C' || filter === 't_normal' && s.studentType === 'ធម្មតា' || filter === 't_special' && s.studentType === 'ពិសេស' || filter === 't_ssw' && s.studentType === 'SSW';
+  });
   var examReady = allStudents.filter(s => s.status === 'Road exam soon').length;
   if (bp.mobile) {
     var filterChips = [{
@@ -37440,7 +37462,7 @@ var StudentsScreenV2 = () => {
           fontFamily: 'var(--font-km)',
           color: 'var(--ink)'
         }
-      }, tr(km, en)), action, React.createElement("span", {
+      }, tr(km, en)), isOpen && action, React.createElement("span", {
         style: {
           fontSize: 13,
           color: 'var(--ink-3)',
@@ -37456,14 +37478,12 @@ var StudentsScreenV2 = () => {
         }
       }, children));
     };
-    var SectionEditBtn = () => React.createElement("button", {
+    var SectionEditBtn = ({
+      sec
+    }) => React.createElement("button", {
       onClick: e => {
         e.stopPropagation();
-        setOpenSections(p => ({
-          ...p,
-          bio: true
-        }));
-        setMobileEdit(v => !v);
+        setMobileEdit(m => m === sec ? null : sec);
       },
       style: {
         display: 'flex',
@@ -37472,9 +37492,9 @@ var StudentsScreenV2 = () => {
         padding: '5px 10px',
         borderRadius: 7,
         flexShrink: 0,
-        border: '1px solid ' + (mobileEdit ? 'var(--accent)' : 'var(--border)'),
-        background: mobileEdit ? 'var(--accent)' : 'var(--surface)',
-        color: mobileEdit ? '#fff' : 'var(--ink-2)',
+        border: '1px solid ' + (mobileEdit === sec ? 'var(--accent)' : 'var(--border)'),
+        background: mobileEdit === sec ? 'var(--accent)' : 'var(--surface)',
+        color: mobileEdit === sec ? '#fff' : 'var(--ink-2)',
         cursor: 'pointer',
         fontSize: 12,
         fontWeight: 600,
@@ -37483,7 +37503,7 @@ var StudentsScreenV2 = () => {
     }, React.createElement(Icon, {
       name: "users",
       size: 12
-    }), mobileEdit ? tr('បិទ', 'Close') : tr('កែ', 'Edit'));
+    }), mobileEdit === sec ? tr('បិទ', 'Close') : tr('កែ', 'Edit'));
     var InfoPair = ({
       label,
       val
@@ -37511,6 +37531,21 @@ var StudentsScreenV2 = () => {
       var price = studentPrice(s);
       var paidAmt = Math.round((s.paid || 0) * price);
       var studentLessons = LESSONS.filter(l => l.studentId === s.id).slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 12);
+      var grad = isGraduated(s);
+      var editForm = React.createElement(StudentEditPanel, {
+        key: s.id,
+        s: s,
+        onSave: u => {
+          saveStudent(u);
+          setMobileEdit(null);
+        },
+        onCancel: () => setMobileEdit(null),
+        onDelete: id => {
+          deleteStudent(id);
+          setMobileEdit(null);
+          setMobileProfileId(null);
+        }
+      });
       return React.createElement("div", {
         style: {
           display: 'flex',
@@ -37550,25 +37585,37 @@ var StudentsScreenV2 = () => {
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap'
         }
-      }, lang === 'km' ? s.name : s.en || s.name)), React.createElement(CvSection, {
+      }, lang === 'km' ? s.name : s.en || s.name)), React.createElement("button", {
+        onClick: () => toggleGraduate(s),
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          width: '100%',
+          marginBottom: 12,
+          padding: '10px',
+          borderRadius: 9,
+          cursor: 'pointer',
+          fontSize: 13,
+          fontWeight: 600,
+          fontFamily: 'inherit',
+          border: '1.5px solid ' + (grad ? 'var(--good)' : 'var(--border-strong)'),
+          background: grad ? 'var(--good)' : 'var(--surface)',
+          color: grad ? '#fff' : 'var(--ink-2)'
+        }
+      }, React.createElement(Icon, {
+        name: grad ? 'check' : 'star',
+        size: 15,
+        stroke: 2.2
+      }), grad ? tr('បាន​បញ្ចប់​ការសិក្សា — ចុច​ដើម្បី​យក​មក​វិញ', 'Graduated — tap to restore') : tr('សម្គាល់​ថា​បាន​បញ្ចប់​ការសិក្សា', 'Mark as graduated')), React.createElement(CvSection, {
         id: "bio",
         km: "\u179A\u17BC\u1794\u1790\u178F \u1793\u17B7\u1784 \u1794\u17D2\u179A\u179C\u178F\u17D2\u178F\u17B7\u179A\u17BC\u1794\u179F\u1784\u17D2\u1781\u17C1\u1794",
         en: "Photo & Bio",
-        action: React.createElement(SectionEditBtn, null)
-      }, mobileEdit ? React.createElement(StudentEditPanel, {
-        key: s.id,
-        s: s,
-        onSave: u => {
-          saveStudent(u);
-          setMobileEdit(false);
-        },
-        onCancel: () => setMobileEdit(false),
-        onDelete: id => {
-          deleteStudent(id);
-          setMobileEdit(false);
-          setMobileProfileId(null);
-        }
-      }) : React.createElement(React.Fragment, null, React.createElement("div", {
+        action: React.createElement(SectionEditBtn, {
+          sec: "bio"
+        })
+      }, mobileEdit === 'bio' ? editForm : React.createElement(React.Fragment, null, React.createElement("div", {
         style: {
           display: 'flex',
           gap: 14,
@@ -37653,8 +37700,11 @@ var StudentsScreenV2 = () => {
       })))), React.createElement(CvSection, {
         id: "payment",
         km: "\u1785\u17BB\u17C7\u1788\u17D2\u1798\u17C4\u17C7 \u1793\u17B7\u1784 \u1780\u17B6\u1794\u1784\u17CB\u1794\u17D2\u179A\u17B6\u1780\u17CB",
-        en: "Enrollment & Payment"
-      }, React.createElement("div", {
+        en: "Enrollment & Payment",
+        action: React.createElement(SectionEditBtn, {
+          sec: "payment"
+        })
+      }, mobileEdit === 'payment' ? editForm : React.createElement(React.Fragment, null, React.createElement("div", {
         style: {
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
@@ -37722,11 +37772,14 @@ var StudentsScreenV2 = () => {
           fontWeight: 600,
           color: 'var(--good)'
         }
-      }, "+$", e.amount))))), React.createElement(CvSection, {
+      }, "+$", e.amount)))))), React.createElement(CvSection, {
         id: "study",
         km: "\u1794\u17D2\u179A\u179C\u178F\u17D2\u178F\u179F\u17B7\u1780\u17D2\u179F\u17B6",
-        en: "Study History"
-      }, React.createElement("div", {
+        en: "Study History",
+        action: React.createElement(SectionEditBtn, {
+          sec: "study"
+        })
+      }, mobileEdit === 'study' ? editForm : React.createElement(React.Fragment, null, React.createElement("div", {
         style: {
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
@@ -37777,7 +37830,7 @@ var StudentsScreenV2 = () => {
           background: 'var(--accent)',
           borderRadius: 999
         }
-      }))), React.createElement(CvSection, {
+      })))), React.createElement(CvSection, {
         id: "docs",
         km: "\u17AF\u1780\u179F\u17B6\u179A\u179F\u17B7\u179F\u17D2\u179F",
         en: "Documents"
@@ -44267,7 +44320,7 @@ var NewInvoiceScreen = ({
       color: 'var(--ink)',
       cursor: 'default'
     }
-  }, STUDENTS.map(s => {
+  }, STUDENTS.filter(s => !(window.__isGraduated && window.__isGraduated(s))).map(s => {
     var prevCount = INVOICES.filter(inv => inv.student === s.id).length;
     return React.createElement("option", {
       key: s.id,
