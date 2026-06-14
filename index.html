@@ -37079,12 +37079,35 @@ var lessonTypeKm = l => {
   if (l.color === 'c' || l.color === 'e') return 'ទ្រឹស្ដី';
   return 'អនុវត្តន៍';
 };
+var lessonsCoveredBy = l => {
+  var lib = typeof window !== 'undefined' && window.__lessonsLib || {};
+  var all = [...(lib.theoryTexts || []), ...(lib.practicalTexts || []), ...(lib.theoryVideos || []), ...(lib.practicalVideos || [])];
+  var num = no => {
+    var m = String(no || '').match(/\d+/);
+    return m ? m[0] : String(no || '').trim();
+  };
+  if (Array.isArray(l.lessonIds) && l.lessonIds.length) {
+    return l.lessonIds.map(id => {
+      var u = all.find(x => x.id === id);
+      return u ? {
+        no: num(u.no),
+        name: u.km || u.en || ''
+      } : null;
+    }).filter(Boolean);
+  }
+  if (l.lessonNo) return String(l.lessonNo).split(',').map(x => ({
+    no: num(x),
+    name: ''
+  })).filter(c => c.no);
+  return [];
+};
 var CvLessonRow = ({
   l,
   tr,
   onSave
 }) => {
   var [open, setOpen] = React.useState(false);
+  var covered = lessonsCoveredBy(l);
   var [rating, setRating] = React.useState(l.rating || 0);
   var [didWell, setDidWell] = React.useState(l.didWell || '');
   var [toImprove, setToImprove] = React.useState(l.toImprove || '');
@@ -37152,7 +37175,24 @@ var CvLessonRow = ({
       color: 'var(--ink-2)',
       marginTop: 1
     }
-  }, lessonTypeKm(l)), l.rating > 0 && React.createElement("div", {
+  }, lessonTypeKm(l)), covered.length > 0 && React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: 4,
+      marginTop: 3
+    }
+  }, covered.map((c, i) => React.createElement("span", {
+    key: i,
+    style: {
+      fontSize: 10.5,
+      padding: '1px 7px',
+      borderRadius: 5,
+      background: 'var(--accent-soft)',
+      color: 'var(--accent)',
+      whiteSpace: 'nowrap'
+    }
+  }, React.createElement("b", null, c.no), c.name ? ' · ' + c.name : ''))), l.rating > 0 && React.createElement("div", {
     style: {
       fontSize: 12,
       color: 'var(--gold)',

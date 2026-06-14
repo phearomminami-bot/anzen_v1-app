@@ -34,8 +34,22 @@ const lessonTypeKm = (l) => {
 
 // Expandable lesson row: tap to rate, note strengths/weaknesses and add a
 // comment. Saves back onto the lesson via onSave.
+// Curriculum lessons (from Tab Lessons) selected for a scheduled lesson —
+// shown as number + name so each entry lists what was covered.
+const lessonsCoveredBy = (l) => {
+  const lib = (typeof window !== 'undefined' && window.__lessonsLib) || {};
+  const all = [...(lib.theoryTexts||[]), ...(lib.practicalTexts||[]), ...(lib.theoryVideos||[]), ...(lib.practicalVideos||[])];
+  const num = (no) => { const m = String(no||'').match(/\d+/); return m ? m[0] : String(no||'').trim(); };
+  if (Array.isArray(l.lessonIds) && l.lessonIds.length) {
+    return l.lessonIds.map(id => { const u = all.find(x => x.id === id); return u ? { no: num(u.no), name: u.km || u.en || '' } : null; }).filter(Boolean);
+  }
+  if (l.lessonNo) return String(l.lessonNo).split(',').map(x => ({ no: num(x), name: '' })).filter(c => c.no);
+  return [];
+};
+
 const CvLessonRow = ({ l, tr, onSave }) => {
   const [open, setOpen]           = React.useState(false);
+  const covered = lessonsCoveredBy(l);
   const [rating, setRating]       = React.useState(l.rating || 0);
   const [didWell, setDidWell]     = React.useState(l.didWell || '');
   const [toImprove, setToImprove] = React.useState(l.toImprove || '');
@@ -53,6 +67,15 @@ const CvLessonRow = ({ l, tr, onSave }) => {
         <div style={{minWidth:0}}>
           <div style={{fontSize:12.5,fontWeight:600,color:'var(--ink)'}}>{l.date}</div>
           <div style={{fontSize:12,color:'var(--ink-2)',marginTop:1}}>{lessonTypeKm(l)}</div>
+          {covered.length > 0 && (
+            <div style={{display:'flex',flexWrap:'wrap',gap:4,marginTop:3}}>
+              {covered.map((c,i)=>(
+                <span key={i} style={{fontSize:10.5,padding:'1px 7px',borderRadius:5,background:'var(--accent-soft)',color:'var(--accent)',whiteSpace:'nowrap'}}>
+                  <b>{c.no}</b>{c.name ? ' · '+c.name : ''}
+                </span>
+              ))}
+            </div>
+          )}
           {(l.rating > 0) && <div style={{fontSize:12,color:'var(--gold)',marginTop:1,letterSpacing:1}}>{'★'.repeat(l.rating)}<span style={{color:'var(--border-strong)'}}>{'★'.repeat(5-l.rating)}</span></div>}
           {l.note && !open && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2,fontStyle:'italic',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{l.note}</div>}
         </div>
