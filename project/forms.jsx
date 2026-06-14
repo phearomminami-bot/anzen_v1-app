@@ -1828,6 +1828,8 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
   const editLesson = ctx.lesson || null;
   const defaultDate = ctx.date || (editLesson && editLesson.date) || todayStr();
 
+  // Display a lesson code as its number only ("学科1" → "1").
+  const lessonNum = (no) => { const m = String(no||'').match(/\d+/); return m ? m[0] : String(no||''); };
   // ── Lesson: pull real lessons from Tab Lessons (window.__lessonsLib) ───────
   const _lib = (typeof window !== 'undefined' && window.__lessonsLib) || {};
   const TYPE_CATS = [
@@ -1905,7 +1907,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
 
     const stu      = STUDENTS.find(s => s.id === studentId);
     const selObjs  = catObj.items.filter(u => selLessons.includes(u.id));
-    const selLabel = selObjs.map(u => u.no ? `${u.no} ${tr(u.km,u.en)}` : tr(u.km,u.en)).join(', ');
+    const selLabel = selObjs.map(u => u.no ? `${lessonNum(u.no)} ${tr(u.km,u.en)}` : tr(u.km,u.en)).join(', ');
     const typeName = `${tr(catObj.km, catObj.en)}${selLabel ? ' · ' + selLabel : ''}`;
     const lessonNo = selObjs.map(u => u.no).filter(Boolean).join(', ');   // short code e.g. "学科1" for the calendar
 
@@ -2012,7 +2014,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
                 <div key={u.id} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'5px 10px',
                   background:'var(--accent-soft)',border:'1px solid var(--accent)',borderRadius:6,
                   fontSize:12,fontWeight:500,color:'var(--accent)'}}>
-                  {u.no ? `${u.no} · ` : ''}{tr(u.km, u.en)}
+                  {u.no ? `${lessonNum(u.no)} · ` : ''}{tr(u.km, u.en)}
                   <button type="button" onClick={()=>setSelLessons(prev=>prev.filter(x=>x!==u.id))} style={{
                     border:'none',background:'none',cursor:'pointer',color:'var(--accent)',
                     fontSize:14,lineHeight:1,padding:0,display:'flex',alignItems:'center',
@@ -2035,7 +2037,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
                   if (!grp.length) return [];
                   return [
                     <option key={'st'+stage} value="" disabled>{stage===1 ? tr('── ដំណាក់កាល ១','── Stage 1 · 第一段階 ──') : tr('── ដំណាក់កាល ២','── Stage 2 · 第二段階 ──')}</option>,
-                    ...grp.map(u => <option key={u.id} value={u.id}>{u.no ? u.no+' · ' : ''}{tr(u.km, u.en)}</option>),
+                    ...grp.map(u => <option key={u.id} value={u.id}>{u.no ? lessonNum(u.no)+' · ' : ''}{tr(u.km, u.en)}</option>),
                   ];
                 }),
               ]}

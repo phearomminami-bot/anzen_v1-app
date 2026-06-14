@@ -326,6 +326,19 @@ const LessonDetail = ({ lesson, onClose }) => {
     return Array.from({length:n}, (_,i) => start + i).join(', ');
   })();
 
+  // Lessons covered by this booking — moved out of the calendar block into the
+  // detail. Shown as the lesson number(s) + name (no Japanese 学科/技能 prefix).
+  const coveredLessons = (() => {
+    const lib = (typeof window !== 'undefined' && window.__lessonsLib) || {};
+    const all = [...(lib.theoryTexts||[]), ...(lib.practicalTexts||[]), ...(lib.theoryVideos||[]), ...(lib.practicalVideos||[])];
+    const num = (no) => { const m = String(no||'').match(/\d+/); return m ? m[0] : String(no||'').trim(); };
+    if (Array.isArray(lesson.lessonIds) && lesson.lessonIds.length) {
+      return lesson.lessonIds.map(id => { const u = all.find(x => x.id === id); return u ? { no: num(u.no), name: (lang==='km' ? u.km : (u.en||u.km)) } : null; }).filter(Boolean);
+    }
+    if (lesson.lessonNo) return String(lesson.lessonNo).split(',').map(x => ({ no: num(x), name: '' })).filter(c => c.no);
+    return [];
+  })();
+
   const markDone = () => {
     lesson.status = 'done';
     // Credit hours to student
@@ -449,6 +462,21 @@ const LessonDetail = ({ lesson, onClose }) => {
                 }}>{v.trans}</span>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lessons covered (from Tab Lessons) */}
+      {coveredLessons.length > 0 && (
+        <div style={{padding:14,background:'var(--surface-muted)',borderRadius:10}}>
+          <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace',marginBottom:8}}>{tr('មេរៀន','LESSONS')}</div>
+          <div style={{display:'flex',flexDirection:'column',gap:6}}>
+            {coveredLessons.map((c,i)=>(
+              <div key={i} style={{display:'flex',gap:8,alignItems:'baseline',fontSize:13}}>
+                <span style={{fontWeight:700,color:'var(--accent)',fontFamily:'"JetBrains Mono",monospace',flexShrink:0,minWidth:18}}>{c.no}</span>
+                <span style={{color:'var(--ink-2)'}}>{c.name || '—'}</span>
+              </div>
+            ))}
           </div>
         </div>
       )}

@@ -393,6 +393,7 @@ window.__trRegistry = {
   "Hour": "ម៉ោងទី",
   "STUDENT": "សិស្ស",
   "INSTRUCTOR": "គ្រូ",
+  "LESSONS": "មេរៀន",
   "GUEST INSTRUCTORS": "គ្រូ​ភ្ញៀវ",
   "Created by": "បង្កើត​ដោយ",
   "Close": "បិទ",
@@ -2492,6 +2493,7 @@ window.__trGroups = {
     "Hour": "ម៉ោងទី",
     "STUDENT": "សិស្ស",
     "INSTRUCTOR": "គ្រូ",
+    "LESSONS": "មេរៀន",
     "GUEST INSTRUCTORS": "គ្រូ​ភ្ញៀវ",
     "Created by": "បង្កើត​ដោយ",
     "Close": "ត្រឡប់",
@@ -6759,6 +6761,10 @@ var NewLessonForm = ({
   } = useAppActions();
   var editLesson = ctx.lesson || null;
   var defaultDate = ctx.date || editLesson && editLesson.date || todayStr();
+  var lessonNum = no => {
+    var m = String(no || '').match(/\d+/);
+    return m ? m[0] : String(no || '');
+  };
   var _lib = typeof window !== 'undefined' && window.__lessonsLib || {};
   var TYPE_CATS = [{
     k: 'theory',
@@ -6867,7 +6873,7 @@ var NewLessonForm = ({
     }
     var stu = STUDENTS.find(s => s.id === studentId);
     var selObjs = catObj.items.filter(u => selLessons.includes(u.id));
-    var selLabel = selObjs.map(u => u.no ? `${u.no} ${tr(u.km, u.en)}` : tr(u.km, u.en)).join(', ');
+    var selLabel = selObjs.map(u => u.no ? `${lessonNum(u.no)} ${tr(u.km, u.en)}` : tr(u.km, u.en)).join(', ');
     var typeName = `${tr(catObj.km, catObj.en)}${selLabel ? ' · ' + selLabel : ''}`;
     var lessonNo = selObjs.map(u => u.no).filter(Boolean).join(', ');
     if (editLesson) {
@@ -6998,7 +7004,7 @@ var NewLessonForm = ({
       fontWeight: 500,
       color: 'var(--accent)'
     }
-  }, u.no ? `${u.no} · ` : '', tr(u.km, u.en), React.createElement("button", {
+  }, u.no ? `${lessonNum(u.no)} · ` : '', tr(u.km, u.en), React.createElement("button", {
     type: "button",
     onClick: () => setSelLessons(prev => prev.filter(x => x !== u.id)),
     style: {
@@ -7037,7 +7043,7 @@ var NewLessonForm = ({
     }, stage === 1 ? tr('── ដំណាក់កាល ១', '── Stage 1 · 第一段階 ──') : tr('── ដំណាក់កាល ២', '── Stage 2 · 第二段階 ──')), ...grp.map(u => React.createElement("option", {
       key: u.id,
       value: u.id
-    }, u.no ? u.no + ' · ' : '', tr(u.km, u.en)))];
+    }, u.no ? lessonNum(u.no) + ' · ' : '', tr(u.km, u.en)))];
   })]))), React.createElement(FormSection, {
     title: tr('ពេល​វេលា', 'WHEN')
   }, React.createElement("div", {
@@ -9386,6 +9392,28 @@ var LessonDetail = ({
       length: n
     }, (_, i) => start + i).join(', ');
   })();
+  var coveredLessons = (() => {
+    var lib = typeof window !== 'undefined' && window.__lessonsLib || {};
+    var all = [...(lib.theoryTexts || []), ...(lib.practicalTexts || []), ...(lib.theoryVideos || []), ...(lib.practicalVideos || [])];
+    var num = no => {
+      var m = String(no || '').match(/\d+/);
+      return m ? m[0] : String(no || '').trim();
+    };
+    if (Array.isArray(lesson.lessonIds) && lesson.lessonIds.length) {
+      return lesson.lessonIds.map(id => {
+        var u = all.find(x => x.id === id);
+        return u ? {
+          no: num(u.no),
+          name: lang === 'km' ? u.km : u.en || u.km
+        } : null;
+      }).filter(Boolean);
+    }
+    if (lesson.lessonNo) return String(lesson.lessonNo).split(',').map(x => ({
+      no: num(x),
+      name: ''
+    })).filter(c => c.no);
+    return [];
+  })();
   var markDone = () => {
     lesson.status = 'done';
     if (s) {
@@ -9698,7 +9726,47 @@ var LessonDetail = ({
       color: v.trans === 'MT' ? '#B0413E' : '#2A5DB0',
       fontFamily: '"JetBrains Mono",monospace'
     }
-  }, v.trans)))), lesson.guests && lesson.guests.length > 0 && React.createElement("div", {
+  }, v.trans)))), coveredLessons.length > 0 && React.createElement("div", {
+    style: {
+      padding: 14,
+      background: 'var(--surface-muted)',
+      borderRadius: 10
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: 'var(--ink-3)',
+      letterSpacing: '.05em',
+      fontFamily: '"JetBrains Mono",monospace',
+      marginBottom: 8
+    }
+  }, tr('មេរៀន', 'LESSONS')), React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 6
+    }
+  }, coveredLessons.map((c, i) => React.createElement("div", {
+    key: i,
+    style: {
+      display: 'flex',
+      gap: 8,
+      alignItems: 'baseline',
+      fontSize: 13
+    }
+  }, React.createElement("span", {
+    style: {
+      fontWeight: 700,
+      color: 'var(--accent)',
+      fontFamily: '"JetBrains Mono",monospace',
+      flexShrink: 0,
+      minWidth: 18
+    }
+  }, c.no), React.createElement("span", {
+    style: {
+      color: 'var(--ink-2)'
+    }
+  }, c.name || '—'))))), lesson.guests && lesson.guests.length > 0 && React.createElement("div", {
     style: {
       padding: 14,
       background: 'var(--surface-muted)',
@@ -16495,11 +16563,15 @@ var LOC_NAMES = {
 };
 var locLabelOf = l => l.location && l.location.trim() || LOC_NAMES[l.pickup] || l.pickup || '';
 var lessonShort = l => {
-  if (l.lessonNo) return l.lessonNo;
+  var num = no => {
+    var m = String(no || '').match(/\d+/);
+    return m ? m[0] : String(no || '').trim();
+  };
+  if (l.lessonNo) return String(l.lessonNo).split(',').map(x => num(x)).filter(Boolean).join(', ');
   var lib = typeof window !== 'undefined' && window.__lessonsLib || {};
   var all = [...(lib.theoryTexts || []), ...(lib.practicalTexts || [])];
   if (Array.isArray(l.lessonIds) && l.lessonIds.length) {
-    var nos = l.lessonIds.map(id => all.find(u => u.id === id)?.no).filter(Boolean);
+    var nos = l.lessonIds.map(id => all.find(u => u.id === id)?.no).filter(Boolean).map(num);
     if (nos.length) return nos.join(', ');
   }
   return (l.type || '').split('·')[1]?.trim() || '';
@@ -17139,17 +17211,7 @@ var ScheduleWeek = ({
           flexShrink: 1,
           minWidth: 0
         }
-      }, studentMode ? lessonShort(l) || l.type.split('·')[0].trim() : s ? s.en || s.name : l.type.split('·')[0].trim()), lessonShort(l) && React.createElement("span", {
-        style: {
-          fontSize: 9,
-          fontWeight: 700,
-          color: c.text,
-          opacity: .9,
-          whiteSpace: 'nowrap',
-          flexShrink: 0,
-          fontFamily: '"JetBrains Mono",monospace'
-        }
-      }, lessonShort(l))), React.createElement("div", {
+      }, studentMode ? lessonShort(l) || l.type.split('·')[0].trim() : s ? s.en || s.name : l.type.split('·')[0].trim())), React.createElement("div", {
         style: {
           display: 'flex',
           gap: 3,

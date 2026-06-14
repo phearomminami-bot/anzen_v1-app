@@ -12,13 +12,15 @@ const LESSON_COLORS = {
 const LOC_NAMES = { school:'School', yard:'Course', apply:'Apply Centre', exam:'Exam Centre', classA:'Class A', classB:'Class B', classC:'Class C' };
 const locLabelOf = (l) => (l.location && l.location.trim()) || LOC_NAMES[l.pickup] || l.pickup || '';
 
-// Short lesson code for the calendar (e.g. "学科1" / "技能1"); falls back to type code
+// Short lesson code for the calendar — the lesson number(s) only ("1" / "1, 2"),
+// stripping the Japanese 学科/技能 prefix. Falls back to the type code.
 const lessonShort = (l) => {
-  if (l.lessonNo) return l.lessonNo;
+  const num = (no) => { const m = String(no||'').match(/\d+/); return m ? m[0] : String(no||'').trim(); };
+  if (l.lessonNo) return String(l.lessonNo).split(',').map(x => num(x)).filter(Boolean).join(', ');
   const lib = (typeof window !== 'undefined' && window.__lessonsLib) || {};
   const all = [...(lib.theoryTexts||[]), ...(lib.practicalTexts||[])];
   if (Array.isArray(l.lessonIds) && l.lessonIds.length) {
-    const nos = l.lessonIds.map(id => all.find(u=>u.id===id)?.no).filter(Boolean);
+    const nos = l.lessonIds.map(id => all.find(u=>u.id===id)?.no).filter(Boolean).map(num);
     if (nos.length) return nos.join(', ');
   }
   return (l.type||'').split('·')[1]?.trim() || '';
@@ -312,11 +314,6 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                       <span style={{fontWeight:700,color:c.text,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',fontSize:10.5,flexShrink:1,minWidth:0}}>
                         {studentMode ? (lessonShort(l) || l.type.split('·')[0].trim()) : (s ? (s.en || s.name) : l.type.split('·')[0].trim())}
                       </span>
-                      {lessonShort(l) && (
-                        <span style={{fontSize:9,fontWeight:700,color:c.text,opacity:.9,whiteSpace:'nowrap',flexShrink:0,fontFamily:'"JetBrains Mono",monospace'}}>
-                          {lessonShort(l)}
-                        </span>
-                      )}
                     </div>
                     <div style={{display:'flex',gap:3,alignItems:'center',overflow:'hidden',minWidth:0}}>
                       <span style={{color:c.text,opacity:.88,fontSize:10,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',flex:1,minWidth:0}}>
