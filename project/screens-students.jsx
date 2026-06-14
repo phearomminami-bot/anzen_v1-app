@@ -103,6 +103,47 @@ const CvLessonRow = ({ l, tr, onSave }) => {
   );
 };
 
+// Collapsible profile section. Defined at module scope (NOT inside the screen's
+// render) so its identity is stable — otherwise every parent re-render (e.g. the
+// mobile keyboard resizing the viewport) would remount the section and drop
+// focus from any input being typed into.
+const CvSection = ({ label, children, action, isOpen, onToggle }) => (
+  <div style={{borderRadius:10,overflow:'hidden',border:'1px solid var(--border)',marginBottom:8}}>
+    <div onClick={onToggle} style={{
+      width:'100%',padding:'12px 14px',display:'flex',alignItems:'center',gap:10,
+      background: isOpen ? 'var(--surface-muted)' : 'var(--surface)', cursor:'pointer',textAlign:'left',
+    }}>
+      <span style={{flex:1,minWidth:0,fontSize:14,fontWeight:700,fontFamily:'var(--font-km)',color:'var(--ink)'}}>{label}</span>
+      {isOpen && action}
+      <span style={{fontSize:13,color:'var(--ink-3)',transition:'transform .2s',flexShrink:0,
+        transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)'}}>▾</span>
+    </div>
+    {isOpen && (
+      <div style={{padding:'12px 14px',borderTop:'1px solid var(--border)',background:'var(--surface)'}}>
+        {children}
+      </div>
+    )}
+  </div>
+);
+
+const InfoPair = ({ label, val }) => (
+  <div>
+    <div style={{fontSize:10,color:'var(--ink-3)',marginBottom:1}}>{label}</div>
+    <div style={{fontSize:13,fontWeight:500,color:'var(--ink)'}}>{val || '—'}</div>
+  </div>
+);
+
+// Per-section edit toggle button (rendered in a section header).
+const SectionEditBtn = ({ active, label, onClick }) => (
+  <button onClick={onClick}
+    style={{display:'flex',alignItems:'center',gap:4,padding:'5px 10px',borderRadius:7,flexShrink:0,
+      border:'1px solid '+(active?'var(--accent)':'var(--border)'),
+      background:active?'var(--accent)':'var(--surface)',
+      color:active?'#fff':'var(--ink-2)',cursor:'pointer',fontSize:12,fontWeight:600,fontFamily:'inherit'}}>
+    <Icon name="users" size={12}/>{label}
+  </button>
+);
+
 const extendStudent = (s) => {
   const trans = s.trans || 'AT';
   const pracCount = trans === 'MT' ? 13 : 10;
@@ -315,48 +356,11 @@ const StudentsScreenV2 = () => {
       {id:'finished',  l:tr('បាន​បញ្ចប់','Completed')},
     ];
     const toggleSection = (id) => setOpenSections(prev => ({...prev, [id]: !prev[id]}));
-
-    const CvSection = ({id, km, en, children, action}) => {
-      const isOpen = openSections[id];
-      return (
-        <div style={{borderRadius:10,overflow:'hidden',border:'1px solid var(--border)',marginBottom:8}}>
-          <div onClick={()=>toggleSection(id)} style={{
-            width:'100%',padding:'12px 14px',display:'flex',alignItems:'center',gap:10,
-            background: isOpen ? 'var(--surface-muted)' : 'var(--surface)',
-            cursor:'pointer',textAlign:'left',
-          }}>
-            <span style={{flex:1,minWidth:0,fontSize:14,fontWeight:700,fontFamily:'var(--font-km)',color:'var(--ink)'}}>
-              {tr(km, en)}
-            </span>
-            {isOpen && action}
-            <span style={{fontSize:13,color:'var(--ink-3)',transition:'transform .2s',flexShrink:0,
-              transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)'}}>▾</span>
-          </div>
-          {isOpen && (
-            <div style={{padding:'12px 14px',borderTop:'1px solid var(--border)',background:'var(--surface)'}}>
-              {children}
-            </div>
-          )}
-        </div>
-      );
-    };
-    // Per-section "Edit" toggle — only rendered once a section is expanded.
-    // Click to reveal the editor inside that section, click again to hide it.
-    const SectionEditBtn = ({sec}) => (
-      <button onClick={(e)=>{ e.stopPropagation(); setMobileEdit(m => m===sec ? null : sec); }}
-        style={{display:'flex',alignItems:'center',gap:4,padding:'5px 10px',borderRadius:7,flexShrink:0,
-          border:'1px solid '+(mobileEdit===sec?'var(--accent)':'var(--border)'),
-          background:mobileEdit===sec?'var(--accent)':'var(--surface)',
-          color:mobileEdit===sec?'#fff':'var(--ink-2)',cursor:'pointer',fontSize:12,fontWeight:600,fontFamily:'inherit'}}>
-        <Icon name="users" size={12}/>{mobileEdit===sec ? tr('បិទ','Close') : tr('កែ','Edit')}
-      </button>
-    );
-
-    const InfoPair = ({label, val}) => (
-      <div>
-        <div style={{fontSize:10,color:'var(--ink-3)',marginBottom:1}}>{label}</div>
-        <div style={{fontSize:13,fontWeight:500,color:'var(--ink)'}}>{val || '—'}</div>
-      </div>
+    // Build the edit-toggle button for a section header.
+    const editAction = (sec) => (
+      <SectionEditBtn active={mobileEdit===sec}
+        label={mobileEdit===sec ? tr('បិទ','Close') : tr('កែ','Edit')}
+        onClick={(e)=>{ e.stopPropagation(); setMobileEdit(m => m===sec ? null : sec); }}/>
     );
 
     // ── CV profile view ────────────────────────────────────────────────────
@@ -408,7 +412,7 @@ const StudentsScreenV2 = () => {
           </button>
 
           {/* Section 1: Photo & bio — edit toggle lives in the header */}
-          <CvSection id="bio" km="រូបថត និង ប្រវត្តិរូបសង្ខេប" en="Photo & Bio" action={<SectionEditBtn sec="bio"/>}>
+          <CvSection label={tr('រូបថត និង ប្រវត្តិរូបសង្ខេប','Photo & Bio')} isOpen={openSections.bio} onToggle={()=>toggleSection('bio')} action={editAction('bio')}>
             {mobileEdit==='bio' ? editForm : (<>
             <div style={{display:'flex',gap:14,marginBottom:12,alignItems:'flex-start'}}>
               <div style={{textAlign:'center',flexShrink:0}}>
@@ -437,7 +441,7 @@ const StudentsScreenV2 = () => {
           </CvSection>
 
           {/* Section 2: Enrollment & payment */}
-          <CvSection id="payment" km="ចុះឈ្មោះ និង កាបង់ប្រាក់" en="Enrollment & Payment" action={<SectionEditBtn sec="payment"/>}>
+          <CvSection label={tr('ចុះឈ្មោះ និង កាបង់ប្រាក់','Enrollment & Payment')} isOpen={openSections.payment} onToggle={()=>toggleSection('payment')} action={editAction('payment')}>
             {mobileEdit==='payment' ? editForm : (<>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px 14px',marginBottom:12}}>
               <InfoPair label={tr('ថ្ងៃចុះឈ្មោះ','Reg. date')} val={s.regDate}/>
@@ -468,7 +472,7 @@ const StudentsScreenV2 = () => {
           </CvSection>
 
           {/* Section 3: Study history */}
-          <CvSection id="study" km="ប្រវត្តសិក្សា" en="Study History" action={<SectionEditBtn sec="study"/>}>
+          <CvSection label={tr('ប្រវត្តសិក្សា','Study History')} isOpen={openSections.study} onToggle={()=>toggleSection('study')} action={editAction('study')}>
             {mobileEdit==='study' ? editForm : (<>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px 14px',marginBottom:12}}>
               <InfoPair label={tr('ចាប់ផ្ដើម','Start')} val={s.study_start || s.regDate}/>
@@ -489,7 +493,7 @@ const StudentsScreenV2 = () => {
           </CvSection>
 
           {/* Section 4: Documents */}
-          <CvSection id="docs" km="ឯកសារសិស្ស" en="Documents">
+          <CvSection label={tr('ឯកសារសិស្ស','Documents')} isOpen={openSections.docs} onToggle={()=>toggleSection('docs')}>
             <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:6}}>{tr('ចុច​ដើម្បី​ប្ដូរ​ស្ថានភាព','Tap to toggle status')}</div>
             {[
               {key:'permit',   km:'ប័ណ្ណ​អនុញ្ញាត',       en:"Learner's permit"},
@@ -514,7 +518,7 @@ const StudentsScreenV2 = () => {
           </CvSection>
 
           {/* Section 5: Lessons & comments */}
-          <CvSection id="lessons" km="បញ្ជីមេរៀន និង មតិគ្រូ" en="Lessons & Comments">
+          <CvSection label={tr('បញ្ជីមេរៀន និង មតិគ្រូ','Lessons & Comments')} isOpen={openSections.lessons} onToggle={()=>toggleSection('lessons')}>
             {studentLessons.length === 0 ? (
               <div style={{fontSize:13,color:'var(--ink-3)',textAlign:'center',padding:'12px 0'}}>
                 {tr('មិន​ទាន់​មាន​មេរៀន','No lessons yet')}
