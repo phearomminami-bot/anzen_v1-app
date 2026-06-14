@@ -55,12 +55,19 @@ const CvLessonRow = ({ l, tr, onSave }) => {
   const [toImprove, setToImprove] = React.useState(l.toImprove || '');
   const [note, setNote]           = React.useState(l.note || '');
   const [done, setDone]           = React.useState(l.status === 'done');
+  const [editing, setEditing]     = React.useState(false);
+  const hasFeedback = !!(l.rating || String(l.didWell||'').trim() || String(l.toImprove||'').trim() || String(l.note||'').trim());
   const fieldStyle = { width:'100%', padding:'8px 10px', border:'1px solid var(--border)', borderRadius:8, fontSize:13, fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)', boxSizing:'border-box', resize:'vertical' };
   const lbl = { fontSize:11, color:'var(--ink-3)', fontWeight:600, margin:'10px 0 4px' };
-  const save = () => { onSave(l, { rating, didWell: didWell.trim(), toImprove: toImprove.trim(), note: note.trim(), status: done ? 'done' : 'pending' }); setOpen(false); };
+  const resetFields = () => { setRating(l.rating||0); setDidWell(l.didWell||''); setToImprove(l.toImprove||''); setNote(l.note||''); setDone(l.status==='done'); };
+  const toggleOpen = () => { if (open) { setEditing(false); resetFields(); } setOpen(o => !o); };
+  // Save then drop back to the read-only view (keep the row open).
+  const save = () => { onSave(l, { rating, didWell: didWell.trim(), toImprove: toImprove.trim(), note: note.trim(), status: done ? 'done' : 'pending' }); setEditing(false); };
+  const showForm = editing || !hasFeedback;   // first time (no feedback) → form; otherwise read-only
+  const stars = (n) => <span style={{color:'var(--gold)',letterSpacing:1}}>{'★'.repeat(n)}<span style={{color:'var(--border-strong)'}}>{'★'.repeat(5-n)}</span></span>;
   return (
     <div style={{borderBottom:'1px solid var(--border)'}}>
-      <button onClick={()=>setOpen(o=>!o)} style={{
+      <button onClick={toggleOpen} style={{
         width:'100%', textAlign:'left', background:'transparent', border:'none', cursor:'pointer',
         padding:'10px 0', display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:10,
       }}>
@@ -84,7 +91,7 @@ const CvLessonRow = ({ l, tr, onSave }) => {
           <span style={{transition:'transform .2s',transform:open?'rotate(180deg)':'none',color:'var(--ink-3)'}}>▾</span>
         </span>
       </button>
-      {open && (
+      {open && showForm && (
         <div style={{padding:'4px 0 14px'}}>
           <div style={lbl}>{tr('ស្ថានភាព','Status')}</div>
           <div style={{display:'flex',gap:6}}>
@@ -120,6 +127,22 @@ const CvLessonRow = ({ l, tr, onSave }) => {
             width:'100%',marginTop:12,padding:'10px',borderRadius:8,border:'none',
             background:'var(--accent)',color:'#fff',cursor:'pointer',fontSize:13,fontWeight:600,
           }}>{tr('រក្សា​ទុក​មតិ','Save feedback')}</button>
+        </div>
+      )}
+      {open && !showForm && (
+        <div style={{padding:'4px 0 14px'}}>
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            <div><div style={lbl}>{tr('ស្ថានភាព','Status')}</div><div style={{fontSize:13,fontWeight:600,color:done?'var(--good)':'var(--ink-2)'}}>{done?tr('រួចរាល់','Done'):tr('កំពុង','Pending')}</div></div>
+            {rating>0 && <div><div style={lbl}>{tr('វាយតម្លៃ','Rating')}</div><div style={{fontSize:18}}>{stars(rating)}</div></div>}
+            {String(didWell).trim() && <div><div style={lbl}>{tr('ធ្វើ​បាន​ល្អ','Did well')}</div><div style={{fontSize:13,color:'var(--ink)'}}>{didWell}</div></div>}
+            {String(toImprove).trim() && <div><div style={lbl}>{tr('ខ្វះខាត​ត្រូវ​កែ','Needs work')}</div><div style={{fontSize:13,color:'var(--ink)'}}>{toImprove}</div></div>}
+            {String(note).trim() && <div><div style={lbl}>{tr('មតិ​បន្ថែម','Comment')}</div><div style={{fontSize:13,color:'var(--ink)',whiteSpace:'pre-wrap'}}>{note}</div></div>}
+          </div>
+          <button onClick={()=>setEditing(true)} style={{
+            display:'flex',alignItems:'center',justifyContent:'center',gap:5,
+            marginTop:12,padding:'8px 14px',borderRadius:8,border:'1px solid var(--border-strong)',
+            background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,fontFamily:'inherit',
+          }}><Icon name="users" size={13}/>{tr('កែ​មតិ','Edit')}</button>
         </div>
       )}
     </div>

@@ -37113,6 +37113,8 @@ var CvLessonRow = ({
   var [toImprove, setToImprove] = React.useState(l.toImprove || '');
   var [note, setNote] = React.useState(l.note || '');
   var [done, setDone] = React.useState(l.status === 'done');
+  var [editing, setEditing] = React.useState(false);
+  var hasFeedback = !!(l.rating || String(l.didWell || '').trim() || String(l.toImprove || '').trim() || String(l.note || '').trim());
   var fieldStyle = {
     width: '100%',
     padding: '8px 10px',
@@ -37131,6 +37133,20 @@ var CvLessonRow = ({
     fontWeight: 600,
     margin: '10px 0 4px'
   };
+  var resetFields = () => {
+    setRating(l.rating || 0);
+    setDidWell(l.didWell || '');
+    setToImprove(l.toImprove || '');
+    setNote(l.note || '');
+    setDone(l.status === 'done');
+  };
+  var toggleOpen = () => {
+    if (open) {
+      setEditing(false);
+      resetFields();
+    }
+    setOpen(o => !o);
+  };
   var save = () => {
     onSave(l, {
       rating,
@@ -37139,14 +37155,25 @@ var CvLessonRow = ({
       note: note.trim(),
       status: done ? 'done' : 'pending'
     });
-    setOpen(false);
+    setEditing(false);
   };
+  var showForm = editing || !hasFeedback;
+  var stars = n => React.createElement("span", {
+    style: {
+      color: 'var(--gold)',
+      letterSpacing: 1
+    }
+  }, '★'.repeat(n), React.createElement("span", {
+    style: {
+      color: 'var(--border-strong)'
+    }
+  }, '★'.repeat(5 - n)));
   return React.createElement("div", {
     style: {
       borderBottom: '1px solid var(--border)'
     }
   }, React.createElement("button", {
-    onClick: () => setOpen(o => !o),
+    onClick: toggleOpen,
     style: {
       width: '100%',
       textAlign: 'left',
@@ -37229,7 +37256,7 @@ var CvLessonRow = ({
       transform: open ? 'rotate(180deg)' : 'none',
       color: 'var(--ink-3)'
     }
-  }, "\u25BE"))), open && React.createElement("div", {
+  }, "\u25BE"))), open && showForm && React.createElement("div", {
     style: {
       padding: '4px 0 14px'
     }
@@ -37310,7 +37337,74 @@ var CvLessonRow = ({
       fontSize: 13,
       fontWeight: 600
     }
-  }, tr('រក្សា​ទុក​មតិ', 'Save feedback'))));
+  }, tr('រក្សា​ទុក​មតិ', 'Save feedback'))), open && !showForm && React.createElement("div", {
+    style: {
+      padding: '4px 0 14px'
+    }
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 8
+    }
+  }, React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('ស្ថានភាព', 'Status')), React.createElement("div", {
+    style: {
+      fontSize: 13,
+      fontWeight: 600,
+      color: done ? 'var(--good)' : 'var(--ink-2)'
+    }
+  }, done ? tr('រួចរាល់', 'Done') : tr('កំពុង', 'Pending'))), rating > 0 && React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('វាយតម្លៃ', 'Rating')), React.createElement("div", {
+    style: {
+      fontSize: 18
+    }
+  }, stars(rating))), String(didWell).trim() && React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('ធ្វើ​បាន​ល្អ', 'Did well')), React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: 'var(--ink)'
+    }
+  }, didWell)), String(toImprove).trim() && React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('ខ្វះខាត​ត្រូវ​កែ', 'Needs work')), React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: 'var(--ink)'
+    }
+  }, toImprove)), String(note).trim() && React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('មតិ​បន្ថែម', 'Comment')), React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: 'var(--ink)',
+      whiteSpace: 'pre-wrap'
+    }
+  }, note))), React.createElement("button", {
+    onClick: () => setEditing(true),
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 5,
+      marginTop: 12,
+      padding: '8px 14px',
+      borderRadius: 8,
+      border: '1px solid var(--border-strong)',
+      background: 'var(--surface)',
+      color: 'var(--ink-2)',
+      cursor: 'pointer',
+      fontSize: 13,
+      fontWeight: 600,
+      fontFamily: 'inherit'
+    }
+  }, React.createElement(Icon, {
+    name: "users",
+    size: 13
+  }), tr('កែ​មតិ', 'Edit'))));
 };
 var CvSection = ({
   label,
