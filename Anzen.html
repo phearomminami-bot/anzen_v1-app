@@ -912,9 +912,8 @@ window.__trRegistry = {
   "Payment recorded": "បានចងចាំការបង់",
   "Feedback saved ✓": "បាន​រក្សា​ទុក​មតិ ✓",
   "Student removed": "បានលុបសិស្ស",
-  "Exam": "នឹងប្រឡង",
+  "Completed": "រួច​រាល់",
   "Back": "ត្រឡប់",
-  "Edit details": "កែ​ព័ត៌មាន",
   "Age": "អាយុ",
   "y": "ឆ្នាំ",
   "Trans.": "ប្រអប់លេខ",
@@ -1054,7 +1053,6 @@ window.__trRegistry = {
   "Road exams": "ការ​ប្រឡង​ផ្លូវ",
   "Cancellations": "ការ​លុបចោល",
   "Confirmed": "បាន​បញ្ជាក់",
-  "Completed": "រួច​រាល់",
   "New booking": "កក់​ថ្មី",
   "No instructors — add in Staff tab": "គ្មាន​គ្រូ — បន្ថែម​ក្នុង Tab Staff",
   "Click to book": "ចុច​ដើម្បី​កក់​ —  '+ins.name+' '+String(h).padStart(2,'0')+':00",
@@ -1466,9 +1464,8 @@ window.__trGroups = {
     "Payment recorded": "បានចងចាំការបង់",
     "Feedback saved ✓": "បាន​រក្សា​ទុក​មតិ ✓",
     "Student removed": "បានលុបសិស្ស",
-    "Exam": "នឹងប្រឡង",
+    "Completed": "បាន​បញ្ចប់",
     "Back": "ត្រឡប់",
-    "Edit details": "កែ​ព័ត៌មាន",
     "Age": "អាយុ",
     "y": "ឆ្នាំ",
     "Trans.": "ប្រអប់លេខ",
@@ -2101,7 +2098,6 @@ window.__trGroups = {
     "Road exams": "ការ​ប្រឡង​ផ្លូវ",
     "Cancellations": "ការ​លុបចោល",
     "Confirmed": "បាន​បញ្ជាក់",
-    "Completed": "រួច​រាល់",
     "New booking": "កក់​ថ្មី",
     "No instructors — add in Staff tab": "គ្មាន​គ្រូ — បន្ថែម​ក្នុង Tab Staff",
     "Click to book": "ចុច​ដើម្បី​កក់​ —  '+ins.name+' '+String(h).padStart(2,'0')+':00",
@@ -37385,21 +37381,24 @@ var StudentsScreenV2 = () => {
     en: 'Documents',
     icon: 'book'
   }];
-  var filtered = allStudents.filter(s => filter === 'all' || filter === 'new' && s.status === 'New' || filter === 'inprogress' && s.status === 'In progress' || filter === 'exam' && s.status === 'Road exam soon' || filter === 'cleared' && s.status === 'Cleared' || filter === 'graduated' && s.exam_result === 'pass' || filter === 'B' && clsLetter(s.cls) === 'B' || filter === 'A' && clsLetter(s.cls) === 'A' || filter === 'C' && clsLetter(s.cls) === 'C' || filter === 't_normal' && s.studentType === 'ធម្មតា' || filter === 't_special' && s.studentType === 'ពិសេស' || filter === 't_ssw' && s.studentType === 'SSW');
+  var filtered = allStudents.filter(s => filter === 'all' || filter === 'new' && s.status === 'New' || filter === 'inprogress' && s.status === 'In progress' || filter === 'exam' && s.status === 'Road exam soon' || filter === 'cleared' && s.status === 'Cleared' || filter === 'graduated' && s.exam_result === 'pass' || filter === 'B' && clsLetter(s.cls) === 'B' || filter === 'A' && clsLetter(s.cls) === 'A' || filter === 'C' && clsLetter(s.cls) === 'C' || filter === 't_normal' && s.studentType === 'ធម្មតា' || filter === 't_special' && s.studentType === 'ពិសេស' || filter === 't_ssw' && s.studentType === 'SSW' || filter === 'finished' && (s.status === 'Cleared' || s.exam_result === 'pass'));
   var examReady = allStudents.filter(s => s.status === 'Road exam soon').length;
   if (bp.mobile) {
     var filterChips = [{
       id: 'all',
       l: tr('ទាំងអស់', 'All')
     }, {
-      id: 'new',
-      l: tr('ថ្មី', 'New')
+      id: 't_normal',
+      l: tr('ធម្មតា', 'Regular')
     }, {
-      id: 'inprogress',
-      l: tr('កំពុងរៀន', 'Active')
+      id: 't_special',
+      l: tr('ពិសេស', 'Special')
     }, {
-      id: 'exam',
-      l: tr('នឹងប្រឡង', 'Exam')
+      id: 't_ssw',
+      l: 'SSW'
+    }, {
+      id: 'finished',
+      l: tr('បាន​បញ្ចប់', 'Completed')
     }];
     var toggleSection = id => setOpenSections(prev => ({
       ...prev,
@@ -37409,7 +37408,8 @@ var StudentsScreenV2 = () => {
       id,
       km,
       en,
-      children
+      children,
+      action
     }) => {
       var isOpen = openSections[id];
       return React.createElement("div", {
@@ -37419,31 +37419,33 @@ var StudentsScreenV2 = () => {
           border: '1px solid var(--border)',
           marginBottom: 8
         }
-      }, React.createElement("button", {
+      }, React.createElement("div", {
         onClick: () => toggleSection(id),
         style: {
           width: '100%',
           padding: '12px 14px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
+          gap: 10,
           background: isOpen ? 'var(--surface-muted)' : 'var(--surface)',
-          border: 'none',
           cursor: 'pointer',
           textAlign: 'left'
         }
       }, React.createElement("span", {
         style: {
+          flex: 1,
+          minWidth: 0,
           fontSize: 14,
           fontWeight: 700,
           fontFamily: 'var(--font-km)',
           color: 'var(--ink)'
         }
-      }, tr(km, en)), React.createElement("span", {
+      }, tr(km, en)), action, React.createElement("span", {
         style: {
           fontSize: 13,
           color: 'var(--ink-3)',
           transition: 'transform .2s',
+          flexShrink: 0,
           transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)'
         }
       }, "\u25BE")), isOpen && React.createElement("div", {
@@ -37454,6 +37456,34 @@ var StudentsScreenV2 = () => {
         }
       }, children));
     };
+    var SectionEditBtn = () => React.createElement("button", {
+      onClick: e => {
+        e.stopPropagation();
+        setOpenSections(p => ({
+          ...p,
+          bio: true
+        }));
+        setMobileEdit(v => !v);
+      },
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 4,
+        padding: '5px 10px',
+        borderRadius: 7,
+        flexShrink: 0,
+        border: '1px solid ' + (mobileEdit ? 'var(--accent)' : 'var(--border)'),
+        background: mobileEdit ? 'var(--accent)' : 'var(--surface)',
+        color: mobileEdit ? '#fff' : 'var(--ink-2)',
+        cursor: 'pointer',
+        fontSize: 12,
+        fontWeight: 600,
+        fontFamily: 'inherit'
+      }
+    }, React.createElement(Icon, {
+      name: "users",
+      size: 12
+    }), mobileEdit ? tr('បិទ', 'Close') : tr('កែ', 'Edit'));
     var InfoPair = ({
       label,
       val
@@ -37475,57 +37505,6 @@ var StudentsScreenV2 = () => {
       if (!s) {
         setMobileProfileId(null);
         return null;
-      }
-      if (mobileEdit) {
-        return React.createElement("div", {
-          style: {
-            display: 'flex',
-            flexDirection: 'column'
-          }
-        }, React.createElement("div", {
-          style: {
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            marginBottom: 14
-          }
-        }, React.createElement("button", {
-          onClick: () => setMobileEdit(false),
-          style: {
-            display: 'flex',
-            alignItems: 'center',
-            gap: 5,
-            padding: '7px 12px',
-            borderRadius: 8,
-            border: '1px solid var(--border)',
-            background: 'var(--surface)',
-            cursor: 'pointer',
-            fontSize: 13,
-            fontWeight: 500,
-            color: 'var(--ink-2)',
-            flexShrink: 0
-          }
-        }, "\u2190 ", tr('ត្រឡប់', 'Back')), React.createElement("div", {
-          style: {
-            flex: 1,
-            fontSize: 14,
-            fontWeight: 700,
-            fontFamily: 'var(--font-km)'
-          }
-        }, tr('កែ​ព័ត៌មាន', 'Edit details'))), React.createElement(StudentEditPanel, {
-          key: s.id,
-          s: s,
-          onSave: u => {
-            saveStudent(u);
-            setMobileEdit(false);
-          },
-          onCancel: () => setMobileEdit(false),
-          onDelete: id => {
-            deleteStudent(id);
-            setMobileEdit(false);
-            setMobileProfileId(null);
-          }
-        }));
       }
       var inst = instById(s.instId);
       var pct = s.target > 0 ? Math.min(100, Math.round(s.hours / s.target * 100)) : 0;
@@ -37571,19 +37550,25 @@ var StudentsScreenV2 = () => {
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap'
         }
-      }, lang === 'km' ? s.name : s.en || s.name), React.createElement(Btn, {
-        kind: "primary",
-        size: "sm",
-        icon: React.createElement(Icon, {
-          name: "users",
-          size: 13
-        }),
-        onClick: () => setMobileEdit(true)
-      }, tr('កែ', 'Edit'))), React.createElement(CvSection, {
+      }, lang === 'km' ? s.name : s.en || s.name)), React.createElement(CvSection, {
         id: "bio",
         km: "\u179A\u17BC\u1794\u1790\u178F \u1793\u17B7\u1784 \u1794\u17D2\u179A\u179C\u178F\u17D2\u178F\u17B7\u179A\u17BC\u1794\u179F\u1784\u17D2\u1781\u17C1\u1794",
-        en: "Photo & Bio"
-      }, React.createElement("div", {
+        en: "Photo & Bio",
+        action: React.createElement(SectionEditBtn, null)
+      }, mobileEdit ? React.createElement(StudentEditPanel, {
+        key: s.id,
+        s: s,
+        onSave: u => {
+          saveStudent(u);
+          setMobileEdit(false);
+        },
+        onCancel: () => setMobileEdit(false),
+        onDelete: id => {
+          deleteStudent(id);
+          setMobileEdit(false);
+          setMobileProfileId(null);
+        }
+      }) : React.createElement(React.Fragment, null, React.createElement("div", {
         style: {
           display: 'flex',
           gap: 14,
@@ -37637,7 +37622,7 @@ var StudentsScreenV2 = () => {
         }
       }, React.createElement(InfoPair, {
         label: tr('ថ្នាក់', 'Class'),
-        val: s.cls
+        val: clsKm(s.cls)
       }), React.createElement(InfoPair, {
         label: tr('ភេទ', 'Gender'),
         val: s.gender === 'M' ? tr('ប្រុស', 'Male') : tr('ស្រី', 'Female')
@@ -37665,7 +37650,7 @@ var StudentsScreenV2 = () => {
       }), React.createElement(InfoPair, {
         label: tr('ទីតាំង​ប្រឡង', 'Exam location'),
         val: s.exam_location
-      }))), React.createElement(CvSection, {
+      })))), React.createElement(CvSection, {
         id: "payment",
         km: "\u1785\u17BB\u17C7\u1788\u17D2\u1798\u17C4\u17C7 \u1793\u17B7\u1784 \u1780\u17B6\u1794\u1784\u17CB\u1794\u17D2\u179A\u17B6\u1780\u17CB",
         en: "Enrollment & Payment"

@@ -278,7 +278,8 @@ const StudentsScreenV2 = () => {
     (filter==='C'          && clsLetter(s.cls)==='C') ||
     (filter==='t_normal'   && s.studentType==='ធម្មតា') ||
     (filter==='t_special'  && s.studentType==='ពិសេស') ||
-    (filter==='t_ssw'      && s.studentType==='SSW')
+    (filter==='t_ssw'      && s.studentType==='SSW') ||
+    (filter==='finished'   && (s.status==='Cleared' || s.exam_result==='pass'))
   );
 
   const examReady = allStudents.filter(s => s.status==='Road exam soon').length;
@@ -286,28 +287,30 @@ const StudentsScreenV2 = () => {
   // ── Mobile: list + CV profile ──────────────────────────────────────────────
   if (bp.mobile) {
     const filterChips = [
-      {id:'all', l:tr('ទាំងអស់','All')},
-      {id:'new', l:tr('ថ្មី','New')},
-      {id:'inprogress', l:tr('កំពុងរៀន','Active')},
-      {id:'exam', l:tr('នឹងប្រឡង','Exam')},
+      {id:'all',       l:tr('ទាំងអស់','All')},
+      {id:'t_normal',  l:tr('ធម្មតា','Regular')},
+      {id:'t_special', l:tr('ពិសេស','Special')},
+      {id:'t_ssw',     l:'SSW'},
+      {id:'finished',  l:tr('បាន​បញ្ចប់','Completed')},
     ];
     const toggleSection = (id) => setOpenSections(prev => ({...prev, [id]: !prev[id]}));
 
-    const CvSection = ({id, km, en, children}) => {
+    const CvSection = ({id, km, en, children, action}) => {
       const isOpen = openSections[id];
       return (
         <div style={{borderRadius:10,overflow:'hidden',border:'1px solid var(--border)',marginBottom:8}}>
-          <button onClick={()=>toggleSection(id)} style={{
-            width:'100%',padding:'12px 14px',display:'flex',alignItems:'center',justifyContent:'space-between',
+          <div onClick={()=>toggleSection(id)} style={{
+            width:'100%',padding:'12px 14px',display:'flex',alignItems:'center',gap:10,
             background: isOpen ? 'var(--surface-muted)' : 'var(--surface)',
-            border:'none',cursor:'pointer',textAlign:'left',
+            cursor:'pointer',textAlign:'left',
           }}>
-            <span style={{fontSize:14,fontWeight:700,fontFamily:'var(--font-km)',color:'var(--ink)'}}>
+            <span style={{flex:1,minWidth:0,fontSize:14,fontWeight:700,fontFamily:'var(--font-km)',color:'var(--ink)'}}>
               {tr(km, en)}
             </span>
-            <span style={{fontSize:13,color:'var(--ink-3)',transition:'transform .2s',
+            {action}
+            <span style={{fontSize:13,color:'var(--ink-3)',transition:'transform .2s',flexShrink:0,
               transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)'}}>▾</span>
-          </button>
+          </div>
           {isOpen && (
             <div style={{padding:'12px 14px',borderTop:'1px solid var(--border)',background:'var(--surface)'}}>
               {children}
@@ -316,6 +319,17 @@ const StudentsScreenV2 = () => {
         </div>
       );
     };
+    // Small "Edit" toggle that lives in a section header (click to show the
+    // editor, click again to hide it).
+    const SectionEditBtn = () => (
+      <button onClick={(e)=>{ e.stopPropagation(); setOpenSections(p=>({...p,bio:true})); setMobileEdit(v=>!v); }}
+        style={{display:'flex',alignItems:'center',gap:4,padding:'5px 10px',borderRadius:7,flexShrink:0,
+          border:'1px solid '+(mobileEdit?'var(--accent)':'var(--border)'),
+          background:mobileEdit?'var(--accent)':'var(--surface)',
+          color:mobileEdit?'#fff':'var(--ink-2)',cursor:'pointer',fontSize:12,fontWeight:600,fontFamily:'inherit'}}>
+        <Icon name="users" size={12}/>{mobileEdit ? tr('បិទ','Close') : tr('កែ','Edit')}
+      </button>
+    );
 
     const InfoPair = ({label, val}) => (
       <div>
@@ -328,28 +342,6 @@ const StudentsScreenV2 = () => {
     if (mobileProfileId) {
       const s = allStudents.find(x => x.id === mobileProfileId);
       if (!s) { setMobileProfileId(null); return null; }
-
-      // Edit mode — full edit form on mobile
-      if (mobileEdit) {
-        return (
-          <div style={{display:'flex',flexDirection:'column'}}>
-            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
-              <button onClick={()=>setMobileEdit(false)} style={{
-                display:'flex',alignItems:'center',gap:5,padding:'7px 12px',
-                borderRadius:8,border:'1px solid var(--border)',background:'var(--surface)',
-                cursor:'pointer',fontSize:13,fontWeight:500,color:'var(--ink-2)',flexShrink:0,
-              }}>← {tr('ត្រឡប់','Back')}</button>
-              <div style={{flex:1,fontSize:14,fontWeight:700,fontFamily:'var(--font-km)'}}>
-                {tr('កែ​ព័ត៌មាន','Edit details')}
-              </div>
-            </div>
-            <StudentEditPanel key={s.id} s={s}
-              onSave={(u)=>{ saveStudent(u); setMobileEdit(false); }}
-              onCancel={()=>setMobileEdit(false)}
-              onDelete={(id)=>{ deleteStudent(id); setMobileEdit(false); setMobileProfileId(null); }}/>
-          </div>
-        );
-      }
 
       const inst = instById(s.instId);
       const pct = s.target > 0 ? Math.min(100, Math.round((s.hours / s.target) * 100)) : 0;
@@ -372,13 +364,16 @@ const StudentsScreenV2 = () => {
               overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
               {lang==='km' ? s.name : (s.en || s.name)}
             </div>
-            <Btn kind="primary" size="sm" icon={<Icon name="users" size={13}/>} onClick={()=>setMobileEdit(true)}>
-              {tr('កែ','Edit')}
-            </Btn>
           </div>
 
-          {/* Section 1: Photo & bio */}
-          <CvSection id="bio" km="រូបថត និង ប្រវត្តិរូបសង្ខេប" en="Photo & Bio">
+          {/* Section 1: Photo & bio — edit toggle lives in the header */}
+          <CvSection id="bio" km="រូបថត និង ប្រវត្តិរូបសង្ខេប" en="Photo & Bio" action={<SectionEditBtn/>}>
+            {mobileEdit ? (
+              <StudentEditPanel key={s.id} s={s}
+                onSave={(u)=>{ saveStudent(u); setMobileEdit(false); }}
+                onCancel={()=>setMobileEdit(false)}
+                onDelete={(id)=>{ deleteStudent(id); setMobileEdit(false); setMobileProfileId(null); }}/>
+            ) : (<>
             <div style={{display:'flex',gap:14,marginBottom:12,alignItems:'flex-start'}}>
               <div style={{textAlign:'center',flexShrink:0}}>
                 <UploadAvatar id={s.id} photo={s.photo} size={72} onUpload={savePhoto}/>
@@ -391,7 +386,7 @@ const StudentsScreenV2 = () => {
               </div>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px 14px'}}>
-              <InfoPair label={tr('ថ្នាក់','Class')} val={s.cls}/>
+              <InfoPair label={tr('ថ្នាក់','Class')} val={clsKm(s.cls)}/>
               <InfoPair label={tr('ភេទ','Gender')} val={s.gender==='M'?tr('ប្រុស','Male'):tr('ស្រី','Female')}/>
               <InfoPair label={tr('អាយុ','Age')} val={s.age ? `${s.age} ${tr('ឆ្នាំ','y')}` : null}/>
               <InfoPair label={tr('ប្រភេទ','Type')} val={s.studentType}/>
@@ -402,6 +397,7 @@ const StudentsScreenV2 = () => {
               <InfoPair label={tr('លេខ​បណ្ណ​បើកបរ','License No.')} val={s.license_no}/>
               <InfoPair label={tr('ទីតាំង​ប្រឡង','Exam location')} val={s.exam_location}/>
             </div>
+            </>)}
           </CvSection>
 
           {/* Section 2: Enrollment & payment */}
