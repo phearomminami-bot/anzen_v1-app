@@ -67,6 +67,10 @@
 
   const fill = (arr, rows, initialLoad, table) => {
     if (!rows) return;
+    // SAFETY GUARD: an empty cloud table while we still hold local rows is almost
+    // always a failed/incomplete load — NEVER mass-delete local data on that basis.
+    // (This is what wiped a device after a failed migration push.)
+    if (!initialLoad && rows.length === 0 && arr.length > 0) return;
     const cloudMap = {};
     rows.forEach(r => { const o = rowObj(r); if (o.id) cloudMap[o.id] = o; });
     // Baseline = the cloud-confirmed state. Used to protect un-synced LOCAL changes
@@ -417,19 +421,23 @@
     try { await window.sb.from('school_settings').upsert({ id: 1, data: blob(settings) }); }
     catch (e) { console.error('[Anzen] sync settings', e); }
 
-    // Update snapshots to reflect what we just pushed
-    lastIds = { vehicles: vIds, students: sIds, lessons: lIds, invoices: iIds };
-    // Update content snap for pushed records so next sync computes correct diff
-    const updateSnap = (t, pushed) => pushed.forEach(r => {
-      if (!contentSnap[t]) contentSnap[t] = new Map();
-      contentSnap[t].set(String(r.id), JSON.stringify(r));
-    });
-    updateSnap('vehicles',    cVeh);
-    updateSnap('students',    cStu);
-    updateSnap('lessons',     cLes);
-    updateSnap('invoices',    cInv);
-    updateSnap('instructors', cIns);
-    updateSnap('staff',       cStf);
+    // Only advance the "synced" baseline when the push actually SUCCEEDED. If any
+    // upsert errored, leave records un-synced so (a) they get re-pushed next time,
+    // and (b) a later reload doesn't treat them as "deleted from cloud" and wipe
+    // local data — which is exactly how a failed migration push lost data.
+    if (!firstErr) {
+      lastIds = { vehicles: vIds, students: sIds, lessons: lIds, invoices: iIds };
+      const updateSnap = (t, pushed) => pushed.forEach(r => {
+        if (!contentSnap[t]) contentSnap[t] = new Map();
+        contentSnap[t].set(String(r.id), JSON.stringify(r));
+      });
+      updateSnap('vehicles',    cVeh);
+      updateSnap('students',    cStu);
+      updateSnap('lessons',     cLes);
+      updateSnap('invoices',    cInv);
+      updateSnap('instructors', cIns);
+      updateSnap('staff',       cStf);
+    }
 
     return { ok: !firstErr, error: firstErr };
   }

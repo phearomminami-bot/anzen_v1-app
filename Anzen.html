@@ -57683,6 +57683,7 @@ Object.assign(window, {
   };
   var fill = (arr, rows, initialLoad, table) => {
     if (!rows) return;
+    if (!initialLoad && rows.length === 0 && arr.length > 0) return;
     var cloudMap = {};
     rows.forEach(r => {
       var o = rowObj(r);
@@ -58117,22 +58118,24 @@ Object.assign(window, {
     } catch (e) {
       console.error('[Anzen] sync settings', e);
     }
-    lastIds = {
-      vehicles: vIds,
-      students: sIds,
-      lessons: lIds,
-      invoices: iIds
-    };
-    var updateSnap = (t, pushed) => pushed.forEach(r => {
-      if (!contentSnap[t]) contentSnap[t] = new Map();
-      contentSnap[t].set(String(r.id), JSON.stringify(r));
-    });
-    updateSnap('vehicles', cVeh);
-    updateSnap('students', cStu);
-    updateSnap('lessons', cLes);
-    updateSnap('invoices', cInv);
-    updateSnap('instructors', cIns);
-    updateSnap('staff', cStf);
+    if (!firstErr) {
+      lastIds = {
+        vehicles: vIds,
+        students: sIds,
+        lessons: lIds,
+        invoices: iIds
+      };
+      var updateSnap = (t, pushed) => pushed.forEach(r => {
+        if (!contentSnap[t]) contentSnap[t] = new Map();
+        contentSnap[t].set(String(r.id), JSON.stringify(r));
+      });
+      updateSnap('vehicles', cVeh);
+      updateSnap('students', cStu);
+      updateSnap('lessons', cLes);
+      updateSnap('invoices', cInv);
+      updateSnap('instructors', cIns);
+      updateSnap('staff', cStf);
+    }
     return {
       ok: !firstErr,
       error: firstErr
