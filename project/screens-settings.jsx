@@ -2075,7 +2075,10 @@ const DataBackup = ({ toast, tr }) => {
     if (cloudBusy) return;
     setCloudBusy('push');
     try {
-      const r = await window.__sbPushNow();
+      // Force-push ALL local data (not just changed rows) so a fresh/empty
+      // cloud project gets fully populated — this is the migration action.
+      const push = window.__sbForcePushAll || window.__sbPushNow;
+      const r = await push();
       if (r && r.ok) toast(tr('បានផ្ទេរទិន្នន័យទៅ Cloud ✓', 'Pushed to cloud ✓'), 'good');
       else toast(tr('ផ្ទេរមានបញ្ហា — ' + (r?.error||''), 'Push failed — ' + (r?.error||'')), 'danger');
     } catch (e) { toast(tr('ផ្ទេរមានបញ្ហា', 'Push failed'), 'danger'); }

@@ -289,6 +289,19 @@
     finally { window.__sbHasPendingSync = false; }
   };
 
+  // One-time migration helper: forget the change-tracking baseline so doSync
+  // pushes EVERY local record up to the (new/empty) cloud project. Used when
+  // moving to a fresh Supabase project — uploads all local data in one go.
+  window.__sbForcePushAll = async function () {
+    if (!window.sb) return { ok: false, error: 'not-configured' };
+    clearTimeout(syncTimer);
+    contentSnap = {};        // empty baseline → changed() returns all rows
+    lastIds = null;          // don't delete anything based on a stale snapshot
+    window.__sbHasPendingSync = true;
+    try { return await doSync(); }
+    finally { window.__sbHasPendingSync = false; }
+  };
+
   async function doSync() {
     if (!window.sb) return { ok: false };
 

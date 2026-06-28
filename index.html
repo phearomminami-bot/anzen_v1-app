@@ -53633,7 +53633,8 @@ var DataBackup = ({
     if (cloudBusy) return;
     setCloudBusy('push');
     try {
-      var r = await window.__sbPushNow();
+      var push = window.__sbForcePushAll || window.__sbPushNow;
+      var r = await push();
       if (r && r.ok) toast(tr('បានផ្ទេរទិន្នន័យទៅ Cloud ✓', 'Pushed to cloud ✓'), 'good');else toast(tr('ផ្ទេរមានបញ្ហា — ' + (r?.error || ''), 'Push failed — ' + (r?.error || '')), 'danger');
     } catch (e) {
       toast(tr('ផ្ទេរមានបញ្ហា', 'Push failed'), 'danger');
@@ -57910,6 +57911,21 @@ Object.assign(window, {
       error: 'not-configured'
     };
     clearTimeout(syncTimer);
+    try {
+      return await doSync();
+    } finally {
+      window.__sbHasPendingSync = false;
+    }
+  };
+  window.__sbForcePushAll = async function () {
+    if (!window.sb) return {
+      ok: false,
+      error: 'not-configured'
+    };
+    clearTimeout(syncTimer);
+    contentSnap = {};
+    lastIds = null;
+    window.__sbHasPendingSync = true;
     try {
       return await doSync();
     } finally {
