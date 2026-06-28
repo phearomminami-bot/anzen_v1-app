@@ -743,6 +743,14 @@ const RealLoginCard = ({ onAuthLogin, onUseDemo }) => {
           background: busy?'var(--ink-3)':'var(--accent)', color:'#fff',
           fontSize:14,fontWeight:700,cursor: busy?'default':'pointer',fontFamily:'inherit',
         }}>{busy ? tr('កំពុង​ចូល…','Signing in…') : tr('ចូល','Sign in')}</button>
+
+        {onUseDemo && (
+          <button type="button" onClick={onUseDemo} style={{
+            width:'100%',marginTop:12,padding:'10px',borderRadius:10,
+            border:'1px solid var(--border)',background:'transparent',
+            color:'var(--ink-2)',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit',
+          }}>{tr('ប្រើ​ការ​ចូល​ក្នុង​តំបន់ (Admin / Demo)','Use local login (Admin / Demo)')}</button>
+        )}
       </form>
     </div>
   );
