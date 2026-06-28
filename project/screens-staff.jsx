@@ -427,6 +427,23 @@ const SfDetailRow = ({ s, onEdit, onSavePhoto }) => {
             {inst.id}
           </Btn>
         )}
+        {inst && (
+          <Btn kind="ghost" size="sm" icon={<Icon name="users" size={13}/>}
+            onClick={()=>{
+              inst.visible = inst.visible === false ? true : false;
+              if (window.saveAllData) window.saveAllData();
+              if (window.__notifyInstructorsChanged) window.__notifyInstructorsChanged();
+              if (window.__notifyStaffChanged) window.__notifyStaffChanged();
+              toast(inst.visible === false
+                ? (tr ? tr('លាក់​ពី Tab គ្រូ','Hidden from Instructors') : 'Hidden')
+                : (tr ? tr('បង្ហាញ​នៅ Tab គ្រូ','Shown in Instructors') : 'Shown'), 'neutral');
+            }}
+            style={inst.visible === false ? {} : {color:'var(--good)',borderColor:'var(--good)'}}>
+            {inst.visible === false
+              ? (tr ? tr('បង្ហាញ​ក្នុង​គ្រូ','Show in Instructors') : 'Show in Instructors')
+              : (tr ? tr('បង្ហាញ​ក្នុង​គ្រូ ✓','In Instructors ✓') : 'In Instructors ✓')}
+          </Btn>
+        )}
         <Btn kind="ghost" size="sm" onClick={onEdit}>{tr('កែ​សម្រួល','Edit')}</Btn>
         <Btn kind="primary" size="sm" icon={<Icon name="cal" size={13}/>}
           onClick={()=>{ if(inst) window.__scheduleInstFilter=inst.id; navigate('schedule'); }}>
@@ -445,27 +462,6 @@ const SfDetailRow = ({ s, onEdit, onSavePhoto }) => {
             <div><div style={{fontSize:10,color:'var(--ink-3)',textTransform:'uppercase',letterSpacing:'.05em'}}>Total lessons</div><div style={{fontSize:15,fontWeight:700,marginTop:1}}>{weekLessons.length}</div></div>
             <div><div style={{fontSize:10,color:'var(--ink-3)',textTransform:'uppercase',letterSpacing:'.05em'}}>Languages</div><div style={{fontSize:12,marginTop:1,color:'var(--ink-2)'}}>{inst.lang}</div></div>
           </div>
-          {/* Show/hide in Instructors tab */}
-          <button
-            onClick={() => {
-              inst.visible = inst.visible === false ? true : false;
-              if (window.saveAllData) window.saveAllData();
-              if (window.__notifyInstructorsChanged) window.__notifyInstructorsChanged();
-              toast(inst.visible === false
-                ? (tr ? tr('លាក់​ចេញ​ពី​ Tab គ្រូ','Hidden from Instructors tab') : 'Hidden from Instructors tab')
-                : (tr ? tr('បង្ហាញ​នៅ​ Tab គ្រូ','Shown in Instructors tab') : 'Shown in Instructors tab'),
-              'neutral');
-            }}
-            style={{
-              padding:'6px 12px',borderRadius:8,fontSize:11,fontWeight:600,cursor:'pointer',
-              border:'1px solid var(--border)',transition:'all .12s',flexShrink:0,
-              background: inst.visible === false ? 'var(--surface-muted)' : 'var(--good)18',
-              color:       inst.visible === false ? 'var(--ink-3)' : 'var(--good)',
-            }}>
-            {inst.visible === false
-              ? (tr ? tr('លាក់​នៅ Tab គ្រូ ●','Hidden in Instructors ●') : 'Hidden ●')
-              : (tr ? tr('បង្ហាញ​នៅ Tab គ្រូ ●','Visible in Instructors ●') : 'Visible ●')}
-          </button>
         </div>
       )}
 

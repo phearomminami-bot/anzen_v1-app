@@ -712,11 +712,11 @@ window.__trRegistry = {
   "Request leave": "ស្នើច្បាប់",
   "Add first staff": "បន្ថែម​បុគ្គលិក​ដំបូង",
   "Password saved": "បានរក្សាទុក Password",
+  "Hidden from Instructors": "លាក់​ពី Tab គ្រូ",
+  "Shown in Instructors": "បង្ហាញ​នៅ Tab គ្រូ",
+  "Show in Instructors": "បង្ហាញ​ក្នុង​គ្រូ",
+  "In Instructors ✓": "បង្ហាញ​ក្នុង​គ្រូ ✓",
   "TEACHING": "ព័ត៌មាន​បង្រៀន",
-  "Hidden from Instructors tab": "លាក់​ចេញ​ពី​ Tab គ្រូ",
-  "Shown in Instructors tab": "បង្ហាញ​នៅ​ Tab គ្រូ",
-  "Hidden in Instructors ●": "លាក់​នៅ Tab គ្រូ ●",
-  "Visible in Instructors ●": "បង្ហាញ​នៅ Tab គ្រូ ●",
   "EMPLOYMENT": "ប្រភេទ​ការ​ងារ",
   "Start": "ចាប់ផ្ដើម",
   "Contract": "ប្រភេទ",
@@ -1883,11 +1883,11 @@ window.__trGroups = {
     "Request leave": "ស្នើច្បាប់",
     "Add first staff": "បន្ថែម​បុគ្គលិក​ដំបូង",
     "Password saved": "បានរក្សាទុក Password",
+    "Hidden from Instructors": "លាក់​ពី Tab គ្រូ",
+    "Shown in Instructors": "បង្ហាញ​នៅ Tab គ្រូ",
+    "Show in Instructors": "បង្ហាញ​ក្នុង​គ្រូ",
+    "In Instructors ✓": "បង្ហាញ​ក្នុង​គ្រូ ✓",
     "TEACHING": "ព័ត៌មាន​បង្រៀន",
-    "Hidden from Instructors tab": "លាក់​ចេញ​ពី​ Tab គ្រូ",
-    "Shown in Instructors tab": "បង្ហាញ​នៅ​ Tab គ្រូ",
-    "Hidden in Instructors ●": "លាក់​នៅ Tab គ្រូ ●",
-    "Visible in Instructors ●": "បង្ហាញ​នៅ Tab គ្រូ ●",
     "EMPLOYMENT": "ការងារ",
     "Start": "ចូលធ្វើការ",
     "Contract": "ប្រភេទ",
@@ -25931,7 +25931,25 @@ var SfDetailRow = ({
       size: 13
     }),
     onClick: () => navigate('instructors')
-  }, inst.id), React.createElement(Btn, {
+  }, inst.id), inst && React.createElement(Btn, {
+    kind: "ghost",
+    size: "sm",
+    icon: React.createElement(Icon, {
+      name: "users",
+      size: 13
+    }),
+    onClick: () => {
+      inst.visible = inst.visible === false ? true : false;
+      if (window.saveAllData) window.saveAllData();
+      if (window.__notifyInstructorsChanged) window.__notifyInstructorsChanged();
+      if (window.__notifyStaffChanged) window.__notifyStaffChanged();
+      toast(inst.visible === false ? tr ? tr('លាក់​ពី Tab គ្រូ', 'Hidden from Instructors') : 'Hidden' : tr ? tr('បង្ហាញ​នៅ Tab គ្រូ', 'Shown in Instructors') : 'Shown', 'neutral');
+    },
+    style: inst.visible === false ? {} : {
+      color: 'var(--good)',
+      borderColor: 'var(--good)'
+    }
+  }, inst.visible === false ? tr ? tr('បង្ហាញ​ក្នុង​គ្រូ', 'Show in Instructors') : 'Show in Instructors' : tr ? tr('បង្ហាញ​ក្នុង​គ្រូ ✓', 'In Instructors ✓') : 'In Instructors ✓'), React.createElement(Btn, {
     kind: "ghost",
     size: "sm",
     onClick: onEdit
@@ -26039,26 +26057,7 @@ var SfDetailRow = ({
       marginTop: 1,
       color: 'var(--ink-2)'
     }
-  }, inst.lang))), React.createElement("button", {
-    onClick: () => {
-      inst.visible = inst.visible === false ? true : false;
-      if (window.saveAllData) window.saveAllData();
-      if (window.__notifyInstructorsChanged) window.__notifyInstructorsChanged();
-      toast(inst.visible === false ? tr ? tr('លាក់​ចេញ​ពី​ Tab គ្រូ', 'Hidden from Instructors tab') : 'Hidden from Instructors tab' : tr ? tr('បង្ហាញ​នៅ​ Tab គ្រូ', 'Shown in Instructors tab') : 'Shown in Instructors tab', 'neutral');
-    },
-    style: {
-      padding: '6px 12px',
-      borderRadius: 8,
-      fontSize: 11,
-      fontWeight: 600,
-      cursor: 'pointer',
-      border: '1px solid var(--border)',
-      transition: 'all .12s',
-      flexShrink: 0,
-      background: inst.visible === false ? 'var(--surface-muted)' : 'var(--good)18',
-      color: inst.visible === false ? 'var(--ink-3)' : 'var(--good)'
-    }
-  }, inst.visible === false ? tr ? tr('លាក់​នៅ Tab គ្រូ ●', 'Hidden in Instructors ●') : 'Hidden ●' : tr ? tr('បង្ហាញ​នៅ Tab គ្រូ ●', 'Visible in Instructors ●') : 'Visible ●')), React.createElement("div", {
+  }, inst.lang)))), React.createElement("div", {
     style: {
       padding: 18,
       display: 'grid',
