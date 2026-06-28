@@ -660,6 +660,8 @@ window.__trRegistry = {
   "Mark as read ✓": "សម្គាល់ថាបានអាន ✓",
   "questions": "សំណួរ",
   "Passed": "ឆ្លងកាត់",
+  "Open in new tab": "បើក​ក្នុង​ផ្ទាំង​ថ្មី",
+  "Mark as done": "សម្គាល់​ថា​បាន​ធ្វើ",
   "Passed! Well done!": "ឆ្លងកាត់! ល្អណាស់!",
   "Try again": "ព្យាយាមមើលម្ដងទៀត",
   "correct answers": "ចម្លើយត្រូវ",
@@ -679,6 +681,8 @@ window.__trRegistry = {
   "Image upload failed": "បន្ទុក​រូប​មិន​បាន",
   "Enter a YouTube ID to preview": "វាយ YouTube ID ដើម្បីមើល",
   "Add video": "បន្ថែម​វីដេអូ",
+  "If you paste a Google Form link, this exercise uses the form instead of the questions below.": "បើ​ដាក់​តំណ Google Form នោះ​លំហាត់​នេះ​នឹង​ប្រើ Google Form ជំនួស​សំណួរ​ខាង​ក្រោម។",
+  "This exercise uses a Google Form ✓ — the built-in questions are not used.": "លំហាត់​នេះ​ប្រើ Google Form ✓ — សំណួរ​ខាង​ក្នុង​មិន​ត្រូវ​បាន​ប្រើ​ទេ។",
   "Questions": "សំណួរ",
   "Add question": "បន្ថែម​សំណួរ",
   "Replace": "ប្ដូរ​រូប",
@@ -687,7 +691,8 @@ window.__trRegistry = {
   "Remove image": "លុបរូប",
   "Mark as correct": "ជា​ចម្លើយ​ត្រឹមត្រូវ",
   "Add quiz": "បន្ថែម​លំហាត់",
-  "question' + (item.questions.length===1?'':'s": "សំណួរ",
+  "Google Form exercise": "លំហាត់ Google Form",
+  "question' + (qCount===1?'':'s": "សំណួរ",
   "Saved": "បានបង់'),'good'); }\n            }}\n            onSaveBio={(id, updates) => {\n              const i = STUDENTS.findIndex(s => s.id === id);\n              if (i !== -1) { Object.assign(STUDENTS[i], updates); if(window.saveAllData)window.saveAllData(); forceUpdate(); toast(tr('បានរក្សាទុក",
   "Added": "បានបន្ថែម",
   "Delete this item?": "លុប​មេរៀន?",
@@ -1722,6 +1727,8 @@ window.__trGroups = {
     "Mark as read ✓": "សម្គាល់ថាបានអាន ✓",
     "questions": "សំណួរ",
     "Passed": "ឆ្លងកាត់",
+    "Open in new tab": "បើក​ក្នុង​ផ្ទាំង​ថ្មី",
+    "Mark as done": "សម្គាល់​ថា​បាន​ធ្វើ",
     "Passed! Well done!": "ឆ្លងកាត់! ល្អណាស់!",
     "Try again": "ព្យាយាមមើលម្ដងទៀត",
     "correct answers": "ចម្លើយត្រូវ",
@@ -1743,6 +1750,8 @@ window.__trGroups = {
     "Image upload failed": "បន្ទុក​រូប​មិន​បាន",
     "Enter a YouTube ID to preview": "វាយ YouTube ID ដើម្បីមើល",
     "Add video": "បន្ថែម",
+    "If you paste a Google Form link, this exercise uses the form instead of the questions below.": "បើ​ដាក់​តំណ Google Form នោះ​លំហាត់​នេះ​នឹង​ប្រើ Google Form ជំនួស​សំណួរ​ខាង​ក្រោម។",
+    "This exercise uses a Google Form ✓ — the built-in questions are not used.": "លំហាត់​នេះ​ប្រើ Google Form ✓ — សំណួរ​ខាង​ក្នុង​មិន​ត្រូវ​បាន​ប្រើ​ទេ។",
     "Questions": "សំណួរ",
     "Add question": "បន្ថែម​សំណួរ",
     "Replace": "ប្ដូរ​រូប",
@@ -1751,7 +1760,8 @@ window.__trGroups = {
     "Remove image": "លុបរូប",
     "Mark as correct": "ជា​ចម្លើយ​ត្រឹមត្រូវ",
     "Add quiz": "បន្ថែម",
-    "question' + (item.questions.length===1?'':'s": "សំណួរ",
+    "Google Form exercise": "លំហាត់ Google Form",
+    "question' + (qCount===1?'':'s": "សំណួរ",
     "Saved": "បាន​រក្សា​ទុក",
     "Added": "បាន​បន្ថែម",
     "Delete this item?": "លុប​មេរៀន?",
@@ -22288,9 +22298,19 @@ var ExerciseCard = ({
   var {
     tr
   } = useAppActions();
-  var total = exercise.questions.length;
-  var score = submitted ? exercise.questions.filter((q, i) => answers[i] === q.answer).length : null;
+  var isForm = !!exercise.formUrl;
+  var total = (exercise.questions || []).length;
+  var score = submitted ? (exercise.questions || []).filter((q, i) => answers[i] === q.answer).length : null;
   var passed = score === total;
+  var formEmbedUrl = u => {
+    try {
+      var url = new URL(u);
+      url.searchParams.set('embedded', 'true');
+      return url.toString();
+    } catch (e) {
+      return u;
+    }
+  };
   var handleSubmit = () => {
     setSubmitted(true);
     if (score === total) onDone(exercise.id);
@@ -22355,7 +22375,7 @@ var ExerciseCard = ({
       color: 'var(--ink-3)',
       marginTop: 2
     }
-  }, total, " ", tr('សំណួរ', 'questions'))), done && React.createElement(Badge, {
+  }, isForm ? 'Google Form' : `${total} ${tr('សំណួរ', 'questions')}`)), done && React.createElement(Badge, {
     tone: "good"
   }, tr('ឆ្លងកាត់', 'Passed')), React.createElement("svg", {
     width: "14",
@@ -22372,7 +22392,55 @@ var ExerciseCard = ({
     }
   }, React.createElement("path", {
     d: "M9 6l6 6-6 6"
-  }))), open && React.createElement("div", {
+  }))), open && isForm && React.createElement("div", {
+    style: {
+      padding: '10px 14px 16px',
+      borderTop: '1px solid var(--border)'
+    }
+  }, React.createElement("iframe", {
+    src: formEmbedUrl(exercise.formUrl),
+    title: tr(exercise.km, exercise.en),
+    style: {
+      width: '100%',
+      height: 520,
+      border: '1px solid var(--border)',
+      borderRadius: 8,
+      background: '#fff'
+    }
+  }), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      marginTop: 10,
+      flexWrap: 'wrap'
+    }
+  }, React.createElement("a", {
+    href: exercise.formUrl,
+    target: "_blank",
+    rel: "noopener noreferrer",
+    style: {
+      padding: '9px 14px',
+      borderRadius: 8,
+      border: '1px solid var(--border)',
+      background: 'var(--surface)',
+      color: 'var(--ink-2)',
+      fontSize: 13,
+      fontWeight: 600,
+      textDecoration: 'none'
+    }
+  }, "\u2197 ", tr('បើក​ក្នុង​ផ្ទាំង​ថ្មី', 'Open in new tab')), !done && React.createElement("button", {
+    onClick: () => onDone(exercise.id),
+    style: {
+      padding: '9px 14px',
+      borderRadius: 8,
+      border: 'none',
+      background: 'var(--good)',
+      color: '#fff',
+      fontSize: 13,
+      fontWeight: 600,
+      cursor: 'pointer'
+    }
+  }, tr('សម្គាល់​ថា​បាន​ធ្វើ', 'Mark as done')))), open && !isForm && React.createElement("div", {
     style: {
       padding: '4px 14px 16px',
       borderTop: '1px solid var(--border)'
@@ -24015,7 +24083,9 @@ var QuizForm = ({
   } = useAutoTranslate();
   var [km, setKm] = React.useState(initial?.km || '');
   var [en, setEn] = React.useState(initial?.en || '');
+  var [formUrl, setFormUrl] = React.useState(initial?.formUrl || '');
   var [questions, setQuestions] = React.useState(initial?.questions ? JSON.parse(JSON.stringify(initial.questions)) : [blankQuestion()]);
+  var useForm = !!formUrl.trim();
   var updateQ = (idx, patch) => {
     setQuestions(qs => qs.map((q, i) => i === idx ? {
       ...q,
@@ -24053,7 +24123,8 @@ var QuizForm = ({
       ...(initial || {}),
       km: km.trim(),
       en: en.trim(),
-      questions: questions.map(q => ({
+      formUrl: formUrl.trim(),
+      questions: useForm ? [] : questions.map(q => ({
         ...q,
         opts_km: q.opts_km.map(o => o || ''),
         opts_en: q.opts_en.map(o => o || '')
@@ -24092,7 +24163,35 @@ var QuizForm = ({
     placeholder: "e.g. Quiz 1"
   }), React.createElement(TrBadge, {
     show: trBusy
-  }))), React.createElement("div", {
+  }))), React.createElement(AlField, {
+    km: "Google Form (\u178F\u17C6\u178E)",
+    en: "Google Form (link)"
+  }, React.createElement(AlInput, {
+    value: formUrl,
+    onChange: e => setFormUrl(e.target.value),
+    placeholder: "https://docs.google.com/forms/d/e/\u2026/viewform"
+  }), React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--ink-3)',
+      marginTop: 4
+    }
+  }, tr('បើ​ដាក់​តំណ Google Form នោះ​លំហាត់​នេះ​នឹង​ប្រើ Google Form ជំនួស​សំណួរ​ខាង​ក្រោម។', 'If you paste a Google Form link, this exercise uses the form instead of the questions below.'))), useForm ? React.createElement("div", {
+    style: {
+      padding: '12px 14px',
+      background: 'var(--accent-soft)',
+      border: '1px solid var(--accent)',
+      borderRadius: 10,
+      fontSize: 12,
+      color: 'var(--accent)',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8
+    }
+  }, React.createElement(Icon, {
+    name: "book",
+    size: 15
+  }), tr('លំហាត់​នេះ​ប្រើ Google Form ✓ — សំណួរ​ខាង​ក្នុង​មិន​ត្រូវ​បាន​ប្រើ​ទេ។', 'This exercise uses a Google Form ✓ — the built-in questions are not used.')) : React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -24117,7 +24216,7 @@ var QuizForm = ({
       size: 12
     }),
     onClick: () => setQuestions(qs => [...qs, blankQuestion()])
-  }, tr('បន្ថែម​សំណួរ', 'Add question'))), React.createElement("div", {
+  }, tr('បន្ថែម​សំណួរ', 'Add question'))), !useForm && React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
@@ -24610,20 +24709,22 @@ var QuizRow = ({
   tr,
   mobile
 }) => {
+  var isForm = !!item.formUrl;
+  var qCount = (item.questions || []).length;
   var iconBox = React.createElement("div", {
     style: {
       width: 38,
       height: 38,
       borderRadius: 8,
       flexShrink: 0,
-      background: 'var(--accent-soft)',
+      background: isForm ? '#E8F0E6' : 'var(--accent-soft)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      color: 'var(--accent)'
+      color: isForm ? '#3B7A57' : 'var(--accent)'
     }
   }, React.createElement(Icon, {
-    name: "star",
+    name: isForm ? 'book' : 'star',
     size: 16
   }));
   var title = React.createElement("div", {
@@ -24635,15 +24736,28 @@ var QuizRow = ({
     style: {
       fontSize: 14,
       fontWeight: 600,
-      lineHeight: 1.3
+      lineHeight: 1.3,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8
     }
-  }, item.km), React.createElement("div", {
+  }, item.km, isForm && React.createElement("span", {
+    style: {
+      fontSize: 10,
+      fontWeight: 700,
+      padding: '1px 7px',
+      borderRadius: 4,
+      background: '#E8F0E6',
+      color: '#3B7A57',
+      whiteSpace: 'nowrap'
+    }
+  }, "Google Form")), React.createElement("div", {
     style: {
       fontSize: 12,
       color: 'var(--ink-3)',
       marginTop: 1
     }
-  }, item.en, " \xB7 ", item.questions.length, " ", tr('សំណួរ', 'question' + (item.questions.length === 1 ? '' : 's'))));
+  }, item.en, isForm ? ' · ' + tr('លំហាត់ Google Form', 'Google Form exercise') : ' · ' + qCount + ' ' + tr('សំណួរ', 'question' + (qCount === 1 ? '' : 's'))));
   if (mobile) return React.createElement("div", {
     style: {
       display: 'flex',

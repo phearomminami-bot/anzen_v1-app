@@ -1240,9 +1240,11 @@ const ExerciseCard = ({ exercise, done, onDone }) => {
   const [submitted, setSubmitted] = React.useState(false);
   const { tr } = useAppActions();
 
-  const total  = exercise.questions.length;
-  const score  = submitted ? exercise.questions.filter((q, i) => answers[i] === q.answer).length : null;
+  const isForm = !!exercise.formUrl;
+  const total  = (exercise.questions || []).length;
+  const score  = submitted ? (exercise.questions || []).filter((q, i) => answers[i] === q.answer).length : null;
   const passed = score === total;
+  const formEmbedUrl = (u) => { try { const url = new URL(u); url.searchParams.set('embedded', 'true'); return url.toString(); } catch (e) { return u; } };
 
   const handleSubmit = () => {
     setSubmitted(true);
@@ -1274,7 +1276,7 @@ const ExerciseCard = ({ exercise, done, onDone }) => {
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 600 }}>{tr(exercise.km, exercise.en)}</div>
           <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2 }}>
-            {total} {tr('សំណួរ', 'questions')}
+            {isForm ? 'Google Form' : `${total} ${tr('សំណួរ', 'questions')}`}
           </div>
         </div>
         {done && <Badge tone="good">{tr('ឆ្លងកាត់', 'Passed')}</Badge>}
@@ -1284,7 +1286,25 @@ const ExerciseCard = ({ exercise, done, onDone }) => {
         </svg>
       </button>
 
-      {open && (
+      {open && isForm && (
+        <div style={{ padding: '10px 14px 16px', borderTop: '1px solid var(--border)' }}>
+          <iframe src={formEmbedUrl(exercise.formUrl)} title={tr(exercise.km, exercise.en)}
+            style={{ width: '100%', height: 520, border: '1px solid var(--border)', borderRadius: 8, background: '#fff' }}/>
+          <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+            <a href={exercise.formUrl} target="_blank" rel="noopener noreferrer" style={{
+              padding: '9px 14px', borderRadius: 8, border: '1px solid var(--border)',
+              background: 'var(--surface)', color: 'var(--ink-2)', fontSize: 13, fontWeight: 600, textDecoration: 'none',
+            }}>↗ {tr('បើក​ក្នុង​ផ្ទាំង​ថ្មី', 'Open in new tab')}</a>
+            {!done && (
+              <button onClick={() => onDone(exercise.id)} style={{
+                padding: '9px 14px', borderRadius: 8, border: 'none',
+                background: 'var(--good)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              }}>{tr('សម្គាល់​ថា​បាន​ធ្វើ', 'Mark as done')}</button>
+            )}
+          </div>
+        </div>
+      )}
+      {open && !isForm && (
         <div style={{ padding: '4px 14px 16px', borderTop: '1px solid var(--border)' }}>
           {exercise.questions.map((q, qi) => {
             const opts = tr(q.opts_km, q.opts_en);

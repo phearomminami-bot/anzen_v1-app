@@ -649,9 +649,11 @@ const QuizForm = ({ initial, onSave, onCancel }) => {
   const { busy: trBusy, translate } = useAutoTranslate();
   const [km, setKm] = React.useState(initial?.km || '');
   const [en, setEn] = React.useState(initial?.en || '');
+  const [formUrl, setFormUrl] = React.useState(initial?.formUrl || '');
   const [questions, setQuestions] = React.useState(
     initial?.questions ? JSON.parse(JSON.stringify(initial.questions)) : [blankQuestion()]
   );
+  const useForm = !!formUrl.trim();   // a Google Form replaces the built-in questions
 
   const updateQ = (idx, patch) => {
     setQuestions(qs => qs.map((q,i) => i===idx ? {...q, ...patch} : q));
@@ -677,7 +679,10 @@ const QuizForm = ({ initial, onSave, onCancel }) => {
     onSave({
       ...(initial || {}),
       km: km.trim(), en: en.trim(),
-      questions: questions.map(q => ({
+      formUrl: formUrl.trim(),
+      // A Google Form replaces the built-in questions; keep any existing ones but
+      // they aren't used while a form URL is set.
+      questions: useForm ? [] : questions.map(q => ({
         ...q,
         opts_km: q.opts_km.map(o => o || ''),
         opts_en: q.opts_en.map(o => o || ''),
@@ -697,6 +702,23 @@ const QuizForm = ({ initial, onSave, onCancel }) => {
         </AlField>
       </div>
 
+      {/* Google Form — paste a link to use a Google Form as this exercise */}
+      <AlField km="Google Form (តំណ)" en="Google Form (link)">
+        <AlInput value={formUrl} onChange={e=>setFormUrl(e.target.value)}
+          placeholder="https://docs.google.com/forms/d/e/…/viewform"/>
+        <div style={{fontSize:11,color:'var(--ink-3)',marginTop:4}}>
+          {tr('បើ​ដាក់​តំណ Google Form នោះ​លំហាត់​នេះ​នឹង​ប្រើ Google Form ជំនួស​សំណួរ​ខាង​ក្រោម។',
+              'If you paste a Google Form link, this exercise uses the form instead of the questions below.')}
+        </div>
+      </AlField>
+
+      {useForm ? (
+        <div style={{padding:'12px 14px',background:'var(--accent-soft)',border:'1px solid var(--accent)',borderRadius:10,fontSize:12,color:'var(--accent)',display:'flex',alignItems:'center',gap:8}}>
+          <Icon name="book" size={15}/>
+          {tr('លំហាត់​នេះ​ប្រើ Google Form ✓ — សំណួរ​ខាង​ក្នុង​មិន​ត្រូវ​បាន​ប្រើ​ទេ។',
+              'This exercise uses a Google Form ✓ — the built-in questions are not used.')}
+        </div>
+      ) : (
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:6}}>
         <div style={{fontSize:13,fontWeight:600}}>{tr('សំណួរ','Questions')} <span style={{color:'var(--ink-3)',fontWeight:400}}>· {questions.length}</span></div>
         <Btn kind="ghost" size="sm" icon={<Icon name="plus" size={12}/>}
@@ -704,7 +726,9 @@ const QuizForm = ({ initial, onSave, onCancel }) => {
           {tr('បន្ថែម​សំណួរ','Add question')}
         </Btn>
       </div>
+      )}
 
+      {!useForm && (
       <div style={{display:'flex',flexDirection:'column',gap:14}}>
         {questions.map((q, qi) => (
           <div key={qi} style={{
@@ -793,6 +817,7 @@ const QuizForm = ({ initial, onSave, onCancel }) => {
           </div>
         ))}
       </div>
+      )}
 
       <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginTop:8}}>
         <Btn kind="ghost"   size="md" onClick={onCancel}>{tr('បោះបង់','Cancel')}</Btn>
@@ -889,15 +914,24 @@ const VideoLessonRow = ({ item, onEdit, onDelete, tr, mobile }) => {
 };
 
 const QuizRow = ({ item, onEdit, onDelete, tr, mobile }) => {
+  const isForm = !!item.formUrl;
+  const qCount = (item.questions || []).length;
   const iconBox = (
-    <div style={{width:38,height:38,borderRadius:8,flexShrink:0,background:'var(--accent-soft)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--accent)'}}>
-      <Icon name="star" size={16}/>
+    <div style={{width:38,height:38,borderRadius:8,flexShrink:0,background:isForm?'#E8F0E6':'var(--accent-soft)',display:'flex',alignItems:'center',justifyContent:'center',color:isForm?'#3B7A57':'var(--accent)'}}>
+      <Icon name={isForm?'book':'star'} size={16}/>
     </div>
   );
   const title = (
     <div style={{minWidth:0,flex:1}}>
-      <div style={{fontSize:14,fontWeight:600,lineHeight:1.3}}>{item.km}</div>
-      <div style={{fontSize:12,color:'var(--ink-3)',marginTop:1}}>{item.en} · {item.questions.length} {tr('សំណួរ','question' + (item.questions.length===1?'':'s'))}</div>
+      <div style={{fontSize:14,fontWeight:600,lineHeight:1.3,display:'flex',alignItems:'center',gap:8}}>
+        {item.km}
+        {isForm && <span style={{fontSize:10,fontWeight:700,padding:'1px 7px',borderRadius:4,background:'#E8F0E6',color:'#3B7A57',whiteSpace:'nowrap'}}>Google Form</span>}
+      </div>
+      <div style={{fontSize:12,color:'var(--ink-3)',marginTop:1}}>
+        {item.en}{isForm
+          ? ' · ' + tr('លំហាត់ Google Form','Google Form exercise')
+          : ' · ' + qCount + ' ' + tr('សំណួរ','question' + (qCount===1?'':'s'))}
+      </div>
     </div>
   );
   if (mobile) return (
