@@ -363,8 +363,8 @@ window.onerror = function(msg,src,line,col,err){
 </script>
 <script>
   window.__ANZEN_SUPABASE = {
-    url:     'https://lnpaxsaxweshxoicvhec.supabase.co',          // Project URL  (Settings → API)
-    anonKey: 'sb_publishable_cC-v6zgUQ5q3P82bq3RPeQ_aCx5jRb3'     // anon/publishable key (public by design — NOT service_role)
+    url:     'https://ibuvhzybdhngbwicrgzy.supabase.co',          // Project URL  (Settings → API)
+    anonKey: 'sb_publishable_7bf6pG7zzEr2VtAzCionvg_vLGEtx0q'     // anon/publishable key (public by design — NOT service_role)
   };
 </script>
 """
