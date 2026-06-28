@@ -15,7 +15,7 @@ const DEPT_OPTS   = ['Office','Finance','Marketing','Workshop','Transport','Inst
 const STATUS_OPTS = ['At desk','On lesson','Available','Training','In shop','On route','Remote','Off-site'];
 
 const StaffScreen = () => {
-  const { openForm, toast, tr } = useAppActions();
+  const { openForm, toast, tr, confirm } = useAppActions();
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   const [tab, setTab]         = React.useState('directory');
   const [view, setView]       = React.useState('cards');
@@ -99,6 +99,40 @@ const StaffScreen = () => {
     toast('បានលុបបុគ្គលិក', 'good');
   };
 
+  // Offboard: keep the record (archived) but move to "Former staff", disable
+  // their login and hide them from the Instructors tab. Data is NOT deleted.
+  const offboardStaff = (id) => {
+    const s = window.__staffData.find(x => x.id === id);
+    if (!s) return;
+    confirm?.({
+      title: tr('សម្គាល់​ថា​ឈប់​ពី​ការងារ?','Mark as left employment?'),
+      body:  tr('បុគ្គលិក​នេះ​នឹង​ផ្លាស់​ទៅ "អតីត​បុគ្គលិក"។ គណនី​ចូល​នឹង​ត្រូវ​ផ្អាក ហើយ​លាក់​ពី Tab គ្រូ។ ទិន្នន័យ​ទាំងអស់​ត្រូវ​បាន​រក្សា​ទុក។',
+                 'This person moves to "Former staff". Their login is disabled and they\'re hidden from Instructors. All their data is kept.'),
+      confirmText: tr('ឈប់​ពី​ការងារ','Offboard'), danger: true,
+      onConfirm: () => {
+        s.offboarded = true;
+        s.offboardedAt = (typeof todayStr === 'function' ? todayStr() : new Date().toISOString().slice(0,10));
+        s.account_disabled = true;
+        const inst = instById(s.instId);
+        if (inst) inst.visible = false;
+        if (window.saveAllData) window.saveAllData();
+        if (window.__notifyInstructorsChanged) window.__notifyInstructorsChanged();
+        forceUpdate();
+        toast(tr('បាន​សម្គាល់​ថា​ឈប់​ពី​ការងារ ✓','Marked as former staff ✓'), 'neutral');
+      },
+    });
+  };
+  const restoreStaff = (id) => {
+    const s = window.__staffData.find(x => x.id === id);
+    if (!s) return;
+    s.offboarded = false;
+    s.account_disabled = false;
+    if (s.status === 'Former') s.status = 'At desk';
+    if (window.saveAllData) window.saveAllData();
+    forceUpdate();
+    toast(tr('បាន​ជួល​ឡើង​វិញ​ជា​បុគ្គលិក​សកម្ម','Restored to active staff'), 'good');
+  };
+
   const saveEdit = (updated) => {
     const i = window.__staffData.findIndex(s => s.id === updated.id);
     if (i !== -1) window.__staffData[i] = updated;
@@ -155,11 +189,15 @@ const StaffScreen = () => {
     }
   };
 
+  const activeStaff = staff.filter(s => !s.offboarded);
+  const formerStaff = staff.filter(s => s.offboarded);
   const deptCounts = DEPT_OPTS.reduce((acc, d) => {
-    acc[d] = staff.filter(s => s.dept === d).length;
+    acc[d] = activeStaff.filter(s => s.dept === d).length;
     return acc;
   }, {});
-  const filtered  = staff.filter(s => dept === 'all' || s.dept === dept);
+  const filtered  = dept === 'former'
+    ? formerStaff
+    : activeStaff.filter(s => dept === 'all' || s.dept === dept);
   const pending   = leaves.filter(l => l.status === 'Pending');
   const upcoming  = leaves.filter(l => l.status === 'Approved');
   const total$    = staff.reduce((a, s) => a + (s.salary || 0), 0);
@@ -177,7 +215,7 @@ const StaffScreen = () => {
     <div style={{display:'flex',flexDirection:'column',gap:14}}>
       <SectionTitle
         km="បុគ្គលិក"
-        en={staff.length ? `${staff.length} employees · ${pending.length} pending leave` : 'No staff yet'}
+        en={activeStaff.length ? `${activeStaff.length} employees · ${pending.length} pending leave` : 'No staff yet'}
         action={
           <div style={{display:'flex',gap:8}}>
             <Btn kind="ghost" size="md" onClick={()=>toast('Export CSV · coming soon','neutral')}>{tr('នាំចេញ','Export')}</Btn>
@@ -191,8 +229,8 @@ const StaffScreen = () => {
 
       {/* KPI strip */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:12}}>
-        <Card><Stat label={tr('សរុប','Total')}         value={staff.length}                                      sub={staff.length ? `${[...new Set(staff.map(s=>s.dept))].length} dept` : 'add staff'}/></Card>
-        <Card><Stat label={tr('សកម្ម','On duty')}       value={staff.filter(s=>s.status==='At desk'||s.status==='On lesson'||s.status==='In shop').length + '/' + staff.length}/></Card>
+        <Card><Stat label={tr('សរុប','Total')}         value={activeStaff.length}                                sub={activeStaff.length ? `${[...new Set(activeStaff.map(s=>s.dept))].length} dept` : 'add staff'}/></Card>
+        <Card><Stat label={tr('សកម្ម','On duty')}       value={activeStaff.filter(s=>s.status==='At desk'||s.status==='On lesson'||s.status==='In shop').length + '/' + activeStaff.length}/></Card>
         <Card><Stat label={tr('ច្បាប់រង់ចាំ','Pending leave')} value={pending.length}/></Card>
         <Card><Stat label={tr('ប្រាក់ខែ','Payroll')}    value={total$ ? `$${total$.toLocaleString()}` : '$0'}   sub="/month"/></Card>
         <Card><Stat label={tr('ឯកសារខ្វះ','Missing docs')}      value={missingDocs}                                       sub="missing"/></Card>
@@ -247,14 +285,15 @@ const StaffScreen = () => {
               {/* dept chips */}
               <div style={{padding:'10px 14px',borderBottom:'1px solid var(--border)',display:'flex',gap:6,flexWrap:'wrap'}}>
                 {[
-                  {id:'all', l:tr('ទាំងអស់','All'), n:staff.length},
+                  {id:'all', l:tr('ទាំងអស់','All'), n:activeStaff.length},
                   ...DEPT_OPTS.filter(d => deptCounts[d] > 0).map(d => ({id:d, l:d, n:deptCounts[d]})),
+                  ...(formerStaff.length ? [{id:'former', l:tr('អតីត​បុគ្គលិក','Former'), n:formerStaff.length, former:true}] : []),
                 ].map(d => (
                   <button key={d.id} onClick={()=>setDept(d.id)} style={{
                     padding:'4px 10px',
-                    background: dept===d.id ? 'var(--ink)' : 'var(--surface)',
-                    color: dept===d.id ? 'var(--bg)' : 'var(--ink-2)',
-                    border:'1px solid ' + (dept===d.id ? 'var(--ink)' : 'var(--border)'),
+                    background: dept===d.id ? (d.former?'var(--warn)':'var(--ink)') : 'var(--surface)',
+                    color: dept===d.id ? 'var(--bg)' : (d.former?'var(--warn)':'var(--ink-2)'),
+                    border:'1px solid ' + (dept===d.id ? (d.former?'var(--warn)':'var(--ink)') : (d.former?'var(--warn)':'var(--border)')),
                     borderRadius:999,fontSize:11,fontWeight:500,cursor:'default',
                     display:'inline-flex',alignItems:'center',gap:6,
                   }}>
@@ -281,7 +320,7 @@ const StaffScreen = () => {
       {tab==='directory' && selected && (
         editing
           ? <SfEditPanel s={selected} onSave={saveEdit} onCancel={()=>setEditing(false)} onDelete={deleteStaff} onSavePhoto={savePhoto}/>
-          : <SfDetailRow s={selected} onEdit={()=>setEditing(true)} onSavePhoto={savePhoto}/>
+          : <SfDetailRow s={selected} onEdit={()=>setEditing(true)} onSavePhoto={savePhoto} onOffboard={offboardStaff} onRestore={restoreStaff}/>
       )}
     </div>
   );
@@ -379,7 +418,7 @@ const SfStatusDot = ({ status }) => {
 };
 
 // ── Detail panel ──
-const SfDetailRow = ({ s, onEdit, onSavePhoto }) => {
+const SfDetailRow = ({ s, onEdit, onSavePhoto, onOffboard, onRestore }) => {
   const { toast, navigate, tr } = useAppActions();
   const [showPw, setShowPw] = React.useState(false);
   const [settingPw, setSettingPw] = React.useState(false);
@@ -411,8 +450,9 @@ const SfDetailRow = ({ s, onEdit, onSavePhoto }) => {
         <div style={{flex:1}}>
           <div style={{display:'flex',alignItems:'center',gap:10}}>
             <div style={{fontSize:20,fontWeight:600,fontFamily:'var(--font-display)'}}>{s.name}</div>
-            <SfStatusDot status={s.status}/>
-            <span style={{fontSize:12,color:'var(--ink-3)'}}>{s.status}</span>
+            {s.offboarded
+              ? <Badge tone="warn">{tr('អតីត​បុគ្គលិក','Former staff')}{s.offboardedAt ? ' · ' + s.offboardedAt : ''}</Badge>
+              : <><SfStatusDot status={s.status}/><span style={{fontSize:12,color:'var(--ink-3)'}}>{s.status}</span></>}
             {inst && <Badge tone="accent">{inst.cls.map(c=>`Class ${c}`).join(' · ')}</Badge>}
           </div>
           <div style={{fontSize:12,color:'var(--ink-3)',marginTop:2}}>{s.en} · {s.id} · {s.role} · {s.dept}</div>
@@ -445,10 +485,23 @@ const SfDetailRow = ({ s, onEdit, onSavePhoto }) => {
           </Btn>
         )}
         <Btn kind="ghost" size="sm" onClick={onEdit}>{tr('កែ​សម្រួល','Edit')}</Btn>
-        <Btn kind="primary" size="sm" icon={<Icon name="cal" size={13}/>}
-          onClick={()=>{ if(inst) window.__scheduleInstFilter=inst.id; navigate('schedule'); }}>
-          បើក​កាល​វិភាគ
-        </Btn>
+        {!s.offboarded && (
+          <Btn kind="primary" size="sm" icon={<Icon name="cal" size={13}/>}
+            onClick={()=>{ if(inst) window.__scheduleInstFilter=inst.id; navigate('schedule'); }}>
+            បើក​កាល​វិភាគ
+          </Btn>
+        )}
+        {s.offboarded
+          ? <Btn kind="ghost" size="sm" icon={<Icon name="refresh" size={13}/>}
+              onClick={()=>onRestore && onRestore(s.id)}
+              style={{color:'var(--good)',borderColor:'var(--good)'}}>
+              {tr('ជួល​ឡើង​វិញ','Re-hire')}
+            </Btn>
+          : <Btn kind="ghost" size="sm"
+              onClick={()=>onOffboard && onOffboard(s.id)}
+              style={{color:'var(--warn)',borderColor:'var(--warn)'}}>
+              {tr('ឈប់​ពី​ការងារ','Offboard')}
+            </Btn>}
       </div>
 
       {/* Teaching profile strip — instructors only */}

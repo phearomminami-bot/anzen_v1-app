@@ -703,6 +703,11 @@ window.__trRegistry = {
   "Edit lesson": "កែ​មេរៀន",
   "Add text lesson": "បន្ថែម​មេរៀន​អត្ថបទ",
   "Add video lesson": "បន្ថែម​មេរៀន​វីដេអូ",
+  "Mark as left employment?": "សម្គាល់​ថា​ឈប់​ពី​ការងារ?",
+  "This person moves to \"Former staff\". Their login is disabled and they\\'re hidden from Instructors. All their data is kept.": "បុគ្គលិក​នេះ​នឹង​ផ្លាស់​ទៅ \"អតីត​បុគ្គលិក\"។ គណនី​ចូល​នឹង​ត្រូវ​ផ្អាក ហើយ​លាក់​ពី Tab គ្រូ។ ទិន្នន័យ​ទាំងអស់​ត្រូវ​បាន​រក្សា​ទុក។",
+  "Offboard": "ឈប់​ពី​ការងារ",
+  "Marked as former staff ✓": "បាន​សម្គាល់​ថា​ឈប់​ពី​ការងារ ✓",
+  "Restored to active staff": "បាន​ជួល​ឡើង​វិញ​ជា​បុគ្គលិក​សកម្ម",
   "Add staff": "បន្ថែមបុគ្គលិក",
   "Total": "សរុប",
   "On duty": "សកម្ម",
@@ -711,11 +716,14 @@ window.__trRegistry = {
   "Missing docs": "ឯកសារខ្វះ",
   "Request leave": "ស្នើច្បាប់",
   "Add first staff": "បន្ថែម​បុគ្គលិក​ដំបូង",
+  "Former": "អតីត​បុគ្គលិក",
   "Password saved": "បានរក្សាទុក Password",
+  "Former staff": "អតីត​បុគ្គលិក",
   "Hidden from Instructors": "លាក់​ពី Tab គ្រូ",
   "Shown in Instructors": "បង្ហាញ​នៅ Tab គ្រូ",
   "Show in Instructors": "បង្ហាញ​ក្នុង​គ្រូ",
   "In Instructors ✓": "បង្ហាញ​ក្នុង​គ្រូ ✓",
+  "Re-hire": "ជួល​ឡើង​វិញ",
   "TEACHING": "ព័ត៌មាន​បង្រៀន",
   "EMPLOYMENT": "ប្រភេទ​ការ​ងារ",
   "Start": "ចាប់ផ្ដើម",
@@ -1874,6 +1882,11 @@ window.__trGroups = {
     "Toggle vehicles visible in Vehicle management": "ធ្វើ​ឲ្យ​យានយន្ត​មើលឃើញ​នៅ​ Vehicle management"
   },
   "បុគ្គលិក · Staff": {
+    "Mark as left employment?": "សម្គាល់​ថា​ឈប់​ពី​ការងារ?",
+    "This person moves to \"Former staff\". Their login is disabled and they\\'re hidden from Instructors. All their data is kept.": "បុគ្គលិក​នេះ​នឹង​ផ្លាស់​ទៅ \"អតីត​បុគ្គលិក\"។ គណនី​ចូល​នឹង​ត្រូវ​ផ្អាក ហើយ​លាក់​ពី Tab គ្រូ។ ទិន្នន័យ​ទាំងអស់​ត្រូវ​បាន​រក្សា​ទុក។",
+    "Offboard": "ឈប់​ពី​ការងារ",
+    "Marked as former staff ✓": "បាន​សម្គាល់​ថា​ឈប់​ពី​ការងារ ✓",
+    "Restored to active staff": "បាន​ជួល​ឡើង​វិញ​ជា​បុគ្គលិក​សកម្ម",
     "Add staff": "បន្ថែមបុគ្គលិក",
     "Total": "សរុប",
     "On duty": "សកម្ម",
@@ -1882,11 +1895,14 @@ window.__trGroups = {
     "Missing docs": "ឯកសារខ្វះ",
     "Request leave": "ស្នើច្បាប់",
     "Add first staff": "បន្ថែម​បុគ្គលិក​ដំបូង",
+    "Former": "អតីត​បុគ្គលិក",
     "Password saved": "បានរក្សាទុក Password",
+    "Former staff": "អតីត​បុគ្គលិក",
     "Hidden from Instructors": "លាក់​ពី Tab គ្រូ",
     "Shown in Instructors": "បង្ហាញ​នៅ Tab គ្រូ",
     "Show in Instructors": "បង្ហាញ​ក្នុង​គ្រូ",
     "In Instructors ✓": "បង្ហាញ​ក្នុង​គ្រូ ✓",
+    "Re-hire": "ជួល​ឡើង​វិញ",
     "TEACHING": "ព័ត៌មាន​បង្រៀន",
     "EMPLOYMENT": "ការងារ",
     "Start": "ចូលធ្វើការ",
@@ -25201,7 +25217,8 @@ var StaffScreen = () => {
   var {
     openForm,
     toast,
-    tr
+    tr,
+    confirm
   } = useAppActions();
   var [, forceUpdate] = React.useReducer(x => x + 1, 0);
   var [tab, setTab] = React.useState('directory');
@@ -25280,6 +25297,37 @@ var StaffScreen = () => {
     if (window.saveAllData) window.saveAllData();
     toast('បានលុបបុគ្គលិក', 'good');
   };
+  var offboardStaff = id => {
+    var s = window.__staffData.find(x => x.id === id);
+    if (!s) return;
+    confirm?.({
+      title: tr('សម្គាល់​ថា​ឈប់​ពី​ការងារ?', 'Mark as left employment?'),
+      body: tr('បុគ្គលិក​នេះ​នឹង​ផ្លាស់​ទៅ "អតីត​បុគ្គលិក"។ គណនី​ចូល​នឹង​ត្រូវ​ផ្អាក ហើយ​លាក់​ពី Tab គ្រូ។ ទិន្នន័យ​ទាំងអស់​ត្រូវ​បាន​រក្សា​ទុក។', 'This person moves to "Former staff". Their login is disabled and they\'re hidden from Instructors. All their data is kept.'),
+      confirmText: tr('ឈប់​ពី​ការងារ', 'Offboard'),
+      danger: true,
+      onConfirm: () => {
+        s.offboarded = true;
+        s.offboardedAt = typeof todayStr === 'function' ? todayStr() : new Date().toISOString().slice(0, 10);
+        s.account_disabled = true;
+        var inst = instById(s.instId);
+        if (inst) inst.visible = false;
+        if (window.saveAllData) window.saveAllData();
+        if (window.__notifyInstructorsChanged) window.__notifyInstructorsChanged();
+        forceUpdate();
+        toast(tr('បាន​សម្គាល់​ថា​ឈប់​ពី​ការងារ ✓', 'Marked as former staff ✓'), 'neutral');
+      }
+    });
+  };
+  var restoreStaff = id => {
+    var s = window.__staffData.find(x => x.id === id);
+    if (!s) return;
+    s.offboarded = false;
+    s.account_disabled = false;
+    if (s.status === 'Former') s.status = 'At desk';
+    if (window.saveAllData) window.saveAllData();
+    forceUpdate();
+    toast(tr('បាន​ជួល​ឡើង​វិញ​ជា​បុគ្គលិក​សកម្ម', 'Restored to active staff'), 'good');
+  };
   var saveEdit = updated => {
     var i = window.__staffData.findIndex(s => s.id === updated.id);
     if (i !== -1) window.__staffData[i] = updated;
@@ -25332,11 +25380,13 @@ var StaffScreen = () => {
       forceUpdate();
     }
   };
+  var activeStaff = staff.filter(s => !s.offboarded);
+  var formerStaff = staff.filter(s => s.offboarded);
   var deptCounts = DEPT_OPTS.reduce((acc, d) => {
-    acc[d] = staff.filter(s => s.dept === d).length;
+    acc[d] = activeStaff.filter(s => s.dept === d).length;
     return acc;
   }, {});
-  var filtered = staff.filter(s => dept === 'all' || s.dept === dept);
+  var filtered = dept === 'former' ? formerStaff : activeStaff.filter(s => dept === 'all' || s.dept === dept);
   var pending = leaves.filter(l => l.status === 'Pending');
   var upcoming = leaves.filter(l => l.status === 'Approved');
   var total$ = staff.reduce((a, s) => a + (s.salary || 0), 0);
@@ -25375,7 +25425,7 @@ var StaffScreen = () => {
     }
   }, React.createElement(SectionTitle, {
     km: "\u1794\u17BB\u1782\u17D2\u1782\u179B\u17B7\u1780",
-    en: staff.length ? `${staff.length} employees · ${pending.length} pending leave` : 'No staff yet',
+    en: activeStaff.length ? `${activeStaff.length} employees · ${pending.length} pending leave` : 'No staff yet',
     action: React.createElement("div", {
       style: {
         display: 'flex',
@@ -25402,11 +25452,11 @@ var StaffScreen = () => {
     }
   }, React.createElement(Card, null, React.createElement(Stat, {
     label: tr('សរុប', 'Total'),
-    value: staff.length,
-    sub: staff.length ? `${[...new Set(staff.map(s => s.dept))].length} dept` : 'add staff'
+    value: activeStaff.length,
+    sub: activeStaff.length ? `${[...new Set(activeStaff.map(s => s.dept))].length} dept` : 'add staff'
   })), React.createElement(Card, null, React.createElement(Stat, {
     label: tr('សកម្ម', 'On duty'),
-    value: staff.filter(s => s.status === 'At desk' || s.status === 'On lesson' || s.status === 'In shop').length + '/' + staff.length
+    value: activeStaff.filter(s => s.status === 'At desk' || s.status === 'On lesson' || s.status === 'In shop').length + '/' + activeStaff.length
   })), React.createElement(Card, null, React.createElement(Stat, {
     label: tr('ច្បាប់រង់ចាំ', 'Pending leave'),
     value: pending.length
@@ -25525,19 +25575,24 @@ var StaffScreen = () => {
   }, [{
     id: 'all',
     l: tr('ទាំងអស់', 'All'),
-    n: staff.length
+    n: activeStaff.length
   }, ...DEPT_OPTS.filter(d => deptCounts[d] > 0).map(d => ({
     id: d,
     l: d,
     n: deptCounts[d]
-  }))].map(d => React.createElement("button", {
+  })), ...(formerStaff.length ? [{
+    id: 'former',
+    l: tr('អតីត​បុគ្គលិក', 'Former'),
+    n: formerStaff.length,
+    former: true
+  }] : [])].map(d => React.createElement("button", {
     key: d.id,
     onClick: () => setDept(d.id),
     style: {
       padding: '4px 10px',
-      background: dept === d.id ? 'var(--ink)' : 'var(--surface)',
-      color: dept === d.id ? 'var(--bg)' : 'var(--ink-2)',
-      border: '1px solid ' + (dept === d.id ? 'var(--ink)' : 'var(--border)'),
+      background: dept === d.id ? d.former ? 'var(--warn)' : 'var(--ink)' : 'var(--surface)',
+      color: dept === d.id ? 'var(--bg)' : d.former ? 'var(--warn)' : 'var(--ink-2)',
+      border: '1px solid ' + (dept === d.id ? d.former ? 'var(--warn)' : 'var(--ink)' : d.former ? 'var(--warn)' : 'var(--border)'),
       borderRadius: 999,
       fontSize: 11,
       fontWeight: 500,
@@ -25587,7 +25642,9 @@ var StaffScreen = () => {
   }) : React.createElement(SfDetailRow, {
     s: selected,
     onEdit: () => setEditing(true),
-    onSavePhoto: savePhoto
+    onSavePhoto: savePhoto,
+    onOffboard: offboardStaff,
+    onRestore: restoreStaff
   })));
 };
 var SfCards = ({
@@ -25839,7 +25896,9 @@ var SfStatusDot = ({
 var SfDetailRow = ({
   s,
   onEdit,
-  onSavePhoto
+  onSavePhoto,
+  onOffboard,
+  onRestore
 }) => {
   var {
     toast,
@@ -25900,14 +25959,16 @@ var SfDetailRow = ({
       fontWeight: 600,
       fontFamily: 'var(--font-display)'
     }
-  }, s.name), React.createElement(SfStatusDot, {
+  }, s.name), s.offboarded ? React.createElement(Badge, {
+    tone: "warn"
+  }, tr('អតីត​បុគ្គលិក', 'Former staff'), s.offboardedAt ? ' · ' + s.offboardedAt : '') : React.createElement(React.Fragment, null, React.createElement(SfStatusDot, {
     status: s.status
   }), React.createElement("span", {
     style: {
       fontSize: 12,
       color: 'var(--ink-3)'
     }
-  }, s.status), inst && React.createElement(Badge, {
+  }, s.status)), inst && React.createElement(Badge, {
     tone: "accent"
   }, inst.cls.map(c => `Class ${c}`).join(' · '))), React.createElement("div", {
     style: {
@@ -25953,7 +26014,7 @@ var SfDetailRow = ({
     kind: "ghost",
     size: "sm",
     onClick: onEdit
-  }, tr('កែ​សម្រួល', 'Edit')), React.createElement(Btn, {
+  }, tr('កែ​សម្រួល', 'Edit')), !s.offboarded && React.createElement(Btn, {
     kind: "primary",
     size: "sm",
     icon: React.createElement(Icon, {
@@ -25964,7 +26025,27 @@ var SfDetailRow = ({
       if (inst) window.__scheduleInstFilter = inst.id;
       navigate('schedule');
     }
-  }, "\u1794\u17BE\u1780\u200B\u1780\u17B6\u179B\u200B\u179C\u17B7\u1797\u17B6\u1782")), inst && React.createElement("div", {
+  }, "\u1794\u17BE\u1780\u200B\u1780\u17B6\u179B\u200B\u179C\u17B7\u1797\u17B6\u1782"), s.offboarded ? React.createElement(Btn, {
+    kind: "ghost",
+    size: "sm",
+    icon: React.createElement(Icon, {
+      name: "refresh",
+      size: 13
+    }),
+    onClick: () => onRestore && onRestore(s.id),
+    style: {
+      color: 'var(--good)',
+      borderColor: 'var(--good)'
+    }
+  }, tr('ជួល​ឡើង​វិញ', 'Re-hire')) : React.createElement(Btn, {
+    kind: "ghost",
+    size: "sm",
+    onClick: () => onOffboard && onOffboard(s.id),
+    style: {
+      color: 'var(--warn)',
+      borderColor: 'var(--warn)'
+    }
+  }, tr('ឈប់​ពី​ការងារ', 'Offboard'))), inst && React.createElement("div", {
     style: {
       padding: '12px 18px',
       borderBottom: '1px solid var(--border)',
