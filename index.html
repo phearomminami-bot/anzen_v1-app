@@ -923,6 +923,12 @@ window.__trRegistry = {
   "Comment": "មតិ​បន្ថែម",
   "💬 Instructor comment...": "💬 មតិ​គ្រូ​លើ​មេរៀន​នេះ...",
   "Save feedback": "រក្សា​ទុក​មតិ",
+  "Completion": "បញ្ចប់",
+  "Exam apply": "ស្នើរ​ប្រឡង",
+  "Result": "លទ្ធផល",
+  "Pass": "ជាប់",
+  "Fail": "ធ្លាក់",
+  "Target hours": "ម៉ោងគោល",
   "Payment recorded": "បានចងចាំការបង់",
   "Marked as graduated ✓": "បាន​សម្គាល់​ថា​បញ្ចប់​ការសិក្សា ✓",
   "Restored to active": "បាន​យក​មក​សិក្សា​វិញ",
@@ -944,9 +950,6 @@ window.__trRegistry = {
   "Payment progress": "ការបង់ប្រាក់",
   "Payment log": "ប្រវត្តិ​បង់",
   "Study History": "ប្រវត្តសិក្សា",
-  "Completion": "បញ្ចប់",
-  "Exam apply": "ស្នើរ​ប្រឡង",
-  "Result": "លទ្ធផល",
   "Hours": "ម៉ោង",
   "Tap to toggle status": "ចុច​ដើម្បី​ប្ដូរ​ស្ថានភាព",
   "Missing": "មិន​ទាន់",
@@ -986,12 +989,9 @@ window.__trRegistry = {
   "AT · Auto (10 h)": "AT · លេខ​អូតូ (10 ម៉ោង)",
   "MT · Manual (13 h)": "MT · លេខ​ដៃ (13 ម៉ោង)",
   "— Not assigned": "— មិន​ទាន់​",
-  "Target hours": "ម៉ោងគោល",
   "Study start": "ចាប់​ផ្ដើម",
   "Study end": "បញ្ចប់",
   "Exam result": "លទ្ធផល​ប្រឡង",
-  "Pass": "ជាប់",
-  "Fail": "ធ្លាក់",
   "Learner permit": "អនុញ្ញាត​សិក្សា",
   "ID card": "អត្តសញ្ញាណប័ណ្ណ",
   "Medical cert.": "វិញ្ញាបនបត្រ​វេជ្ជសាស្ត្រ",
@@ -1483,6 +1483,12 @@ window.__trGroups = {
     "Comment": "មតិ​បន្ថែម",
     "💬 Instructor comment...": "💬 មតិ​គ្រូ​លើ​មេរៀន​នេះ...",
     "Save feedback": "រក្សា​ទុក​មតិ",
+    "Completion": "បញ្ចប់",
+    "Exam apply": "ស្នើរប្រឡង",
+    "Result": "លទ្ធផល",
+    "Pass": "ជាប់",
+    "Fail": "ធ្លាក់",
+    "Target hours": "ម៉ោង​គោលដៅ",
     "Payment recorded": "បានចងចាំការបង់",
     "Marked as graduated ✓": "បាន​សម្គាល់​ថា​បញ្ចប់​ការសិក្សា ✓",
     "Restored to active": "បាន​យក​មក​សិក្សា​វិញ",
@@ -1504,9 +1510,6 @@ window.__trGroups = {
     "Payment progress": "ការបង់ប្រាក់",
     "Payment log": "ប្រវត្តិ​បង់",
     "Study History": "ប្រវត្តសិក្សា",
-    "Completion": "បញ្ចប់",
-    "Exam apply": "ស្នើរប្រឡង",
-    "Result": "លទ្ធផល",
     "Hours": "ម៉ោង",
     "Tap to toggle status": "ចុច​ដើម្បី​ប្ដូរ​ស្ថានភាព",
     "Missing": "មិន​ទាន់",
@@ -1546,12 +1549,9 @@ window.__trGroups = {
     "AT · Auto (10 h)": "AT · លេខ​អូតូ (10 ម៉ោង)",
     "MT · Manual (13 h)": "MT · លេខ​ដៃ (13 ម៉ោង)",
     "— Not assigned": "— មិន​ទាន់​",
-    "Target hours": "ម៉ោងគោល",
     "Study start": "ចាប់ផ្ដើមសិក្សា",
     "Study end": "បញ្ចប់សិក្សា",
     "Exam result": "លទ្ធផល​ប្រឡង",
-    "Pass": "ជាប់",
-    "Fail": "ធ្លាក់",
     "Learner permit": "អនុញ្ញាត​សិក្សា",
     "ID card": "អត្តសញ្ញាណប័ណ្ណ",
     "Medical cert.": "វិញ្ញាបនបត្រ",
@@ -37690,6 +37690,117 @@ var SectionEditBtn = ({
   name: "users",
   size: 12
 }), label);
+var _stFld = {
+  width: '100%',
+  padding: '8px 10px',
+  border: '1px solid var(--border)',
+  borderRadius: 8,
+  fontSize: 13,
+  fontFamily: 'inherit',
+  background: 'var(--surface)',
+  color: 'var(--ink)',
+  boxSizing: 'border-box'
+};
+var _stLbl = {
+  fontSize: 11,
+  color: 'var(--ink-3)',
+  fontWeight: 600,
+  margin: '10px 0 4px'
+};
+var StudyEditForm = ({
+  s,
+  tr,
+  onSave
+}) => {
+  var [start, setStart] = React.useState(s.study_start || '');
+  var [end, setEnd] = React.useState(s.study_end || '');
+  var [apply, setApply] = React.useState(s.exam_apply || '');
+  var [examDate, setExam] = React.useState(s.exam_date || '');
+  var [result, setResult] = React.useState(s.exam_result || '');
+  var [target, setTarget] = React.useState(s.target || 0);
+  var save = () => onSave({
+    id: s.id,
+    study_start: start,
+    study_end: end,
+    exam_apply: apply,
+    exam_date: examDate,
+    exam_result: result,
+    target: Number(target) || 0
+  });
+  return React.createElement("div", {
+    style: {
+      paddingTop: 4
+    }
+  }, React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: '0 12px'
+    }
+  }, React.createElement("div", null, React.createElement("div", {
+    style: _stLbl
+  }, tr('ចាប់ផ្ដើម', 'Start')), React.createElement("input", {
+    type: "date",
+    value: start,
+    onChange: e => setStart(e.target.value),
+    style: _stFld
+  })), React.createElement("div", null, React.createElement("div", {
+    style: _stLbl
+  }, tr('បញ្ចប់', 'Completion')), React.createElement("input", {
+    type: "date",
+    value: end,
+    onChange: e => setEnd(e.target.value),
+    style: _stFld
+  })), React.createElement("div", null, React.createElement("div", {
+    style: _stLbl
+  }, tr('ស្នើរប្រឡង', 'Exam apply')), React.createElement("input", {
+    type: "date",
+    value: apply,
+    onChange: e => setApply(e.target.value),
+    style: _stFld
+  })), React.createElement("div", null, React.createElement("div", {
+    style: _stLbl
+  }, tr('ថ្ងៃប្រឡង', 'Exam date')), React.createElement("input", {
+    type: "date",
+    value: examDate,
+    onChange: e => setExam(e.target.value),
+    style: _stFld
+  })), React.createElement("div", null, React.createElement("div", {
+    style: _stLbl
+  }, tr('លទ្ធផល', 'Result')), React.createElement("select", {
+    value: result,
+    onChange: e => setResult(e.target.value),
+    style: _stFld
+  }, React.createElement("option", {
+    value: ""
+  }, "\u2014"), React.createElement("option", {
+    value: "pass"
+  }, tr('ជាប់', 'Pass')), React.createElement("option", {
+    value: "fail"
+  }, tr('ធ្លាក់', 'Fail')))), React.createElement("div", null, React.createElement("div", {
+    style: _stLbl
+  }, tr('ម៉ោង​គោលដៅ', 'Target hours')), React.createElement("input", {
+    type: "number",
+    value: target,
+    onChange: e => setTarget(e.target.value),
+    style: _stFld
+  }))), React.createElement("button", {
+    onClick: save,
+    style: {
+      width: '100%',
+      marginTop: 14,
+      padding: '10px',
+      borderRadius: 8,
+      border: 'none',
+      background: 'var(--accent)',
+      color: '#fff',
+      cursor: 'pointer',
+      fontSize: 13,
+      fontWeight: 600,
+      fontFamily: 'inherit'
+    }
+  }, tr('រក្សា​ទុក', 'Save')));
+};
 var extendStudent = s => {
   var trans = s.trans || 'AT';
   var pracCount = trans === 'MT' ? 13 : 10;
@@ -38186,7 +38297,14 @@ var StudentsScreenV2 = () => {
         isOpen: openSections.study,
         onToggle: () => toggleSection('study'),
         action: editAction('study')
-      }, mobileEdit === 'study' ? editForm : React.createElement(React.Fragment, null, React.createElement("div", {
+      }, mobileEdit === 'study' ? React.createElement(StudyEditForm, {
+        s: s,
+        tr: tr,
+        onSave: u => {
+          saveStudent(u);
+          setMobileEdit(null);
+        }
+      }) : React.createElement(React.Fragment, null, React.createElement("div", {
         style: {
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',

@@ -190,6 +190,40 @@ const SectionEditBtn = ({ active, label, onClick }) => (
   </button>
 );
 
+// Focused editor for the Study-History section — only the dates + result +
+// target hours (NOT the whole student form). Module-level + inline inputs so
+// typing keeps focus across re-renders.
+const _stFld = { width:'100%', padding:'8px 10px', border:'1px solid var(--border)', borderRadius:8, fontSize:13, fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)', boxSizing:'border-box' };
+const _stLbl = { fontSize:11, color:'var(--ink-3)', fontWeight:600, margin:'10px 0 4px' };
+const StudyEditForm = ({ s, tr, onSave }) => {
+  const [start, setStart]   = React.useState(s.study_start || '');
+  const [end, setEnd]       = React.useState(s.study_end || '');
+  const [apply, setApply]   = React.useState(s.exam_apply || '');
+  const [examDate, setExam] = React.useState(s.exam_date || '');
+  const [result, setResult] = React.useState(s.exam_result || '');
+  const [target, setTarget] = React.useState(s.target || 0);
+  const save = () => onSave({ id: s.id, study_start: start, study_end: end, exam_apply: apply, exam_date: examDate, exam_result: result, target: Number(target) || 0 });
+  return (
+    <div style={{paddingTop:4}}>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 12px'}}>
+        <div><div style={_stLbl}>{tr('ចាប់ផ្ដើម','Start')}</div><input type="date" value={start} onChange={e=>setStart(e.target.value)} style={_stFld}/></div>
+        <div><div style={_stLbl}>{tr('បញ្ចប់','Completion')}</div><input type="date" value={end} onChange={e=>setEnd(e.target.value)} style={_stFld}/></div>
+        <div><div style={_stLbl}>{tr('ស្នើរប្រឡង','Exam apply')}</div><input type="date" value={apply} onChange={e=>setApply(e.target.value)} style={_stFld}/></div>
+        <div><div style={_stLbl}>{tr('ថ្ងៃប្រឡង','Exam date')}</div><input type="date" value={examDate} onChange={e=>setExam(e.target.value)} style={_stFld}/></div>
+        <div><div style={_stLbl}>{tr('លទ្ធផល','Result')}</div>
+          <select value={result} onChange={e=>setResult(e.target.value)} style={_stFld}>
+            <option value="">—</option>
+            <option value="pass">{tr('ជាប់','Pass')}</option>
+            <option value="fail">{tr('ធ្លាក់','Fail')}</option>
+          </select>
+        </div>
+        <div><div style={_stLbl}>{tr('ម៉ោង​គោលដៅ','Target hours')}</div><input type="number" value={target} onChange={e=>setTarget(e.target.value)} style={_stFld}/></div>
+      </div>
+      <button onClick={save} style={{width:'100%',marginTop:14,padding:'10px',borderRadius:8,border:'none',background:'var(--accent)',color:'#fff',cursor:'pointer',fontSize:13,fontWeight:600,fontFamily:'inherit'}}>{tr('រក្សា​ទុក','Save')}</button>
+    </div>
+  );
+};
+
 const extendStudent = (s) => {
   const trans = s.trans || 'AT';
   const pracCount = trans === 'MT' ? 13 : 10;
@@ -520,7 +554,9 @@ const StudentsScreenV2 = () => {
 
           {/* Section 3: Study history */}
           <CvSection label={tr('ប្រវត្តសិក្សា','Study History')} isOpen={openSections.study} onToggle={()=>toggleSection('study')} action={editAction('study')}>
-            {mobileEdit==='study' ? editForm : (<>
+            {mobileEdit==='study'
+              ? <StudyEditForm s={s} tr={tr} onSave={(u)=>{ saveStudent(u); setMobileEdit(null); }}/>
+              : (<>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px 14px',marginBottom:12}}>
               <InfoPair label={tr('ចាប់ផ្ដើម','Start')} val={s.study_start || s.regDate}/>
               <InfoPair label={tr('បញ្ចប់','Completion')} val={s.study_end}/>
