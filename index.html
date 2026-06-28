@@ -1368,7 +1368,6 @@ window.__trRegistry = {
   "Sign in": "ចូល​គណនី",
   "Enter your email and password": "បញ្ចូល​អ៊ីមែល និង​ពាក្យ​សម្ងាត់​របស់​អ្នក",
   "Signing in…": "កំពុង​ចូល…",
-  "Use local login (Admin / Demo)": "ប្រើ​ការ​ចូល​ក្នុង​តំបន់ (Admin / Demo)",
   "Incorrect Student ID or password": "Student ID ឬ Password មិន​ត្រឹម​ត្រូវ",
   "Account suspended — please contact the school": "គណនីត្រូវបានផ្អាក — សូម​ទំនាក់ទំនង​គ្រឹះស្ថាន",
   "Please enter ID and password": "សូម​បំពេញ ID និង Password",
@@ -2578,7 +2577,6 @@ window.__trGroups = {
     "Sign in": "ចូល​គណនី",
     "Enter your email and password": "បញ្ចូល​អ៊ីមែល និង​ពាក្យ​សម្ងាត់​របស់​អ្នក",
     "Signing in…": "កំពុង​ចូល…",
-    "Use local login (Admin / Demo)": "ប្រើ​ការ​ចូល​ក្នុង​តំបន់ (Admin / Demo)",
     "Incorrect Student ID or password": "Student ID ឬ Password មិន​ត្រឹម​ត្រូវ",
     "Account suspended — please contact the school": "គណនីត្រូវបានផ្អាក — សូម​ទំនាក់ទំនង​គ្រឹះស្ថាន",
     "Please enter ID and password": "សូម​បំពេញ ID និង Password",
@@ -59340,23 +59338,7 @@ var RealLoginCard = ({
       cursor: busy ? 'default' : 'pointer',
       fontFamily: 'inherit'
     }
-  }, busy ? tr('កំពុង​ចូល…', 'Signing in…') : tr('ចូល', 'Sign in')), onUseDemo && React.createElement("button", {
-    type: "button",
-    onClick: onUseDemo,
-    style: {
-      width: '100%',
-      marginTop: 12,
-      padding: '10px',
-      borderRadius: 10,
-      border: '1px solid var(--border)',
-      background: 'transparent',
-      color: 'var(--ink-2)',
-      fontSize: 12,
-      fontWeight: 600,
-      cursor: 'pointer',
-      fontFamily: 'inherit'
-    }
-  }, tr('ប្រើ​ការ​ចូល​ក្នុង​តំបន់ (Admin / Demo)', 'Use local login (Admin / Demo)'))));
+  }, busy ? tr('កំពុង​ចូល…', 'Signing in…') : tr('ចូល', 'Sign in'))));
 };
 var LoginScreen = ({
   onLogin,
