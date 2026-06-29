@@ -332,11 +332,16 @@ const SchoolInfo = ({ onDirty }) => {
     if (!file) return;
     // Shrink the logo before storing — it lives in school_settings and is pulled
     // on every full load, so a multi-MB original would waste a lot of egress.
+    const store = async (dataUrl) => {
+      let out = dataUrl;
+      if (window.__sbUploadMedia) { const u = await window.__sbUploadMedia(dataUrl, { folder:'logo', name:'logo' }); if (u) out = u; }
+      up(setLogo,'logo')(out);
+    };
     if (window.resizeImageFile) {
-      window.resizeImageFile(file, 256, 256).then(url => up(setLogo,'logo')(url));
+      window.resizeImageFile(file, 256, 256).then(store);
     } else {
       const reader = new FileReader();
-      reader.onload = ev => { up(setLogo,'logo')(ev.target.result); };
+      reader.onload = ev => { store(ev.target.result); };
       reader.readAsDataURL(file);
     }
   };

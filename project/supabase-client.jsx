@@ -23,6 +23,29 @@
   // Is real login available?
   window.__sbConfigured = () => !!window.sb;
 
+  // ── Storage: upload an image/file (data URL) → returns a public URL ──────────
+  // Moves big base64 blobs OUT of the synced DB rows, which is what drove the
+  // egress overage before. Returns null when not connected or on any failure,
+  // so every caller can safely fall back to keeping the base64 it already has.
+  window.__sbUploadMedia = async (dataUrl, opts = {}) => {
+    if (!window.sb || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) return null;
+    try {
+      const blob = await (await fetch(dataUrl)).blob();
+      const mime = blob.type || 'image/jpeg';
+      const ext  = (mime.split('/')[1] || 'bin').split('+')[0].slice(0, 5);
+      const safe = String(opts.name || 'f').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 40) || 'f';
+      const rand = Math.random().toString(36).slice(2, 8);
+      const path = `${opts.folder || 'misc'}/${safe}-${Date.now()}-${rand}.${ext}`;
+      const { error } = await window.sb.storage.from('media').upload(path, blob, { contentType: mime, upsert: true });
+      if (error) throw error;
+      const { data } = window.sb.storage.from('media').getPublicUrl(path);
+      return (data && data.publicUrl) || null;
+    } catch (e) {
+      console.warn('[Anzen] media upload failed (kept inline):', e && e.message);
+      return null;
+    }
+  };
+
   // Load the profile row (role + linked_id) for the current auth user.
   window.__sbLoadProfile = async () => {
     if (!window.sb) return null;

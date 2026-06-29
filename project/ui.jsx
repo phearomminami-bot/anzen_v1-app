@@ -55,7 +55,11 @@ const UploadAvatar = ({ id, photo, size = 64, ring, onUpload }) => {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = '';
-    resizeImageFile(file, 400, 400).then(dataUrl => onUpload && onUpload(id, dataUrl));
+    resizeImageFile(file, 400, 400).then(async dataUrl => {
+      let out = dataUrl;
+      if (window.__sbUploadMedia) { const url = await window.__sbUploadMedia(dataUrl, { folder:'avatars', name:String(id||'') }); if (url) out = url; }
+      onUpload && onUpload(id, out);
+    });
   };
 
   return (
@@ -93,7 +97,11 @@ const UploadPhoto = ({ id, photo, w, h, r = 6, onUpload, maxW = 800, maxH = 500,
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = '';
-    resizeImageFile(file, maxW, maxH).then(dataUrl => onUpload && onUpload(id, dataUrl));
+    resizeImageFile(file, maxW, maxH).then(async dataUrl => {
+      let out = dataUrl;
+      if (window.__sbUploadMedia) { const url = await window.__sbUploadMedia(dataUrl, { folder:'photos', name:String(id||'') }); if (url) out = url; }
+      onUpload && onUpload(id, out);
+    });
   };
 
   return (

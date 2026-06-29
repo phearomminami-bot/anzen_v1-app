@@ -2824,7 +2824,17 @@ var UploadAvatar = ({
     var file = e.target.files?.[0];
     if (!file) return;
     e.target.value = '';
-    resizeImageFile(file, 400, 400).then(dataUrl => onUpload && onUpload(id, dataUrl));
+    resizeImageFile(file, 400, 400).then(async dataUrl => {
+      var out = dataUrl;
+      if (window.__sbUploadMedia) {
+        var url = await window.__sbUploadMedia(dataUrl, {
+          folder: 'avatars',
+          name: String(id || '')
+        });
+        if (url) out = url;
+      }
+      onUpload && onUpload(id, out);
+    });
   };
   return React.createElement("div", {
     style: {
@@ -2906,7 +2916,17 @@ var UploadPhoto = ({
     var file = e.target.files?.[0];
     if (!file) return;
     e.target.value = '';
-    resizeImageFile(file, maxW, maxH).then(dataUrl => onUpload && onUpload(id, dataUrl));
+    resizeImageFile(file, maxW, maxH).then(async dataUrl => {
+      var out = dataUrl;
+      if (window.__sbUploadMedia) {
+        var url = await window.__sbUploadMedia(dataUrl, {
+          folder: 'photos',
+          name: String(id || '')
+        });
+        if (url) out = url;
+      }
+      onUpload && onUpload(id, out);
+    });
   };
   return React.createElement("div", {
     style: {
@@ -44998,6 +45018,10 @@ var SchoolDocs = ({
   var viewDoc = d => {
     var src = d.file;
     if (!src) return;
+    if (/^https?:\/\//.test(src)) {
+      window.open(src, '_blank');
+      return;
+    }
     try {
       var [meta, b64] = src.split(',');
       var mime = (meta.match(/data:(.*?);/) || [])[1] || d.fileType || 'application/octet-stream';
@@ -45013,19 +45037,27 @@ var SchoolDocs = ({
       window.open(src, '_blank');
     }
   };
-  var addDoc = () => {
+  var addDoc = async () => {
     if (!newTitle.trim() && !newFile) {
       toast(tr('សូមបំពេញឈ្មោះ ឬ ភ្ជាប់ឯកសារ', 'Enter a title or attach a file'), 'warn');
       return;
     }
     if (!student.schoolDocs) student.schoolDocs = [];
+    var fileVal = newFile ? newFile.data : undefined;
+    if (newFile && window.__sbUploadMedia) {
+      var u = await window.__sbUploadMedia(newFile.data, {
+        folder: 'docs',
+        name: (student.id || '') + '-' + (newFile.name || 'doc')
+      });
+      if (u) fileVal = u;
+    }
     student.schoolDocs.push({
       id: 'doc-' + Date.now(),
       type: newType,
       title: newTitle.trim() || newFile && newFile.name || 'Document',
       date: newDate,
       note: newNote.trim(),
-      file: newFile ? newFile.data : undefined,
+      file: fileVal,
       fileName: newFile ? newFile.name : undefined,
       fileType: newFile ? newFile.type : undefined
     });
@@ -51372,12 +51404,23 @@ var SchoolInfo = ({
   var handleLogoFile = e => {
     var file = e.target.files?.[0];
     if (!file) return;
+    var store = async dataUrl => {
+      var out = dataUrl;
+      if (window.__sbUploadMedia) {
+        var u = await window.__sbUploadMedia(dataUrl, {
+          folder: 'logo',
+          name: 'logo'
+        });
+        if (u) out = u;
+      }
+      up(setLogo, 'logo')(out);
+    };
     if (window.resizeImageFile) {
-      window.resizeImageFile(file, 256, 256).then(url => up(setLogo, 'logo')(url));
+      window.resizeImageFile(file, 256, 256).then(store);
     } else {
       var reader = new FileReader();
       reader.onload = ev => {
-        up(setLogo, 'logo')(ev.target.result);
+        store(ev.target.result);
       };
       reader.readAsDataURL(file);
     }
@@ -59514,6 +59557,31 @@ Object.assign(window, {
     }
   }
   window.__sbConfigured = () => !!window.sb;
+  window.__sbUploadMedia = async (dataUrl, opts = {}) => {
+    if (!window.sb || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) return null;
+    try {
+      var blob = await (await fetch(dataUrl)).blob();
+      var mime = blob.type || 'image/jpeg';
+      var ext = (mime.split('/')[1] || 'bin').split('+')[0].slice(0, 5);
+      var safe = String(opts.name || 'f').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 40) || 'f';
+      var rand = Math.random().toString(36).slice(2, 8);
+      var path = `${opts.folder || 'misc'}/${safe}-${Date.now()}-${rand}.${ext}`;
+      var {
+        error
+      } = await window.sb.storage.from('media').upload(path, blob, {
+        contentType: mime,
+        upsert: true
+      });
+      if (error) throw error;
+      var {
+        data
+      } = window.sb.storage.from('media').getPublicUrl(path);
+      return data && data.publicUrl || null;
+    } catch (e) {
+      console.warn('[Anzen] media upload failed (kept inline):', e && e.message);
+      return null;
+    }
+  };
   window.__sbLoadProfile = async () => {
     if (!window.sb) return null;
     var {

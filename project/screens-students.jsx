@@ -3217,6 +3217,7 @@ const SchoolDocs = ({ student }) => {
   // Open an attached file (image/PDF) reliably in a new tab via a Blob URL.
   const viewDoc = (d) => {
     const src = d.file; if (!src) return;
+    if (/^https?:\/\//.test(src)) { window.open(src, '_blank'); return; }   // Storage URL
     try {
       const [meta, b64] = src.split(',');
       const mime = (meta.match(/data:(.*?);/) || [])[1] || d.fileType || 'application/octet-stream';
@@ -3228,16 +3229,23 @@ const SchoolDocs = ({ student }) => {
     } catch (e) { window.open(src, '_blank'); }
   };
 
-  const addDoc = () => {
+  const addDoc = async () => {
     if (!newTitle.trim() && !newFile) { toast(tr('សូមបំពេញឈ្មោះ ឬ ភ្ជាប់ឯកសារ','Enter a title or attach a file'), 'warn'); return; }
     if (!student.schoolDocs) student.schoolDocs = [];
+    // Upload the attachment to Storage (keeps the big base64 out of the synced
+    // DB); fall back to the inline data URL if Storage isn't available.
+    let fileVal = newFile ? newFile.data : undefined;
+    if (newFile && window.__sbUploadMedia) {
+      const u = await window.__sbUploadMedia(newFile.data, { folder:'docs', name:(student.id||'')+'-'+(newFile.name||'doc') });
+      if (u) fileVal = u;
+    }
     student.schoolDocs.push({
       id: 'doc-' + Date.now(),
       type: newType,
       title: (newTitle.trim() || (newFile && newFile.name) || 'Document'),
       date: newDate,
       note: newNote.trim(),
-      file:     newFile ? newFile.data : undefined,
+      file:     fileVal,
       fileName: newFile ? newFile.name : undefined,
       fileType: newFile ? newFile.type : undefined,
     });
