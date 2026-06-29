@@ -492,9 +492,9 @@ window.__trRegistry = {
   "No active lessons now": "គ្មាន​មេរៀន​ឥឡូវ",
   "Cleared rate": "អត្រា​ជោគ​ជ័យ",
   "No data yet": "មិន​ទាន់​មាន​ទិន្នន័យ",
+  "TODAY\\'S EXAMS": "ប្រឡង​ថ្ងៃ​នេះ",
   "TODAY\\'S LESSONS": "មេរៀន​ថ្ងៃ​នេះ",
   "No lessons scheduled today": "គ្មាន​មេរៀន​ថ្ងៃ​នេះ",
-  "TODAY\\'S EXAMS": "ប្រឡង​ថ្ងៃ​នេះ",
   "TOMORROW\\'S LESSONS": "មេរៀន​ថ្ងៃ​ស្អែក",
   "No lessons scheduled tomorrow": "គ្មាន​មេរៀន​ថ្ងៃ​ស្អែក",
   "ALERTS": "ការ​ជូន​ដំណឹង",
@@ -1460,9 +1460,9 @@ window.__trGroups = {
     "No active lessons now": "គ្មាន​មេរៀន​ឥឡូវ",
     "Cleared rate": "អត្រា​ជោគ​ជ័យ",
     "No data yet": "មិន​ទាន់​មាន​ទិន្នន័យ",
+    "TODAY\\'S EXAMS": "ប្រឡង​ថ្ងៃ​នេះ",
     "TODAY\\'S LESSONS": "មេរៀន​ថ្ងៃ​នេះ",
     "No lessons scheduled today": "គ្មាន​មេរៀន​ថ្ងៃ​នេះ",
-    "TODAY\\'S EXAMS": "ប្រឡង​ថ្ងៃ​នេះ",
     "TOMORROW\\'S LESSONS": "មេរៀន​ថ្ងៃ​ស្អែក",
     "No lessons scheduled tomorrow": "គ្មាន​មេរៀន​ថ្ងៃ​ស្អែក",
     "ALERTS": "ការ​ជូន​ដំណឹង",
@@ -15147,55 +15147,7 @@ var DashboardAdmin = () => {
           flexDirection: 'column',
           gap: 8
         }
-      }, React.createElement(Card, {
-        label: tr('មេរៀន​ថ្ងៃ​នេះ', 'TODAY\'S LESSONS')
-      }, sorted.length === 0 ? React.createElement("div", {
-        style: {
-          padding: '24px 0',
-          textAlign: 'center',
-          color: 'var(--ink-3)'
-        }
-      }, React.createElement("div", {
-        style: {
-          fontSize: 13
-        }
-      }, tr('គ្មាន​មេរៀន​ថ្ងៃ​នេះ', 'No lessons scheduled today')), React.createElement(Btn, {
-        kind: "ghost",
-        size: "sm",
-        onClick: () => openForm('newLesson'),
-        style: {
-          marginTop: 12
-        },
-        icon: React.createElement(Icon, {
-          name: "plus",
-          size: 13
-        })
-      }, tr('បន្ថែម​មេរៀន', 'Add lesson'))) : cols === 1 ? sorted.map((l, i) => React.createElement(LessonRow, {
-        key: l.id || i,
-        l: l,
-        i: i
-      })) : React.createElement("div", {
-        style: {
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '0 10px'
-        }
-      }, React.createElement("div", null, sorted.slice(0, half).map((l, i) => React.createElement(LessonRow, {
-        key: l.id || i,
-        l: l,
-        i: i,
-        compact: true
-      }))), React.createElement("div", {
-        style: {
-          borderLeft: '1px solid var(--border)',
-          paddingLeft: 10
-        }
-      }, sorted.slice(half).map((l, i) => React.createElement(LessonRow, {
-        key: l.id || i,
-        l: l,
-        i: i,
-        compact: true
-      }))))), todayExams.length > 0 && React.createElement(Card, {
+      }, todayExams.length > 0 && React.createElement(Card, {
         label: tr('ប្រឡង​ថ្ងៃ​នេះ', 'TODAY\'S EXAMS')
       }, todayExams.map((e, i) => {
         var stu = (e.studentIds || []).map(id => {
@@ -15248,7 +15200,55 @@ var DashboardAdmin = () => {
             marginTop: 1
           }
         }, "\uD83D\uDC68\u200D\uD83C\uDFEB ", ins.join(' · '))));
-      })), React.createElement(GlanceBar, {
+      })), React.createElement(Card, {
+        label: tr('មេរៀន​ថ្ងៃ​នេះ', 'TODAY\'S LESSONS')
+      }, sorted.length === 0 ? React.createElement("div", {
+        style: {
+          padding: '24px 0',
+          textAlign: 'center',
+          color: 'var(--ink-3)'
+        }
+      }, React.createElement("div", {
+        style: {
+          fontSize: 13
+        }
+      }, tr('គ្មាន​មេរៀន​ថ្ងៃ​នេះ', 'No lessons scheduled today')), React.createElement(Btn, {
+        kind: "ghost",
+        size: "sm",
+        onClick: () => openForm('newLesson'),
+        style: {
+          marginTop: 12
+        },
+        icon: React.createElement(Icon, {
+          name: "plus",
+          size: 13
+        })
+      }, tr('បន្ថែម​មេរៀន', 'Add lesson'))) : cols === 1 ? sorted.map((l, i) => React.createElement(LessonRow, {
+        key: l.id || i,
+        l: l,
+        i: i
+      })) : React.createElement("div", {
+        style: {
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '0 10px'
+        }
+      }, React.createElement("div", null, sorted.slice(0, half).map((l, i) => React.createElement(LessonRow, {
+        key: l.id || i,
+        l: l,
+        i: i,
+        compact: true
+      }))), React.createElement("div", {
+        style: {
+          borderLeft: '1px solid var(--border)',
+          paddingLeft: 10
+        }
+      }, sorted.slice(half).map((l, i) => React.createElement(LessonRow, {
+        key: l.id || i,
+        l: l,
+        i: i,
+        compact: true
+      }))))), React.createElement(GlanceBar, {
         vehIds: todayVehIds,
         instIds: todayInstIds,
         studIds: todayStudIds

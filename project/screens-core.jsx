@@ -266,23 +266,6 @@ const DashboardAdmin = () => {
             const half = Math.ceil(sorted.length / 2);
             return (
               <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                <Card label={tr('មេរៀន​ថ្ងៃ​នេះ','TODAY\'S LESSONS')}>
-                  {sorted.length === 0 ? (
-                    <div style={{padding:'24px 0',textAlign:'center',color:'var(--ink-3)'}}>
-                      <div style={{fontSize:13}}>{tr('គ្មាន​មេរៀន​ថ្ងៃ​នេះ','No lessons scheduled today')}</div>
-                      <Btn kind="ghost" size="sm" onClick={()=>openForm('newLesson')} style={{marginTop:12}} icon={<Icon name="plus" size={13}/>}>{tr('បន្ថែម​មេរៀន','Add lesson')}</Btn>
-                    </div>
-                  ) : cols === 1 ? (
-                    sorted.map((l,i) => <LessonRow key={l.id||i} l={l} i={i}/>)
-                  ) : (
-                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 10px'}}>
-                      <div>{sorted.slice(0,half).map((l,i) => <LessonRow key={l.id||i} l={l} i={i} compact/>)}</div>
-                      <div style={{borderLeft:'1px solid var(--border)',paddingLeft:10}}>
-                        {sorted.slice(half).map((l,i) => <LessonRow key={l.id||i} l={l} i={i} compact/>)}
-                      </div>
-                    </div>
-                  )}
-                </Card>
                 {todayExams.length > 0 && (
                   <Card label={tr('ប្រឡង​ថ្ងៃ​នេះ','TODAY\'S EXAMS')}>
                     {todayExams.map((e,i) => {
@@ -300,6 +283,23 @@ const DashboardAdmin = () => {
                     })}
                   </Card>
                 )}
+                <Card label={tr('មេរៀន​ថ្ងៃ​នេះ','TODAY\'S LESSONS')}>
+                  {sorted.length === 0 ? (
+                    <div style={{padding:'24px 0',textAlign:'center',color:'var(--ink-3)'}}>
+                      <div style={{fontSize:13}}>{tr('គ្មាន​មេរៀន​ថ្ងៃ​នេះ','No lessons scheduled today')}</div>
+                      <Btn kind="ghost" size="sm" onClick={()=>openForm('newLesson')} style={{marginTop:12}} icon={<Icon name="plus" size={13}/>}>{tr('បន្ថែម​មេរៀន','Add lesson')}</Btn>
+                    </div>
+                  ) : cols === 1 ? (
+                    sorted.map((l,i) => <LessonRow key={l.id||i} l={l} i={i}/>)
+                  ) : (
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 10px'}}>
+                      <div>{sorted.slice(0,half).map((l,i) => <LessonRow key={l.id||i} l={l} i={i} compact/>)}</div>
+                      <div style={{borderLeft:'1px solid var(--border)',paddingLeft:10}}>
+                        {sorted.slice(half).map((l,i) => <LessonRow key={l.id||i} l={l} i={i} compact/>)}
+                      </div>
+                    </div>
+                  )}
+                </Card>
                 <GlanceBar vehIds={todayVehIds} instIds={todayInstIds} studIds={todayStudIds}/>
               </div>
             );
