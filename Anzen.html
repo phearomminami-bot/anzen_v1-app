@@ -587,6 +587,8 @@ window.__trRegistry = {
   "Add at this time": "បន្ថែម​នៅ​ម៉ោង​នេះ",
   "New note": "ចំណាំ​ថ្មី",
   "Book new lesson": "ណាត់​មេរៀន​ថ្មី",
+  "Exam slot — not counted as a lesson": "កាលវិភាគ​ប្រឡង — មិន​រាប់​ជា​មេរៀន",
+  "Create exam": "បង្កើត​កាលវិភាគ​ប្រឡង",
   "Time": "ម៉ោង",
   "e.g. Teacher meeting": "ឧ. ប្រជុំគ្រូ",
   "e.g. All-instructor meeting in the conference room at 2pm": "ឧ. ប្រជុំគ្រូទាំងអស់ នៅបន្ទប់ប្រជុំ ម៉ោង ២ រសៀល",
@@ -1686,6 +1688,8 @@ window.__trGroups = {
     "Add at this time": "បន្ថែម​នៅ​ម៉ោង​នេះ",
     "New note": "ចំណាំ​ថ្មី",
     "Book new lesson": "កក់​មេរៀន​ថ្មី",
+    "Exam slot — not counted as a lesson": "កាលវិភាគ​ប្រឡង — មិន​រាប់​ជា​មេរៀន",
+    "Create exam": "បង្កើត​កាលវិភាគ​ប្រឡង",
     "Time": "ម៉ោង",
     "e.g. Teacher meeting": "ឧ. ប្រជុំគ្រូ",
     "e.g. All-instructor meeting in the conference room at 2pm": "ឧ. ប្រជុំគ្រូទាំងអស់ នៅបន្ទប់ប្រជុំ ម៉ោង ២ រសៀល",
@@ -19052,6 +19056,11 @@ var ScheduleScreen = ({
     km: 'ចំណាំ',
     en: 'Note',
     icon: 'bell'
+  }, {
+    k: 'exam',
+    km: 'ប្រឡង',
+    en: 'Exam',
+    icon: 'star'
   }].map(t => React.createElement("button", {
     key: t.k,
     onClick: () => setNoteModal(m => ({
@@ -19112,6 +19121,58 @@ var ScheduleScreen = ({
       });
     }
   }, tr('កក់​មេរៀន​ថ្មី', 'Book new lesson')), React.createElement(Btn, {
+    kind: "ghost",
+    size: "md",
+    onClick: () => setNoteModal(null),
+    style: {
+      justifyContent: 'center'
+    }
+  }, tr('បោះបង់', 'Cancel'))) : noteModal.mode === 'exam' ? React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 14
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: 'var(--ink-2)',
+      background: 'var(--surface-muted)',
+      borderRadius: 8,
+      padding: '11px 13px',
+      fontFamily: '"JetBrains Mono",monospace'
+    }
+  }, "\uD83D\uDCC5 ", noteModal.date, "\u3000\uD83D\uDD52 ", noteModal.time), React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--ink-3)'
+    }
+  }, tr('កាលវិភាគ​ប្រឡង — មិន​រាប់​ជា​មេរៀន', 'Exam slot — not counted as a lesson')), React.createElement(Btn, {
+    kind: "primary",
+    size: "lg",
+    icon: React.createElement(Icon, {
+      name: "star",
+      size: 15
+    }),
+    style: {
+      justifyContent: 'center',
+      background: '#1A6B3C',
+      borderColor: '#1A6B3C'
+    },
+    onClick: () => {
+      var d = noteModal.date,
+        t = noteModal.time;
+      setNoteModal(null);
+      setExamModal({
+        date: d,
+        time: t,
+        len: 2,
+        studentIds: [],
+        instIds: [],
+        note: ''
+      });
+    }
+  }, tr('បង្កើត​កាលវិភាគ​ប្រឡង', 'Create exam')), React.createElement(Btn, {
     kind: "ghost",
     size: "md",
     onClick: () => setNoteModal(null),

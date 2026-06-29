@@ -1132,7 +1132,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
             {/* Lesson / Note toggle — only when creating from a time slot */}
             {noteModal.mode && !noteModal.id && (
               <div style={{display:'flex',background:'var(--surface-muted)',borderRadius:9,padding:3,gap:3}}>
-                {[{k:'lesson',km:'មេរៀន',en:'Lesson',icon:'plus'},{k:'note',km:'ចំណាំ',en:'Note',icon:'bell'}].map(t=>(
+                {[{k:'lesson',km:'មេរៀន',en:'Lesson',icon:'plus'},{k:'note',km:'ចំណាំ',en:'Note',icon:'bell'},{k:'exam',km:'ប្រឡង',en:'Exam',icon:'star'}].map(t=>(
                   <button key={t.k} onClick={()=>setNoteModal(m=>({...m,mode:t.k}))} style={{
                     flex:1,padding:'8px 10px',border:'none',borderRadius:7,cursor:'pointer',fontSize:13,fontWeight:600,
                     display:'flex',alignItems:'center',justifyContent:'center',gap:6,
@@ -1152,6 +1152,18 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
                 <Btn kind="primary" size="lg" icon={<Icon name="plus" size={15}/>} style={{justifyContent:'center'}}
                   onClick={()=>{ const d=noteModal.date, h=noteModal.hour; setNoteModal(null); openForm('newLesson',{date:d,hour:h}); }}>
                   {tr('កក់​មេរៀន​ថ្មី','Book new lesson')}
+                </Btn>
+                <Btn kind="ghost" size="md" onClick={()=>setNoteModal(null)} style={{justifyContent:'center'}}>{tr('បោះបង់','Cancel')}</Btn>
+              </div>
+            ) : noteModal.mode === 'exam' ? (
+              <div style={{display:'flex',flexDirection:'column',gap:14}}>
+                <div style={{fontSize:13,color:'var(--ink-2)',background:'var(--surface-muted)',borderRadius:8,padding:'11px 13px',fontFamily:'"JetBrains Mono",monospace'}}>
+                  📅 {noteModal.date}　🕒 {noteModal.time}
+                </div>
+                <div style={{fontSize:11,color:'var(--ink-3)'}}>{tr('កាលវិភាគ​ប្រឡង — មិន​រាប់​ជា​មេរៀន','Exam slot — not counted as a lesson')}</div>
+                <Btn kind="primary" size="lg" icon={<Icon name="star" size={15}/>} style={{justifyContent:'center',background:'#1A6B3C',borderColor:'#1A6B3C'}}
+                  onClick={()=>{ const d=noteModal.date, t=noteModal.time; setNoteModal(null); setExamModal({date:d,time:t,len:2,studentIds:[],instIds:[],note:''}); }}>
+                  {tr('បង្កើត​កាលវិភាគ​ប្រឡង','Create exam')}
                 </Btn>
                 <Btn kind="ghost" size="md" onClick={()=>setNoteModal(null)} style={{justifyContent:'center'}}>{tr('បោះបង់','Cancel')}</Btn>
               </div>
