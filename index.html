@@ -38607,6 +38607,93 @@ var CvLessonRow = ({
     size: 13
   }), tr('កែ​មតិ', 'Edit'))));
 };
+var printStudentLessonsPDF = (s, lessons, exams) => {
+  if (!s) return;
+  var esc = x => String(x == null ? '' : x).replace(/[&<>]/g, m => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;'
+  })[m]);
+  var ss = window.__schoolSettings || {};
+  var school = ss.name || 'Anzen';
+  var sid = s.id;
+  var typeKm = l => l.color === 'c' || l.color === 'e' ? 'ទ្រឹស្ដី' : 'អនុវត្តន៍';
+  var stars = n => '★'.repeat(n || 0) + '☆'.repeat(5 - (n || 0));
+  var items = [...lessons.map(l => ({
+    t: 'lesson',
+    k: (l.date || '') + ' ' + String(l.h || 0).padStart(2, '0'),
+    item: l
+  })), ...exams.map(e => ({
+    t: 'exam',
+    k: (e.date || '') + ' ' + String(e.time || '').slice(0, 5),
+    item: e
+  }))].sort((a, b) => a.k < b.k ? 1 : a.k > b.k ? -1 : 0);
+  var rows = items.map(row => {
+    if (row.t === 'exam') {
+      var e = row.item;
+      var r = e.results && e.results[sid] || {};
+      var ins = (e.instIds || []).map(id => {
+        var it = instById(id);
+        return it ? esc(it.en || it.name) : null;
+      }).filter(Boolean).join(', ') || '—';
+      var isFail = r.result === 'fail';
+      var badge = r.result === 'pass' ? '<b style="color:#12A302">ជាប់ ✓</b>' : isFail ? '<b style="color:#B0413E">ធ្លាក់ ✗</b>' : '—';
+      var failInfo = isFail ? `${r.failLocation ? '<div>📍 ' + esc(r.failLocation) + '</div>' : ''}${r.failReason ? '<div style="color:#7a2b29">' + esc(r.failReason) + '</div>' : ''}` : '';
+      return `<tr style="background:${isFail ? '#fbeceb' : '#eafbe7'};-webkit-print-color-adjust:exact;print-color-adjust:exact">
+        <td style="white-space:nowrap;font-family:monospace;color:#12A302;font-weight:700">${esc(e.date)}<br>${esc(String(e.time || '').slice(0, 5))}</td>
+        <td><b>🎓 ប្រឡង</b><br><span style="color:#555">${ins}</span></td>
+        <td>${badge}${failInfo}</td>
+      </tr>`;
+    }
+    var l = row.item;
+    var it = instById(l.instId);
+    var inst = it ? esc(it.en || it.name) : '—';
+    var covered = lessonsCoveredBy(l).map(c => esc(c.no + (c.name ? ' ' + c.name : ''))).join(', ');
+    var fb = [];
+    if (l.rating) fb.push('<div>' + stars(l.rating) + '</div>');
+    if (l.didWell) fb.push('<div><b>ធ្វើបានល្អ:</b> ' + esc(l.didWell) + '</div>');
+    if (l.toImprove) fb.push('<div><b>ខ្វះខាត:</b> ' + esc(l.toImprove) + '</div>');
+    if (l.note) fb.push('<div><b>មតិ:</b> ' + esc(l.note) + '</div>');
+    var status = l.status === 'done' ? '<b style="color:#1A6B3C">រួចរាល់</b>' : l.status === 'cancelled' ? '<span style="color:#999">បានលុប</span>' : 'កំពុង';
+    return `<tr>
+      <td style="white-space:nowrap;font-family:monospace;color:#444;font-weight:700">${esc(l.date)}<br>${String(l.h || 0).padStart(2, '0')}:00</td>
+      <td><b>${typeKm(l)}</b>${covered ? '<br><span style="color:#1A4F96">' + covered + '</span>' : ''}<br><span style="color:#888">${inst}</span></td>
+      <td>${status}${fb.length ? '<div style="margin-top:3px;color:#333">' + fb.join('') + '</div>' : ''}</td>
+    </tr>`;
+  }).join('');
+  var doc = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<title>បញ្ជីមេរៀន · ${esc(s.name || s.en || '')}</title>
+<style>
+  @page { size:A4 portrait; margin:0; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#e8e8e8;font-family:'Noto Sans Khmer','Inter',sans-serif;}
+  .bar{position:fixed;top:0;left:0;right:0;z-index:9;background:#1a1a19;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 18px;}
+  .bar button{background:#2a5db0;color:#fff;border:none;border-radius:6px;padding:9px 18px;font:inherit;font-weight:700;cursor:pointer;}
+  .bar .t{font-size:13px;font-weight:600;}
+  .sheet{width:210mm;min-height:297mm;margin:58px auto 30px;background:#fff;padding:12.7mm;box-shadow:0 6px 30px rgba(0,0,0,.18);}
+  h1{font-size:18px;color:#1A4F96;}
+  .sub{font-size:13px;color:#333;margin:2px 0 14px;}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  th{background:#f0f0ee;text-align:left;padding:7px 8px;border:1px solid #ddd;font-size:11px;color:#555;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  td{padding:7px 8px;border:1px solid #e5e5e5;vertical-align:top;line-height:1.5;}
+  @media print{ body{background:#fff;} .bar{display:none;} .sheet{margin:0;box-shadow:none;width:auto;min-height:auto;} }
+</style></head><body>
+<div class="bar"><span class="t">បញ្ជីមេរៀន · ${esc(s.name || s.en || '')}</span><button onclick="window.print()">🖨 បោះពុម្ព / រក្សាជា PDF</button></div>
+<div class="sheet">
+  <h1>${esc(school)}</h1>
+  <div class="sub">បញ្ជីមេរៀន និង មតិគ្រូ · <b>${esc(s.name || '')}</b> ${esc(s.en || '')} · ${esc(s.id || '')} · ${items.length} កំណត់ត្រា</div>
+  <table>
+    <thead><tr><th style="width:80px">ថ្ងៃ/ម៉ោង</th><th style="width:38%">ប្រភេទ · គ្រូ</th><th>លទ្ធផល · មតិគ្រូ</th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="3" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr>'}</tbody>
+  </table>
+</div>
+</body></html>`;
+  var w = window.open('', '_blank', 'width=900,height=1100');
+  if (!w) return;
+  w.document.write(doc);
+  w.document.close();
+};
 var ExamFeedbackRow = ({
   e,
   sid,
@@ -40002,11 +40089,33 @@ var StudentsScreenV2 = () => {
             onSave: saveLessonFeedback
           });
         });
-      })(), React.createElement("button", {
+      })(), React.createElement("div", {
+        style: {
+          display: 'flex',
+          gap: 8,
+          marginTop: 12
+        }
+      }, React.createElement("button", {
+        onClick: () => printStudentLessonsPDF(s, studentLessons, studentExams),
+        style: {
+          flex: 1,
+          padding: '10px',
+          borderRadius: 8,
+          border: '1px solid var(--border-strong)',
+          background: 'var(--surface)',
+          color: 'var(--ink-2)',
+          cursor: 'pointer',
+          fontSize: 13,
+          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 6
+        }
+      }, "\u2B07 ", tr('ទាញយក PDF', 'Download PDF')), React.createElement("button", {
         onClick: () => bookLesson(s),
         style: {
-          width: '100%',
-          marginTop: 12,
+          flex: 1,
           padding: '10px',
           borderRadius: 8,
           border: 'none',
@@ -40016,7 +40125,7 @@ var StudentsScreenV2 = () => {
           fontSize: 13,
           fontWeight: 600
         }
-      }, tr('ណាត់​មេរៀន​ថ្មី', 'Book new lesson'))));
+      }, tr('ណាត់​មេរៀន​ថ្មី', 'Book new lesson')))));
     }
     return React.createElement("div", {
       style: {
