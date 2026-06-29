@@ -504,9 +504,10 @@ const StudentsScreenV2 = () => {
       const pct = s.target > 0 ? Math.min(100, Math.round((s.hours / s.target) * 100)) : 0;
       const price = studentPrice(s);
       const paidAmt = Math.round((s.paid || 0) * price);
+      // Show ALL of this student's lessons (newest first). Previously capped at
+      // 12, which hid older lessons that exist in the schedule.
       const studentLessons = LESSONS.filter(l => l.studentId === s.id).slice()
-        .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))
-        .slice(0, 12);
+        .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
       const grad = isGraduated(s);
       // Shared edit form — rendered inside whichever section is being edited.
       const editForm = (

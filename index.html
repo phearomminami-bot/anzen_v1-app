@@ -38197,7 +38197,7 @@ var StudentsScreenV2 = () => {
       var pct = s.target > 0 ? Math.min(100, Math.round(s.hours / s.target * 100)) : 0;
       var price = studentPrice(s);
       var paidAmt = Math.round((s.paid || 0) * price);
-      var studentLessons = LESSONS.filter(l => l.studentId === s.id).slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 12);
+      var studentLessons = LESSONS.filter(l => l.studentId === s.id).slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
       var grad = isGraduated(s);
       var editForm = React.createElement(StudentEditPanel, {
         key: s.id,
