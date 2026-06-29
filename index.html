@@ -39706,74 +39706,86 @@ var StudentsScreenV2 = () => {
         label: tr('បញ្ជីមេរៀន និង មតិគ្រូ', 'Lessons & Comments'),
         isOpen: openSections.lessons,
         onToggle: () => toggleSection('lessons')
-      }, studentExams.length > 0 && React.createElement("div", {
-        style: {
-          marginBottom: 10
-        }
-      }, studentExams.map((e, i) => {
-        var ins = (e.instIds || []).map(id => {
-          var it = instById(id);
-          return it ? it.en || it.name : null;
-        }).filter(Boolean);
-        return React.createElement("div", {
-          key: e.id || i,
-          style: {
-            display: 'flex',
-            gap: 10,
-            alignItems: 'flex-start',
-            padding: '9px 8px',
-            borderRadius: 8,
-            marginBottom: 6,
-            background: 'rgba(18,163,2,.08)',
-            border: '1px solid rgba(18,163,2,.35)',
-            borderLeft: '3px solid #12A302'
-          }
-        }, React.createElement("div", {
-          style: {
-            fontSize: 11,
-            fontWeight: 700,
-            fontFamily: '"JetBrains Mono",monospace',
-            color: '#12A302',
-            minWidth: 54,
-            lineHeight: 1.5
-          }
-        }, e.date, React.createElement("br", null), String(e.time || '').slice(0, 5)), React.createElement("div", {
-          style: {
-            flex: 1,
-            minWidth: 0
-          }
-        }, React.createElement("div", {
+      }, (() => {
+        var items = [...studentLessons.map(l => ({
+          t: 'lesson',
+          k: (l.date || '') + ' ' + String(l.h || 0).padStart(2, '0'),
+          item: l
+        })), ...studentExams.map(e => ({
+          t: 'exam',
+          k: (e.date || '') + ' ' + String(e.time || '').slice(0, 5),
+          item: e
+        }))].sort((a, b) => a.k < b.k ? 1 : a.k > b.k ? -1 : 0);
+        if (items.length === 0) return React.createElement("div", {
           style: {
             fontSize: 13,
-            fontWeight: 700,
-            color: '#0c5a01'
-          }
-        }, "\uD83C\uDF93 ", tr('ប្រឡង', 'Exam')), ins.length > 0 && React.createElement("div", {
-          style: {
-            fontSize: 11,
             color: 'var(--ink-3)',
-            marginTop: 1
+            textAlign: 'center',
+            padding: '12px 0'
           }
-        }, "\uD83D\uDC68\u200D\uD83C\uDFEB ", ins.join(' · ')), e.note && React.createElement("div", {
-          style: {
-            fontSize: 11,
-            color: 'var(--ink-2)',
-            marginTop: 1
+        }, tr('មិន​ទាន់​មាន​មេរៀន', 'No lessons yet'));
+        return items.map((row, i) => {
+          if (row.t === 'exam') {
+            var e = row.item;
+            var ins = (e.instIds || []).map(id => {
+              var it = instById(id);
+              return it ? it.en || it.name : null;
+            }).filter(Boolean);
+            return React.createElement("div", {
+              key: e.id || 'ex' + i,
+              style: {
+                display: 'flex',
+                gap: 10,
+                alignItems: 'flex-start',
+                padding: '9px 8px',
+                borderRadius: 8,
+                marginBottom: 6,
+                background: 'rgba(18,163,2,.08)',
+                border: '1px solid rgba(18,163,2,.35)',
+                borderLeft: '3px solid #12A302'
+              }
+            }, React.createElement("div", {
+              style: {
+                fontSize: 11,
+                fontWeight: 700,
+                fontFamily: '"JetBrains Mono",monospace',
+                color: '#12A302',
+                minWidth: 54,
+                lineHeight: 1.5
+              }
+            }, e.date, React.createElement("br", null), String(e.time || '').slice(0, 5)), React.createElement("div", {
+              style: {
+                flex: 1,
+                minWidth: 0
+              }
+            }, React.createElement("div", {
+              style: {
+                fontSize: 13,
+                fontWeight: 700,
+                color: '#0c5a01'
+              }
+            }, "\uD83C\uDF93 ", tr('ប្រឡង', 'Exam')), ins.length > 0 && React.createElement("div", {
+              style: {
+                fontSize: 11,
+                color: 'var(--ink-3)',
+                marginTop: 1
+              }
+            }, "\uD83D\uDC68\u200D\uD83C\uDFEB ", ins.join(' · ')), e.note && React.createElement("div", {
+              style: {
+                fontSize: 11,
+                color: 'var(--ink-2)',
+                marginTop: 1
+              }
+            }, e.note)));
           }
-        }, e.note)));
-      })), studentLessons.length === 0 ? React.createElement("div", {
-        style: {
-          fontSize: 13,
-          color: 'var(--ink-3)',
-          textAlign: 'center',
-          padding: '12px 0'
-        }
-      }, tr('មិន​ទាន់​មាន​មេរៀន', 'No lessons yet')) : studentLessons.map((l, i) => React.createElement(CvLessonRow, {
-        key: l.id || i,
-        l: l,
-        tr: tr,
-        onSave: saveLessonFeedback
-      })), React.createElement("button", {
+          return React.createElement(CvLessonRow, {
+            key: row.item.id || 'ls' + i,
+            l: row.item,
+            tr: tr,
+            onSave: saveLessonFeedback
+          });
+        });
+      })(), React.createElement("button", {
         onClick: () => bookLesson(s),
         style: {
           width: '100%',

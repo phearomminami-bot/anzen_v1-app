@@ -747,12 +747,21 @@ const StudentsScreenV2 = () => {
 
           {/* Section 5: Lessons & comments */}
           <CvSection label={tr('បញ្ជីមេរៀន និង មតិគ្រូ','Lessons & Comments')} isOpen={openSections.lessons} onToggle={()=>toggleSection('lessons')}>
-            {studentExams.length > 0 && (
-              <div style={{marginBottom:10}}>
-                {studentExams.map((e,i) => {
+            {(() => {
+              // Merge lessons + exams into one list, newest first by date+time.
+              const items = [
+                ...studentLessons.map(l => ({ t:'lesson', k:(l.date||'')+' '+String(l.h||0).padStart(2,'0'), item:l })),
+                ...studentExams.map(e  => ({ t:'exam',   k:(e.date||'')+' '+String(e.time||'').slice(0,5),    item:e })),
+              ].sort((a,b)=> a.k<b.k ? 1 : a.k>b.k ? -1 : 0);
+              if (items.length === 0) return (
+                <div style={{fontSize:13,color:'var(--ink-3)',textAlign:'center',padding:'12px 0'}}>{tr('មិន​ទាន់​មាន​មេរៀន','No lessons yet')}</div>
+              );
+              return items.map((row,i) => {
+                if (row.t === 'exam') {
+                  const e = row.item;
                   const ins = (e.instIds||[]).map(id=>{ const it=instById(id); return it?(it.en||it.name):null; }).filter(Boolean);
                   return (
-                    <div key={e.id||i} style={{display:'flex',gap:10,alignItems:'flex-start',padding:'9px 8px',borderRadius:8,marginBottom:6,
+                    <div key={e.id||('ex'+i)} style={{display:'flex',gap:10,alignItems:'flex-start',padding:'9px 8px',borderRadius:8,marginBottom:6,
                       background:'rgba(18,163,2,.08)',border:'1px solid rgba(18,163,2,.35)',borderLeft:'3px solid #12A302'}}>
                       <div style={{fontSize:11,fontWeight:700,fontFamily:'"JetBrains Mono",monospace',color:'#12A302',minWidth:54,lineHeight:1.5}}>{e.date}<br/>{String(e.time||'').slice(0,5)}</div>
                       <div style={{flex:1,minWidth:0}}>
@@ -762,16 +771,10 @@ const StudentsScreenV2 = () => {
                       </div>
                     </div>
                   );
-                })}
-              </div>
-            )}
-            {studentLessons.length === 0 ? (
-              <div style={{fontSize:13,color:'var(--ink-3)',textAlign:'center',padding:'12px 0'}}>
-                {tr('មិន​ទាន់​មាន​មេរៀន','No lessons yet')}
-              </div>
-            ) : studentLessons.map((l,i) => (
-              <CvLessonRow key={l.id || i} l={l} tr={tr} onSave={saveLessonFeedback}/>
-            ))}
+                }
+                return <CvLessonRow key={row.item.id||('ls'+i)} l={row.item} tr={tr} onSave={saveLessonFeedback}/>;
+              });
+            })()}
             <button onClick={()=>bookLesson(s)} style={{
               width:'100%',marginTop:12,padding:'10px',borderRadius:8,
               border:'none',background:'var(--accent)',color:'#fff',
