@@ -200,6 +200,76 @@ const CvLessonRow = ({ l, tr, onSave }) => {
   );
 };
 
+// Exam row in a student's Lessons & Comments — mark pass/fail per student and
+// record where they failed. Fail turns the row red.
+const ExamFeedbackRow = ({ e, sid, tr, onSave }) => {
+  const r = (e.results && e.results[sid]) || {};
+  const [open, setOpen]                 = React.useState(false);
+  const [editing, setEditing]           = React.useState(false);
+  const [result, setResult]             = React.useState(r.result || '');
+  const [failLocation, setFailLocation] = React.useState(r.failLocation || '');
+  const [failReason, setFailReason]     = React.useState(r.failReason || '');
+  const ins = (e.instIds||[]).map(id=>{ const it=instById(id); return it?(it.en||it.name):null; }).filter(Boolean);
+  const savedFail = r.result === 'fail';
+  const savedPass = r.result === 'pass';
+  const hasResult = !!r.result;
+  const showForm  = editing;
+  const reset = () => { setResult(r.result||''); setFailLocation(r.failLocation||''); setFailReason(r.failReason||''); };
+  const toggleOpen = () => { if (open) { setEditing(false); reset(); } setOpen(o=>!o); };
+  const save = () => { onSave(e.id, sid, { result, failLocation: failLocation.trim(), failReason: failReason.trim() }); setEditing(false); };
+  const th = savedFail
+    ? { bg:'rgba(176,65,62,.08)', bd:'rgba(176,65,62,.4)', accent:'#B0413E', text:'#7a2b29' }
+    : { bg:'rgba(18,163,2,.08)',  bd:'rgba(18,163,2,.35)', accent:'#12A302', text:'#0c5a01' };
+  const fld = { width:'100%', padding:'8px 10px', border:'1px solid var(--border)', borderRadius:8, fontSize:13, fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)', boxSizing:'border-box' };
+  const lbl = { fontSize:11, color:'var(--ink-3)', fontWeight:600, margin:'10px 0 4px' };
+  return (
+    <div style={{borderRadius:8,marginBottom:6,background:th.bg,border:`1px solid ${th.bd}`,borderLeft:`3px solid ${th.accent}`,overflow:'hidden'}}>
+      <button onClick={toggleOpen} style={{width:'100%',textAlign:'left',background:'none',border:'none',cursor:'pointer',padding:'9px 10px',display:'flex',gap:10,alignItems:'flex-start'}}>
+        <div style={{fontSize:11,fontWeight:700,fontFamily:'"JetBrains Mono",monospace',color:th.accent,minWidth:54,lineHeight:1.5}}>{e.date}<br/>{String(e.time||'').slice(0,5)}</div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:13,fontWeight:700,color:th.text}}>🎓 {tr('ប្រឡង','Exam')}</div>
+          {ins.length>0 && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:1}}>👨‍🏫 {ins.join(' · ')}</div>}
+          {savedFail && r.failLocation && <div style={{fontSize:11,color:th.text,marginTop:1}}>📍 {r.failLocation}</div>}
+        </div>
+        <span style={{display:'flex',alignItems:'center',gap:4,flexShrink:0}}>
+          {savedPass && <span style={{fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:6,background:'rgba(18,163,2,.16)',color:'#12A302'}}>{tr('ជាប់','Pass')}</span>}
+          {savedFail && <span style={{fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:6,background:'rgba(176,65,62,.16)',color:'#B0413E'}}>{tr('ធ្លាក់','Fail')}</span>}
+          {!hasResult && <span style={{fontSize:11,color:'var(--ink-3)'}}>{tr('កំណត់​លទ្ធផល','Set result')}</span>}
+          <span style={{transition:'transform .2s',transform:open?'rotate(180deg)':'none',color:'var(--ink-3)'}}>▾</span>
+        </span>
+      </button>
+      {open && (
+        <div style={{padding:'2px 10px 12px'}}>
+          {!showForm && hasResult ? (
+            <div style={{display:'flex',flexDirection:'column',gap:6}}>
+              {savedFail && r.failReason && <div><div style={lbl}>{tr('មូលហេតុ​ធ្លាក់','Fail reason')}</div><div style={{fontSize:13,color:'var(--ink)'}}>{r.failReason}</div></div>}
+              <button onClick={()=>setEditing(true)} style={{alignSelf:'flex-start',marginTop:6,padding:'7px 14px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,fontFamily:'inherit'}}>✎ {tr('កែ','Edit')}</button>
+            </div>
+          ) : (
+            <>
+              <div style={lbl}>{tr('លទ្ធផល','Result')}</div>
+              <div style={{display:'flex',gap:6}}>
+                {[['pass',tr('ជាប់','Pass'),'#12A302'],['fail',tr('ធ្លាក់','Fail'),'#B0413E']].map(([v,t,c])=>(
+                  <button key={v} onClick={()=>setResult(v)} style={{flex:1,padding:'8px 0',borderRadius:7,cursor:'pointer',fontSize:13,fontWeight:700,fontFamily:'inherit',
+                    border:`1.5px solid ${result===v?c:'var(--border)'}`,
+                    background: result===v ? c : 'var(--surface)', color: result===v ? '#fff' : 'var(--ink-2)'}}>{t}</button>
+                ))}
+              </div>
+              {result==='fail' && (<>
+                <div style={lbl}>{tr('កន្លែង​ធ្លាក់','Failed at')}</div>
+                <input value={failLocation} onChange={ev=>setFailLocation(ev.target.value)} placeholder={tr('ឧ. ប្រឡង​ផ្លូវ','e.g. road test')} style={fld}/>
+                <div style={lbl}>{tr('មូលហេតុ​ធ្លាក់','Fail reason')}</div>
+                <input value={failReason} onChange={ev=>setFailReason(ev.target.value)} placeholder={tr('ឧ. ចត​មិន​ត្រូវ','e.g. parking error')} style={fld}/>
+              </>)}
+              <button onClick={save} style={{width:'100%',marginTop:12,padding:'10px',borderRadius:8,border:'none',background:th.accent,color:'#fff',cursor:'pointer',fontSize:13,fontWeight:600,fontFamily:'inherit'}}>{tr('រក្សា​ទុក​លទ្ធផល','Save result')}</button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Collapsible profile section. Defined at module scope (NOT inside the screen's
 // render) so its identity is stable — otherwise every parent re-render (e.g. the
 // mobile keyboard resizing the viewport) would remount the section and drop
@@ -503,6 +573,18 @@ const StudentsScreenV2 = () => {
     }
   };
 
+  // Per-student exam result (pass/fail + fail details). An exam can hold many
+  // students, so results are keyed by student id on the exam record.
+  const saveExamResult = (examId, studentId, patch) => {
+    const list = (window.__schoolSettings && window.__schoolSettings.scheduleExams) || [];
+    const ex = list.find(e => e.id === examId);
+    if (!ex) return;
+    ex.results = { ...(ex.results || {}), [studentId]: patch };
+    if (window.saveAllData) window.saveAllData();
+    forceUpdate();
+    toast(tr('បាន​រក្សា​ទុក​លទ្ធផល ✓', 'Result saved ✓'), 'good');
+  };
+
   const deleteStudent = (id) => {
     const i = STUDENTS.findIndex(s => s.id === id);
     if (i !== -1) STUDENTS.splice(i, 1);
@@ -758,19 +840,7 @@ const StudentsScreenV2 = () => {
               );
               return items.map((row,i) => {
                 if (row.t === 'exam') {
-                  const e = row.item;
-                  const ins = (e.instIds||[]).map(id=>{ const it=instById(id); return it?(it.en||it.name):null; }).filter(Boolean);
-                  return (
-                    <div key={e.id||('ex'+i)} style={{display:'flex',gap:10,alignItems:'flex-start',padding:'9px 8px',borderRadius:8,marginBottom:6,
-                      background:'rgba(18,163,2,.08)',border:'1px solid rgba(18,163,2,.35)',borderLeft:'3px solid #12A302'}}>
-                      <div style={{fontSize:11,fontWeight:700,fontFamily:'"JetBrains Mono",monospace',color:'#12A302',minWidth:54,lineHeight:1.5}}>{e.date}<br/>{String(e.time||'').slice(0,5)}</div>
-                      <div style={{flex:1,minWidth:0}}>
-                        <div style={{fontSize:13,fontWeight:700,color:'#0c5a01'}}>🎓 {tr('ប្រឡង','Exam')}</div>
-                        {ins.length>0 && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:1}}>👨‍🏫 {ins.join(' · ')}</div>}
-                        {e.note && <div style={{fontSize:11,color:'var(--ink-2)',marginTop:1}}>{e.note}</div>}
-                      </div>
-                    </div>
-                  );
+                  return <ExamFeedbackRow key={row.item.id||('ex'+i)} e={row.item} sid={s.id} tr={tr} onSave={saveExamResult}/>;
                 }
                 return <CvLessonRow key={row.item.id||('ls'+i)} l={row.item} tr={tr} onSave={saveLessonFeedback}/>;
               });

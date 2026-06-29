@@ -948,17 +948,19 @@ window.__trRegistry = {
   "Comment": "មតិ​បន្ថែម",
   "💬 Instructor comment...": "💬 មតិ​គ្រូ​លើ​មេរៀន​នេះ...",
   "Save feedback": "រក្សា​ទុក​មតិ",
+  "Pass": "ជាប់",
+  "Fail": "ធ្លាក់",
+  "Set result": "កំណត់​លទ្ធផល",
+  "Fail reason": "មូលហេតុ​ធ្លាក់",
+  "Result": "លទ្ធផល",
+  "Failed at": "កន្លែង​ធ្លាក់",
+  "e.g. parking error": "ឧ. ចត​មិន​ត្រូវ",
+  "Save result": "រក្សា​ទុក​លទ្ធផល",
   "Completion": "បញ្ចប់",
   "Target hours": "ម៉ោងគោល",
   "Exams": "ការ​ប្រឡង",
   "First exam": "ប្រឡង​លើក​ដំបូង",
   "Apply date": "ដាក់​ពាក្យ",
-  "Result": "លទ្ធផល",
-  "Pass": "ជាប់",
-  "Fail": "ធ្លាក់",
-  "Failed at": "កន្លែង​ធ្លាក់",
-  "Fail reason": "មូលហេតុ​ធ្លាក់",
-  "e.g. parking error": "ឧ. ចត​មិន​ត្រូវ",
   "Add resit": "បន្ថែម​ការ​ប្រឡង​សង",
   "Reg. date": "ថ្ងៃចុះឈ្មោះ",
   "Paid in full": "បាន​បង់​ប្រាក់​ពេញ",
@@ -966,6 +968,7 @@ window.__trRegistry = {
   "Marked as graduated ✓": "បាន​សម្គាល់​ថា​បញ្ចប់​ការសិក្សា ✓",
   "Restored to active": "បាន​យក​មក​សិក្សា​វិញ",
   "Feedback saved ✓": "បាន​រក្សា​ទុក​មតិ ✓",
+  "Result saved ✓": "បាន​រក្សា​ទុក​លទ្ធផល ✓",
   "Student removed": "បានលុបសិស្ស",
   "Completed": "រួច​រាល់",
   "Back": "ត្រឡប់",
@@ -1520,17 +1523,19 @@ window.__trGroups = {
     "Comment": "មតិ​បន្ថែម",
     "💬 Instructor comment...": "💬 មតិ​គ្រូ​លើ​មេរៀន​នេះ...",
     "Save feedback": "រក្សា​ទុក​មតិ",
+    "Pass": "ជាប់",
+    "Fail": "ធ្លាក់",
+    "Set result": "កំណត់​លទ្ធផល",
+    "Fail reason": "មូលហេតុ​ធ្លាក់",
+    "Result": "លទ្ធផល",
+    "Failed at": "កន្លែង​ធ្លាក់",
+    "e.g. parking error": "ឧ. ចត​មិន​ត្រូវ",
+    "Save result": "រក្សា​ទុក​លទ្ធផល",
     "Completion": "បញ្ចប់",
     "Target hours": "ម៉ោង​គោលដៅ",
     "Exams": "ការ​ប្រឡង",
     "First exam": "ប្រឡង​លើក​ដំបូង",
     "Apply date": "ប្រឡង​សង លើកទី '+i, 'Resit #'+i)}\n            </div>\n            {i>0 && <button onClick={()=>removeAttempt(i)} style={{border:'none',background:'none',color:'var(--danger)',cursor:'pointer',fontSize:16,lineHeight:1,padding:0}}>×</button>}\n          </div>\n          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 12px'}}>\n            <div><div style={_stLbl}>{tr('ថ្ងៃ​ដាក់​ពាក្យ",
-    "Result": "លទ្ធផល",
-    "Pass": "ជាប់",
-    "Fail": "ធ្លាក់",
-    "Failed at": "កន្លែង​ធ្លាក់",
-    "Fail reason": "មូលហេតុ​ធ្លាក់",
-    "e.g. parking error": "ឧ. ចត​មិន​ត្រូវ",
     "Add resit": "បន្ថែម​ការ​ប្រឡង​សង",
     "Reg. date": "ថ្ងៃ​ចុះ​ឈ្មោះ",
     "Paid in full": "បាន​បង់​ប្រាក់​ពេញ",
@@ -1538,6 +1543,7 @@ window.__trGroups = {
     "Marked as graduated ✓": "បាន​សម្គាល់​ថា​បញ្ចប់​ការសិក្សា ✓",
     "Restored to active": "បាន​យក​មក​សិក្សា​វិញ",
     "Feedback saved ✓": "បាន​រក្សា​ទុក​មតិ ✓",
+    "Result saved ✓": "បាន​រក្សា​ទុក​លទ្ធផល ✓",
     "Student removed": "បានលុបសិស្ស",
     "Completed": "បាន​បញ្ចប់",
     "Back": "ត្រឡប់",
@@ -38601,6 +38607,249 @@ var CvLessonRow = ({
     size: 13
   }), tr('កែ​មតិ', 'Edit'))));
 };
+var ExamFeedbackRow = ({
+  e,
+  sid,
+  tr,
+  onSave
+}) => {
+  var r = e.results && e.results[sid] || {};
+  var [open, setOpen] = React.useState(false);
+  var [editing, setEditing] = React.useState(false);
+  var [result, setResult] = React.useState(r.result || '');
+  var [failLocation, setFailLocation] = React.useState(r.failLocation || '');
+  var [failReason, setFailReason] = React.useState(r.failReason || '');
+  var ins = (e.instIds || []).map(id => {
+    var it = instById(id);
+    return it ? it.en || it.name : null;
+  }).filter(Boolean);
+  var savedFail = r.result === 'fail';
+  var savedPass = r.result === 'pass';
+  var hasResult = !!r.result;
+  var showForm = editing;
+  var reset = () => {
+    setResult(r.result || '');
+    setFailLocation(r.failLocation || '');
+    setFailReason(r.failReason || '');
+  };
+  var toggleOpen = () => {
+    if (open) {
+      setEditing(false);
+      reset();
+    }
+    setOpen(o => !o);
+  };
+  var save = () => {
+    onSave(e.id, sid, {
+      result,
+      failLocation: failLocation.trim(),
+      failReason: failReason.trim()
+    });
+    setEditing(false);
+  };
+  var th = savedFail ? {
+    bg: 'rgba(176,65,62,.08)',
+    bd: 'rgba(176,65,62,.4)',
+    accent: '#B0413E',
+    text: '#7a2b29'
+  } : {
+    bg: 'rgba(18,163,2,.08)',
+    bd: 'rgba(18,163,2,.35)',
+    accent: '#12A302',
+    text: '#0c5a01'
+  };
+  var fld = {
+    width: '100%',
+    padding: '8px 10px',
+    border: '1px solid var(--border)',
+    borderRadius: 8,
+    fontSize: 13,
+    fontFamily: 'inherit',
+    background: 'var(--surface)',
+    color: 'var(--ink)',
+    boxSizing: 'border-box'
+  };
+  var lbl = {
+    fontSize: 11,
+    color: 'var(--ink-3)',
+    fontWeight: 600,
+    margin: '10px 0 4px'
+  };
+  return React.createElement("div", {
+    style: {
+      borderRadius: 8,
+      marginBottom: 6,
+      background: th.bg,
+      border: `1px solid ${th.bd}`,
+      borderLeft: `3px solid ${th.accent}`,
+      overflow: 'hidden'
+    }
+  }, React.createElement("button", {
+    onClick: toggleOpen,
+    style: {
+      width: '100%',
+      textAlign: 'left',
+      background: 'none',
+      border: 'none',
+      cursor: 'pointer',
+      padding: '9px 10px',
+      display: 'flex',
+      gap: 10,
+      alignItems: 'flex-start'
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 11,
+      fontWeight: 700,
+      fontFamily: '"JetBrains Mono",monospace',
+      color: th.accent,
+      minWidth: 54,
+      lineHeight: 1.5
+    }
+  }, e.date, React.createElement("br", null), String(e.time || '').slice(0, 5)), React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 13,
+      fontWeight: 700,
+      color: th.text
+    }
+  }, "\uD83C\uDF93 ", tr('ប្រឡង', 'Exam')), ins.length > 0 && React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--ink-3)',
+      marginTop: 1
+    }
+  }, "\uD83D\uDC68\u200D\uD83C\uDFEB ", ins.join(' · ')), savedFail && r.failLocation && React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: th.text,
+      marginTop: 1
+    }
+  }, "\uD83D\uDCCD ", r.failLocation)), React.createElement("span", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 4,
+      flexShrink: 0
+    }
+  }, savedPass && React.createElement("span", {
+    style: {
+      fontSize: 11,
+      fontWeight: 700,
+      padding: '2px 8px',
+      borderRadius: 6,
+      background: 'rgba(18,163,2,.16)',
+      color: '#12A302'
+    }
+  }, tr('ជាប់', 'Pass')), savedFail && React.createElement("span", {
+    style: {
+      fontSize: 11,
+      fontWeight: 700,
+      padding: '2px 8px',
+      borderRadius: 6,
+      background: 'rgba(176,65,62,.16)',
+      color: '#B0413E'
+    }
+  }, tr('ធ្លាក់', 'Fail')), !hasResult && React.createElement("span", {
+    style: {
+      fontSize: 11,
+      color: 'var(--ink-3)'
+    }
+  }, tr('កំណត់​លទ្ធផល', 'Set result')), React.createElement("span", {
+    style: {
+      transition: 'transform .2s',
+      transform: open ? 'rotate(180deg)' : 'none',
+      color: 'var(--ink-3)'
+    }
+  }, "\u25BE"))), open && React.createElement("div", {
+    style: {
+      padding: '2px 10px 12px'
+    }
+  }, !showForm && hasResult ? React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 6
+    }
+  }, savedFail && r.failReason && React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('មូលហេតុ​ធ្លាក់', 'Fail reason')), React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: 'var(--ink)'
+    }
+  }, r.failReason)), React.createElement("button", {
+    onClick: () => setEditing(true),
+    style: {
+      alignSelf: 'flex-start',
+      marginTop: 6,
+      padding: '7px 14px',
+      borderRadius: 8,
+      border: '1px solid var(--border-strong)',
+      background: 'var(--surface)',
+      color: 'var(--ink-2)',
+      cursor: 'pointer',
+      fontSize: 13,
+      fontWeight: 600,
+      fontFamily: 'inherit'
+    }
+  }, "\u270E ", tr('កែ', 'Edit'))) : React.createElement(React.Fragment, null, React.createElement("div", {
+    style: lbl
+  }, tr('លទ្ធផល', 'Result')), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 6
+    }
+  }, [['pass', tr('ជាប់', 'Pass'), '#12A302'], ['fail', tr('ធ្លាក់', 'Fail'), '#B0413E']].map(([v, t, c]) => React.createElement("button", {
+    key: v,
+    onClick: () => setResult(v),
+    style: {
+      flex: 1,
+      padding: '8px 0',
+      borderRadius: 7,
+      cursor: 'pointer',
+      fontSize: 13,
+      fontWeight: 700,
+      fontFamily: 'inherit',
+      border: `1.5px solid ${result === v ? c : 'var(--border)'}`,
+      background: result === v ? c : 'var(--surface)',
+      color: result === v ? '#fff' : 'var(--ink-2)'
+    }
+  }, t))), result === 'fail' && React.createElement(React.Fragment, null, React.createElement("div", {
+    style: lbl
+  }, tr('កន្លែង​ធ្លាក់', 'Failed at')), React.createElement("input", {
+    value: failLocation,
+    onChange: ev => setFailLocation(ev.target.value),
+    placeholder: tr('ឧ. ប្រឡង​ផ្លូវ', 'e.g. road test'),
+    style: fld
+  }), React.createElement("div", {
+    style: lbl
+  }, tr('មូលហេតុ​ធ្លាក់', 'Fail reason')), React.createElement("input", {
+    value: failReason,
+    onChange: ev => setFailReason(ev.target.value),
+    placeholder: tr('ឧ. ចត​មិន​ត្រូវ', 'e.g. parking error'),
+    style: fld
+  })), React.createElement("button", {
+    onClick: save,
+    style: {
+      width: '100%',
+      marginTop: 12,
+      padding: '10px',
+      borderRadius: 8,
+      border: 'none',
+      background: th.accent,
+      color: '#fff',
+      cursor: 'pointer',
+      fontSize: 13,
+      fontWeight: 600,
+      fontFamily: 'inherit'
+    }
+  }, tr('រក្សា​ទុក​លទ្ធផល', 'Save result')))));
+};
 var CvSection = ({
   label,
   children,
@@ -39205,6 +39454,18 @@ var StudentsScreenV2 = () => {
       toast(tr('បាន​រក្សា​ទុក​មតិ ✓', 'Feedback saved ✓'), 'good');
     }
   };
+  var saveExamResult = (examId, studentId, patch) => {
+    var list = window.__schoolSettings && window.__schoolSettings.scheduleExams || [];
+    var ex = list.find(e => e.id === examId);
+    if (!ex) return;
+    ex.results = {
+      ...(ex.results || {}),
+      [studentId]: patch
+    };
+    if (window.saveAllData) window.saveAllData();
+    forceUpdate();
+    toast(tr('បាន​រក្សា​ទុក​លទ្ធផល ✓', 'Result saved ✓'), 'good');
+  };
   var deleteStudent = id => {
     var i = STUDENTS.findIndex(s => s.id === id);
     if (i !== -1) STUDENTS.splice(i, 1);
@@ -39726,57 +39987,13 @@ var StudentsScreenV2 = () => {
         }, tr('មិន​ទាន់​មាន​មេរៀន', 'No lessons yet'));
         return items.map((row, i) => {
           if (row.t === 'exam') {
-            var e = row.item;
-            var ins = (e.instIds || []).map(id => {
-              var it = instById(id);
-              return it ? it.en || it.name : null;
-            }).filter(Boolean);
-            return React.createElement("div", {
-              key: e.id || 'ex' + i,
-              style: {
-                display: 'flex',
-                gap: 10,
-                alignItems: 'flex-start',
-                padding: '9px 8px',
-                borderRadius: 8,
-                marginBottom: 6,
-                background: 'rgba(18,163,2,.08)',
-                border: '1px solid rgba(18,163,2,.35)',
-                borderLeft: '3px solid #12A302'
-              }
-            }, React.createElement("div", {
-              style: {
-                fontSize: 11,
-                fontWeight: 700,
-                fontFamily: '"JetBrains Mono",monospace',
-                color: '#12A302',
-                minWidth: 54,
-                lineHeight: 1.5
-              }
-            }, e.date, React.createElement("br", null), String(e.time || '').slice(0, 5)), React.createElement("div", {
-              style: {
-                flex: 1,
-                minWidth: 0
-              }
-            }, React.createElement("div", {
-              style: {
-                fontSize: 13,
-                fontWeight: 700,
-                color: '#0c5a01'
-              }
-            }, "\uD83C\uDF93 ", tr('ប្រឡង', 'Exam')), ins.length > 0 && React.createElement("div", {
-              style: {
-                fontSize: 11,
-                color: 'var(--ink-3)',
-                marginTop: 1
-              }
-            }, "\uD83D\uDC68\u200D\uD83C\uDFEB ", ins.join(' · ')), e.note && React.createElement("div", {
-              style: {
-                fontSize: 11,
-                color: 'var(--ink-2)',
-                marginTop: 1
-              }
-            }, e.note)));
+            return React.createElement(ExamFeedbackRow, {
+              key: row.item.id || 'ex' + i,
+              e: row.item,
+              sid: s.id,
+              tr: tr,
+              onSave: saveExamResult
+            });
           }
           return React.createElement(CvLessonRow, {
             key: row.item.id || 'ls' + i,
