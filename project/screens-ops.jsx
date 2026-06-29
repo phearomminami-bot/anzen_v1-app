@@ -146,7 +146,7 @@ const computeLayout = (dayLessons) => {
 };
 
 // ── Week view ──
-const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], highlights = {}, onHighlight, hlColor = '', notes = [], onSlotClick, onNoteClick, dayNav = null, clip = null, onStartCopy, onStartMove, onPlace, onMoveLesson }) => {
+const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], highlights = {}, onHighlight, hlColor = '', notes = [], onSlotClick, onNoteClick, dayNav = null, clip = null, onStartCopy, onStartMove, onPlace, onMoveLesson, onToggleCancel }) => {
   const { openDetail, openForm, tr } = useAppActions();
   const dateInputRef = React.useRef(null);
   const hours = Array.from({length:12}, (_,i)=> i+7); // 7..18
@@ -215,7 +215,7 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
         </div>
         {/* Day columns */}
         {weekDates.map((date,dayIdx)=>{
-          const dayLessons = lessons.filter(l => l.date === date && l.status !== 'cancelled');
+          const dayLessons = lessons.filter(l => l.date === date); // cancelled shown greyed + struck
           // Timed notes join the same overlap layout as lessons, so a note and a
           // lesson at the same time sit side by side instead of covering each
           // other. Give notes a 1-hour span for the overlap math.
@@ -280,7 +280,10 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
               {dayLessons.map((l,i)=>{
                 const top = (l.h - 7) * 48 + 2;
                 const height = l.len * 48 - 4;
-                const c = lessonBlockColor(l, studentMode);
+                const isCancelled = l.status === 'cancelled';
+                const c = isCancelled
+                  ? { bg:'var(--surface-muted)', bd:'var(--border)', accent:'var(--border-strong)', text:'var(--ink-3)' }
+                  : lessonBlockColor(l, studentMode);
                 const s = studentById(l.studentId);
                 const it = instById(l.instId);
                 const v = vehById(l.veh);
@@ -301,13 +304,22 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                     borderRadius:6,padding:'4px 6px',overflow:'hidden',
                     fontSize:10.5,textAlign:'left',cursor:'pointer',font:'inherit',color:c.text,
                     boxSizing:'border-box',userSelect:'none',
+                    textDecoration: isCancelled ? 'line-through' : 'none',
+                    opacity: isCancelled ? 0.7 : 1,
                   }}>
                     {!studentMode && onStartCopy && (
                       <div style={{position:'absolute',top:2,right:2,display:'flex',gap:2,zIndex:4}}>
-                        <button title={tr('ចម្លង','Copy')} onClick={e=>{ e.stopPropagation(); onStartCopy(l); }}
-                          style={{width:16,height:16,padding:0,border:'none',borderRadius:4,background:'rgba(255,255,255,.75)',color:'#222',cursor:'pointer',fontSize:9,lineHeight:'16px',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 1px 2px rgba(0,0,0,.2)'}}>⧉</button>
-                        <button title={tr('ផ្លាស់ទី','Move')} onClick={e=>{ e.stopPropagation(); onStartMove(l); }}
-                          style={{width:16,height:16,padding:0,border:'none',borderRadius:4,background:'rgba(255,255,255,.75)',color:'#222',cursor:'pointer',fontSize:10,lineHeight:'16px',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 1px 2px rgba(0,0,0,.2)'}}>➜</button>
+                        {!isCancelled && <>
+                          <button title={tr('ចម្លង','Copy')} onClick={e=>{ e.stopPropagation(); onStartCopy(l); }}
+                            style={{width:16,height:16,padding:0,border:'none',borderRadius:4,background:'rgba(255,255,255,.75)',color:'#222',cursor:'pointer',fontSize:9,lineHeight:'16px',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 1px 2px rgba(0,0,0,.2)'}}>⧉</button>
+                          <button title={tr('ផ្លាស់ទី','Move')} onClick={e=>{ e.stopPropagation(); onStartMove(l); }}
+                            style={{width:16,height:16,padding:0,border:'none',borderRadius:4,background:'rgba(255,255,255,.75)',color:'#222',cursor:'pointer',fontSize:10,lineHeight:'16px',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 1px 2px rgba(0,0,0,.2)'}}>➜</button>
+                        </>}
+                        {onToggleCancel && (
+                          <button title={isCancelled ? tr('ស្ដារ​ការ​រៀន','Restore') : tr('លុប/ប្ដូរ​ថ្ងៃ (រក្សា​ទិន្នន័យ)','Cancel (keep data)')}
+                            onClick={e=>{ e.stopPropagation(); onToggleCancel(l); }}
+                            style={{width:16,height:16,padding:0,border:'none',borderRadius:4,background: isCancelled ? 'rgba(59,122,87,.9)' : 'rgba(176,65,62,.9)',color:'#fff',cursor:'pointer',fontSize:10,lineHeight:'16px',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 1px 2px rgba(0,0,0,.2)',textDecoration:'none'}}>{isCancelled ? '↺' : '✕'}</button>
+                        )}
                       </div>
                     )}
                     <div style={{display:'flex',gap:4,alignItems:'baseline',overflow:'hidden',minWidth:0}}>
@@ -667,10 +679,11 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   };
   const weekDates  = bp.mobile ? [mobileDate] : allWeekDates;
 
+  // Cancelled lessons stay in the list so the week/day grid can show them
+  // struck-through + greyed (data preserved). The month / agenda / PDF views
+  // each re-filter cancelled out on their own.
   const baseLessons = LESSONS.filter(l =>
-    studentMode
-      ? (l.studentId === studentId || l.studentId === '—') && l.status !== 'cancelled'
-      : l.status !== 'cancelled'
+    !studentMode || l.studentId === studentId || l.studentId === '—'
   );
 
   const visibleLessons = !studentMode
@@ -727,6 +740,18 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   const reRenderLessons = () => { setVer(n => n+1); if (window.__notifyLessonsChanged) window.__notifyLessonsChanged(); };
   const startCopy = (lesson) => setClip({ lesson, mode:'copy' });
   const startMove = (lesson) => setClip({ lesson, mode:'move' });
+  // Cancel / restore a scheduled lesson without deleting it — when a student
+  // changes day or drops a lesson, strike it through + grey it but keep the row.
+  const toggleCancel = (lesson) => {
+    const idx = LESSONS.findIndex(x => x.id === lesson.id);
+    if (idx === -1) return;
+    const nowCancel = LESSONS[idx].status !== 'cancelled';
+    LESSONS[idx] = { ...LESSONS[idx], status: nowCancel ? 'cancelled' : 'scheduled' };
+    if (window.__logActivity) window.__logActivity('edit','lesson',(nowCancel?'cancel':'restore')+' → '+lesson.date+' '+String(lesson.h).padStart(2,'0')+':00');
+    if (window.saveAllData) window.saveAllData();
+    toast(nowCancel ? tr('បាន​លុប​ការ​រៀន (រក្សា​ទិន្នន័យ)','Lesson cancelled — data kept') : tr('បាន​ស្ដារ​ការ​រៀន​ឡើង​វិញ','Lesson restored'), nowCancel ? 'neutral' : 'good');
+    reRenderLessons();
+  };
   // Drop the clipboard lesson onto a slot: copy → duplicate, move → relocate.
   const placeLesson = (date, hour) => {
     if (!clip) return;
@@ -767,7 +792,8 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   const viewProps = { lessons:visibleLessons, studentMode, weekDates, highlights, onHighlight:handleHighlight, hlColor:activeColor,
     notes:visNotes, onSlotClick: studentMode ? null : openSlot, onNoteClick: (n)=>openDetail('note', n),
     clip: studentMode ? null : clip, onStartCopy: studentMode ? null : startCopy, onStartMove: studentMode ? null : startMove,
-    onPlace: studentMode ? null : placeLesson, onMoveLesson: studentMode ? null : moveLesson };
+    onPlace: studentMode ? null : placeLesson, onMoveLesson: studentMode ? null : moveLesson,
+    onToggleCancel: studentMode ? null : toggleCancel };
 
   const selStyle = {
     padding:'6px 10px',border:'1px solid var(--border)',borderRadius:7,
@@ -832,7 +858,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(o=>o-1)}>{tr('◀ មុន','◀ Prev')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(0)}>{tr('ថ្ងៃ​នេះ','Today')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(o=>o+1)}>{tr('បន្ទាប់ ▶','Next ▶')}</Btn>
-            <Btn kind="ghost" size="md" onClick={()=>generateSchedulePDF({lessons:visibleLessons,weekDates:allWeekDates,viewType:v,labelEn,instFilter,vehFilter,studentFilter})} icon={<Icon name="download" size={14}/>}>{tr('PDF','PDF')}</Btn>
+            <Btn kind="ghost" size="md" onClick={()=>generateSchedulePDF({lessons:visibleLessons.filter(l=>l.status!=='cancelled'),weekDates:allWeekDates,viewType:v,labelEn,instFilter,vehFilter,studentFilter})} icon={<Icon name="download" size={14}/>}>{tr('PDF','PDF')}</Btn>
             {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:allWeekDates[0]||today,time:'09:00',title:'',description:'',author:meName,invited:[]})} icon={<Icon name="bell" size={14}/>}>{tr('+ ចំណាំ','+ Note')}</Btn>}
             {can(role,'create','lesson') && <Btn kind="primary" size="md" onClick={()=>openForm('newLesson')} icon={<Icon name="plus" size={14}/>}>{tr('មេរៀន​ថ្មី','New lesson')}</Btn>}
           </div>
@@ -1003,7 +1029,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
         <Btn kind="ghost" size="md" style={{justifyContent:'center'}}
           onClick={()=>{
             const mLabel = `${EN_MONTHS[parseInt(mobileDate.slice(5,7))-1]} ${mobileDate.slice(0,4)}`;
-            generateSchedulePDF({lessons:visibleLessons,weekDates:allWeekDates,viewType:'month',monthAnchor:mobileDate,labelEn:mLabel,instFilter,vehFilter,studentFilter});
+            generateSchedulePDF({lessons:visibleLessons.filter(l=>l.status!=='cancelled'),weekDates:allWeekDates,viewType:'month',monthAnchor:mobileDate,labelEn:mLabel,instFilter,vehFilter,studentFilter});
           }}
           icon={<Icon name="download" size={14}/>}>{tr('ទាញ​យក PDF (ប្រចាំ​ខែ)','Download PDF (month)')}</Btn>
       )}

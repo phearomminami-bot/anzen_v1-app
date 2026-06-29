@@ -557,10 +557,14 @@ window.__trRegistry = {
   "Rate": "វាយ​តម្លៃ",
   "Copy": "ម៉ូដ​ចម្លង",
   "Move": "ម៉ូដ​ផ្លាស់​ទី",
+  "Restore": "ស្ដារ",
+  "Cancel (keep data)": "លុប/ប្ដូរ​ថ្ងៃ (រក្សា​ទិន្នន័យ)",
   "today": "ថ្ងៃ​នេះ",
   "No lessons scheduled": "គ្មាន​មេរៀន",
   "Available slots": "ម៉ោង​ដែល​អាច​កក់​បាន",
   "Admin": "នាយក",
+  "Lesson cancelled — data kept": "បាន​លុប​ការ​រៀន (រក្សា​ទិន្នន័យ)",
+  "Lesson restored": "បាន​ស្ដារ​ការ​រៀន​ឡើង​វិញ",
   "Pasted copy ✓": "បាន​ដាក់​ច្បាប់​ចម្លង ✓",
   "Moved ✓": "បាន​ផ្លាស់​ទី ✓",
   "tap an empty slot to place": "ចុច​ប្រអប់​ទំនេរ​ដើម្បី​ដាក់",
@@ -1200,7 +1204,6 @@ window.__trRegistry = {
   "This action cannot be undone.": "សកម្ម​ភាព​នេះ​មិន​អាច​ត្រឡប់​​វិញ​បាន​ទេ​។",
   "Restore this point?": "ស្ដារ​ឡើងវិញ?",
   "All data will revert to its state at '+(s?fmtDT(s.ts):'": "ទិន្នន័យ​ទាំងអស់​នឹង​ត្រឡប់​ទៅ​ស្ថានភាព​នៅ '+(s?fmtDT(s.ts):'')+'។ ការ​ផ្លាស់​ប្ដូរ​ក្រោយ​ពេល​នោះ​នឹង​បាត់។",
-  "Restore": "ស្ដារ",
   "Restoring…": "កំពុង​ស្ដារ…",
   "Clear history?": "សម្អាត​ប្រវត្តិ?",
   "All activity records will be removed.": "កំណត់​ហេតុ​សកម្មភាព​ទាំងអស់​នឹង​ត្រូវ​លុប។",
@@ -1622,10 +1625,14 @@ window.__trGroups = {
   "កាលវិភាគ · Schedule": {
     "Copy": "ចម្លង",
     "Move": "ផ្លាស់ទី",
+    "Restore": "ស្ដារ​ការ​រៀន",
+    "Cancel (keep data)": "លុប/ប្ដូរ​ថ្ងៃ (រក្សា​ទិន្នន័យ)",
     "today": "ថ្ងៃ​នេះ",
     "No lessons scheduled": "គ្មាន​មេរៀន",
     "Available slots": "ម៉ោង​ដែល​អាច​កក់​បាន",
     "Admin": "នាយក",
+    "Lesson cancelled — data kept": "បាន​លុប​ការ​រៀន (រក្សា​ទិន្នន័យ)",
+    "Lesson restored": "បាន​ស្ដារ​ការ​រៀន​ឡើង​វិញ",
     "Pasted copy ✓": "បាន​ដាក់​ច្បាប់​ចម្លង ✓",
     "Moved ✓": "បាន​ផ្លាស់​ទី ✓",
     "tap an empty slot to place": "ចុច​ប្រអប់​ទំនេរ​ដើម្បី​ដាក់",
@@ -2285,7 +2292,6 @@ window.__trGroups = {
     "This action cannot be undone.": "សកម្ម​ភាព​នេះ​មិន​អាច​ត្រឡប់​​វិញ​បាន​ទេ​។",
     "Restore this point?": "ស្ដារ​ឡើងវិញ?",
     "All data will revert to its state at '+(s?fmtDT(s.ts):'": "ទិន្នន័យ​ទាំងអស់​នឹង​ត្រឡប់​ទៅ​ស្ថានភាព​នៅ '+(s?fmtDT(s.ts):'')+'។ ការ​ផ្លាស់​ប្ដូរ​ក្រោយ​ពេល​នោះ​នឹង​បាត់។",
-    "Restore": "ស្ដារ",
     "Restoring…": "កំពុង​ស្ដារ…",
     "Clear history?": "សម្អាត​ប្រវត្តិ?",
     "All activity records will be removed.": "កំណត់​ហេតុ​សកម្មភាព​ទាំងអស់​នឹង​ត្រូវ​លុប។",
@@ -16800,7 +16806,8 @@ var ScheduleWeek = ({
   onStartCopy,
   onStartMove,
   onPlace,
-  onMoveLesson
+  onMoveLesson,
+  onToggleCancel
 }) => {
   var {
     openDetail,
@@ -17010,7 +17017,7 @@ var ScheduleWeek = ({
       fontFamily: '"JetBrains Mono",monospace'
     }
   }, String(h).padStart(2, '0'), ":00"))), weekDates.map((date, dayIdx) => {
-    var dayLessons = lessons.filter(l => l.date === date && l.status !== 'cancelled');
+    var dayLessons = lessons.filter(l => l.date === date);
     var dayNotes = notes.filter(n => n.date === date && n.time).map(n => {
       var [hh, mm] = n.time.split(':').map(Number);
       return {
@@ -17118,7 +17125,13 @@ var ScheduleWeek = ({
     }), dayLessons.map((l, i) => {
       var top = (l.h - 7) * 48 + 2;
       var height = l.len * 48 - 4;
-      var c = lessonBlockColor(l, studentMode);
+      var isCancelled = l.status === 'cancelled';
+      var c = isCancelled ? {
+        bg: 'var(--surface-muted)',
+        bd: 'var(--border)',
+        accent: 'var(--border-strong)',
+        text: 'var(--ink-3)'
+      } : lessonBlockColor(l, studentMode);
       var s = studentById(l.studentId);
       var it = instById(l.instId);
       var v = vehById(l.veh);
@@ -17163,7 +17176,9 @@ var ScheduleWeek = ({
           font: 'inherit',
           color: c.text,
           boxSizing: 'border-box',
-          userSelect: 'none'
+          userSelect: 'none',
+          textDecoration: isCancelled ? 'line-through' : 'none',
+          opacity: isCancelled ? 0.7 : 1
         }
       }, !studentMode && onStartCopy && React.createElement("div", {
         style: {
@@ -17174,7 +17189,7 @@ var ScheduleWeek = ({
           gap: 2,
           zIndex: 4
         }
-      }, React.createElement("button", {
+      }, !isCancelled && React.createElement(React.Fragment, null, React.createElement("button", {
         title: tr('ចម្លង', 'Copy'),
         onClick: e => {
           e.stopPropagation();
@@ -17218,7 +17233,30 @@ var ScheduleWeek = ({
           justifyContent: 'center',
           boxShadow: '0 1px 2px rgba(0,0,0,.2)'
         }
-      }, "\u279C")), React.createElement("div", {
+      }, "\u279C")), onToggleCancel && React.createElement("button", {
+        title: isCancelled ? tr('ស្ដារ​ការ​រៀន', 'Restore') : tr('លុប/ប្ដូរ​ថ្ងៃ (រក្សា​ទិន្នន័យ)', 'Cancel (keep data)'),
+        onClick: e => {
+          e.stopPropagation();
+          onToggleCancel(l);
+        },
+        style: {
+          width: 16,
+          height: 16,
+          padding: 0,
+          border: 'none',
+          borderRadius: 4,
+          background: isCancelled ? 'rgba(59,122,87,.9)' : 'rgba(176,65,62,.9)',
+          color: '#fff',
+          cursor: 'pointer',
+          fontSize: 10,
+          lineHeight: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 1px 2px rgba(0,0,0,.2)',
+          textDecoration: 'none'
+        }
+      }, isCancelled ? '↺' : '✕')), React.createElement("div", {
         style: {
           display: 'flex',
           gap: 4,
@@ -17877,7 +17915,7 @@ var ScheduleScreen = ({
     setDayOffset(Math.round((a - b) / 86400000));
   };
   var weekDates = bp.mobile ? [mobileDate] : allWeekDates;
-  var baseLessons = LESSONS.filter(l => studentMode ? (l.studentId === studentId || l.studentId === '—') && l.status !== 'cancelled' : l.status !== 'cancelled');
+  var baseLessons = LESSONS.filter(l => !studentMode || l.studentId === studentId || l.studentId === '—');
   var visibleLessons = !studentMode ? baseLessons.filter(l => (!instFilter || l.instId === instFilter) && (!vehFilter || l.veh === vehFilter) && (!studentFilter || l.studentId === studentFilter)) : baseLessons;
   var anyFilter = instFilter || vehFilter || studentFilter;
   var weekStart = allWeekDates[0] || '';
@@ -17949,6 +17987,19 @@ var ScheduleScreen = ({
     lesson,
     mode: 'move'
   });
+  var toggleCancel = lesson => {
+    var idx = LESSONS.findIndex(x => x.id === lesson.id);
+    if (idx === -1) return;
+    var nowCancel = LESSONS[idx].status !== 'cancelled';
+    LESSONS[idx] = {
+      ...LESSONS[idx],
+      status: nowCancel ? 'cancelled' : 'scheduled'
+    };
+    if (window.__logActivity) window.__logActivity('edit', 'lesson', (nowCancel ? 'cancel' : 'restore') + ' → ' + lesson.date + ' ' + String(lesson.h).padStart(2, '0') + ':00');
+    if (window.saveAllData) window.saveAllData();
+    toast(nowCancel ? tr('បាន​លុប​ការ​រៀន (រក្សា​ទិន្នន័យ)', 'Lesson cancelled — data kept') : tr('បាន​ស្ដារ​ការ​រៀន​ឡើង​វិញ', 'Lesson restored'), nowCancel ? 'neutral' : 'good');
+    reRenderLessons();
+  };
   var placeLesson = (date, hour) => {
     if (!clip) return;
     var L = clip.lesson;
@@ -18014,7 +18065,8 @@ var ScheduleScreen = ({
     onStartCopy: studentMode ? null : startCopy,
     onStartMove: studentMode ? null : startMove,
     onPlace: studentMode ? null : placeLesson,
-    onMoveLesson: studentMode ? null : moveLesson
+    onMoveLesson: studentMode ? null : moveLesson,
+    onToggleCancel: studentMode ? null : toggleCancel
   };
   var selStyle = {
     padding: '6px 10px',
@@ -18208,7 +18260,7 @@ var ScheduleScreen = ({
       kind: "ghost",
       size: "md",
       onClick: () => generateSchedulePDF({
-        lessons: visibleLessons,
+        lessons: visibleLessons.filter(l => l.status !== 'cancelled'),
         weekDates: allWeekDates,
         viewType: v,
         labelEn,
@@ -18611,7 +18663,7 @@ var ScheduleScreen = ({
     onClick: () => {
       var mLabel = `${EN_MONTHS[parseInt(mobileDate.slice(5, 7)) - 1]} ${mobileDate.slice(0, 4)}`;
       generateSchedulePDF({
-        lessons: visibleLessons,
+        lessons: visibleLessons.filter(l => l.status !== 'cancelled'),
         weekDates: allWeekDates,
         viewType: 'month',
         monthAnchor: mobileDate,
