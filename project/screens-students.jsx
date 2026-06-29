@@ -184,8 +184,7 @@ const CvLessonRow = ({ l, tr, onSave }) => {
       {open && !showForm && (
         <div style={{padding:'4px 0 14px'}}>
           <div style={{display:'flex',flexDirection:'column',gap:8}}>
-            <div><div style={lbl}>{tr('ស្ថានភាព','Status')}</div><div style={{fontSize:13,fontWeight:600,color:done?'var(--good)':'var(--ink-2)'}}>{done?tr('រួចរាល់','Done'):tr('កំពុង','Pending')}</div></div>
-            {rating>0 && <div><div style={lbl}>{tr('វាយតម្លៃ','Rating')}</div><div style={{fontSize:18}}>{stars(rating)}</div></div>}
+            {/* Status + rating omitted here — already shown in the row header. */}
             {String(didWell).trim() && <div><div style={lbl}>{tr('ធ្វើ​បាន​ល្អ','Did well')}</div><div style={{fontSize:13,color:'var(--ink)'}}>{didWell}</div></div>}
             {String(toImprove).trim() && <div><div style={lbl}>{tr('ខ្វះខាត​ត្រូវ​កែ','Needs work')}</div><div style={{fontSize:13,color:'var(--ink)'}}>{toImprove}</div></div>}
             {String(note).trim() && <div><div style={lbl}>{tr('មតិ​បន្ថែម','Comment')}</div><div style={{fontSize:13,color:'var(--ink)',whiteSpace:'pre-wrap'}}>{note}</div></div>}

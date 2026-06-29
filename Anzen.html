@@ -37698,21 +37698,7 @@ var CvLessonRow = ({
       flexDirection: 'column',
       gap: 8
     }
-  }, React.createElement("div", null, React.createElement("div", {
-    style: lbl
-  }, tr('ស្ថានភាព', 'Status')), React.createElement("div", {
-    style: {
-      fontSize: 13,
-      fontWeight: 600,
-      color: done ? 'var(--good)' : 'var(--ink-2)'
-    }
-  }, done ? tr('រួចរាល់', 'Done') : tr('កំពុង', 'Pending'))), rating > 0 && React.createElement("div", null, React.createElement("div", {
-    style: lbl
-  }, tr('វាយតម្លៃ', 'Rating')), React.createElement("div", {
-    style: {
-      fontSize: 18
-    }
-  }, stars(rating))), String(didWell).trim() && React.createElement("div", null, React.createElement("div", {
+  }, String(didWell).trim() && React.createElement("div", null, React.createElement("div", {
     style: lbl
   }, tr('ធ្វើ​បាន​ល្អ', 'Did well')), React.createElement("div", {
     style: {
