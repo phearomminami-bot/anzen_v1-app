@@ -376,6 +376,16 @@ const LessonDetail = ({ lesson, onClose }) => {
     },
   });
 
+  // Restore a cancelled lesson back to scheduled — data was kept, so this just
+  // flips the status. Stays open so the badge updates in place.
+  const restoreLesson = () => {
+    lesson.status = 'scheduled';
+    setVer(n => n + 1);
+    if (window.__notifyLessonsChanged) window.__notifyLessonsChanged();
+    if (window.saveAllData) window.saveAllData();
+    toast(tr('បាន​ស្ដារ​មេរៀន​ឡើង​វិញ', 'Lesson restored'), 'good');
+  };
+
   const dateLabel = lesson.date ? formatDateShort(lesson.date, lang) : '';
 
   if (editing) {
@@ -533,10 +543,11 @@ const LessonDetail = ({ lesson, onClose }) => {
           <>
             <Btn kind="ghost" size="md" onClick={onClose} style={{flex:1,justifyContent:'center'}}>{tr('បិទ','Close')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>{ openForm('editLesson', { lesson }); onClose && onClose(); }} style={{flex:1,justifyContent:'center'}}>✎ {tr('កែ','Edit')}</Btn>
+            <Btn kind="ghost" size="md" onClick={restoreLesson} style={{flex:1,justifyContent:'center',color:'var(--good)',borderColor:'var(--good)'}}>↺ {tr('ស្ដារ​ឡើង​វិញ','Restore')}</Btn>
           </>
         ) : (
           <>
-            <Btn kind="ghost" size="md" onClick={cancelLesson} style={{flex:1,justifyContent:'center'}}>{tr('លុប​ចោល','Cancel')}</Btn>
+            <Btn kind="ghost" size="md" onClick={cancelLesson} style={{flex:1,justifyContent:'center',color:'var(--danger)',borderColor:'var(--danger)'}}>✕ {tr('លុប/ប្ដូរ​ថ្ងៃ','Cancel')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>{ openForm('editLesson', { lesson }); onClose && onClose(); }} style={{flex:1,justifyContent:'center'}}>✎ {tr('កែ','Edit')}</Btn>
             <Btn kind="primary" size="md" onClick={markDone} icon={<Icon name="check" size={14}/>} style={{flex:1,justifyContent:'center'}}>{tr('ចប់​មេរៀន ✓','Mark done ✓')}</Btn>
           </>

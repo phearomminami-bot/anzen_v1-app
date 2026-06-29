@@ -389,6 +389,7 @@ window.__trRegistry = {
   "Are you sure? The lesson will be cancelled and the student notified.": "អ្នក​ប្រាកដ​ទេ? មេរៀន​នឹង​ត្រូវ​បាន​លុប​ចោល ហើយ​សិស្ស​នឹង​ទទួល​ជូន​ដំណឹង។",
   "Cancel lesson": "លុប",
   "Lesson cancelled": "បាន​លុប​ចោល​មេរៀន",
+  "Lesson restored": "បាន​ស្ដារ​មេរៀន​ឡើង​វិញ",
   "Done": "ចប់",
   "Hour": "ម៉ោងទី",
   "STUDENT": "សិស្ស",
@@ -400,6 +401,7 @@ window.__trRegistry = {
   "Contacting instructor…": "សាក​ទំនាក់​គ្រូ…",
   "Contact instructor": "ទំនាក់​គ្រូ",
   "Edit": "កែ",
+  "Restore": "ស្ដារ",
   "Mark done ✓": "ចប់​មេរៀន ✓",
   "Delete this note?": "លុប​ចំណាំ?",
   "Are you sure? This note will be removed.": "អ្នក​ប្រាកដ​ទេ? ចំណាំ​នេះ​នឹង​ត្រូវ​លុប។",
@@ -557,14 +559,10 @@ window.__trRegistry = {
   "Rate": "វាយ​តម្លៃ",
   "Copy": "ម៉ូដ​ចម្លង",
   "Move": "ម៉ូដ​ផ្លាស់​ទី",
-  "Restore": "ស្ដារ",
-  "Cancel (keep data)": "លុប/ប្ដូរ​ថ្ងៃ (រក្សា​ទិន្នន័យ)",
   "today": "ថ្ងៃ​នេះ",
   "No lessons scheduled": "គ្មាន​មេរៀន",
   "Available slots": "ម៉ោង​ដែល​អាច​កក់​បាន",
   "Admin": "នាយក",
-  "Lesson cancelled — data kept": "បាន​លុប​ការ​រៀន (រក្សា​ទិន្នន័យ)",
-  "Lesson restored": "បាន​ស្ដារ​ការ​រៀន​ឡើង​វិញ",
   "Pasted copy ✓": "បាន​ដាក់​ច្បាប់​ចម្លង ✓",
   "Moved ✓": "បាន​ផ្លាស់​ទី ✓",
   "tap an empty slot to place": "ចុច​ប្រអប់​ទំនេរ​ដើម្បី​ដាក់",
@@ -1625,14 +1623,10 @@ window.__trGroups = {
   "កាលវិភាគ · Schedule": {
     "Copy": "ចម្លង",
     "Move": "ផ្លាស់ទី",
-    "Restore": "ស្ដារ​ការ​រៀន",
-    "Cancel (keep data)": "លុប/ប្ដូរ​ថ្ងៃ (រក្សា​ទិន្នន័យ)",
     "today": "ថ្ងៃ​នេះ",
     "No lessons scheduled": "គ្មាន​មេរៀន",
     "Available slots": "ម៉ោង​ដែល​អាច​កក់​បាន",
     "Admin": "នាយក",
-    "Lesson cancelled — data kept": "បាន​លុប​ការ​រៀន (រក្សា​ទិន្នន័យ)",
-    "Lesson restored": "បាន​ស្ដារ​ការ​រៀន​ឡើង​វិញ",
     "Pasted copy ✓": "បាន​ដាក់​ច្បាប់​ចម្លង ✓",
     "Moved ✓": "បាន​ផ្លាស់​ទី ✓",
     "tap an empty slot to place": "ចុច​ប្រអប់​ទំនេរ​ដើម្បី​ដាក់",
@@ -2521,6 +2515,7 @@ window.__trGroups = {
     "Are you sure? The lesson will be cancelled and the student notified.": "អ្នក​ប្រាកដ​ទេ? មេរៀន​នឹង​ត្រូវ​បាន​លុប​ចោល ហើយ​សិស្ស​នឹង​ទទួល​ជូន​ដំណឹង។",
     "Cancel lesson": "លុប",
     "Lesson cancelled": "បាន​លុប​ចោល​មេរៀន",
+    "Lesson restored": "បាន​ស្ដារ​មេរៀន​ឡើង​វិញ",
     "Done": "រួច​រាល់",
     "Hour": "ម៉ោងទី",
     "STUDENT": "សិស្ស",
@@ -2532,6 +2527,7 @@ window.__trGroups = {
     "Contacting instructor…": "សាក​ទំនាក់​គ្រូ…",
     "Contact instructor": "ទំនាក់​គ្រូ",
     "Edit": "កែ",
+    "Restore": "ស្ដារ​ឡើង​វិញ",
     "Mark done ✓": "ចប់​មេរៀន ✓",
     "Delete this note?": "លុប​ចំណាំ?",
     "Are you sure? This note will be removed.": "អ្នក​ប្រាកដ​ទេ? ចំណាំ​នេះ​នឹង​ត្រូវ​លុប។",
@@ -9482,6 +9478,13 @@ var LessonDetail = ({
       onClose();
     }
   });
+  var restoreLesson = () => {
+    lesson.status = 'scheduled';
+    setVer(n => n + 1);
+    if (window.__notifyLessonsChanged) window.__notifyLessonsChanged();
+    if (window.saveAllData) window.saveAllData();
+    toast(tr('បាន​ស្ដារ​មេរៀន​ឡើង​វិញ', 'Lesson restored'), 'good');
+  };
   var dateLabel = lesson.date ? formatDateShort(lesson.date, lang) : '';
   if (editing) {
     return React.createElement(LessonEditForm, {
@@ -9945,15 +9948,27 @@ var LessonDetail = ({
       flex: 1,
       justifyContent: 'center'
     }
-  }, "\u270E ", tr('កែ', 'Edit'))) : React.createElement(React.Fragment, null, React.createElement(Btn, {
+  }, "\u270E ", tr('កែ', 'Edit')), React.createElement(Btn, {
+    kind: "ghost",
+    size: "md",
+    onClick: restoreLesson,
+    style: {
+      flex: 1,
+      justifyContent: 'center',
+      color: 'var(--good)',
+      borderColor: 'var(--good)'
+    }
+  }, "\u21BA ", tr('ស្ដារ​ឡើង​វិញ', 'Restore'))) : React.createElement(React.Fragment, null, React.createElement(Btn, {
     kind: "ghost",
     size: "md",
     onClick: cancelLesson,
     style: {
       flex: 1,
-      justifyContent: 'center'
+      justifyContent: 'center',
+      color: 'var(--danger)',
+      borderColor: 'var(--danger)'
     }
-  }, tr('លុប​ចោល', 'Cancel')), React.createElement(Btn, {
+  }, "\u2715 ", tr('លុប/ប្ដូរ​ថ្ងៃ', 'Cancel')), React.createElement(Btn, {
     kind: "ghost",
     size: "md",
     onClick: () => {
@@ -16806,8 +16821,7 @@ var ScheduleWeek = ({
   onStartCopy,
   onStartMove,
   onPlace,
-  onMoveLesson,
-  onToggleCancel
+  onMoveLesson
 }) => {
   var {
     openDetail,
@@ -17180,7 +17194,7 @@ var ScheduleWeek = ({
           textDecoration: isCancelled ? 'line-through' : 'none',
           opacity: isCancelled ? 0.7 : 1
         }
-      }, !studentMode && onStartCopy && React.createElement("div", {
+      }, !studentMode && onStartCopy && !isCancelled && React.createElement("div", {
         style: {
           position: 'absolute',
           top: 2,
@@ -17189,7 +17203,7 @@ var ScheduleWeek = ({
           gap: 2,
           zIndex: 4
         }
-      }, !isCancelled && React.createElement(React.Fragment, null, React.createElement("button", {
+      }, React.createElement("button", {
         title: tr('ចម្លង', 'Copy'),
         onClick: e => {
           e.stopPropagation();
@@ -17233,30 +17247,7 @@ var ScheduleWeek = ({
           justifyContent: 'center',
           boxShadow: '0 1px 2px rgba(0,0,0,.2)'
         }
-      }, "\u279C")), onToggleCancel && React.createElement("button", {
-        title: isCancelled ? tr('ស្ដារ​ការ​រៀន', 'Restore') : tr('លុប/ប្ដូរ​ថ្ងៃ (រក្សា​ទិន្នន័យ)', 'Cancel (keep data)'),
-        onClick: e => {
-          e.stopPropagation();
-          onToggleCancel(l);
-        },
-        style: {
-          width: 16,
-          height: 16,
-          padding: 0,
-          border: 'none',
-          borderRadius: 4,
-          background: isCancelled ? 'rgba(59,122,87,.9)' : 'rgba(176,65,62,.9)',
-          color: '#fff',
-          cursor: 'pointer',
-          fontSize: 10,
-          lineHeight: '16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 1px 2px rgba(0,0,0,.2)',
-          textDecoration: 'none'
-        }
-      }, isCancelled ? '↺' : '✕')), React.createElement("div", {
+      }, "\u279C")), React.createElement("div", {
         style: {
           display: 'flex',
           gap: 4,
@@ -17987,19 +17978,6 @@ var ScheduleScreen = ({
     lesson,
     mode: 'move'
   });
-  var toggleCancel = lesson => {
-    var idx = LESSONS.findIndex(x => x.id === lesson.id);
-    if (idx === -1) return;
-    var nowCancel = LESSONS[idx].status !== 'cancelled';
-    LESSONS[idx] = {
-      ...LESSONS[idx],
-      status: nowCancel ? 'cancelled' : 'scheduled'
-    };
-    if (window.__logActivity) window.__logActivity('edit', 'lesson', (nowCancel ? 'cancel' : 'restore') + ' → ' + lesson.date + ' ' + String(lesson.h).padStart(2, '0') + ':00');
-    if (window.saveAllData) window.saveAllData();
-    toast(nowCancel ? tr('បាន​លុប​ការ​រៀន (រក្សា​ទិន្នន័យ)', 'Lesson cancelled — data kept') : tr('បាន​ស្ដារ​ការ​រៀន​ឡើង​វិញ', 'Lesson restored'), nowCancel ? 'neutral' : 'good');
-    reRenderLessons();
-  };
   var placeLesson = (date, hour) => {
     if (!clip) return;
     var L = clip.lesson;
@@ -18065,8 +18043,7 @@ var ScheduleScreen = ({
     onStartCopy: studentMode ? null : startCopy,
     onStartMove: studentMode ? null : startMove,
     onPlace: studentMode ? null : placeLesson,
-    onMoveLesson: studentMode ? null : moveLesson,
-    onToggleCancel: studentMode ? null : toggleCancel
+    onMoveLesson: studentMode ? null : moveLesson
   };
   var selStyle = {
     padding: '6px 10px',

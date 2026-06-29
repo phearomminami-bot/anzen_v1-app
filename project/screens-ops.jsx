@@ -146,7 +146,7 @@ const computeLayout = (dayLessons) => {
 };
 
 // ── Week view ──
-const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], highlights = {}, onHighlight, hlColor = '', notes = [], onSlotClick, onNoteClick, dayNav = null, clip = null, onStartCopy, onStartMove, onPlace, onMoveLesson, onToggleCancel }) => {
+const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], highlights = {}, onHighlight, hlColor = '', notes = [], onSlotClick, onNoteClick, dayNav = null, clip = null, onStartCopy, onStartMove, onPlace, onMoveLesson }) => {
   const { openDetail, openForm, tr } = useAppActions();
   const dateInputRef = React.useRef(null);
   const hours = Array.from({length:12}, (_,i)=> i+7); // 7..18
@@ -307,19 +307,12 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                     textDecoration: isCancelled ? 'line-through' : 'none',
                     opacity: isCancelled ? 0.7 : 1,
                   }}>
-                    {!studentMode && onStartCopy && (
+                    {!studentMode && onStartCopy && !isCancelled && (
                       <div style={{position:'absolute',top:2,right:2,display:'flex',gap:2,zIndex:4}}>
-                        {!isCancelled && <>
-                          <button title={tr('ចម្លង','Copy')} onClick={e=>{ e.stopPropagation(); onStartCopy(l); }}
-                            style={{width:16,height:16,padding:0,border:'none',borderRadius:4,background:'rgba(255,255,255,.75)',color:'#222',cursor:'pointer',fontSize:9,lineHeight:'16px',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 1px 2px rgba(0,0,0,.2)'}}>⧉</button>
-                          <button title={tr('ផ្លាស់ទី','Move')} onClick={e=>{ e.stopPropagation(); onStartMove(l); }}
-                            style={{width:16,height:16,padding:0,border:'none',borderRadius:4,background:'rgba(255,255,255,.75)',color:'#222',cursor:'pointer',fontSize:10,lineHeight:'16px',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 1px 2px rgba(0,0,0,.2)'}}>➜</button>
-                        </>}
-                        {onToggleCancel && (
-                          <button title={isCancelled ? tr('ស្ដារ​ការ​រៀន','Restore') : tr('លុប/ប្ដូរ​ថ្ងៃ (រក្សា​ទិន្នន័យ)','Cancel (keep data)')}
-                            onClick={e=>{ e.stopPropagation(); onToggleCancel(l); }}
-                            style={{width:16,height:16,padding:0,border:'none',borderRadius:4,background: isCancelled ? 'rgba(59,122,87,.9)' : 'rgba(176,65,62,.9)',color:'#fff',cursor:'pointer',fontSize:10,lineHeight:'16px',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 1px 2px rgba(0,0,0,.2)',textDecoration:'none'}}>{isCancelled ? '↺' : '✕'}</button>
-                        )}
+                        <button title={tr('ចម្លង','Copy')} onClick={e=>{ e.stopPropagation(); onStartCopy(l); }}
+                          style={{width:16,height:16,padding:0,border:'none',borderRadius:4,background:'rgba(255,255,255,.75)',color:'#222',cursor:'pointer',fontSize:9,lineHeight:'16px',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 1px 2px rgba(0,0,0,.2)'}}>⧉</button>
+                        <button title={tr('ផ្លាស់ទី','Move')} onClick={e=>{ e.stopPropagation(); onStartMove(l); }}
+                          style={{width:16,height:16,padding:0,border:'none',borderRadius:4,background:'rgba(255,255,255,.75)',color:'#222',cursor:'pointer',fontSize:10,lineHeight:'16px',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 1px 2px rgba(0,0,0,.2)'}}>➜</button>
                       </div>
                     )}
                     <div style={{display:'flex',gap:4,alignItems:'baseline',overflow:'hidden',minWidth:0}}>
@@ -740,18 +733,6 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   const reRenderLessons = () => { setVer(n => n+1); if (window.__notifyLessonsChanged) window.__notifyLessonsChanged(); };
   const startCopy = (lesson) => setClip({ lesson, mode:'copy' });
   const startMove = (lesson) => setClip({ lesson, mode:'move' });
-  // Cancel / restore a scheduled lesson without deleting it — when a student
-  // changes day or drops a lesson, strike it through + grey it but keep the row.
-  const toggleCancel = (lesson) => {
-    const idx = LESSONS.findIndex(x => x.id === lesson.id);
-    if (idx === -1) return;
-    const nowCancel = LESSONS[idx].status !== 'cancelled';
-    LESSONS[idx] = { ...LESSONS[idx], status: nowCancel ? 'cancelled' : 'scheduled' };
-    if (window.__logActivity) window.__logActivity('edit','lesson',(nowCancel?'cancel':'restore')+' → '+lesson.date+' '+String(lesson.h).padStart(2,'0')+':00');
-    if (window.saveAllData) window.saveAllData();
-    toast(nowCancel ? tr('បាន​លុប​ការ​រៀន (រក្សា​ទិន្នន័យ)','Lesson cancelled — data kept') : tr('បាន​ស្ដារ​ការ​រៀន​ឡើង​វិញ','Lesson restored'), nowCancel ? 'neutral' : 'good');
-    reRenderLessons();
-  };
   // Drop the clipboard lesson onto a slot: copy → duplicate, move → relocate.
   const placeLesson = (date, hour) => {
     if (!clip) return;
@@ -792,8 +773,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   const viewProps = { lessons:visibleLessons, studentMode, weekDates, highlights, onHighlight:handleHighlight, hlColor:activeColor,
     notes:visNotes, onSlotClick: studentMode ? null : openSlot, onNoteClick: (n)=>openDetail('note', n),
     clip: studentMode ? null : clip, onStartCopy: studentMode ? null : startCopy, onStartMove: studentMode ? null : startMove,
-    onPlace: studentMode ? null : placeLesson, onMoveLesson: studentMode ? null : moveLesson,
-    onToggleCancel: studentMode ? null : toggleCancel };
+    onPlace: studentMode ? null : placeLesson, onMoveLesson: studentMode ? null : moveLesson };
 
   const selStyle = {
     padding:'6px 10px',border:'1px solid var(--border)',borderRadius:7,
