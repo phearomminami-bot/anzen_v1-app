@@ -1200,38 +1200,19 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
   else if (vehFilter) { const v = VEHICLES.find(x=>x.id===vehFilter); filterInfo = `Vehicle: ${v?v.plate:vehFilter}`; }
   else if (studentFilter) { const s = STUDENTS.find(x=>x.id===studentFilter); filterInfo = `Student: ${s?s.name:studentFilter}`; }
 
-  let bodyHTML = '';
-
-  if (viewType === 'agenda') {
-    const grouped = {};
-    lessons.forEach(l => { if (!grouped[l.date]) grouped[l.date] = []; grouped[l.date].push(l); });
-    const dates = Object.keys(grouped).sort();
-    if (dates.length === 0) {
-      bodyHTML = `<p style="color:#888;text-align:center;padding:20px">No lessons in this period.</p>`;
-    } else {
-      bodyHTML = dates.map(date => {
-        const dayLessons = grouped[date].sort((a,b) => a.h - b.h);
-        const d = new Date(date+'T00:00:00');
-        const dayLabel = DAYS[d.getDay()===0?6:d.getDay()-1];
-        return `<div style="margin-bottom:16px">
-          <div style="font-size:12px;font-weight:700;color:#1A4F96;padding:6px 10px;background:#E8F0FB;border-radius:6px;margin-bottom:6px">${dayLabel} ${date}</div>
-          ${dayLessons.map(l => `<div style="display:flex;gap:10px;padding:6px 10px;border-bottom:1px solid #eee;align-items:flex-start">
-            <div style="min-width:78px;font-size:11px;font-weight:600;color:#444;font-family:monospace">${fmtH(l.h)}-${fmtH(l.h+(l.len||1))}</div>
-            <div style="flex:1">${lessonCard(l)}</div>
-          </div>`).join('')}
-        </div>`;
-      }).join('');
-    }
-  } else if (viewType === 'month') {
-    // Full-month wall-calendar grid (Mon–Sun columns, week rows) — landscape print.
-    const anchor = new Date((monthAnchor || (lessons[0] && lessons[0].date) || todayStr()) + 'T00:00:00');
+  // ── Month helpers (so the PDF month grid can be regenerated for any month) ──
+  const EN_MO = (typeof EN_MONTHS !== 'undefined' && EN_MONTHS) || ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const pad2 = n => String(n).padStart(2,'0');
+  const fmtMonthLabel = (Y,M) => `${EN_MO[M]} ${Y}`;
+  const monthHours = (Y,M) => lessons.filter(l => { const d = new Date((l.date||'')+'T00:00:00'); return d.getFullYear()===Y && d.getMonth()===M; }).reduce((a,l)=>a+(l.len||1),0);
+  // Full-month wall-calendar grid (Mon–Sun columns, week rows) for the given anchor.
+  const buildMonthGrid = (anchor) => {
     const Y = anchor.getFullYear(), M = anchor.getMonth();
     const startDow = (new Date(Y, M, 1).getDay() + 6) % 7;   // 0 = Mon
     const lastDate = new Date(Y, M + 1, 0).getDate();
     const weeks = Math.ceil((startDow + lastDate) / 7);
     const gridStart = new Date(Y, M, 1 - startDow);
-    const pad = n => String(n).padStart(2, '0');
-    const fmtD = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    const fmtD = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
     const byDate = {};
     lessons.forEach(l => { if (l.status !== 'cancelled') (byDate[l.date] = byDate[l.date] || []).push(l); });
     let rows = '';
@@ -1271,10 +1252,42 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
       }
       rows += `<tr>${cells}</tr>`;
     }
-    bodyHTML = `<table style="width:100%;border-collapse:collapse;table-layout:fixed">
+    return `<table style="width:100%;border-collapse:collapse;table-layout:fixed">
       <thead><tr>${DAYS.map((dn,i)=>`<th style="border:1px solid #ddd;background:${i===6?'#fff0f0':'#f0f0ee'};color:${i===6?'#c04040':'#555'};font-size:10px;padding:5px;-webkit-print-color-adjust:exact;print-color-adjust:exact">${dn}</th>`).join('')}</tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
+  };
+
+  let bodyHTML = '';
+  let curLabel = labelEn;
+  let curHours = lessons.reduce((a,l)=>a+(l.len||1),0);
+  // Mutable anchor for the month view so the month switcher can change it.
+  let monthAnchorDate = new Date((monthAnchor || (lessons[0] && lessons[0].date) || todayStr()) + 'T00:00:00');
+
+  if (viewType === 'agenda') {
+    const grouped = {};
+    lessons.forEach(l => { if (!grouped[l.date]) grouped[l.date] = []; grouped[l.date].push(l); });
+    const dates = Object.keys(grouped).sort();
+    if (dates.length === 0) {
+      bodyHTML = `<p style="color:#888;text-align:center;padding:20px">No lessons in this period.</p>`;
+    } else {
+      bodyHTML = dates.map(date => {
+        const dayLessons = grouped[date].sort((a,b) => a.h - b.h);
+        const d = new Date(date+'T00:00:00');
+        const dayLabel = DAYS[d.getDay()===0?6:d.getDay()-1];
+        return `<div style="margin-bottom:16px">
+          <div style="font-size:12px;font-weight:700;color:#1A4F96;padding:6px 10px;background:#E8F0FB;border-radius:6px;margin-bottom:6px">${dayLabel} ${date}</div>
+          ${dayLessons.map(l => `<div style="display:flex;gap:10px;padding:6px 10px;border-bottom:1px solid #eee;align-items:flex-start">
+            <div style="min-width:78px;font-size:11px;font-weight:600;color:#444;font-family:monospace">${fmtH(l.h)}-${fmtH(l.h+(l.len||1))}</div>
+            <div style="flex:1">${lessonCard(l)}</div>
+          </div>`).join('')}
+        </div>`;
+      }).join('');
+    }
+  } else if (viewType === 'month') {
+    bodyHTML  = buildMonthGrid(monthAnchorDate);
+    curLabel  = fmtMonthLabel(monthAnchorDate.getFullYear(), monthAnchorDate.getMonth());
+    curHours  = monthHours(monthAnchorDate.getFullYear(), monthAnchorDate.getMonth());
   } else {
     // Week table
     const allDates = weekDates.length ? weekDates : [];
@@ -1308,29 +1321,33 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
     </table>`;
   }
 
-  const bodyContent = `
+  // Assemble the printable page (header + legend + body) for a given label /
+  // hours / inner-grid. Re-callable so the month switcher can repaint it.
+  const assemble = (inner, lbl, hrs) => `
   <div style="padding:16px 20px 10px;border-bottom:2px solid #1A4F96;display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px">
     <div>
       <div style="font-size:18px;font-weight:700;color:#1A4F96">${name}</div>
       <div style="font-size:13px;font-weight:600;color:#333;margin-top:2px">
-        ${viewType==='agenda'?'Agenda':viewType==='month'?'Monthly Schedule':'Weekly Schedule'} · ${labelEn}
+        ${viewType==='agenda'?'Agenda':viewType==='month'?'Monthly Schedule':'Weekly Schedule'} · ${lbl}
       </div>
       ${filterInfo ? `<div style="font-size:11px;color:#777;margin-top:2px">Filter: ${filterInfo}</div>` : ''}
     </div>
     <div style="text-align:right;font-size:10px;color:#aaa">
       <div>Printed: ${new Date().toLocaleDateString()}</div>
-      <div>${(() => { const th = lessons.reduce((a,l)=>a+(l.len||1),0); return `${th} hour${th!==1?'s':''}`; })()}</div>
+      <div>${hrs} hour${hrs!==1?'s':''}</div>
     </div>
   </div>
   <div style="display:flex;gap:14px;flex-wrap:wrap;padding:0 20px 10px;font-size:10px;color:#555;align-items:center">
-    ${[['Practice','a'],['Theory','c']].map(([lbl,k])=>
-      `<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;border-radius:3px;background:${LBG[k]};border:1px solid ${LC[k]};-webkit-print-color-adjust:exact;print-color-adjust:exact"></span>${lbl}</span>`
+    ${[['Practice','a'],['Theory','c']].map(([lbl2,k])=>
+      `<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;border-radius:3px;background:${LBG[k]};border:1px solid ${LC[k]};-webkit-print-color-adjust:exact;print-color-adjust:exact"></span>${lbl2}</span>`
     ).join('')}
     <span style="width:1px;height:12px;background:#ddd"></span>
     <span style="display:inline-flex;align-items:center;gap:5px"><span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;background:#2A5DB0;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">School</span> ទីតាំង​សាលា</span>
     <span style="display:inline-flex;align-items:center;gap:5px"><span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;background:#B0413E;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">Course</span> ទីលាន​ហ្វឹក​ហាត់</span>
   </div>
-  <div style="padding:0 20px 20px">${bodyHTML}</div>`;
+  <div style="padding:0 20px 20px">${inner}</div>`;
+
+  const bodyContent = assemble(bodyHTML, curLabel, curHours);
 
   // Render in an in-app overlay (not a new window) so the user can always tap
   // Back to return to the app — a new tab/print view traps users on mobile.
@@ -1351,11 +1368,21 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
     }`;
   document.head.appendChild(style);
 
+  // Month switcher (month view only) — lets the user pick any month to export.
+  const monthSwitcher = viewType === 'month' ? `
+      <div style="display:flex;align-items:center;gap:6px">
+        <button id="__pdfMPrev" title="មុន" style="border:none;background:rgba(255,255,255,.2);color:#fff;font-size:16px;font-weight:700;width:38px;height:38px;border-radius:9px;cursor:pointer">◀</button>
+        <input id="__pdfMonth" type="month" value="${monthAnchorDate.getFullYear()}-${pad2(monthAnchorDate.getMonth()+1)}"
+          style="border:none;border-radius:9px;padding:9px 10px;font-size:14px;font-weight:600;color:#1A4F96;background:#fff;cursor:pointer"/>
+        <button id="__pdfMNext" title="បន្ទាប់" style="border:none;background:rgba(255,255,255,.2);color:#fff;font-size:16px;font-weight:700;width:38px;height:38px;border-radius:9px;cursor:pointer">▶</button>
+      </div>` : '';
+
   const host = document.createElement('div');
   host.id = HOST_ID;
   host.innerHTML = `
-    <div class="pdf-toolbar" style="position:sticky;top:0;z-index:2;display:flex;gap:8px;justify-content:space-between;align-items:center;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;background:#1A4F96;color:#fff;box-shadow:0 1px 8px rgba(0,0,0,.25)">
+    <div class="pdf-toolbar" style="position:sticky;top:0;z-index:2;display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;align-items:center;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;background:#1A4F96;color:#fff;box-shadow:0 1px 8px rgba(0,0,0,.25)">
       <button id="__pdfBack" style="display:inline-flex;align-items:center;gap:6px;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:15px;font-weight:600;padding:10px 16px;border-radius:9px;cursor:pointer">⬅ ត្រឡប់ · Back</button>
+      ${monthSwitcher}
       <button id="__pdfPrint" style="display:inline-flex;align-items:center;gap:6px;border:none;background:#fff;color:#1A4F96;font-size:15px;font-weight:700;padding:10px 16px;border-radius:9px;cursor:pointer">🖨 បោះពុម្ព / PDF</button>
     </div>
     <div class="pdf-paper">${bodyContent}</div>`;
@@ -1364,6 +1391,22 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
   const cleanup = () => { host.remove(); style.remove(); };
   host.querySelector('#__pdfBack').onclick  = cleanup;
   host.querySelector('#__pdfPrint').onclick = () => { try { window.print(); } catch(e) {} };
+
+  // Repaint the printable page for the currently-selected month.
+  if (viewType === 'month') {
+    const monthInput = host.querySelector('#__pdfMonth');
+    const repaint = () => {
+      const Y = monthAnchorDate.getFullYear(), M = monthAnchorDate.getMonth();
+      host.querySelector('.pdf-paper').innerHTML = assemble(buildMonthGrid(monthAnchorDate), fmtMonthLabel(Y, M), monthHours(Y, M));
+      monthInput.value = `${Y}-${pad2(M+1)}`;
+    };
+    monthInput.onchange = () => {
+      const [yy, mm] = monthInput.value.split('-').map(Number);
+      if (yy && mm) { monthAnchorDate = new Date(yy, mm - 1, 1); repaint(); }
+    };
+    host.querySelector('#__pdfMPrev').onclick = () => { monthAnchorDate = new Date(monthAnchorDate.getFullYear(), monthAnchorDate.getMonth() - 1, 1); repaint(); };
+    host.querySelector('#__pdfMNext').onclick = () => { monthAnchorDate = new Date(monthAnchorDate.getFullYear(), monthAnchorDate.getMonth() + 1, 1); repaint(); };
+  }
 };
 const FleetScreen = ({ role = 'admin' }) => {
   const { toast, openForm, openDetail, navigate, tr } = useAppActions();

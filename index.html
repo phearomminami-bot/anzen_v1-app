@@ -19149,40 +19149,21 @@ var generateSchedulePDF = ({
     var s = STUDENTS.find(x => x.id === studentFilter);
     filterInfo = `Student: ${s ? s.name : studentFilter}`;
   }
-  var bodyHTML = '';
-  if (viewType === 'agenda') {
-    var grouped = {};
-    lessons.forEach(l => {
-      if (!grouped[l.date]) grouped[l.date] = [];
-      grouped[l.date].push(l);
-    });
-    var dates = Object.keys(grouped).sort();
-    if (dates.length === 0) {
-      bodyHTML = `<p style="color:#888;text-align:center;padding:20px">No lessons in this period.</p>`;
-    } else {
-      bodyHTML = dates.map(date => {
-        var dayLessons = grouped[date].sort((a, b) => a.h - b.h);
-        var d = new Date(date + 'T00:00:00');
-        var dayLabel = DAYS[d.getDay() === 0 ? 6 : d.getDay() - 1];
-        return `<div style="margin-bottom:16px">
-          <div style="font-size:12px;font-weight:700;color:#1A4F96;padding:6px 10px;background:#E8F0FB;border-radius:6px;margin-bottom:6px">${dayLabel} ${date}</div>
-          ${dayLessons.map(l => `<div style="display:flex;gap:10px;padding:6px 10px;border-bottom:1px solid #eee;align-items:flex-start">
-            <div style="min-width:78px;font-size:11px;font-weight:600;color:#444;font-family:monospace">${fmtH(l.h)}-${fmtH(l.h + (l.len || 1))}</div>
-            <div style="flex:1">${lessonCard(l)}</div>
-          </div>`).join('')}
-        </div>`;
-      }).join('');
-    }
-  } else if (viewType === 'month') {
-    var anchor = new Date((monthAnchor || lessons[0] && lessons[0].date || todayStr()) + 'T00:00:00');
+  var EN_MO = typeof EN_MONTHS !== 'undefined' && EN_MONTHS || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var pad2 = n => String(n).padStart(2, '0');
+  var fmtMonthLabel = (Y, M) => `${EN_MO[M]} ${Y}`;
+  var monthHours = (Y, M) => lessons.filter(l => {
+    var d = new Date((l.date || '') + 'T00:00:00');
+    return d.getFullYear() === Y && d.getMonth() === M;
+  }).reduce((a, l) => a + (l.len || 1), 0);
+  var buildMonthGrid = anchor => {
     var Y = anchor.getFullYear(),
       M = anchor.getMonth();
     var startDow = (new Date(Y, M, 1).getDay() + 6) % 7;
     var lastDate = new Date(Y, M + 1, 0).getDate();
     var weeks = Math.ceil((startDow + lastDate) / 7);
     var gridStart = new Date(Y, M, 1 - startDow);
-    var pad = n => String(n).padStart(2, '0');
-    var fmtD = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    var fmtD = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
     var byDate = {};
     lessons.forEach(l => {
       if (l.status !== 'cancelled') (byDate[l.date] = byDate[l.date] || []).push(l);
@@ -19225,10 +19206,42 @@ var generateSchedulePDF = ({
       }
       rows += `<tr>${cells}</tr>`;
     }
-    bodyHTML = `<table style="width:100%;border-collapse:collapse;table-layout:fixed">
+    return `<table style="width:100%;border-collapse:collapse;table-layout:fixed">
       <thead><tr>${DAYS.map((dn, i) => `<th style="border:1px solid #ddd;background:${i === 6 ? '#fff0f0' : '#f0f0ee'};color:${i === 6 ? '#c04040' : '#555'};font-size:10px;padding:5px;-webkit-print-color-adjust:exact;print-color-adjust:exact">${dn}</th>`).join('')}</tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
+  };
+  var bodyHTML = '';
+  var curLabel = labelEn;
+  var curHours = lessons.reduce((a, l) => a + (l.len || 1), 0);
+  var monthAnchorDate = new Date((monthAnchor || lessons[0] && lessons[0].date || todayStr()) + 'T00:00:00');
+  if (viewType === 'agenda') {
+    var grouped = {};
+    lessons.forEach(l => {
+      if (!grouped[l.date]) grouped[l.date] = [];
+      grouped[l.date].push(l);
+    });
+    var dates = Object.keys(grouped).sort();
+    if (dates.length === 0) {
+      bodyHTML = `<p style="color:#888;text-align:center;padding:20px">No lessons in this period.</p>`;
+    } else {
+      bodyHTML = dates.map(date => {
+        var dayLessons = grouped[date].sort((a, b) => a.h - b.h);
+        var d = new Date(date + 'T00:00:00');
+        var dayLabel = DAYS[d.getDay() === 0 ? 6 : d.getDay() - 1];
+        return `<div style="margin-bottom:16px">
+          <div style="font-size:12px;font-weight:700;color:#1A4F96;padding:6px 10px;background:#E8F0FB;border-radius:6px;margin-bottom:6px">${dayLabel} ${date}</div>
+          ${dayLessons.map(l => `<div style="display:flex;gap:10px;padding:6px 10px;border-bottom:1px solid #eee;align-items:flex-start">
+            <div style="min-width:78px;font-size:11px;font-weight:600;color:#444;font-family:monospace">${fmtH(l.h)}-${fmtH(l.h + (l.len || 1))}</div>
+            <div style="flex:1">${lessonCard(l)}</div>
+          </div>`).join('')}
+        </div>`;
+      }).join('');
+    }
+  } else if (viewType === 'month') {
+    bodyHTML = buildMonthGrid(monthAnchorDate);
+    curLabel = fmtMonthLabel(monthAnchorDate.getFullYear(), monthAnchorDate.getMonth());
+    curHours = monthHours(monthAnchorDate.getFullYear(), monthAnchorDate.getMonth());
   } else {
     var allDates = weekDates.length ? weekDates : [];
     bodyHTML = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:11px">
@@ -19260,30 +19273,28 @@ var generateSchedulePDF = ({
       </tbody>
     </table>`;
   }
-  var bodyContent = `
+  var assemble = (inner, lbl, hrs) => `
   <div style="padding:16px 20px 10px;border-bottom:2px solid #1A4F96;display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px">
     <div>
       <div style="font-size:18px;font-weight:700;color:#1A4F96">${name}</div>
       <div style="font-size:13px;font-weight:600;color:#333;margin-top:2px">
-        ${viewType === 'agenda' ? 'Agenda' : viewType === 'month' ? 'Monthly Schedule' : 'Weekly Schedule'} · ${labelEn}
+        ${viewType === 'agenda' ? 'Agenda' : viewType === 'month' ? 'Monthly Schedule' : 'Weekly Schedule'} · ${lbl}
       </div>
       ${filterInfo ? `<div style="font-size:11px;color:#777;margin-top:2px">Filter: ${filterInfo}</div>` : ''}
     </div>
     <div style="text-align:right;font-size:10px;color:#aaa">
       <div>Printed: ${new Date().toLocaleDateString()}</div>
-      <div>${(() => {
-    var th = lessons.reduce((a, l) => a + (l.len || 1), 0);
-    return `${th} hour${th !== 1 ? 's' : ''}`;
-  })()}</div>
+      <div>${hrs} hour${hrs !== 1 ? 's' : ''}</div>
     </div>
   </div>
   <div style="display:flex;gap:14px;flex-wrap:wrap;padding:0 20px 10px;font-size:10px;color:#555;align-items:center">
-    ${[['Practice', 'a'], ['Theory', 'c']].map(([lbl, k]) => `<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;border-radius:3px;background:${LBG[k]};border:1px solid ${LC[k]};-webkit-print-color-adjust:exact;print-color-adjust:exact"></span>${lbl}</span>`).join('')}
+    ${[['Practice', 'a'], ['Theory', 'c']].map(([lbl2, k]) => `<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;border-radius:3px;background:${LBG[k]};border:1px solid ${LC[k]};-webkit-print-color-adjust:exact;print-color-adjust:exact"></span>${lbl2}</span>`).join('')}
     <span style="width:1px;height:12px;background:#ddd"></span>
     <span style="display:inline-flex;align-items:center;gap:5px"><span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;background:#2A5DB0;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">School</span> ទីតាំង​សាលា</span>
     <span style="display:inline-flex;align-items:center;gap:5px"><span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;background:#B0413E;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">Course</span> ទីលាន​ហ្វឹក​ហាត់</span>
   </div>
-  <div style="padding:0 20px 20px">${bodyHTML}</div>`;
+  <div style="padding:0 20px 20px">${inner}</div>`;
+  var bodyContent = assemble(bodyHTML, curLabel, curHours);
   var HOST_ID = '__anzenPdfHost';
   document.getElementById(HOST_ID)?.remove();
   document.getElementById('__anzenPdfStyle')?.remove();
@@ -19299,11 +19310,19 @@ var generateSchedulePDF = ({
       @page{size:A4 landscape;margin:12mm}
     }`;
   document.head.appendChild(style);
+  var monthSwitcher = viewType === 'month' ? `
+      <div style="display:flex;align-items:center;gap:6px">
+        <button id="__pdfMPrev" title="មុន" style="border:none;background:rgba(255,255,255,.2);color:#fff;font-size:16px;font-weight:700;width:38px;height:38px;border-radius:9px;cursor:pointer">◀</button>
+        <input id="__pdfMonth" type="month" value="${monthAnchorDate.getFullYear()}-${pad2(monthAnchorDate.getMonth() + 1)}"
+          style="border:none;border-radius:9px;padding:9px 10px;font-size:14px;font-weight:600;color:#1A4F96;background:#fff;cursor:pointer"/>
+        <button id="__pdfMNext" title="បន្ទាប់" style="border:none;background:rgba(255,255,255,.2);color:#fff;font-size:16px;font-weight:700;width:38px;height:38px;border-radius:9px;cursor:pointer">▶</button>
+      </div>` : '';
   var host = document.createElement('div');
   host.id = HOST_ID;
   host.innerHTML = `
-    <div class="pdf-toolbar" style="position:sticky;top:0;z-index:2;display:flex;gap:8px;justify-content:space-between;align-items:center;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;background:#1A4F96;color:#fff;box-shadow:0 1px 8px rgba(0,0,0,.25)">
+    <div class="pdf-toolbar" style="position:sticky;top:0;z-index:2;display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;align-items:center;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;background:#1A4F96;color:#fff;box-shadow:0 1px 8px rgba(0,0,0,.25)">
       <button id="__pdfBack" style="display:inline-flex;align-items:center;gap:6px;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:15px;font-weight:600;padding:10px 16px;border-radius:9px;cursor:pointer">⬅ ត្រឡប់ · Back</button>
+      ${monthSwitcher}
       <button id="__pdfPrint" style="display:inline-flex;align-items:center;gap:6px;border:none;background:#fff;color:#1A4F96;font-size:15px;font-weight:700;padding:10px 16px;border-radius:9px;cursor:pointer">🖨 បោះពុម្ព / PDF</button>
     </div>
     <div class="pdf-paper">${bodyContent}</div>`;
@@ -19318,6 +19337,30 @@ var generateSchedulePDF = ({
       window.print();
     } catch (e) {}
   };
+  if (viewType === 'month') {
+    var monthInput = host.querySelector('#__pdfMonth');
+    var repaint = () => {
+      var Y = monthAnchorDate.getFullYear(),
+        M = monthAnchorDate.getMonth();
+      host.querySelector('.pdf-paper').innerHTML = assemble(buildMonthGrid(monthAnchorDate), fmtMonthLabel(Y, M), monthHours(Y, M));
+      monthInput.value = `${Y}-${pad2(M + 1)}`;
+    };
+    monthInput.onchange = () => {
+      var [yy, mm] = monthInput.value.split('-').map(Number);
+      if (yy && mm) {
+        monthAnchorDate = new Date(yy, mm - 1, 1);
+        repaint();
+      }
+    };
+    host.querySelector('#__pdfMPrev').onclick = () => {
+      monthAnchorDate = new Date(monthAnchorDate.getFullYear(), monthAnchorDate.getMonth() - 1, 1);
+      repaint();
+    };
+    host.querySelector('#__pdfMNext').onclick = () => {
+      monthAnchorDate = new Date(monthAnchorDate.getFullYear(), monthAnchorDate.getMonth() + 1, 1);
+      repaint();
+    };
+  }
 };
 var FleetScreen = ({
   role = 'admin'
