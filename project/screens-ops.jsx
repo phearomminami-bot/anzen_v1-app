@@ -399,7 +399,7 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                     }}>
                     <div style={{display:'flex',alignItems:'center',gap:4,minWidth:0}}>
                       <span style={{flexShrink:0}}>🎓</span>
-                      <span style={{fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',minWidth:0}}>{tr('ប្រឡង','Exam')}{timeLbl?' · '+timeLbl:''}</span>
+                      <span style={{fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',minWidth:0}}>{tr('ប្រឡង','Exam')}</span>
                     </div>
                     {stuNames.length > 0 && (
                       <div style={{fontWeight:600,fontSize:10,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{stuNames.join(', ')}</div>
