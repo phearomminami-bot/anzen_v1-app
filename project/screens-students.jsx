@@ -579,6 +579,10 @@ const StudentsScreenV2 = () => {
       // 12, which hid older lessons that exist in the schedule.
       const studentLessons = LESSONS.filter(l => l.studentId === s.id).slice()
         .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+      // Exam slots (scheduled separately) that include this student — shown green.
+      const studentExams = ((window.__schoolSettings && window.__schoolSettings.scheduleExams) || [])
+        .filter(e => (e.studentIds || []).includes(s.id))
+        .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
       const grad = isGraduated(s);
       // Shared edit form — rendered inside whichever section is being edited.
       const editForm = (
@@ -743,6 +747,24 @@ const StudentsScreenV2 = () => {
 
           {/* Section 5: Lessons & comments */}
           <CvSection label={tr('បញ្ជីមេរៀន និង មតិគ្រូ','Lessons & Comments')} isOpen={openSections.lessons} onToggle={()=>toggleSection('lessons')}>
+            {studentExams.length > 0 && (
+              <div style={{marginBottom:10}}>
+                {studentExams.map((e,i) => {
+                  const ins = (e.instIds||[]).map(id=>{ const it=instById(id); return it?(it.en||it.name):null; }).filter(Boolean);
+                  return (
+                    <div key={e.id||i} style={{display:'flex',gap:10,alignItems:'flex-start',padding:'9px 8px',borderRadius:8,marginBottom:6,
+                      background:'rgba(18,163,2,.08)',border:'1px solid rgba(18,163,2,.35)',borderLeft:'3px solid #12A302'}}>
+                      <div style={{fontSize:11,fontWeight:700,fontFamily:'"JetBrains Mono",monospace',color:'#12A302',minWidth:54,lineHeight:1.5}}>{e.date}<br/>{String(e.time||'').slice(0,5)}</div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:13,fontWeight:700,color:'#0c5a01'}}>🎓 {tr('ប្រឡង','Exam')}</div>
+                        {ins.length>0 && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:1}}>👨‍🏫 {ins.join(' · ')}</div>}
+                        {e.note && <div style={{fontSize:11,color:'var(--ink-2)',marginTop:1}}>{e.note}</div>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             {studentLessons.length === 0 ? (
               <div style={{fontSize:13,color:'var(--ink-3)',textAlign:'center',padding:'12px 0'}}>
                 {tr('មិន​ទាន់​មាន​មេរៀន','No lessons yet')}

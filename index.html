@@ -494,6 +494,7 @@ window.__trRegistry = {
   "No data yet": "មិន​ទាន់​មាន​ទិន្នន័យ",
   "TODAY\\'S LESSONS": "មេរៀន​ថ្ងៃ​នេះ",
   "No lessons scheduled today": "គ្មាន​មេរៀន​ថ្ងៃ​នេះ",
+  "TODAY\\'S EXAMS": "ប្រឡង​ថ្ងៃ​នេះ",
   "TOMORROW\\'S LESSONS": "មេរៀន​ថ្ងៃ​ស្អែក",
   "No lessons scheduled tomorrow": "គ្មាន​មេរៀន​ថ្ងៃ​ស្អែក",
   "ALERTS": "ការ​ជូន​ដំណឹង",
@@ -1458,6 +1459,7 @@ window.__trGroups = {
     "No data yet": "មិន​ទាន់​មាន​ទិន្នន័យ",
     "TODAY\\'S LESSONS": "មេរៀន​ថ្ងៃ​នេះ",
     "No lessons scheduled today": "គ្មាន​មេរៀន​ថ្ងៃ​នេះ",
+    "TODAY\\'S EXAMS": "ប្រឡង​ថ្ងៃ​នេះ",
     "TOMORROW\\'S LESSONS": "មេរៀន​ថ្ងៃ​ស្អែក",
     "No lessons scheduled tomorrow": "គ្មាន​មេរៀន​ថ្ងៃ​ស្អែក",
     "ALERTS": "ការ​ជូន​ដំណឹង",
@@ -14769,6 +14771,8 @@ var DashboardAdmin = () => {
     return localDateStr(d);
   })();
   var tomorrowLessons = LESSONS.filter(l => l.date === tomorrowStr && l.status !== 'cancelled');
+  var allExams = window.__schoolSettings && window.__schoolSettings.scheduleExams || [];
+  var todayExams = allExams.filter(e => e.date === today).sort((a, b) => String(a.time || '').localeCompare(String(b.time || '')));
   var activeVeh = VEHICLES.filter(v => v.status === 'Active').length;
   var serviceVeh = VEHICLES.filter(v => v.status === 'Service due' || v.status === 'Workshop');
   var clsB = STUDENTS.filter(s => s.cls && s.cls.startsWith('B')).length;
@@ -15185,7 +15189,60 @@ var DashboardAdmin = () => {
         l: l,
         i: i,
         compact: true
-      }))))), React.createElement(GlanceBar, {
+      }))))), todayExams.length > 0 && React.createElement(Card, {
+        label: tr('ប្រឡង​ថ្ងៃ​នេះ', 'TODAY\'S EXAMS')
+      }, todayExams.map((e, i) => {
+        var stu = (e.studentIds || []).map(id => {
+          var s = studentById(id);
+          return s ? s.en || s.name : null;
+        }).filter(Boolean);
+        var ins = (e.instIds || []).map(id => {
+          var it = instById(id);
+          return it ? it.en || it.name : null;
+        }).filter(Boolean);
+        return React.createElement("button", {
+          key: e.id || i,
+          onClick: () => openDetail('exam', e),
+          style: {
+            width: '100%',
+            textAlign: 'left',
+            display: 'flex',
+            gap: 10,
+            alignItems: 'flex-start',
+            padding: '9px 0',
+            borderTop: i ? '1px solid var(--border)' : 'none',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            font: 'inherit'
+          }
+        }, React.createElement("div", {
+          style: {
+            fontSize: 12,
+            fontWeight: 700,
+            fontFamily: '"JetBrains Mono",monospace',
+            color: '#12A302',
+            minWidth: 42
+          }
+        }, String(e.time || '').slice(0, 5)), React.createElement("div", {
+          style: {
+            flex: 1,
+            minWidth: 0
+          }
+        }, React.createElement("div", {
+          style: {
+            fontSize: 13,
+            fontWeight: 600,
+            color: 'var(--ink)'
+          }
+        }, "\uD83C\uDF93 ", tr('ប្រឡង', 'Exam'), stu.length ? ' · ' + stu.join(', ') : ''), ins.length > 0 && React.createElement("div", {
+          style: {
+            fontSize: 11,
+            color: 'var(--ink-3)',
+            marginTop: 1
+          }
+        }, "\uD83D\uDC68\u200D\uD83C\uDFEB ", ins.join(' · '))));
+      })), React.createElement(GlanceBar, {
         vehIds: todayVehIds,
         instIds: todayInstIds,
         studIds: todayStudIds
@@ -39237,6 +39294,7 @@ var StudentsScreenV2 = () => {
       var price = studentPrice(s);
       var paidAmt = Math.round((s.paid || 0) * price);
       var studentLessons = LESSONS.filter(l => l.studentId === s.id).slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+      var studentExams = (window.__schoolSettings && window.__schoolSettings.scheduleExams || []).filter(e => (e.studentIds || []).includes(s.id)).sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
       var grad = isGraduated(s);
       var editForm = React.createElement(StudentEditPanel, {
         key: s.id,
@@ -39648,7 +39706,62 @@ var StudentsScreenV2 = () => {
         label: tr('បញ្ជីមេរៀន និង មតិគ្រូ', 'Lessons & Comments'),
         isOpen: openSections.lessons,
         onToggle: () => toggleSection('lessons')
-      }, studentLessons.length === 0 ? React.createElement("div", {
+      }, studentExams.length > 0 && React.createElement("div", {
+        style: {
+          marginBottom: 10
+        }
+      }, studentExams.map((e, i) => {
+        var ins = (e.instIds || []).map(id => {
+          var it = instById(id);
+          return it ? it.en || it.name : null;
+        }).filter(Boolean);
+        return React.createElement("div", {
+          key: e.id || i,
+          style: {
+            display: 'flex',
+            gap: 10,
+            alignItems: 'flex-start',
+            padding: '9px 8px',
+            borderRadius: 8,
+            marginBottom: 6,
+            background: 'rgba(18,163,2,.08)',
+            border: '1px solid rgba(18,163,2,.35)',
+            borderLeft: '3px solid #12A302'
+          }
+        }, React.createElement("div", {
+          style: {
+            fontSize: 11,
+            fontWeight: 700,
+            fontFamily: '"JetBrains Mono",monospace',
+            color: '#12A302',
+            minWidth: 54,
+            lineHeight: 1.5
+          }
+        }, e.date, React.createElement("br", null), String(e.time || '').slice(0, 5)), React.createElement("div", {
+          style: {
+            flex: 1,
+            minWidth: 0
+          }
+        }, React.createElement("div", {
+          style: {
+            fontSize: 13,
+            fontWeight: 700,
+            color: '#0c5a01'
+          }
+        }, "\uD83C\uDF93 ", tr('ប្រឡង', 'Exam')), ins.length > 0 && React.createElement("div", {
+          style: {
+            fontSize: 11,
+            color: 'var(--ink-3)',
+            marginTop: 1
+          }
+        }, "\uD83D\uDC68\u200D\uD83C\uDFEB ", ins.join(' · ')), e.note && React.createElement("div", {
+          style: {
+            fontSize: 11,
+            color: 'var(--ink-2)',
+            marginTop: 1
+          }
+        }, e.note)));
+      })), studentLessons.length === 0 ? React.createElement("div", {
         style: {
           fontSize: 13,
           color: 'var(--ink-3)',

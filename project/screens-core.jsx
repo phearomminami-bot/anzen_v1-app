@@ -57,6 +57,9 @@ const DashboardAdmin = () => {
   const todayLessons    = LESSONS.filter(l => l.date === today && l.status !== 'cancelled');
   const tomorrowStr     = (() => { const d = new Date(); d.setDate(d.getDate()+1); return localDateStr(d); })();
   const tomorrowLessons = LESSONS.filter(l => l.date === tomorrowStr && l.status !== 'cancelled');
+  // Exams are scheduled separately from lessons (green); surface today's here too.
+  const allExams        = (window.__schoolSettings && window.__schoolSettings.scheduleExams) || [];
+  const todayExams      = allExams.filter(e => e.date === today).sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
 
   const activeVeh     = VEHICLES.filter(v => v.status === 'Active').length;
   const serviceVeh    = VEHICLES.filter(v => v.status === 'Service due' || v.status === 'Workshop');
@@ -280,6 +283,23 @@ const DashboardAdmin = () => {
                     </div>
                   )}
                 </Card>
+                {todayExams.length > 0 && (
+                  <Card label={tr('ប្រឡង​ថ្ងៃ​នេះ','TODAY\'S EXAMS')}>
+                    {todayExams.map((e,i) => {
+                      const stu = (e.studentIds||[]).map(id=>{const s=studentById(id);return s?(s.en||s.name):null;}).filter(Boolean);
+                      const ins = (e.instIds||[]).map(id=>{const it=instById(id);return it?(it.en||it.name):null;}).filter(Boolean);
+                      return (
+                        <button key={e.id||i} onClick={()=>openDetail('exam', e)} style={{width:'100%',textAlign:'left',display:'flex',gap:10,alignItems:'flex-start',padding:'9px 0',borderTop:i?'1px solid var(--border)':'none',background:'none',border:'none',cursor:'pointer',font:'inherit'}}>
+                          <div style={{fontSize:12,fontWeight:700,fontFamily:'"JetBrains Mono",monospace',color:'#12A302',minWidth:42}}>{String(e.time||'').slice(0,5)}</div>
+                          <div style={{flex:1,minWidth:0}}>
+                            <div style={{fontSize:13,fontWeight:600,color:'var(--ink)'}}>🎓 {tr('ប្រឡង','Exam')}{stu.length?' · '+stu.join(', '):''}</div>
+                            {ins.length>0 && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:1}}>👨‍🏫 {ins.join(' · ')}</div>}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </Card>
+                )}
                 <GlanceBar vehIds={todayVehIds} instIds={todayInstIds} studIds={todayStudIds}/>
               </div>
             );
