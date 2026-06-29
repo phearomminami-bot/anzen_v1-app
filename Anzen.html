@@ -562,6 +562,7 @@ window.__trRegistry = {
   "Rate": "វាយ​តម្លៃ",
   "Copy": "ម៉ូដ​ចម្លង",
   "Move": "ម៉ូដ​ផ្លាស់​ទី",
+  "Exam": "ប្រឡង",
   "today": "ថ្ងៃ​នេះ",
   "No lessons scheduled": "គ្មាន​មេរៀន",
   "Available slots": "ម៉ោង​ដែល​អាច​កក់​បាន",
@@ -573,6 +574,7 @@ window.__trRegistry = {
   "Next ▶": "បន្ទាប់ ▶",
   "PDF": "PDF",
   "+ Note": "+ ចំណាំ",
+  "+ Exam": "+ ប្រឡង",
   "New lesson": "មេរៀន​ថ្មី",
   "All": "ទាំងអស់",
   "Clear": "សម្អាត",
@@ -592,6 +594,15 @@ window.__trRegistry = {
   "+ Select instructor": "+ ជ្រើស​គ្រូ",
   "Remove": "ដក​ចេញ",
   "No instructors": "មិន​មាន​គ្រូ",
+  "Edit exam": "កែ​កាលវិភាគ​ប្រឡង",
+  "New exam": "កាលវិភាគ​ប្រឡង​ថ្មី",
+  "Not counted as a lesson": "មិន​រាប់​បញ្ចូល​ជា​មេរៀន",
+  "Hrs": "រយៈ(ម៉ោង)",
+  "Students (multiple)": "សិស្ស (ច្រើន​នាក់)",
+  "+ Add student": "+ ជ្រើស​សិស្ស",
+  "Instructors (multiple)": "គ្រូ (ច្រើន​នាក់)",
+  "+ Add instructor": "+ ជ្រើស​គ្រូ",
+  "e.g. road test": "ឧ. ប្រឡង​ផ្លូវ",
   "Maintenance": "កាលវិភាគ​ថែទាំ",
   "Add vehicle": "បន្ថែមរថយន្ត",
   "Utilization": "ការ​ប្រើ​ប្រាស់",
@@ -940,7 +951,6 @@ window.__trRegistry = {
   "Pass": "ជាប់",
   "Fail": "ធ្លាក់",
   "Failed at": "កន្លែង​ធ្លាក់",
-  "e.g. road test": "ឧ. ប្រឡង​ផ្លូវ",
   "Fail reason": "មូលហេតុ​ធ្លាក់",
   "e.g. parking error": "ឧ. ចត​មិន​ត្រូវ",
   "Add resit": "បន្ថែម​ការ​ប្រឡង​សង",
@@ -1512,7 +1522,6 @@ window.__trGroups = {
     "Pass": "ជាប់",
     "Fail": "ធ្លាក់",
     "Failed at": "កន្លែង​ធ្លាក់",
-    "e.g. road test": "ឧ. ប្រឡង​ផ្លូវ",
     "Fail reason": "មូលហេតុ​ធ្លាក់",
     "e.g. parking error": "ឧ. ចត​មិន​ត្រូវ",
     "Add resit": "បន្ថែម​ការ​ប្រឡង​សង",
@@ -1652,6 +1661,7 @@ window.__trGroups = {
   "កាលវិភាគ · Schedule": {
     "Copy": "ចម្លង",
     "Move": "ផ្លាស់ទី",
+    "Exam": "ប្រឡង",
     "today": "ថ្ងៃ​នេះ",
     "No lessons scheduled": "គ្មាន​មេរៀន",
     "Available slots": "ម៉ោង​ដែល​អាច​កក់​បាន",
@@ -1663,6 +1673,7 @@ window.__trGroups = {
     "Next ▶": "បន្ទាប់ ▶",
     "PDF": "PDF",
     "+ Note": "+ ចំណាំ",
+    "+ Exam": "+ ប្រឡង",
     "New lesson": "មេរៀន​ថ្មី",
     "All": "ទាំងអស់",
     "Clear": "ដោះ​ស្រាយ",
@@ -1682,6 +1693,15 @@ window.__trGroups = {
     "+ Select instructor": "+ ជ្រើស​គ្រូ",
     "Remove": "ដក​ចេញ",
     "No instructors": "មិន​មាន​គ្រូ",
+    "Edit exam": "កែ​កាលវិភាគ​ប្រឡង",
+    "New exam": "កាលវិភាគ​ប្រឡង​ថ្មី",
+    "Not counted as a lesson": "មិន​រាប់​បញ្ចូល​ជា​មេរៀន",
+    "Hrs": "រយៈ(ម៉ោង)",
+    "Students (multiple)": "សិស្ស (ច្រើន​នាក់)",
+    "+ Add student": "+ ជ្រើស​សិស្ស",
+    "Instructors (multiple)": "គ្រូ (ច្រើន​នាក់)",
+    "+ Add instructor": "+ ជ្រើស​គ្រូ",
+    "e.g. road test": "ឧ. ប្រឡង​ផ្លូវ",
     "Maintenance": "កាលវិភាគ​ថែទាំ",
     "Add vehicle": "បន្ថែម​យានយន្ត",
     "Utilization": "ការ​ប្រើ​ប្រាស់",
@@ -16892,7 +16912,9 @@ var ScheduleWeek = ({
   onStartCopy,
   onStartMove,
   onPlace,
-  onMoveLesson
+  onMoveLesson,
+  exams = [],
+  onExamClick
 }) => {
   var {
     openDetail,
@@ -17112,7 +17134,16 @@ var ScheduleWeek = ({
         _note: true
       };
     }).filter(n => n.h >= 7 && n.h < 19);
-    var layout = computeLayout([...dayLessons, ...dayNotes]);
+    var dayExams = exams.filter(e => e.date === date && e.time).map(e => {
+      var [hh, mm] = String(e.time).split(':').map(Number);
+      return {
+        ...e,
+        h: hh + (mm || 0) / 60,
+        len: e.len || 2,
+        _exam: true
+      };
+    }).filter(e => e.h >= 7 && e.h < 19);
+    var layout = computeLayout([...dayLessons, ...dayNotes, ...dayExams]);
     var isSun = isSunday(date);
     return React.createElement("div", {
       key: dayIdx,
@@ -17475,6 +17506,98 @@ var ScheduleWeek = ({
           textOverflow: 'ellipsis'
         }
       }, "\uD83D\uDC65 ", invitedNames.join(' · ')));
+    }), dayExams.map(e => {
+      var top = (e.h - 7) * 48 + 2;
+      var height = (e.len || 2) * 48 - 4;
+      var {
+        col,
+        total
+      } = layout.get(e) || {
+        col: 0,
+        total: 1
+      };
+      var pct = 100 / total;
+      var stuNames = (e.studentIds || []).map(id => {
+        var s = studentById(id);
+        return s ? s.en || s.name : null;
+      }).filter(Boolean);
+      var instNames = (e.instIds || []).map(id => {
+        var i = instById(id);
+        return i ? i.en || i.name : null;
+      }).filter(Boolean);
+      var timeLbl = String(e.time || '').slice(0, 5);
+      return React.createElement("button", {
+        key: e.id,
+        onClick: ev => {
+          ev.stopPropagation();
+          onExamClick && onExamClick(e);
+        },
+        title: `${tr('ប្រឡង', 'Exam')} ${timeLbl}`,
+        style: {
+          position: 'absolute',
+          top,
+          left: `calc(${col * pct}% + 4px)`,
+          width: `calc(${pct}% - 8px)`,
+          height,
+          background: 'rgba(26,107,60,.16)',
+          border: '1px solid #1A6B3C',
+          borderLeft: '3px solid #1A6B3C',
+          borderRadius: 6,
+          padding: '4px 6px',
+          overflow: 'hidden',
+          zIndex: 3,
+          fontSize: 10.5,
+          textAlign: 'left',
+          cursor: 'pointer',
+          font: 'inherit',
+          color: '#0f3d22',
+          boxSizing: 'border-box'
+        }
+      }, React.createElement("div", {
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
+          minWidth: 0
+        }
+      }, React.createElement("span", {
+        style: {
+          flexShrink: 0
+        }
+      }, "\uD83C\uDF93"), React.createElement("span", {
+        style: {
+          fontWeight: 700,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          minWidth: 0
+        }
+      }, tr('ប្រឡង', 'Exam'), timeLbl ? ' · ' + timeLbl : '')), stuNames.length > 0 && React.createElement("div", {
+        style: {
+          fontWeight: 600,
+          fontSize: 10,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }
+      }, stuNames.join(', ')), instNames.length > 0 && React.createElement("div", {
+        style: {
+          fontSize: 9.5,
+          opacity: .85,
+          fontStyle: 'italic',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }
+      }, "\uD83D\uDC68\u200D\uD83C\uDFEB ", instNames.join(' · ')), e.note && height >= 64 && React.createElement("div", {
+        style: {
+          fontSize: 9,
+          opacity: .8,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }
+      }, e.note));
     }));
   })));
 };
@@ -17933,12 +18056,77 @@ var ScheduleScreen = ({
       invited: cur.includes(instId) ? cur.filter(x => x !== instId) : [...cur, instId]
     };
   });
+  var [exams, setExams] = React.useState(() => {
+    var ss = window.__schoolSettings;
+    return ss && Array.isArray(ss.scheduleExams) ? ss.scheduleExams : [];
+  });
+  var [examModal, setExamModal] = React.useState(null);
+  var saveExams = next => {
+    setExams(next);
+    if (!window.__schoolSettings) window.__schoolSettings = {};
+    window.__schoolSettings.scheduleExams = next;
+    if (window.saveAllData) window.saveAllData();
+  };
+  var submitExam = () => {
+    var m = examModal;
+    if (!m) return;
+    if (!(m.studentIds || []).length && !(m.instIds || []).length && !(m.note || '').trim()) {
+      setExamModal(null);
+      return;
+    }
+    var rec = {
+      date: m.date,
+      time: m.time || '',
+      len: Number(m.len) || 2,
+      studentIds: m.studentIds || [],
+      instIds: m.instIds || [],
+      note: (m.note || '').trim()
+    };
+    if (m.id) saveExams(exams.map(e => e.id === m.id ? {
+      ...e,
+      ...rec
+    } : e));else saveExams([...exams, {
+      id: 'E' + Date.now(),
+      ...rec,
+      author: meName
+    }]);
+    if (window.__logActivity) window.__logActivity(m.id ? 'edit' : 'create', 'exam', tr('ប្រឡង', 'Exam') + ' ' + m.date);
+    setExamModal(null);
+  };
+  var removeExam = id => {
+    saveExams(exams.filter(e => e.id !== id));
+  };
+  var toggleExamStudent = sid => setExamModal(m => {
+    var c = m.studentIds || [];
+    return {
+      ...m,
+      studentIds: c.includes(sid) ? c.filter(x => x !== sid) : [...c, sid]
+    };
+  });
+  var toggleExamInst = iid => setExamModal(m => {
+    var c = m.instIds || [];
+    return {
+      ...m,
+      instIds: c.includes(iid) ? c.filter(x => x !== iid) : [...c, iid]
+    };
+  });
+  var openExamEdit = e => setExamModal({
+    id: e.id,
+    date: e.date,
+    time: e.time || '',
+    len: e.len || 2,
+    studentIds: [...(e.studentIds || [])],
+    instIds: [...(e.instIds || [])],
+    note: e.note || ''
+  });
   React.useEffect(() => {
     if (view) setV(view);
   }, [view]);
   React.useEffect(() => {
     var fromSettings = window.__schoolSettings && window.__schoolSettings.scheduleNotes;
     if (Array.isArray(fromSettings) && fromSettings !== notes) setNotes(fromSettings);
+    var exFromSettings = window.__schoolSettings && window.__schoolSettings.scheduleExams;
+    if (Array.isArray(exFromSettings) && exFromSettings !== exams) setExams(exFromSettings);
   }, [ver]);
   React.useEffect(() => {
     window.__notifyLessonsChanged = () => setVer(n => n + 1);
@@ -18010,6 +18198,7 @@ var ScheduleScreen = ({
   var noteSortKey = n => n.date + ' ' + (n.time || '99:99');
   var visNoteSet = new Set(weekDates);
   var visNotes = notes.filter(n => visNoteSet.has(n.date)).sort((a, b) => noteSortKey(a) < noteSortKey(b) ? -1 : noteSortKey(a) > noteSortKey(b) ? 1 : 0);
+  var visExams = exams.filter(e => visNoteSet.has(e.date) && (!studentMode || (e.studentIds || []).includes(studentId)));
   var openSlot = (date, hour) => setNoteModal({
     mode: 'lesson',
     date,
@@ -18114,7 +18303,9 @@ var ScheduleScreen = ({
     onStartCopy: studentMode ? null : startCopy,
     onStartMove: studentMode ? null : startMove,
     onPlace: studentMode ? null : placeLesson,
-    onMoveLesson: studentMode ? null : moveLesson
+    onMoveLesson: studentMode ? null : moveLesson,
+    exams: visExams,
+    onExamClick: studentMode ? null : openExamEdit
   };
   var selStyle = {
     padding: '6px 10px',
@@ -18335,7 +18526,26 @@ var ScheduleScreen = ({
         name: "bell",
         size: 14
       })
-    }, tr('+ ចំណាំ', '+ Note')), can(role, 'create', 'lesson') && React.createElement(Btn, {
+    }, tr('+ ចំណាំ', '+ Note')), !studentMode && React.createElement(Btn, {
+      kind: "ghost",
+      size: "md",
+      onClick: () => setExamModal({
+        date: allWeekDates[0] || today,
+        time: '08:00',
+        len: 2,
+        studentIds: [],
+        instIds: [],
+        note: ''
+      }),
+      icon: React.createElement(Icon, {
+        name: "star",
+        size: 14
+      }),
+      style: {
+        color: '#1A6B3C',
+        borderColor: '#1A6B3C'
+      }
+    }, tr('+ ប្រឡង', '+ Exam')), can(role, 'create', 'lesson') && React.createElement(Btn, {
       kind: "primary",
       size: "md",
       onClick: () => openForm('newLesson'),
@@ -19153,7 +19363,219 @@ var ScheduleScreen = ({
     kind: "primary",
     size: "md",
     onClick: submitNote
-  }, tr('រក្សាទុក', 'Save'))))))));
+  }, tr('រក្សាទុក', 'Save'))))))), examModal && (() => {
+    var inp = {
+      width: '100%',
+      padding: '9px 12px',
+      border: '1.5px solid var(--border)',
+      borderRadius: 8,
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      font: 'inherit',
+      fontSize: 13,
+      boxSizing: 'border-box',
+      colorScheme: 'light dark'
+    };
+    var lblSt = {
+      fontSize: 11,
+      fontWeight: 600,
+      color: 'var(--ink-2)',
+      display: 'block',
+      marginBottom: 5
+    };
+    var chip = (label, onRemove, key) => React.createElement("span", {
+      key: key,
+      style: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '5px 10px',
+        borderRadius: 20,
+        border: '1px solid #1A6B3C',
+        background: 'rgba(26,107,60,.12)',
+        color: '#0f3d22',
+        fontSize: 12,
+        fontWeight: 600
+      }
+    }, label, React.createElement("button", {
+      onClick: onRemove,
+      title: tr('ដក​ចេញ', 'Remove'),
+      style: {
+        border: 'none',
+        background: 'none',
+        cursor: 'pointer',
+        color: '#0f3d22',
+        fontSize: 15,
+        lineHeight: 1,
+        padding: 0
+      }
+    }, "\xD7"));
+    var selStu = examModal.studentIds || [];
+    var selIns = examModal.instIds || [];
+    return React.createElement(Modal, {
+      open: true,
+      onClose: () => setExamModal(null),
+      width: 440
+    }, React.createElement("div", {
+      style: {
+        padding: 20,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 14
+      }
+    }, React.createElement("div", {
+      style: {
+        fontSize: 16,
+        fontWeight: 700,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8
+      }
+    }, React.createElement("span", null, "\uD83C\uDF93"), examModal.id ? tr('កែ​កាលវិភាគ​ប្រឡង', 'Edit exam') : tr('កាលវិភាគ​ប្រឡង​ថ្មី', 'New exam')), React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: 'var(--ink-3)',
+        marginTop: -6
+      }
+    }, tr('មិន​រាប់​បញ្ចូល​ជា​មេរៀន', 'Not counted as a lesson')), React.createElement("div", {
+      style: {
+        display: 'grid',
+        gridTemplateColumns: '1fr 110px 90px',
+        gap: 10
+      }
+    }, React.createElement("div", null, React.createElement("label", {
+      style: lblSt
+    }, tr('កាល​បរិច្ឆេទ', 'Date')), React.createElement("input", {
+      type: "date",
+      value: examModal.date,
+      onChange: e => setExamModal(m => ({
+        ...m,
+        date: e.target.value
+      })),
+      style: inp
+    })), React.createElement("div", null, React.createElement("label", {
+      style: lblSt
+    }, tr('ម៉ោង', 'Time')), React.createElement("input", {
+      type: "time",
+      value: examModal.time || '',
+      onChange: e => setExamModal(m => ({
+        ...m,
+        time: e.target.value
+      })),
+      style: {
+        ...inp,
+        fontFamily: '"JetBrains Mono",monospace'
+      }
+    })), React.createElement("div", null, React.createElement("label", {
+      style: lblSt
+    }, tr('រយៈ(ម៉ោង)', 'Hrs')), React.createElement("input", {
+      type: "number",
+      min: "1",
+      max: "8",
+      value: examModal.len,
+      onChange: e => setExamModal(m => ({
+        ...m,
+        len: e.target.value
+      })),
+      style: inp
+    }))), React.createElement("div", null, React.createElement("label", {
+      style: lblSt
+    }, tr('សិស្ស (ច្រើន​នាក់)', 'Students (multiple)'), " ", selStu.length > 0 && React.createElement("span", {
+      style: {
+        color: '#1A6B3C',
+        fontWeight: 700
+      }
+    }, "\xB7 ", selStu.length)), React.createElement("select", {
+      value: "",
+      onChange: e => {
+        if (e.target.value) toggleExamStudent(e.target.value);
+      },
+      style: inp
+    }, React.createElement("option", {
+      value: ""
+    }, tr('+ ជ្រើស​សិស្ស', '+ Add student')), STUDENTS.filter(s => !selStu.includes(s.id)).map(s => React.createElement("option", {
+      key: s.id,
+      value: s.id
+    }, s.en || s.name, " \xB7 ", s.id))), selStu.length > 0 && React.createElement("div", {
+      style: {
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 6,
+        marginTop: 8
+      }
+    }, selStu.map(id => {
+      var s = studentById(id);
+      return s ? chip(s.en || s.name, () => toggleExamStudent(id), id) : null;
+    }))), React.createElement("div", null, React.createElement("label", {
+      style: lblSt
+    }, tr('គ្រូ (ច្រើន​នាក់)', 'Instructors (multiple)'), " ", selIns.length > 0 && React.createElement("span", {
+      style: {
+        color: '#1A6B3C',
+        fontWeight: 700
+      }
+    }, "\xB7 ", selIns.length)), React.createElement("select", {
+      value: "",
+      onChange: e => {
+        if (e.target.value) toggleExamInst(e.target.value);
+      },
+      style: inp
+    }, React.createElement("option", {
+      value: ""
+    }, tr('+ ជ្រើស​គ្រូ', '+ Add instructor')), INSTRUCTORS.filter(i => !selIns.includes(i.id)).map(i => React.createElement("option", {
+      key: i.id,
+      value: i.id
+    }, i.en || i.name))), selIns.length > 0 && React.createElement("div", {
+      style: {
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 6,
+        marginTop: 8
+      }
+    }, selIns.map(id => {
+      var i = instById(id);
+      return i ? chip(i.en || i.name, () => toggleExamInst(id), id) : null;
+    }))), React.createElement("div", null, React.createElement("label", {
+      style: lblSt
+    }, tr('កំណត់​សម្គាល់', 'Note')), React.createElement("input", {
+      value: examModal.note || '',
+      onChange: e => setExamModal(m => ({
+        ...m,
+        note: e.target.value
+      })),
+      placeholder: tr('ឧ. ប្រឡង​ផ្លូវ', 'e.g. road test'),
+      style: inp
+    })), React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 8,
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }
+    }, examModal.id ? React.createElement(Btn, {
+      kind: "ghost",
+      size: "md",
+      style: {
+        color: 'var(--danger)'
+      },
+      onClick: () => {
+        removeExam(examModal.id);
+        setExamModal(null);
+      }
+    }, tr('លុប', 'Delete')) : React.createElement("span", null), React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 8
+      }
+    }, React.createElement(Btn, {
+      kind: "ghost",
+      size: "md",
+      onClick: () => setExamModal(null)
+    }, tr('បោះបង់', 'Cancel')), React.createElement(Btn, {
+      kind: "primary",
+      size: "md",
+      onClick: submitExam
+    }, tr('រក្សាទុក', 'Save'))))));
+  })());
 };
 var generateSchedulePDF = ({
   lessons,
