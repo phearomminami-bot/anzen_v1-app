@@ -649,6 +649,93 @@ const NoteDetail = ({ note, onClose }) => {
   );
 };
 
+// ── Exam detail (schedule exam slot) — mirrors NoteDetail ───────────────────
+const ExamDetail = ({ exam, onClose }) => {
+  const { tr, confirm } = useAppActions();
+  if (!exam) return null;
+  const EX = '#12A302';
+  const students    = (exam.studentIds || []).map(id => studentById(id)).filter(Boolean);
+  const instructors = (exam.instIds    || []).map(id => instById(id)).filter(Boolean);
+  const dateLabel = exam.date ? formatDateShort(exam.date, 'en') : '';
+  const endTime = (() => {
+    const [hh,mm] = String(exam.time||'').split(':').map(Number);
+    if (isNaN(hh)) return '';
+    const tot = hh*60 + (mm||0) + (exam.len||2)*60;
+    return String(Math.floor(tot/60)).padStart(2,'0') + ':' + String(tot%60).padStart(2,'0');
+  })();
+  const doEdit = () => { if (window.__editScheduleExam) window.__editScheduleExam(exam); onClose && onClose(); };
+  const doDelete = () => confirm?.({
+    title: tr('លុប​កាលវិភាគ​ប្រឡង?', 'Delete this exam?'),
+    body:  tr('អ្នក​ប្រាកដ​ទេ? កាលវិភាគ​ប្រឡង​នេះ​នឹង​ត្រូវ​លុប។', 'Are you sure? This exam will be removed.'),
+    confirmText: tr('លុប', 'Delete'), danger: true,
+    onConfirm: () => { if (window.__deleteScheduleExam) window.__deleteScheduleExam(exam.id); onClose && onClose(); },
+  });
+  return (
+    <div style={{padding:'24px',display:'flex',flexDirection:'column',gap:18}}>
+      {/* Header */}
+      <div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+          <span style={{display:'inline-flex',alignItems:'center',gap:5,fontSize:12,fontWeight:700,padding:'3px 10px',borderRadius:6,background:'rgba(18,163,2,.14)',color:EX}}>🎓 {tr('ប្រឡង','Exam')}</span>
+        </div>
+        <div style={{fontSize:32,fontWeight:600,marginTop:10,letterSpacing:'-.02em',fontFamily:'var(--font-display)'}}>
+          {String(exam.time||'').slice(0,5)}{endTime ? '–'+endTime : ''}
+        </div>
+        <div style={{fontSize:13,color:'var(--ink-3)',marginTop:4}}>{[dateLabel, exam.len ? exam.len+(tr(' ម៉ោង','h')) : ''].filter(Boolean).join(' · ')}</div>
+      </div>
+
+      {exam.note && (
+        <div style={{padding:14,background:'rgba(18,163,2,.10)',border:'1px solid rgba(18,163,2,.4)',borderRadius:10}}>
+          <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace',marginBottom:6}}>NOTE · កំណត់​សម្គាល់</div>
+          <div style={{fontSize:15,color:'var(--ink)',whiteSpace:'pre-wrap',wordBreak:'break-word',lineHeight:1.6}}>{exam.note}</div>
+        </div>
+      )}
+
+      {/* Students */}
+      <div style={{padding:14,background:'var(--surface-muted)',borderRadius:10}}>
+        <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace',marginBottom:8}}>STUDENTS · សិស្ស ({students.length})</div>
+        {students.length === 0 ? <div style={{fontSize:13,color:'var(--ink-3)'}}>—</div> : (
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {students.map(s => (
+              <div key={s.id} style={{display:'flex',gap:10,alignItems:'center'}}>
+                {s.photo ? <Avatar tag={s.photo} size={32}/> : <div style={{width:32,height:32,borderRadius:999,background:'var(--border)'}}/>}
+                <div><div style={{fontSize:13,fontWeight:500}}>{s.en || s.name}</div><div style={{fontSize:11,color:'var(--ink-3)'}}>{s.id}</div></div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Instructors */}
+      {instructors.length > 0 && (
+        <div style={{padding:14,background:'var(--surface-muted)',borderRadius:10}}>
+          <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace',marginBottom:8}}>INSTRUCTORS · គ្រូ ({instructors.length})</div>
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {instructors.map(it => (
+              <div key={it.id} style={{display:'flex',gap:10,alignItems:'center'}}>
+                {it.photo ? <Avatar tag={it.photo} size={32}/> : <div style={{width:32,height:32,borderRadius:999,background:'var(--border)'}}/>}
+                <div><div style={{fontSize:13,fontWeight:500}}>{it.en || it.name}</div><div style={{fontSize:11,color:'var(--ink-3)'}}>{it.name || ''}</div></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {exam.author && (
+        <div style={{fontSize:11,color:'var(--ink-3)',display:'flex',alignItems:'center',gap:5,paddingTop:6,borderTop:'1px dashed var(--border)'}}>
+          👤 {tr('បង្កើត​ដោយ','Created by')}: <span style={{fontWeight:600,color:'var(--ink-2)'}}>{exam.author}</span>
+        </div>
+      )}
+
+      {/* Actions */}
+      <div style={{display:'flex',gap:8,marginTop:'auto'}}>
+        <Btn kind="ghost"   size="md" onClick={onClose}  style={{flex:1,justifyContent:'center'}}>{tr('បិទ','Close')}</Btn>
+        <Btn kind="ghost"   size="md" onClick={doDelete} style={{flex:1,justifyContent:'center',color:'var(--danger)'}}>{tr('លុប','Delete')}</Btn>
+        <Btn kind="primary" size="md" onClick={doEdit}   style={{flex:1,justifyContent:'center'}}>✎ {tr('កែ','Edit')}</Btn>
+      </div>
+    </div>
+  );
+};
+
 // ── Student profile (full) ─────────────────────────────────────────────────
 const StudentProfile = ({ student, onClose }) => {
   const { toast, openForm, openDetail, role, tr, curriculumDone, setCurriculumDone, curriculumFeedback, setCurriculumFeedback } = useAppActions();
@@ -1671,4 +1758,4 @@ const StaffProfile = ({ staffProfile, onClose }) => {
   );
 };
 
-Object.assign(window, { LessonDetail, NoteDetail, StudentProfile, InstructorProfile, VehicleDetail, InvoicePreview, StaffProfile });
+Object.assign(window, { LessonDetail, NoteDetail, ExamDetail, StudentProfile, InstructorProfile, VehicleDetail, InvoicePreview, StaffProfile });
