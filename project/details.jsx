@@ -361,17 +361,36 @@ const LessonDetail = ({ lesson, onClose }) => {
     toast(tr(`​បានកត់ ${lesson.len}ម៉ោង​ · ${s?.name||'Group'}`, `Logged ${lesson.len}h · ${s?.en||'Group'}`), 'good');
   };
 
-  const cancelLesson = () => confirm?.({
-    title: tr('លុប​ចោល​មេរៀន?', 'Cancel this lesson?'),
-    body:  tr('អ្នក​ប្រាកដ​ទេ? មេរៀន​នឹង​ត្រូវ​បាន​លុប​ចោល ហើយ​សិស្ស​នឹង​ទទួល​ជូន​ដំណឹង។',
-              'Are you sure? The lesson will be cancelled and the student notified.'),
-    confirmText: tr('លុប', 'Cancel lesson'), danger: true,
+  // "Change day" — the student moved/skipped this slot. Keep the data but mark
+  // it cancelled so the calendar shows it struck-through + greyed (reversible).
+  const changeDayLesson = () => confirm?.({
+    title: tr('ប្ដូរ​ថ្ងៃ​មេរៀន​នេះ?', 'Change this lesson\'s day?'),
+    body:  tr('មេរៀន​នឹង​ត្រូវ​ឆូត​បន្ទាត់ និង​ប្រែ​ជា​ពណ៌​ប្រផេះ​ក្នុង​កាលវិភាគ តែ​ទិន្នន័យ​នៅ​ដដែល (អាច​ស្ដារ​មក​វិញ)។',
+              'The lesson will be struck through and greyed in the schedule, but the data is kept (reversible).'),
+    confirmText: tr('ប្ដូរ​ថ្ងៃ', 'Change day'),
     onConfirm: () => {
       lesson.status = 'cancelled';
       setVer(n => n+1);
       if (window.__notifyLessonsChanged) window.__notifyLessonsChanged();
       if (window.saveAllData) window.saveAllData();
-      toast(tr('បាន​លុប​ចោល​មេរៀន', 'Lesson cancelled'), 'warn');
+      toast(tr('បាន​ប្ដូរ​ថ្ងៃ — រក្សា​ទិន្នន័យ', 'Day changed — data kept'), 'warn');
+      onClose();
+    },
+  });
+
+  // Permanently delete — removes the lesson and its data from the schedule.
+  const deleteLesson = () => confirm?.({
+    title: tr('លុប​មេរៀន​ចេញ?', 'Delete this lesson?'),
+    body:  tr('ទិន្នន័យ​មេរៀន​នេះ​នឹង​ត្រូវ​លុប​ចេញ​ទាំងស្រុង — មិន​អាច​យក​មក​វិញ​បាន​ទេ។',
+              'This lesson and its data will be permanently removed — this cannot be undone.'),
+    confirmText: tr('លុប', 'Delete'), danger: true,
+    onConfirm: () => {
+      const i = (typeof LESSONS !== 'undefined' ? LESSONS : []).findIndex(l => l.id === lesson.id);
+      if (i !== -1) LESSONS.splice(i, 1);
+      if (window.__logActivity) window.__logActivity('delete', 'lesson', (lesson.date||'') + ' ' + String(lesson.h).padStart(2,'0') + ':00');
+      if (window.__notifyLessonsChanged) window.__notifyLessonsChanged();
+      if (window.saveAllData) window.saveAllData();
+      toast(tr('បាន​លុប​មេរៀន​ចេញ', 'Lesson deleted'), 'neutral');
       onClose();
     },
   });
@@ -528,7 +547,7 @@ const LessonDetail = ({ lesson, onClose }) => {
       )}
 
       {/* Actions */}
-      <div style={{display:'flex',gap:8,marginTop:'auto'}}>
+      <div style={{display:'flex',flexWrap:'wrap',gap:8,marginTop:'auto'}}>
         {isStudent ? (
           <>
             <Btn kind="ghost" size="md" onClick={onClose} style={{flex:1,justifyContent:'center'}}>{tr('ត្រឡប់','Close')}</Btn>
@@ -541,15 +560,17 @@ const LessonDetail = ({ lesson, onClose }) => {
           </>
         ) : isCancelled ? (
           <>
-            <Btn kind="ghost" size="md" onClick={onClose} style={{flex:1,justifyContent:'center'}}>{tr('បិទ','Close')}</Btn>
-            <Btn kind="ghost" size="md" onClick={()=>{ openForm('editLesson', { lesson }); onClose && onClose(); }} style={{flex:1,justifyContent:'center'}}>✎ {tr('កែ','Edit')}</Btn>
-            <Btn kind="ghost" size="md" onClick={restoreLesson} style={{flex:1,justifyContent:'center',color:'var(--good)',borderColor:'var(--good)'}}>↺ {tr('ស្ដារ​ឡើង​វិញ','Restore')}</Btn>
+            <Btn kind="ghost" size="md" onClick={restoreLesson} style={{flex:'1 1 calc(50% - 4px)',justifyContent:'center',color:'var(--good)',borderColor:'var(--good)'}}>↺ {tr('ស្ដារ​ឡើង​វិញ','Restore')}</Btn>
+            <Btn kind="ghost" size="md" onClick={deleteLesson} style={{flex:'1 1 calc(50% - 4px)',justifyContent:'center',color:'var(--danger)',borderColor:'var(--danger)'}}>🗑 {tr('លុប','Delete')}</Btn>
+            <Btn kind="ghost" size="md" onClick={()=>{ openForm('editLesson', { lesson }); onClose && onClose(); }} style={{flex:'1 1 calc(50% - 4px)',justifyContent:'center'}}>✎ {tr('កែ','Edit')}</Btn>
+            <Btn kind="ghost" size="md" onClick={onClose} style={{flex:'1 1 calc(50% - 4px)',justifyContent:'center'}}>{tr('បិទ','Close')}</Btn>
           </>
         ) : (
           <>
-            <Btn kind="ghost" size="md" onClick={cancelLesson} style={{flex:1,justifyContent:'center',color:'var(--danger)',borderColor:'var(--danger)'}}>✕ {tr('លុប/ប្ដូរ​ថ្ងៃ','Cancel')}</Btn>
-            <Btn kind="ghost" size="md" onClick={()=>{ openForm('editLesson', { lesson }); onClose && onClose(); }} style={{flex:1,justifyContent:'center'}}>✎ {tr('កែ','Edit')}</Btn>
-            <Btn kind="primary" size="md" onClick={markDone} icon={<Icon name="check" size={14}/>} style={{flex:1,justifyContent:'center'}}>{tr('ចប់​មេរៀន ✓','Mark done ✓')}</Btn>
+            <Btn kind="ghost" size="md" onClick={changeDayLesson} icon={<Icon name="cal" size={14}/>} style={{flex:'1 1 calc(50% - 4px)',justifyContent:'center',color:'var(--warn)',borderColor:'var(--warn)'}}>{tr('ប្ដូរ​ថ្ងៃ','Change day')}</Btn>
+            <Btn kind="ghost" size="md" onClick={deleteLesson} style={{flex:'1 1 calc(50% - 4px)',justifyContent:'center',color:'var(--danger)',borderColor:'var(--danger)'}}>🗑 {tr('លុប','Delete')}</Btn>
+            <Btn kind="ghost" size="md" onClick={()=>{ openForm('editLesson', { lesson }); onClose && onClose(); }} style={{flex:'1 1 calc(50% - 4px)',justifyContent:'center'}}>✎ {tr('កែ','Edit')}</Btn>
+            <Btn kind="primary" size="md" onClick={markDone} icon={<Icon name="check" size={14}/>} style={{flex:'1 1 calc(50% - 4px)',justifyContent:'center'}}>{tr('ចប់​មេរៀន ✓','Mark done ✓')}</Btn>
           </>
         )}
       </div>
