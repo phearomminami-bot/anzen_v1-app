@@ -246,30 +246,68 @@ const SectionEditBtn = ({ active, label, onClick }) => (
 // typing keeps focus across re-renders.
 const _stFld = { width:'100%', padding:'8px 10px', border:'1px solid var(--border)', borderRadius:8, fontSize:13, fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)', boxSizing:'border-box' };
 const _stLbl = { fontSize:11, color:'var(--ink-3)', fontWeight:600, margin:'10px 0 4px' };
+// Assemble all exam attempts (first exam + resits) into one list for display.
+const examAttemptsOf = (s) => [
+  { apply: s.exam_apply || '', date: s.exam_date || '', result: s.exam_result || '', failLocation: s.fail_location || '', failReason: s.fail_reason || '' },
+  ...((s.exam_resits || []).map(r => ({ apply: r.apply || '', date: r.date || '', result: r.result || '', failLocation: r.failLocation || '', failReason: r.failReason || '' }))),
+].filter(a => a.apply || a.date || a.result || a.failLocation || a.failReason);
+
 const StudyEditForm = ({ s, tr, onSave }) => {
   const [start, setStart]   = React.useState(s.study_start || '');
   const [end, setEnd]       = React.useState(s.study_end || '');
-  const [apply, setApply]   = React.useState(s.exam_apply || '');
-  const [examDate, setExam] = React.useState(s.exam_date || '');
-  const [result, setResult] = React.useState(s.exam_result || '');
   const [target, setTarget] = React.useState(s.target || 0);
-  const save = () => onSave({ id: s.id, study_start: start, study_end: end, exam_apply: apply, exam_date: examDate, exam_result: result, target: Number(target) || 0 });
+  // Unified exam attempts: [0] = first exam (legacy fields), [1..] = resits.
+  const [attempts, setAttempts] = React.useState(() => {
+    const first = { apply: s.exam_apply||'', date: s.exam_date||'', result: s.exam_result||'', failLocation: s.fail_location||'', failReason: s.fail_reason||'' };
+    const rest = (s.exam_resits||[]).map(r => ({ apply: r.apply||'', date: r.date||'', result: r.result||'', failLocation: r.failLocation||'', failReason: r.failReason||'' }));
+    return [first, ...rest];
+  });
+  const setAtt = (i, patch) => setAttempts(prev => prev.map((a,j)=>j===i?{...a,...patch}:a));
+  const addAttempt = () => setAttempts(prev => [...prev, {apply:'',date:'',result:'',failLocation:'',failReason:''}]);
+  const removeAttempt = (i) => setAttempts(prev => prev.filter((_,j)=>j!==i));
+  const save = () => {
+    const a0 = attempts[0] || {};
+    onSave({ id: s.id, study_start: start, study_end: end, target: Number(target) || 0,
+      exam_apply: a0.apply||'', exam_date: a0.date||'', exam_result: a0.result||'',
+      fail_location: a0.failLocation||'', fail_reason: a0.failReason||'',
+      exam_resits: attempts.slice(1).map(a => ({ apply:a.apply||'', date:a.date||'', result:a.result||'', failLocation:a.failLocation||'', failReason:a.failReason||'' })) });
+  };
   return (
     <div style={{paddingTop:4}}>
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 12px'}}>
         <div><div style={_stLbl}>{tr('ចាប់ផ្ដើម','Start')}</div><input type="date" value={start} onChange={e=>setStart(e.target.value)} style={_stFld}/></div>
         <div><div style={_stLbl}>{tr('បញ្ចប់','Completion')}</div><input type="date" value={end} onChange={e=>setEnd(e.target.value)} style={_stFld}/></div>
-        <div><div style={_stLbl}>{tr('ស្នើរប្រឡង','Exam apply')}</div><input type="date" value={apply} onChange={e=>setApply(e.target.value)} style={_stFld}/></div>
-        <div><div style={_stLbl}>{tr('ថ្ងៃប្រឡង','Exam date')}</div><input type="date" value={examDate} onChange={e=>setExam(e.target.value)} style={_stFld}/></div>
-        <div><div style={_stLbl}>{tr('លទ្ធផល','Result')}</div>
-          <select value={result} onChange={e=>setResult(e.target.value)} style={_stFld}>
-            <option value="">—</option>
-            <option value="pass">{tr('ជាប់','Pass')}</option>
-            <option value="fail">{tr('ធ្លាក់','Fail')}</option>
-          </select>
-        </div>
-        <div><div style={_stLbl}>{tr('ម៉ោង​គោលដៅ','Target hours')}</div><input type="number" value={target} onChange={e=>setTarget(e.target.value)} style={_stFld}/></div>
+        <div style={{gridColumn:'1/-1'}}><div style={_stLbl}>{tr('ម៉ោង​គោលដៅ','Target hours')}</div><input type="number" value={target} onChange={e=>setTarget(e.target.value)} style={_stFld}/></div>
       </div>
+
+      <div style={{marginTop:14,fontSize:12,fontWeight:700,color:'var(--ink-2)'}}>{tr('ការ​ប្រឡង','Exams')}</div>
+      {attempts.map((a, i) => (
+        <div key={i} style={{marginTop:8,padding:'10px 12px',border:'1px solid var(--border)',borderRadius:9,background:'var(--surface-muted)'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <div style={{fontSize:12,fontWeight:600,color:'var(--accent)'}}>
+              {i===0 ? tr('ប្រឡង​លើក​ដំបូង','First exam') : tr('ប្រឡង​សង លើកទី '+i, 'Resit #'+i)}
+            </div>
+            {i>0 && <button onClick={()=>removeAttempt(i)} style={{border:'none',background:'none',color:'var(--danger)',cursor:'pointer',fontSize:16,lineHeight:1,padding:0}}>×</button>}
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 12px'}}>
+            <div><div style={_stLbl}>{tr('ថ្ងៃ​ដាក់​ពាក្យ','Apply date')}</div><input type="date" value={a.apply} onChange={e=>setAtt(i,{apply:e.target.value})} style={_stFld}/></div>
+            <div><div style={_stLbl}>{tr('ថ្ងៃ​ប្រឡង','Exam date')}</div><input type="date" value={a.date} onChange={e=>setAtt(i,{date:e.target.value})} style={_stFld}/></div>
+            <div style={{gridColumn:'1/-1'}}><div style={_stLbl}>{tr('លទ្ធផល','Result')}</div>
+              <select value={a.result} onChange={e=>setAtt(i,{result:e.target.value})} style={_stFld}>
+                <option value="">—</option>
+                <option value="pass">{tr('ជាប់','Pass')}</option>
+                <option value="fail">{tr('ធ្លាក់','Fail')}</option>
+              </select>
+            </div>
+            {a.result==='fail' && (<>
+              <div style={{gridColumn:'1/-1'}}><div style={_stLbl}>{tr('កន្លែង​ធ្លាក់','Failed at')}</div><input type="text" value={a.failLocation} onChange={e=>setAtt(i,{failLocation:e.target.value})} placeholder={tr('ឧ. ប្រឡង​ផ្លូវ','e.g. road test')} style={_stFld}/></div>
+              <div style={{gridColumn:'1/-1'}}><div style={_stLbl}>{tr('មូលហេតុ​ធ្លាក់','Fail reason')}</div><input type="text" value={a.failReason} onChange={e=>setAtt(i,{failReason:e.target.value})} placeholder={tr('ឧ. ចត​មិន​ត្រូវ','e.g. parking error')} style={_stFld}/></div>
+            </>)}
+          </div>
+        </div>
+      ))}
+      <button onClick={addAttempt} style={{width:'100%',marginTop:8,padding:'9px',borderRadius:8,border:'1.5px dashed var(--border-strong)',background:'transparent',color:'var(--ink-2)',cursor:'pointer',fontSize:12,fontWeight:600,fontFamily:'inherit'}}>+ {tr('បន្ថែម​ការ​ប្រឡង​សង','Add resit')}</button>
+
       <button onClick={save} style={{width:'100%',marginTop:14,padding:'10px',borderRadius:8,border:'none',background:'var(--accent)',color:'#fff',cursor:'pointer',fontSize:13,fontWeight:600,fontFamily:'inherit'}}>{tr('រក្សា​ទុក','Save')}</button>
     </div>
   );
@@ -344,6 +382,8 @@ const extendStudent = (s) => {
     exam_apply:   s.exam_apply   || '',
     exam_date:    s.exam_date    || '',
     exam_result:  s.exam_result  || '',
+    fail_location: s.fail_location || '',
+    fail_reason:   s.fail_reason   || '',
     exam_resits:  s.exam_resits  || [],
     theory_done:      Array.isArray(s.theory_done)      ? s.theory_done      : Array(3).fill(false),
     practice_done:    Array.isArray(s.practice_done)    ? s.practice_done    : Array(pracCount).fill(false),
@@ -527,7 +567,12 @@ const StudentsScreenV2 = () => {
       if (!s) { setMobileProfileId(null); return null; }
 
       const inst = instById(s.instId);
-      const pct = s.target > 0 ? Math.min(100, Math.round((s.hours / s.target) * 100)) : 0;
+      // Hours learned = sum of lengths of this student's lessons marked done in
+      // the feedback list (so completed lessons reflect here), never below the
+      // stored s.hours.
+      const doneHours = LESSONS.filter(l => l.studentId === s.id && l.status === 'done').reduce((a,l)=>a+(l.len||1),0);
+      const learnedHours = Math.max(s.hours || 0, doneHours);
+      const pct = s.target > 0 ? Math.min(100, Math.round((learnedHours / s.target) * 100)) : 0;
       const price = studentPrice(s);
       const paidAmt = Math.round((s.paid || 0) * price);
       // Show ALL of this student's lessons (newest first). Previously capped at
@@ -640,18 +685,34 @@ const StudentsScreenV2 = () => {
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px 14px',marginBottom:12}}>
               <InfoPair label={tr('ចាប់ផ្ដើម','Start')} val={s.study_start || s.regDate}/>
               <InfoPair label={tr('បញ្ចប់','Completion')} val={s.study_end}/>
-              <InfoPair label={tr('ស្នើរប្រឡង','Exam apply')} val={s.exam_apply}/>
-              <InfoPair label={tr('ថ្ងៃប្រឡង','Exam date')} val={s.exam_date}/>
-              <InfoPair label={tr('លទ្ធផល','Result')} val={s.exam_result}/>
-              <InfoPair label={tr('ម៉ោង','Hours')} val={`${s.hours||0}/${s.target||0}h`}/>
+              <InfoPair label={tr('ម៉ោង','Hours')} val={`${learnedHours}/${s.target||0}h`}/>
             </div>
             <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:4,display:'flex',justifyContent:'space-between'}}>
               <span>{tr('ម៉ោងបានរៀន','Hours completed')}</span>
               <span style={{fontWeight:600}}>{pct}%</span>
             </div>
-            <div style={{height:6,background:'var(--surface-muted)',borderRadius:999,overflow:'hidden'}}>
+            <div style={{height:6,background:'var(--surface-muted)',borderRadius:999,overflow:'hidden',marginBottom:12}}>
               <div style={{width:`${pct}%`,height:'100%',background:'var(--accent)',borderRadius:999}}/>
             </div>
+            {/* Exam history — first exam + resits, each with result and fail details */}
+            {(() => {
+              const attempts = examAttemptsOf(s);
+              if (attempts.length === 0) return <div style={{fontSize:12,color:'var(--ink-3)'}}>{tr('មិន​ទាន់​មាន​ការ​ប្រឡង','No exams yet')}</div>;
+              return attempts.map((a,i) => (
+                <div key={i} style={{padding:'8px 0',borderTop:i?'1px dashed var(--border)':'1px solid var(--border)'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+                    <span style={{fontSize:12,fontWeight:600,color:'var(--ink-2)'}}>{i===0?tr('ប្រឡង​លើក​ដំបូង','First exam'):tr('ប្រឡង​សង លើកទី '+i,'Resit #'+i)}</span>
+                    {a.result && <Badge tone={a.result==='pass'?'good':'danger'}>{a.result==='pass'?tr('ជាប់','Pass'):tr('ធ្លាក់','Fail')}</Badge>}
+                  </div>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'4px 14px'}}>
+                    {a.apply && <InfoPair label={tr('ដាក់​ពាក្យ','Apply')} val={a.apply}/>}
+                    {a.date && <InfoPair label={tr('ថ្ងៃ​ប្រឡង','Exam date')} val={a.date}/>}
+                    {a.result==='fail' && a.failLocation && <InfoPair label={tr('កន្លែង​ធ្លាក់','Failed at')} val={a.failLocation}/>}
+                    {a.result==='fail' && a.failReason && <InfoPair label={tr('មូលហេតុ','Reason')} val={a.failReason}/>}
+                  </div>
+                </div>
+              ));
+            })()}
             </>)}
           </CvSection>
 

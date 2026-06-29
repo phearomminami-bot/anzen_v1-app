@@ -805,7 +805,7 @@ window.__trRegistry = {
   "Maternity": "ច្បាប់​សម្រាល",
   "From": "ពី",
   "To": "ដល់",
-  "Reason": "មូល​ហេតុ",
+  "Reason": "មូលហេតុ",
   "Vehicle removed": "បានលុបយានយន្ត",
   "Hidden from Vehicle tab": "លាក់​ចេញ​ពី Tab Vehicle",
   "Shown in Vehicle tab": "បង្ហាញ​នៅ Tab Vehicle",
@@ -929,11 +929,18 @@ window.__trRegistry = {
   "💬 Instructor comment...": "💬 មតិ​គ្រូ​លើ​មេរៀន​នេះ...",
   "Save feedback": "រក្សា​ទុក​មតិ",
   "Completion": "បញ្ចប់",
-  "Exam apply": "ស្នើរ​ប្រឡង",
+  "Target hours": "ម៉ោងគោល",
+  "Exams": "ការ​ប្រឡង",
+  "First exam": "ប្រឡង​លើក​ដំបូង",
+  "Apply date": "ដាក់​ពាក្យ",
   "Result": "លទ្ធផល",
   "Pass": "ជាប់",
   "Fail": "ធ្លាក់",
-  "Target hours": "ម៉ោងគោល",
+  "Failed at": "កន្លែង​ធ្លាក់",
+  "e.g. road test": "ឧ. ប្រឡង​ផ្លូវ",
+  "Fail reason": "មូលហេតុ​ធ្លាក់",
+  "e.g. parking error": "ឧ. ចត​មិន​ត្រូវ",
+  "Add resit": "បន្ថែម​ការ​ប្រឡង​សង",
   "Reg. date": "ថ្ងៃចុះឈ្មោះ",
   "Paid in full": "បាន​បង់​ប្រាក់​ពេញ",
   "Payment recorded": "បានចងចាំការបង់",
@@ -957,6 +964,8 @@ window.__trRegistry = {
   "Payment log": "ប្រវត្តិ​បង់",
   "Study History": "ប្រវត្តសិក្សា",
   "Hours": "ម៉ោង",
+  "No exams yet": "មិន​ទាន់​មាន​ការ​ប្រឡង",
+  "Apply": "ដាក់​ពាក្យ",
   "Tap to toggle status": "ចុច​ដើម្បី​ប្ដូរ​ស្ថានភាព",
   "Missing": "មិន​ទាន់",
   "Lessons & Comments": "បញ្ជីមេរៀន និង មតិគ្រូ",
@@ -997,6 +1006,7 @@ window.__trRegistry = {
   "— Not assigned": "— មិន​ទាន់​",
   "Study start": "ចាប់​ផ្ដើម",
   "Study end": "បញ្ចប់",
+  "Exam apply": "ស្នើរ​ប្រឡង",
   "Exam result": "លទ្ធផល​ប្រឡង",
   "Learner permit": "អនុញ្ញាត​សិក្សា",
   "ID card": "អត្តសញ្ញាណប័ណ្ណ",
@@ -1007,7 +1017,6 @@ window.__trRegistry = {
   "Auto": "លេខ​អូតូ",
   "Tuition": "ថ្លៃបង្រៀន",
   "EXAM": "ការ​ប្រឡង",
-  "Apply date": "ដាក់​ពាក្យ",
   "Enrollment pipeline": "ដំណើរការ​ចូលរៀន",
   "Extra": "ថែម",
   "Theory JP": "ទ្រឹស្ដី JP",
@@ -1492,11 +1501,18 @@ window.__trGroups = {
     "💬 Instructor comment...": "💬 មតិ​គ្រូ​លើ​មេរៀន​នេះ...",
     "Save feedback": "រក្សា​ទុក​មតិ",
     "Completion": "បញ្ចប់",
-    "Exam apply": "ស្នើរប្រឡង",
+    "Target hours": "ម៉ោង​គោលដៅ",
+    "Exams": "ការ​ប្រឡង",
+    "First exam": "ប្រឡង​លើក​ដំបូង",
+    "Apply date": "ប្រឡង​សង លើកទី '+i, 'Resit #'+i)}\n            </div>\n            {i>0 && <button onClick={()=>removeAttempt(i)} style={{border:'none',background:'none',color:'var(--danger)',cursor:'pointer',fontSize:16,lineHeight:1,padding:0}}>×</button>}\n          </div>\n          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 12px'}}>\n            <div><div style={_stLbl}>{tr('ថ្ងៃ​ដាក់​ពាក្យ",
     "Result": "លទ្ធផល",
     "Pass": "ជាប់",
     "Fail": "ធ្លាក់",
-    "Target hours": "ម៉ោង​គោលដៅ",
+    "Failed at": "កន្លែង​ធ្លាក់",
+    "e.g. road test": "ឧ. ប្រឡង​ផ្លូវ",
+    "Fail reason": "មូលហេតុ​ធ្លាក់",
+    "e.g. parking error": "ឧ. ចត​មិន​ត្រូវ",
+    "Add resit": "បន្ថែម​ការ​ប្រឡង​សង",
     "Reg. date": "ថ្ងៃ​ចុះ​ឈ្មោះ",
     "Paid in full": "បាន​បង់​ប្រាក់​ពេញ",
     "Payment recorded": "បានចងចាំការបង់",
@@ -1520,6 +1536,8 @@ window.__trGroups = {
     "Payment log": "ប្រវត្តិ​បង់",
     "Study History": "ប្រវត្តសិក្សា",
     "Hours": "ម៉ោង",
+    "No exams yet": "មិន​ទាន់​មាន​ការ​ប្រឡង",
+    "Apply": "ដាក់​ពាក្យ",
     "Tap to toggle status": "ចុច​ដើម្បី​ប្ដូរ​ស្ថានភាព",
     "Missing": "មិន​ទាន់",
     "Lessons & Comments": "បញ្ជីមេរៀន និង មតិគ្រូ",
@@ -1560,6 +1578,7 @@ window.__trGroups = {
     "— Not assigned": "— មិន​ទាន់​",
     "Study start": "ចាប់ផ្ដើមសិក្សា",
     "Study end": "បញ្ចប់សិក្សា",
+    "Exam apply": "ស្នើរ​ប្រឡង",
     "Exam result": "លទ្ធផល​ប្រឡង",
     "Learner permit": "អនុញ្ញាត​សិក្សា",
     "ID card": "អត្តសញ្ញាណប័ណ្ណ",
@@ -1570,7 +1589,6 @@ window.__trGroups = {
     "Auto": "លេខ​អូតូ",
     "Tuition": "ថ្លៃ​សិក្សា",
     "EXAM": "ការ​ប្រឡង",
-    "Apply date": "ដាក់​ពាក្យ",
     "Enrollment pipeline": "ដំណើរការ​ចូលរៀន",
     "Extra": "ថែម",
     "Theory JP": "ទ្រឹស្ដី JP",
@@ -37852,6 +37870,19 @@ var _stLbl = {
   fontWeight: 600,
   margin: '10px 0 4px'
 };
+var examAttemptsOf = s => [{
+  apply: s.exam_apply || '',
+  date: s.exam_date || '',
+  result: s.exam_result || '',
+  failLocation: s.fail_location || '',
+  failReason: s.fail_reason || ''
+}, ...(s.exam_resits || []).map(r => ({
+  apply: r.apply || '',
+  date: r.date || '',
+  result: r.result || '',
+  failLocation: r.failLocation || '',
+  failReason: r.failReason || ''
+}))].filter(a => a.apply || a.date || a.result || a.failLocation || a.failReason);
 var StudyEditForm = ({
   s,
   tr,
@@ -37859,19 +37890,57 @@ var StudyEditForm = ({
 }) => {
   var [start, setStart] = React.useState(s.study_start || '');
   var [end, setEnd] = React.useState(s.study_end || '');
-  var [apply, setApply] = React.useState(s.exam_apply || '');
-  var [examDate, setExam] = React.useState(s.exam_date || '');
-  var [result, setResult] = React.useState(s.exam_result || '');
   var [target, setTarget] = React.useState(s.target || 0);
-  var save = () => onSave({
-    id: s.id,
-    study_start: start,
-    study_end: end,
-    exam_apply: apply,
-    exam_date: examDate,
-    exam_result: result,
-    target: Number(target) || 0
+  var [attempts, setAttempts] = React.useState(() => {
+    var first = {
+      apply: s.exam_apply || '',
+      date: s.exam_date || '',
+      result: s.exam_result || '',
+      failLocation: s.fail_location || '',
+      failReason: s.fail_reason || ''
+    };
+    var rest = (s.exam_resits || []).map(r => ({
+      apply: r.apply || '',
+      date: r.date || '',
+      result: r.result || '',
+      failLocation: r.failLocation || '',
+      failReason: r.failReason || ''
+    }));
+    return [first, ...rest];
   });
+  var setAtt = (i, patch) => setAttempts(prev => prev.map((a, j) => j === i ? {
+    ...a,
+    ...patch
+  } : a));
+  var addAttempt = () => setAttempts(prev => [...prev, {
+    apply: '',
+    date: '',
+    result: '',
+    failLocation: '',
+    failReason: ''
+  }]);
+  var removeAttempt = i => setAttempts(prev => prev.filter((_, j) => j !== i));
+  var save = () => {
+    var a0 = attempts[0] || {};
+    onSave({
+      id: s.id,
+      study_start: start,
+      study_end: end,
+      target: Number(target) || 0,
+      exam_apply: a0.apply || '',
+      exam_date: a0.date || '',
+      exam_result: a0.result || '',
+      fail_location: a0.failLocation || '',
+      fail_reason: a0.failReason || '',
+      exam_resits: attempts.slice(1).map(a => ({
+        apply: a.apply || '',
+        date: a.date || '',
+        result: a.result || '',
+        failLocation: a.failLocation || '',
+        failReason: a.failReason || ''
+      }))
+    });
+  };
   return React.createElement("div", {
     style: {
       paddingTop: 4
@@ -37896,25 +37965,91 @@ var StudyEditForm = ({
     value: end,
     onChange: e => setEnd(e.target.value),
     style: _stFld
-  })), React.createElement("div", null, React.createElement("div", {
+  })), React.createElement("div", {
+    style: {
+      gridColumn: '1/-1'
+    }
+  }, React.createElement("div", {
     style: _stLbl
-  }, tr('ស្នើរប្រឡង', 'Exam apply')), React.createElement("input", {
+  }, tr('ម៉ោង​គោលដៅ', 'Target hours')), React.createElement("input", {
+    type: "number",
+    value: target,
+    onChange: e => setTarget(e.target.value),
+    style: _stFld
+  }))), React.createElement("div", {
+    style: {
+      marginTop: 14,
+      fontSize: 12,
+      fontWeight: 700,
+      color: 'var(--ink-2)'
+    }
+  }, tr('ការ​ប្រឡង', 'Exams')), attempts.map((a, i) => React.createElement("div", {
+    key: i,
+    style: {
+      marginTop: 8,
+      padding: '10px 12px',
+      border: '1px solid var(--border)',
+      borderRadius: 9,
+      background: 'var(--surface-muted)'
+    }
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center'
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 12,
+      fontWeight: 600,
+      color: 'var(--accent)'
+    }
+  }, i === 0 ? tr('ប្រឡង​លើក​ដំបូង', 'First exam') : tr('ប្រឡង​សង លើកទី ' + i, 'Resit #' + i)), i > 0 && React.createElement("button", {
+    onClick: () => removeAttempt(i),
+    style: {
+      border: 'none',
+      background: 'none',
+      color: 'var(--danger)',
+      cursor: 'pointer',
+      fontSize: 16,
+      lineHeight: 1,
+      padding: 0
+    }
+  }, "\xD7")), React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: '0 12px'
+    }
+  }, React.createElement("div", null, React.createElement("div", {
+    style: _stLbl
+  }, tr('ថ្ងៃ​ដាក់​ពាក្យ', 'Apply date')), React.createElement("input", {
     type: "date",
-    value: apply,
-    onChange: e => setApply(e.target.value),
+    value: a.apply,
+    onChange: e => setAtt(i, {
+      apply: e.target.value
+    }),
     style: _stFld
   })), React.createElement("div", null, React.createElement("div", {
     style: _stLbl
-  }, tr('ថ្ងៃប្រឡង', 'Exam date')), React.createElement("input", {
+  }, tr('ថ្ងៃ​ប្រឡង', 'Exam date')), React.createElement("input", {
     type: "date",
-    value: examDate,
-    onChange: e => setExam(e.target.value),
+    value: a.date,
+    onChange: e => setAtt(i, {
+      date: e.target.value
+    }),
     style: _stFld
-  })), React.createElement("div", null, React.createElement("div", {
+  })), React.createElement("div", {
+    style: {
+      gridColumn: '1/-1'
+    }
+  }, React.createElement("div", {
     style: _stLbl
   }, tr('លទ្ធផល', 'Result')), React.createElement("select", {
-    value: result,
-    onChange: e => setResult(e.target.value),
+    value: a.result,
+    onChange: e => setAtt(i, {
+      result: e.target.value
+    }),
     style: _stFld
   }, React.createElement("option", {
     value: ""
@@ -37922,14 +38057,50 @@ var StudyEditForm = ({
     value: "pass"
   }, tr('ជាប់', 'Pass')), React.createElement("option", {
     value: "fail"
-  }, tr('ធ្លាក់', 'Fail')))), React.createElement("div", null, React.createElement("div", {
+  }, tr('ធ្លាក់', 'Fail')))), a.result === 'fail' && React.createElement(React.Fragment, null, React.createElement("div", {
+    style: {
+      gridColumn: '1/-1'
+    }
+  }, React.createElement("div", {
     style: _stLbl
-  }, tr('ម៉ោង​គោលដៅ', 'Target hours')), React.createElement("input", {
-    type: "number",
-    value: target,
-    onChange: e => setTarget(e.target.value),
+  }, tr('កន្លែង​ធ្លាក់', 'Failed at')), React.createElement("input", {
+    type: "text",
+    value: a.failLocation,
+    onChange: e => setAtt(i, {
+      failLocation: e.target.value
+    }),
+    placeholder: tr('ឧ. ប្រឡង​ផ្លូវ', 'e.g. road test'),
     style: _stFld
-  }))), React.createElement("button", {
+  })), React.createElement("div", {
+    style: {
+      gridColumn: '1/-1'
+    }
+  }, React.createElement("div", {
+    style: _stLbl
+  }, tr('មូលហេតុ​ធ្លាក់', 'Fail reason')), React.createElement("input", {
+    type: "text",
+    value: a.failReason,
+    onChange: e => setAtt(i, {
+      failReason: e.target.value
+    }),
+    placeholder: tr('ឧ. ចត​មិន​ត្រូវ', 'e.g. parking error'),
+    style: _stFld
+  })))))), React.createElement("button", {
+    onClick: addAttempt,
+    style: {
+      width: '100%',
+      marginTop: 8,
+      padding: '9px',
+      borderRadius: 8,
+      border: '1.5px dashed var(--border-strong)',
+      background: 'transparent',
+      color: 'var(--ink-2)',
+      cursor: 'pointer',
+      fontSize: 12,
+      fontWeight: 600,
+      fontFamily: 'inherit'
+    }
+  }, "+ ", tr('បន្ថែម​ការ​ប្រឡង​សង', 'Add resit')), React.createElement("button", {
     onClick: save,
     style: {
       width: '100%',
@@ -38068,6 +38239,8 @@ var extendStudent = s => {
     exam_apply: s.exam_apply || '',
     exam_date: s.exam_date || '',
     exam_result: s.exam_result || '',
+    fail_location: s.fail_location || '',
+    fail_reason: s.fail_reason || '',
     exam_resits: s.exam_resits || [],
     theory_done: Array.isArray(s.theory_done) ? s.theory_done : Array(3).fill(false),
     practice_done: Array.isArray(s.practice_done) ? s.practice_done : Array(pracCount).fill(false),
@@ -38277,7 +38450,9 @@ var StudentsScreenV2 = () => {
         return null;
       }
       var inst = instById(s.instId);
-      var pct = s.target > 0 ? Math.min(100, Math.round(s.hours / s.target * 100)) : 0;
+      var doneHours = LESSONS.filter(l => l.studentId === s.id && l.status === 'done').reduce((a, l) => a + (l.len || 1), 0);
+      var learnedHours = Math.max(s.hours || 0, doneHours);
+      var pct = s.target > 0 ? Math.min(100, Math.round(learnedHours / s.target * 100)) : 0;
       var price = studentPrice(s);
       var paidAmt = Math.round((s.paid || 0) * price);
       var studentLessons = LESSONS.filter(l => l.studentId === s.id).slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
@@ -38551,17 +38726,8 @@ var StudentsScreenV2 = () => {
         label: tr('បញ្ចប់', 'Completion'),
         val: s.study_end
       }), React.createElement(InfoPair, {
-        label: tr('ស្នើរប្រឡង', 'Exam apply'),
-        val: s.exam_apply
-      }), React.createElement(InfoPair, {
-        label: tr('ថ្ងៃប្រឡង', 'Exam date'),
-        val: s.exam_date
-      }), React.createElement(InfoPair, {
-        label: tr('លទ្ធផល', 'Result'),
-        val: s.exam_result
-      }), React.createElement(InfoPair, {
         label: tr('ម៉ោង', 'Hours'),
-        val: `${s.hours || 0}/${s.target || 0}h`
+        val: `${learnedHours}/${s.target || 0}h`
       })), React.createElement("div", {
         style: {
           fontSize: 11,
@@ -38579,7 +38745,8 @@ var StudentsScreenV2 = () => {
           height: 6,
           background: 'var(--surface-muted)',
           borderRadius: 999,
-          overflow: 'hidden'
+          overflow: 'hidden',
+          marginBottom: 12
         }
       }, React.createElement("div", {
         style: {
@@ -38588,7 +38755,55 @@ var StudentsScreenV2 = () => {
           background: 'var(--accent)',
           borderRadius: 999
         }
-      })))), React.createElement(CvSection, {
+      })), (() => {
+        var attempts = examAttemptsOf(s);
+        if (attempts.length === 0) return React.createElement("div", {
+          style: {
+            fontSize: 12,
+            color: 'var(--ink-3)'
+          }
+        }, tr('មិន​ទាន់​មាន​ការ​ប្រឡង', 'No exams yet'));
+        return attempts.map((a, i) => React.createElement("div", {
+          key: i,
+          style: {
+            padding: '8px 0',
+            borderTop: i ? '1px dashed var(--border)' : '1px solid var(--border)'
+          }
+        }, React.createElement("div", {
+          style: {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 4
+          }
+        }, React.createElement("span", {
+          style: {
+            fontSize: 12,
+            fontWeight: 600,
+            color: 'var(--ink-2)'
+          }
+        }, i === 0 ? tr('ប្រឡង​លើក​ដំបូង', 'First exam') : tr('ប្រឡង​សង លើកទី ' + i, 'Resit #' + i)), a.result && React.createElement(Badge, {
+          tone: a.result === 'pass' ? 'good' : 'danger'
+        }, a.result === 'pass' ? tr('ជាប់', 'Pass') : tr('ធ្លាក់', 'Fail'))), React.createElement("div", {
+          style: {
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '4px 14px'
+          }
+        }, a.apply && React.createElement(InfoPair, {
+          label: tr('ដាក់​ពាក្យ', 'Apply'),
+          val: a.apply
+        }), a.date && React.createElement(InfoPair, {
+          label: tr('ថ្ងៃ​ប្រឡង', 'Exam date'),
+          val: a.date
+        }), a.result === 'fail' && a.failLocation && React.createElement(InfoPair, {
+          label: tr('កន្លែង​ធ្លាក់', 'Failed at'),
+          val: a.failLocation
+        }), a.result === 'fail' && a.failReason && React.createElement(InfoPair, {
+          label: tr('មូលហេតុ', 'Reason'),
+          val: a.failReason
+        }))));
+      })())), React.createElement(CvSection, {
         label: tr('ឯកសារសិស្ស', 'Documents'),
         isOpen: openSections.docs,
         onToggle: () => toggleSection('docs')
