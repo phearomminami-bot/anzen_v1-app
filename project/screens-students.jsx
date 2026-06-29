@@ -275,6 +275,32 @@ const StudyEditForm = ({ s, tr, onSave }) => {
   );
 };
 
+// Focused editor for the Enrollment & Payment section: registration date +
+// amount paid, with a "paid in full" checkbox. Edits only these fields.
+const PaymentEditForm = ({ s, tr, onSave }) => {
+  const price = studentPrice(s);
+  const [regDate, setRegDate] = React.useState(s.regDate || '');
+  const [paidAmt, setPaidAmt] = React.useState(String(Math.round((s.paid || 0) * price)));
+  const fullyPaid = (parseFloat(paidAmt) || 0) >= price && price > 0;
+  const save = () => {
+    const amt = Math.max(0, parseFloat(paidAmt) || 0);
+    onSave({ id: s.id, regDate, paid: price > 0 ? Math.min(1, amt / price) : 0 });
+  };
+  return (
+    <div style={{paddingTop:4}}>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 12px'}}>
+        <div><div style={_stLbl}>{tr('ថ្ងៃ​ចុះ​ឈ្មោះ','Reg. date')}</div><input type="date" value={regDate} onChange={e=>setRegDate(e.target.value)} style={_stFld}/></div>
+        <div><div style={_stLbl}>{tr('បាន​បង់','Paid')+` ($) / $${price}`}</div><input type="number" min="0" max={price} value={paidAmt} onChange={e=>setPaidAmt(e.target.value)} style={_stFld}/></div>
+      </div>
+      <label style={{display:'flex',alignItems:'center',gap:8,marginTop:14,cursor:'pointer',fontSize:13,fontWeight:500,color:'var(--ink)'}}>
+        <input type="checkbox" checked={fullyPaid} onChange={e=>setPaidAmt(e.target.checked ? String(price) : '0')} style={{width:18,height:18,cursor:'pointer',accentColor:'var(--good)'}}/>
+        {tr('បាន​បង់​ប្រាក់​ពេញ','Paid in full')}
+      </label>
+      <button onClick={save} style={{width:'100%',marginTop:14,padding:'10px',borderRadius:8,border:'none',background:'var(--accent)',color:'#fff',cursor:'pointer',fontSize:13,fontWeight:600,fontFamily:'inherit'}}>{tr('រក្សា​ទុក','Save')}</button>
+    </div>
+  );
+};
+
 const extendStudent = (s) => {
   const trans = s.trans || 'AT';
   const pracCount = trans === 'MT' ? 13 : 10;
@@ -575,7 +601,9 @@ const StudentsScreenV2 = () => {
 
           {/* Section 2: Enrollment & payment */}
           <CvSection label={tr('ចុះឈ្មោះ និង កាបង់ប្រាក់','Enrollment & Payment')} isOpen={openSections.payment} onToggle={()=>toggleSection('payment')} action={editAction('payment')}>
-            {mobileEdit==='payment' ? editForm : (<>
+            {mobileEdit==='payment'
+              ? <PaymentEditForm s={s} tr={tr} onSave={(u)=>{ saveStudent(u); setMobileEdit(null); }}/>
+              : (<>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px 14px',marginBottom:12}}>
               <InfoPair label={tr('ថ្ងៃចុះឈ្មោះ','Reg. date')} val={s.regDate}/>
               <InfoPair label={tr('ថ្លៃ​វគ្គ','Course fee')} val={`$${price}`}/>

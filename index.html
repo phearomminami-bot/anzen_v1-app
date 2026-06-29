@@ -934,6 +934,8 @@ window.__trRegistry = {
   "Pass": "ជាប់",
   "Fail": "ធ្លាក់",
   "Target hours": "ម៉ោងគោល",
+  "Reg. date": "ថ្ងៃចុះឈ្មោះ",
+  "Paid in full": "បាន​បង់​ប្រាក់​ពេញ",
   "Payment recorded": "បានចងចាំការបង់",
   "Marked as graduated ✓": "បាន​សម្គាល់​ថា​បញ្ចប់​ការសិក្សា ✓",
   "Restored to active": "បាន​យក​មក​សិក្សា​វិញ",
@@ -949,7 +951,6 @@ window.__trRegistry = {
   "Trans.": "ប្រអប់លេខ",
   "License No.": "លេខ​បណ្ណ​បើកបរ",
   "Enrollment & Payment": "ចុះឈ្មោះ និង កាបង់ប្រាក់",
-  "Reg. date": "ថ្ងៃចុះឈ្មោះ",
   "Course fee": "ថ្លៃ​វគ្គ",
   "Balance": "នៅខ្វះ",
   "Payment progress": "ការបង់ប្រាក់",
@@ -1496,6 +1497,8 @@ window.__trGroups = {
     "Pass": "ជាប់",
     "Fail": "ធ្លាក់",
     "Target hours": "ម៉ោង​គោលដៅ",
+    "Reg. date": "ថ្ងៃ​ចុះ​ឈ្មោះ",
+    "Paid in full": "បាន​បង់​ប្រាក់​ពេញ",
     "Payment recorded": "បានចងចាំការបង់",
     "Marked as graduated ✓": "បាន​សម្គាល់​ថា​បញ្ចប់​ការសិក្សា ✓",
     "Restored to active": "បាន​យក​មក​សិក្សា​វិញ",
@@ -1511,7 +1514,6 @@ window.__trGroups = {
     "Trans.": "ប្រអប់លេខ",
     "License No.": "លេខ​បណ្ណ​បើកបរ",
     "Enrollment & Payment": "ចុះឈ្មោះ និង កាបង់ប្រាក់",
-    "Reg. date": "ថ្ងៃចុះឈ្មោះ",
     "Course fee": "ថ្លៃ​វគ្គ",
     "Balance": "នៅខ្វះ",
     "Payment progress": "ការបង់ប្រាក់",
@@ -37944,6 +37946,87 @@ var StudyEditForm = ({
     }
   }, tr('រក្សា​ទុក', 'Save')));
 };
+var PaymentEditForm = ({
+  s,
+  tr,
+  onSave
+}) => {
+  var price = studentPrice(s);
+  var [regDate, setRegDate] = React.useState(s.regDate || '');
+  var [paidAmt, setPaidAmt] = React.useState(String(Math.round((s.paid || 0) * price)));
+  var fullyPaid = (parseFloat(paidAmt) || 0) >= price && price > 0;
+  var save = () => {
+    var amt = Math.max(0, parseFloat(paidAmt) || 0);
+    onSave({
+      id: s.id,
+      regDate,
+      paid: price > 0 ? Math.min(1, amt / price) : 0
+    });
+  };
+  return React.createElement("div", {
+    style: {
+      paddingTop: 4
+    }
+  }, React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: '0 12px'
+    }
+  }, React.createElement("div", null, React.createElement("div", {
+    style: _stLbl
+  }, tr('ថ្ងៃ​ចុះ​ឈ្មោះ', 'Reg. date')), React.createElement("input", {
+    type: "date",
+    value: regDate,
+    onChange: e => setRegDate(e.target.value),
+    style: _stFld
+  })), React.createElement("div", null, React.createElement("div", {
+    style: _stLbl
+  }, tr('បាន​បង់', 'Paid') + ` ($) / $${price}`), React.createElement("input", {
+    type: "number",
+    min: "0",
+    max: price,
+    value: paidAmt,
+    onChange: e => setPaidAmt(e.target.value),
+    style: _stFld
+  }))), React.createElement("label", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: 14,
+      cursor: 'pointer',
+      fontSize: 13,
+      fontWeight: 500,
+      color: 'var(--ink)'
+    }
+  }, React.createElement("input", {
+    type: "checkbox",
+    checked: fullyPaid,
+    onChange: e => setPaidAmt(e.target.checked ? String(price) : '0'),
+    style: {
+      width: 18,
+      height: 18,
+      cursor: 'pointer',
+      accentColor: 'var(--good)'
+    }
+  }), tr('បាន​បង់​ប្រាក់​ពេញ', 'Paid in full')), React.createElement("button", {
+    onClick: save,
+    style: {
+      width: '100%',
+      marginTop: 14,
+      padding: '10px',
+      borderRadius: 8,
+      border: 'none',
+      background: 'var(--accent)',
+      color: '#fff',
+      cursor: 'pointer',
+      fontSize: 13,
+      fontWeight: 600,
+      fontFamily: 'inherit'
+    }
+  }, tr('រក្សា​ទុក', 'Save')));
+};
 var extendStudent = s => {
   var trans = s.trans || 'AT';
   var pracCount = trans === 'MT' ? 13 : 10;
@@ -38367,7 +38450,14 @@ var StudentsScreenV2 = () => {
         isOpen: openSections.payment,
         onToggle: () => toggleSection('payment'),
         action: editAction('payment')
-      }, mobileEdit === 'payment' ? editForm : React.createElement(React.Fragment, null, React.createElement("div", {
+      }, mobileEdit === 'payment' ? React.createElement(PaymentEditForm, {
+        s: s,
+        tr: tr,
+        onSave: u => {
+          saveStudent(u);
+          setMobileEdit(null);
+        }
+      }) : React.createElement(React.Fragment, null, React.createElement("div", {
         style: {
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
