@@ -2953,13 +2953,15 @@ const printLicenseAbroadRequest = (s) => {
   .pdf-bar { position:fixed; top:0; left:0; right:0; z-index:999; background:#1a1a19; color:#fff; display:flex; align-items:center; gap:14px; padding:10px 24px; font-family:'Noto Sans Khmer','Inter',sans-serif; }
   .pdf-bar button { background:#2a5db0; color:#fff; border:none; border-radius:6px; padding:8px 20px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
   .pdf-bar .t { font-size:13px; font-weight:600; }
-  .sheet { width:210mm; min-height:297mm; margin:60px auto 30px; background:#fff; padding:24mm 22mm; box-shadow:0 6px 30px rgba(0,0,0,.18); font-size:15px; line-height:2.1; color:#111; }
+  .sheet { width:210mm; min-height:297mm; margin:60px auto 30px; background:#fff; padding:12.7mm; box-shadow:0 6px 30px rgba(0,0,0,.18); font-size:15px; line-height:2.1; color:#111; }
   .moul { font-family:'Moul','Noto Serif Khmer',serif; }
   .center { text-align:center; }
   .title { font-size:18px; font-weight:700; }
   .sub   { font-size:15px; font-weight:700; }
-  .blank { display:inline-block; border-bottom:1px dotted #333; vertical-align:bottom; }
-  .p { text-indent:48px; margin:14px 0; text-align:justify; }
+  /* Empty fill-in lines: sit on the text baseline (level with the letters). */
+  .blank { display:inline-block; border-bottom:1px dotted #333; vertical-align:baseline; line-height:1; }
+  /* Left-aligned (not justified) so unfilled lines don't stretch the spaces. */
+  .p { text-indent:48px; margin:14px 0; text-align:left; }
   .strong { font-weight:700; }
   .sign { margin-top:26px; text-align:right; line-height:2.3; }
   .signname { margin-top:46px; text-align:right; font-weight:700; padding-right:24px; }
