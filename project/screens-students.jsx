@@ -47,6 +47,13 @@ const lessonsCoveredBy = (l) => {
   return [];
 };
 
+// Curriculum lessons (from Tab Lessons) grouped by type, for the feedback picker.
+const lessonLibGroups = () => {
+  const lib = (typeof window !== 'undefined' && window.__lessonsLib) || {};
+  return { theory: lib.theoryTexts || [], practical: lib.practicalTexts || [] };
+};
+const lessonNumOf = (no) => { const m = String(no||'').match(/\d+/); return m ? m[0] : String(no||'').trim(); };
+
 const CvLessonRow = ({ l, tr, onSave }) => {
   const [open, setOpen]           = React.useState(false);
   const covered = lessonsCoveredBy(l);
@@ -55,14 +62,22 @@ const CvLessonRow = ({ l, tr, onSave }) => {
   const [toImprove, setToImprove] = React.useState(l.toImprove || '');
   const [note, setNote]           = React.useState(l.note || '');
   const [done, setDone]           = React.useState(l.status === 'done');
+  const [lessonIds, setLessonIds] = React.useState(Array.isArray(l.lessonIds) ? [...l.lessonIds] : []);
   const [editing, setEditing]     = React.useState(false);
+  const groups = lessonLibGroups();
+  const allLib = [...groups.theory, ...groups.practical];
   const hasFeedback = !!(l.rating || String(l.didWell||'').trim() || String(l.toImprove||'').trim() || String(l.note||'').trim());
   const fieldStyle = { width:'100%', padding:'8px 10px', border:'1px solid var(--border)', borderRadius:8, fontSize:13, fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)', boxSizing:'border-box', resize:'vertical' };
   const lbl = { fontSize:11, color:'var(--ink-3)', fontWeight:600, margin:'10px 0 4px' };
-  const resetFields = () => { setRating(l.rating||0); setDidWell(l.didWell||''); setToImprove(l.toImprove||''); setNote(l.note||''); setDone(l.status==='done'); };
+  const resetFields = () => { setRating(l.rating||0); setDidWell(l.didWell||''); setToImprove(l.toImprove||''); setNote(l.note||''); setDone(l.status==='done'); setLessonIds(Array.isArray(l.lessonIds)?[...l.lessonIds]:[]); };
   const toggleOpen = () => { if (open) { setEditing(false); resetFields(); } setOpen(o => !o); };
   // Save then drop back to the read-only view (keep the row open).
-  const save = () => { onSave(l, { rating, didWell: didWell.trim(), toImprove: toImprove.trim(), note: note.trim(), status: done ? 'done' : 'pending' }); setEditing(false); };
+  const save = () => {
+    const selObjs  = allLib.filter(u => lessonIds.includes(u.id));
+    const lessonNo = selObjs.map(u => u.no).filter(Boolean).join(', ');   // short code for the calendar
+    onSave(l, { rating, didWell: didWell.trim(), toImprove: toImprove.trim(), note: note.trim(), status: done ? 'done' : 'pending', lessonIds: [...lessonIds], lessonNo });
+    setEditing(false);
+  };
   const showForm = editing || !hasFeedback;   // first time (no feedback) → form; otherwise read-only
   const stars = (n) => <span style={{color:'var(--gold)',letterSpacing:1}}>{'★'.repeat(n)}<span style={{color:'var(--border-strong)'}}>{'★'.repeat(5-n)}</span></span>;
   return (
@@ -93,6 +108,43 @@ const CvLessonRow = ({ l, tr, onSave }) => {
       </button>
       {open && showForm && (
         <div style={{padding:'4px 0 14px'}}>
+          <div style={lbl}>{tr('មេរៀន (ពី Tab Lessons)','Lessons (from Tab Lessons)')}</div>
+          {lessonIds.length > 0 && (
+            <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:8}}>
+              {allLib.filter(u=>lessonIds.includes(u.id)).map(u=>(
+                <div key={u.id} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'4px 9px',
+                  background:'var(--accent-soft)',border:'1px solid var(--accent)',borderRadius:6,
+                  fontSize:12,fontWeight:500,color:'var(--accent)'}}>
+                  {u.no ? lessonNumOf(u.no)+' · ' : ''}{tr(u.km,u.en)}
+                  <button onClick={()=>setLessonIds(prev=>prev.filter(x=>x!==u.id))} style={{
+                    border:'none',background:'none',cursor:'pointer',color:'var(--accent)',
+                    fontSize:14,lineHeight:1,padding:0,display:'flex',alignItems:'center'}}>×</button>
+                </div>
+              ))}
+            </div>
+          )}
+          {allLib.length === 0 ? (
+            <div style={{fontSize:12,color:'var(--ink-3)'}}>{tr('មិនទាន់មានមេរៀននៅ Tab Lessons','No lessons defined in Tab Lessons')}</div>
+          ) : (
+            <select value="" onChange={e=>{ const id=e.target.value; if(id && !lessonIds.includes(id)) setLessonIds(prev=>[...prev,id]); }} style={fieldStyle}>
+              <option value="">+ {tr('បន្ថែម​មេរៀន','Add lesson')}</option>
+              {groups.theory.length>0 && (
+                <optgroup label={tr('ទ្រឹស្ដី','Theory · 学科')}>
+                  {groups.theory.filter(u=>!lessonIds.includes(u.id)).map(u=>(
+                    <option key={u.id} value={u.id}>{u.no?lessonNumOf(u.no)+' · ':''}{tr(u.km,u.en)}</option>
+                  ))}
+                </optgroup>
+              )}
+              {groups.practical.length>0 && (
+                <optgroup label={tr('អនុវត្តន៍','Practical · 技能')}>
+                  {groups.practical.filter(u=>!lessonIds.includes(u.id)).map(u=>(
+                    <option key={u.id} value={u.id}>{u.no?lessonNumOf(u.no)+' · ':''}{tr(u.km,u.en)}</option>
+                  ))}
+                </optgroup>
+              )}
+            </select>
+          )}
+
           <div style={lbl}>{tr('ស្ថានភាព','Status')}</div>
           <div style={{display:'flex',gap:6}}>
             {[[false,tr('កំពុង','Pending')],[true,tr('រួចរាល់','Done')]].map(([v,t])=>(

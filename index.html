@@ -298,7 +298,7 @@ window.__trRegistry = {
   "Schedule lesson": "កក់​មេរៀន",
   "Select lessons (from Tab Lessons)": "ជ្រើស​មេរៀន (ពី Tab Lessons)",
   "No lessons defined in Tab Lessons": "មិនទាន់មានមេរៀននៅ Tab Lessons",
-  "Add lesson": "បន្ថែម",
+  "Add lesson": "បន្ថែម​មេរៀន",
   "── Stage 1 · 第一段階 ──": "── ដំណាក់កាល ១",
   "── Stage 2 · 第二段階 ──": "── ដំណាក់កាល ២",
   "WHEN": "ពេល​វេលា",
@@ -917,6 +917,9 @@ window.__trRegistry = {
   "Order": "លំដាប់",
   "No vehicles to display": "មិន​ទាន់​មាន​យានយន្ត",
   "Toggle vehicles visible in Vehicle management": "ធ្វើ​ឲ្យ​យានយន្ត​មើលឃើញ​នៅ​ Vehicle management",
+  "Lessons (from Tab Lessons)": "មេរៀន (ពី Tab Lessons)",
+  "Theory · 学科": "ទ្រឹស្ដី",
+  "Practical · 技能": "អនុវត្តន៍",
   "Rating": "វាយតម្លៃ",
   "Did well": "ធ្វើ​បាន​ល្អ",
   "e.g. good steering control": "ឧ. បញ្ជា​ចង្កូត​បាន​ល្អ",
@@ -1476,6 +1479,9 @@ window.__trGroups = {
     "Class": "ថ្នាក់"
   },
   "សិស្ស · Students": {
+    "Lessons (from Tab Lessons)": "មេរៀន (ពី Tab Lessons)",
+    "Theory · 学科": "ទ្រឹស្ដី",
+    "Practical · 技能": "អនុវត្តន៍",
     "Rating": "វាយតម្លៃ",
     "Did well": "ធ្វើ​បាន​ល្អ",
     "e.g. good steering control": "ឧ. បញ្ជា​ចង្កូត​បាន​ល្អ",
@@ -37367,6 +37373,17 @@ var lessonsCoveredBy = l => {
   })).filter(c => c.no);
   return [];
 };
+var lessonLibGroups = () => {
+  var lib = typeof window !== 'undefined' && window.__lessonsLib || {};
+  return {
+    theory: lib.theoryTexts || [],
+    practical: lib.practicalTexts || []
+  };
+};
+var lessonNumOf = no => {
+  var m = String(no || '').match(/\d+/);
+  return m ? m[0] : String(no || '').trim();
+};
 var CvLessonRow = ({
   l,
   tr,
@@ -37379,7 +37396,10 @@ var CvLessonRow = ({
   var [toImprove, setToImprove] = React.useState(l.toImprove || '');
   var [note, setNote] = React.useState(l.note || '');
   var [done, setDone] = React.useState(l.status === 'done');
+  var [lessonIds, setLessonIds] = React.useState(Array.isArray(l.lessonIds) ? [...l.lessonIds] : []);
   var [editing, setEditing] = React.useState(false);
+  var groups = lessonLibGroups();
+  var allLib = [...groups.theory, ...groups.practical];
   var hasFeedback = !!(l.rating || String(l.didWell || '').trim() || String(l.toImprove || '').trim() || String(l.note || '').trim());
   var fieldStyle = {
     width: '100%',
@@ -37405,6 +37425,7 @@ var CvLessonRow = ({
     setToImprove(l.toImprove || '');
     setNote(l.note || '');
     setDone(l.status === 'done');
+    setLessonIds(Array.isArray(l.lessonIds) ? [...l.lessonIds] : []);
   };
   var toggleOpen = () => {
     if (open) {
@@ -37414,12 +37435,16 @@ var CvLessonRow = ({
     setOpen(o => !o);
   };
   var save = () => {
+    var selObjs = allLib.filter(u => lessonIds.includes(u.id));
+    var lessonNo = selObjs.map(u => u.no).filter(Boolean).join(', ');
     onSave(l, {
       rating,
       didWell: didWell.trim(),
       toImprove: toImprove.trim(),
       note: note.trim(),
-      status: done ? 'done' : 'pending'
+      status: done ? 'done' : 'pending',
+      lessonIds: [...lessonIds],
+      lessonNo
     });
     setEditing(false);
   };
@@ -37527,6 +37552,66 @@ var CvLessonRow = ({
       padding: '4px 0 14px'
     }
   }, React.createElement("div", {
+    style: lbl
+  }, tr('មេរៀន (ពី Tab Lessons)', 'Lessons (from Tab Lessons)')), lessonIds.length > 0 && React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginBottom: 8
+    }
+  }, allLib.filter(u => lessonIds.includes(u.id)).map(u => React.createElement("div", {
+    key: u.id,
+    style: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 5,
+      padding: '4px 9px',
+      background: 'var(--accent-soft)',
+      border: '1px solid var(--accent)',
+      borderRadius: 6,
+      fontSize: 12,
+      fontWeight: 500,
+      color: 'var(--accent)'
+    }
+  }, u.no ? lessonNumOf(u.no) + ' · ' : '', tr(u.km, u.en), React.createElement("button", {
+    onClick: () => setLessonIds(prev => prev.filter(x => x !== u.id)),
+    style: {
+      border: 'none',
+      background: 'none',
+      cursor: 'pointer',
+      color: 'var(--accent)',
+      fontSize: 14,
+      lineHeight: 1,
+      padding: 0,
+      display: 'flex',
+      alignItems: 'center'
+    }
+  }, "\xD7")))), allLib.length === 0 ? React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'var(--ink-3)'
+    }
+  }, tr('មិនទាន់មានមេរៀននៅ Tab Lessons', 'No lessons defined in Tab Lessons')) : React.createElement("select", {
+    value: "",
+    onChange: e => {
+      var id = e.target.value;
+      if (id && !lessonIds.includes(id)) setLessonIds(prev => [...prev, id]);
+    },
+    style: fieldStyle
+  }, React.createElement("option", {
+    value: ""
+  }, "+ ", tr('បន្ថែម​មេរៀន', 'Add lesson')), groups.theory.length > 0 && React.createElement("optgroup", {
+    label: tr('ទ្រឹស្ដី', 'Theory · 学科')
+  }, groups.theory.filter(u => !lessonIds.includes(u.id)).map(u => React.createElement("option", {
+    key: u.id,
+    value: u.id
+  }, u.no ? lessonNumOf(u.no) + ' · ' : '', tr(u.km, u.en)))), groups.practical.length > 0 && React.createElement("optgroup", {
+    label: tr('អនុវត្តន៍', 'Practical · 技能')
+  }, groups.practical.filter(u => !lessonIds.includes(u.id)).map(u => React.createElement("option", {
+    key: u.id,
+    value: u.id
+  }, u.no ? lessonNumOf(u.no) + ' · ' : '', tr(u.km, u.en))))), React.createElement("div", {
     style: lbl
   }, tr('ស្ថានភាព', 'Status')), React.createElement("div", {
     style: {
