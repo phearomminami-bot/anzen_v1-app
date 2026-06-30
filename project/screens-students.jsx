@@ -36,15 +36,37 @@ const lessonTypeKm = (l) => {
 // comment. Saves back onto the lesson via onSave.
 // Curriculum lessons (from Tab Lessons) selected for a scheduled lesson —
 // shown as number + name so each entry lists what was covered.
-const lessonsCoveredBy = (l) => {
+const lessonsCoveredByIds = (lessonIds, lessonNo) => {
   const lib = (typeof window !== 'undefined' && window.__lessonsLib) || {};
   const all = [...(lib.theoryTexts||[]), ...(lib.practicalTexts||[]), ...(lib.theoryVideos||[]), ...(lib.practicalVideos||[])];
   const num = (no) => { const m = String(no||'').match(/\d+/); return m ? m[0] : String(no||'').trim(); };
-  if (Array.isArray(l.lessonIds) && l.lessonIds.length) {
-    return l.lessonIds.map(id => { const u = all.find(x => x.id === id); return u ? { no: num(u.no), name: u.km || u.en || '' } : null; }).filter(Boolean);
+  if (Array.isArray(lessonIds) && lessonIds.length) {
+    return lessonIds.map(id => { const u = all.find(x => x.id === id); return u ? { no: num(u.no), name: u.km || u.en || '' } : null; }).filter(Boolean);
   }
-  if (l.lessonNo) return String(l.lessonNo).split(',').map(x => ({ no: num(x), name: '' })).filter(c => c.no);
+  if (lessonNo) return String(lessonNo).split(',').map(x => ({ no: num(x), name: '' })).filter(c => c.no);
   return [];
+};
+const lessonsCoveredBy = (l) => lessonsCoveredByIds(l.lessonIds, l.lessonNo);
+
+// ── Per-hour lesson records ────────────────────────────────────────────────
+// A scheduled lesson may span several hours; the record book lists each hour on
+// its own line so every hour can be evaluated separately. Hour 0 keeps using the
+// lesson's own fields (so existing data + the calendar stay in sync); extra hours
+// store their rating/notes/curriculum in l.hourNotes[offset]. Status stays
+// lesson-level (shared) so the hours-completed total is unaffected.
+const lessonHourSlices = (l) => {
+  const n = Math.max(1, Math.round((l && l.len) || 1));
+  const out = [];
+  for (let o = 0; o < n; o++) out.push({ offset: o, h: ((l && l.h) || 0) + o, total: n });
+  return out;
+};
+const hourFbOf = (l, o) => {
+  const src = o === 0 ? l : ((l.hourNotes && l.hourNotes[o]) || {});
+  return {
+    rating: src.rating || 0, didWell: src.didWell || '', toImprove: src.toImprove || '',
+    note: src.note || '', status: l.status || 'pending',
+    lessonIds: Array.isArray(src.lessonIds) ? src.lessonIds : [], lessonNo: src.lessonNo || '',
+  };
 };
 
 // Curriculum lessons (from Tab Lessons) grouped by type, for the feedback picker.
@@ -54,28 +76,32 @@ const lessonLibGroups = () => {
 };
 const lessonNumOf = (no) => { const m = String(no||'').match(/\d+/); return m ? m[0] : String(no||'').trim(); };
 
-const CvLessonRow = ({ l, tr, onSave }) => {
+const CvLessonRow = ({ l, offset = 0, h, total = 1, tr, onSave }) => {
+  const fb0 = hourFbOf(l, offset);
+  const hr  = (h == null ? (l.h || 0) : h);
+  const pad = (n) => String(n).padStart(2, '0');
+  const timeLabel = `${pad(hr)}:00–${pad(hr+1)}:00`;
   const [open, setOpen]           = React.useState(false);
-  const covered = lessonsCoveredBy(l);
-  const [rating, setRating]       = React.useState(l.rating || 0);
-  const [didWell, setDidWell]     = React.useState(l.didWell || '');
-  const [toImprove, setToImprove] = React.useState(l.toImprove || '');
-  const [note, setNote]           = React.useState(l.note || '');
-  const [done, setDone]           = React.useState(l.status === 'done');
-  const [lessonIds, setLessonIds] = React.useState(Array.isArray(l.lessonIds) ? [...l.lessonIds] : []);
+  const covered = lessonsCoveredByIds(fb0.lessonIds, fb0.lessonNo);
+  const [rating, setRating]       = React.useState(fb0.rating);
+  const [didWell, setDidWell]     = React.useState(fb0.didWell);
+  const [toImprove, setToImprove] = React.useState(fb0.toImprove);
+  const [note, setNote]           = React.useState(fb0.note);
+  const [done, setDone]           = React.useState(fb0.status === 'done');
+  const [lessonIds, setLessonIds] = React.useState([...fb0.lessonIds]);
   const [editing, setEditing]     = React.useState(false);
   const groups = lessonLibGroups();
   const allLib = [...groups.theory, ...groups.practical];
-  const hasFeedback = !!(l.rating || String(l.didWell||'').trim() || String(l.toImprove||'').trim() || String(l.note||'').trim());
+  const hasFeedback = !!(fb0.rating || String(fb0.didWell||'').trim() || String(fb0.toImprove||'').trim() || String(fb0.note||'').trim());
   const fieldStyle = { width:'100%', padding:'8px 10px', border:'1px solid var(--border)', borderRadius:8, fontSize:13, fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)', boxSizing:'border-box', resize:'vertical' };
   const lbl = { fontSize:11, color:'var(--ink-3)', fontWeight:600, margin:'10px 0 4px' };
-  const resetFields = () => { setRating(l.rating||0); setDidWell(l.didWell||''); setToImprove(l.toImprove||''); setNote(l.note||''); setDone(l.status==='done'); setLessonIds(Array.isArray(l.lessonIds)?[...l.lessonIds]:[]); };
+  const resetFields = () => { setRating(fb0.rating); setDidWell(fb0.didWell); setToImprove(fb0.toImprove); setNote(fb0.note); setDone(fb0.status==='done'); setLessonIds([...fb0.lessonIds]); };
   const toggleOpen = () => { if (open) { setEditing(false); resetFields(); } setOpen(o => !o); };
   // Save then drop back to the read-only view (keep the row open).
   const save = () => {
     const selObjs  = allLib.filter(u => lessonIds.includes(u.id));
     const lessonNo = selObjs.map(u => u.no).filter(Boolean).join(', ');   // short code for the calendar
-    onSave(l, { rating, didWell: didWell.trim(), toImprove: toImprove.trim(), note: note.trim(), status: done ? 'done' : 'pending', lessonIds: [...lessonIds], lessonNo });
+    onSave(l, { rating, didWell: didWell.trim(), toImprove: toImprove.trim(), note: note.trim(), status: done ? 'done' : 'pending', lessonIds: [...lessonIds], lessonNo }, offset);
     setEditing(false);
   };
   const showForm = editing || !hasFeedback;   // first time (no feedback) → form; otherwise read-only
@@ -87,7 +113,11 @@ const CvLessonRow = ({ l, tr, onSave }) => {
         padding:'10px 0', display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:10,
       }}>
         <div style={{minWidth:0}}>
-          <div style={{fontSize:12.5,fontWeight:600,color:'var(--ink)'}}>{l.date}</div>
+          <div style={{display:'flex',alignItems:'baseline',gap:8,flexWrap:'wrap'}}>
+            <span style={{fontSize:12.5,fontWeight:600,color:'var(--ink)'}}>{l.date}</span>
+            <span style={{fontSize:11.5,fontWeight:600,color:'var(--accent)',fontFamily:'monospace'}}>{timeLabel}</span>
+            {total > 1 && <span style={{fontSize:10,color:'var(--ink-3)'}}>{tr('ម៉ោងទី','Hr')} {offset+1}/{total}</span>}
+          </div>
           <div style={{fontSize:12,color:'var(--ink-2)',marginTop:1}}>{lessonTypeKm(l)}</div>
           {covered.length > 0 && (
             <div style={{display:'flex',flexWrap:'wrap',gap:4,marginTop:3}}>
@@ -98,8 +128,8 @@ const CvLessonRow = ({ l, tr, onSave }) => {
               ))}
             </div>
           )}
-          {(l.rating > 0) && <div style={{fontSize:12,color:'var(--gold)',marginTop:1,letterSpacing:1}}>{'★'.repeat(l.rating)}<span style={{color:'var(--border-strong)'}}>{'★'.repeat(5-l.rating)}</span></div>}
-          {l.note && !open && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2,fontStyle:'italic',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{l.note}</div>}
+          {(fb0.rating > 0) && <div style={{fontSize:12,color:'var(--gold)',marginTop:1,letterSpacing:1}}>{'★'.repeat(fb0.rating)}<span style={{color:'var(--border-strong)'}}>{'★'.repeat(5-fb0.rating)}</span></div>}
+          {fb0.note && !open && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2,fontStyle:'italic',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{fb0.note}</div>}
         </div>
         <span style={{fontSize:11,color:done?'var(--good)':'var(--ink-3)',fontWeight:500,flexShrink:0,display:'flex',alignItems:'center',gap:4}}>
           {done?tr('រួចរាល់','Done'):tr('កំពុង','Pending')}
@@ -264,14 +294,14 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
   const trNat = (v) => { if(!v) return ''; const m={'ខ្មែរ':'Khmer','ខ្មែរ​':'Khmer'}; return lang==='en' ? (m[v]||v) : v; };
   const trGlasses = (v) => { if(!v) return ''; return lang==='en' ? eyeEn(v) : normEye(v); };
   // Covered curriculum lessons, names in the chosen language (library has km+en).
-  const coveredFor = (l) => {
+  const coveredFor = (lessonIds, lessonNo) => {
     const lib = (typeof window !== 'undefined' && window.__lessonsLib) || {};
     const all = [...(lib.theoryTexts||[]), ...(lib.practicalTexts||[]), ...(lib.theoryVideos||[]), ...(lib.practicalVideos||[])];
     const num = (no)=>{ const m=String(no||'').match(/\d+/); return m?m[0]:String(no||'').trim(); };
-    if (Array.isArray(l.lessonIds) && l.lessonIds.length) {
-      return l.lessonIds.map(id=>{ const u=all.find(x=>x.id===id); if(!u) return null; const name = lang==='en' ? (u.en||u.km||'') : (u.km||u.en||''); return {no:num(u.no), name}; }).filter(Boolean);
+    if (Array.isArray(lessonIds) && lessonIds.length) {
+      return lessonIds.map(id=>{ const u=all.find(x=>x.id===id); if(!u) return null; const name = lang==='en' ? (u.en||u.km||'') : (u.km||u.en||''); return {no:num(u.no), name}; }).filter(Boolean);
     }
-    if (l.lessonNo) return String(l.lessonNo).split(',').map(x=>({no:num(x),name:''})).filter(c=>c.no);
+    if (lessonNo) return String(lessonNo).split(',').map(x=>({no:num(x),name:''})).filter(c=>c.no);
     return [];
   };
 
@@ -291,10 +321,11 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
     hourMap[l.id] = nums;
   });
 
+  // Split each lesson into its hours; order oldest-first (earlier on top).
   const items = [
-    ...lessons.map(l => ({ t:'lesson', k:(l.date||'')+' '+String(l.h||0).padStart(2,'0'), item:l })),
+    ...lessons.flatMap(l => lessonHourSlices(l).map(sl => ({ t:'lesson', k:(l.date||'')+' '+String(sl.h).padStart(2,'0'), item:l, sl }))),
     ...exams.map(e  => ({ t:'exam',   k:(e.date||'')+' '+String(e.time||'').slice(0,5),    item:e })),
-  ].sort((a,b)=> a.k<b.k ? 1 : a.k>b.k ? -1 : 0);
+  ].sort((a,b)=> a.k<b.k ? -1 : a.k>b.k ? 1 : 0);
 
   // For the English export, machine-translate Khmer free-text feedback (if a key
   // is set). T(x) returns the translation when available, else the original.
@@ -302,7 +333,7 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
   if (lang === 'en') {
     const hasKh = (x) => typeof x==='string' && /[ក-៿]/.test(x);
     const src = [];
-    lessons.forEach(l => { [l.didWell, l.toImprove, l.note].forEach(v=>{ if(hasKh(v)) src.push(v); }); });
+    lessons.forEach(l => { lessonHourSlices(l).forEach(sl => { const f = hourFbOf(l, sl.offset); [f.didWell, f.toImprove, f.note].forEach(v=>{ if(hasKh(v)) src.push(v); }); }); });
     exams.forEach(e => { const r=(e.results&&e.results[sid])||{}; [r.failLocation, r.failReason].forEach(v=>{ if(hasKh(v)) src.push(v); }); });
     if (src.length) txMap = await translateFeedbackTexts(src, 'en');
   }
@@ -324,21 +355,24 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
         <td>${badge}${failInfo}</td>
       </tr>`;
     }
-    const l = row.item;
+    const l = row.item; const o = row.sl.offset; const f = hourFbOf(l, o);
     const it = instById(l.instId); const inst = it ? esc(it.en||it.name) : '—';
     // Each covered curriculum lesson on its own line (not joined together).
-    const coveredArr = coveredFor(l).map(c => esc(c.no + (c.name ? ' '+c.name : '')));
+    const coveredArr = coveredFor(f.lessonIds, f.lessonNo).map(c => esc(c.no + (c.name ? ' '+c.name : '')));
     const coveredHtml = coveredArr.length ? '<div style="color:#1A4F96;margin-top:2px">' + coveredArr.map(c=>'<div>'+c+'</div>').join('') + '</div>' : '';
     const fb = [];
-    if (l.rating)     fb.push('<div>'+stars(l.rating)+'</div>');
-    if (l.didWell)    fb.push('<div><b>'+L('ធ្វើបានល្អ','Did well')+':</b> '+esc(T(l.didWell))+'</div>');
-    if (l.toImprove)  fb.push('<div><b>'+L('ខ្វះខាត','Needs work')+':</b> '+esc(T(l.toImprove))+'</div>');
-    if (l.note)       fb.push('<div><b>'+L('មតិ','Comment')+':</b> '+esc(T(l.note))+'</div>');
+    if (f.rating)     fb.push('<div>'+stars(f.rating)+'</div>');
+    if (f.didWell)    fb.push('<div><b>'+L('ធ្វើបានល្អ','Did well')+':</b> '+esc(T(f.didWell))+'</div>');
+    if (f.toImprove)  fb.push('<div><b>'+L('ខ្វះខាត','Needs work')+':</b> '+esc(T(f.toImprove))+'</div>');
+    if (f.note)       fb.push('<div><b>'+L('មតិ','Comment')+':</b> '+esc(T(f.note))+'</div>');
     const status = l.status==='done' ? `<b style="color:#1A6B3C">${L('រួចរាល់','Done')}</b>` : l.status==='cancelled' ? `<span style="color:#999">${L('បានលុប','Cancelled')}</span>` : L('កំពុង','Pending');
     const hrs = hourMap[l.id];
-    const hrLabel = hrs && hrs.length ? ` <span style="color:#888;font-weight:400;font-size:10px">(${hrs.join(', ')})</span>` : '';
+    const cumNo = hrs && hrs[o] != null ? hrs[o] : null;
+    const hrLabel = cumNo != null ? ` <span style="color:#888;font-weight:400;font-size:10px">(${cumNo})</span>` : '';
+    const hh = (l.h||0) + o;
+    const timeStr = `${String(hh).padStart(2,'0')}:00-${String(hh+1).padStart(2,'0')}:00`;
     return `<tr>
-      <td style="white-space:nowrap;font-family:monospace;color:#444;font-weight:700">${esc(l.date)}<br>${String(l.h||0).padStart(2,'0')}:00${hrLabel}</td>
+      <td style="white-space:nowrap;font-family:monospace;color:#444;font-weight:700">${esc(l.date)}<br>${timeStr}${hrLabel}</td>
       <td><b>${typeKm(l)}</b>${coveredHtml}<div style="color:#888;margin-top:2px">${inst}</div></td>
       <td>${status}${fb.length?'<div style="margin-top:3px;color:#333">'+fb.join('')+'</div>':''}</td>
     </tr>`;
@@ -841,14 +875,21 @@ const StudentsScreenV2 = () => {
 
   // Save an instructor evaluation/feedback back onto a lesson (rating, notes,
   // status). Persists to localStorage + cloud via saveAllData.
-  const saveLessonFeedback = (lesson, fields) => {
+  const saveLessonFeedback = (lesson, fields, offset = 0) => {
     const i = LESSONS.findIndex(l => l.id === lesson.id);
-    if (i !== -1) {
-      Object.assign(LESSONS[i], fields);
-      if (window.saveAllData) window.saveAllData();
-      forceUpdate();
-      toast(tr('បាន​រក្សា​ទុក​មតិ ✓', 'Feedback saved ✓'), 'good');
+    if (i === -1) return;
+    const { status, ...rest } = fields;
+    if (status !== undefined) LESSONS[i].status = status;   // status is lesson-level (shared by all hours)
+    if (offset === 0) {
+      Object.assign(LESSONS[i], rest);
+    } else {
+      const hn = { ...(LESSONS[i].hourNotes || {}) };
+      hn[offset] = { ...(hn[offset] || {}), ...rest };
+      LESSONS[i].hourNotes = hn;
     }
+    if (window.saveAllData) window.saveAllData();
+    forceUpdate();
+    toast(tr('បាន​រក្សា​ទុក​មតិ ✓', 'Feedback saved ✓'), 'good');
   };
 
   // Per-student exam result (pass/fail + fail details). An exam can hold many
@@ -1108,11 +1149,12 @@ const StudentsScreenV2 = () => {
           {/* Section 5: Lessons & comments */}
           <CvSection label={tr('បញ្ជីមេរៀន និង មតិគ្រូ','Lessons & Comments')} isOpen={openSections.lessons} onToggle={()=>toggleSection('lessons')}>
             {(() => {
-              // Merge lessons + exams into one list, newest first by date+time.
+              // Merge lessons + exams, split each lesson into its hours, and order
+              // oldest-first (earlier on top) by date + hour — same as the PDF.
               const items = [
-                ...studentLessons.map(l => ({ t:'lesson', k:(l.date||'')+' '+String(l.h||0).padStart(2,'0'), item:l })),
+                ...studentLessons.flatMap(l => lessonHourSlices(l).map(sl => ({ t:'lesson', k:(l.date||'')+' '+String(sl.h).padStart(2,'0'), item:l, sl }))),
                 ...studentExams.map(e  => ({ t:'exam',   k:(e.date||'')+' '+String(e.time||'').slice(0,5),    item:e })),
-              ].sort((a,b)=> a.k<b.k ? 1 : a.k>b.k ? -1 : 0);
+              ].sort((a,b)=> a.k<b.k ? -1 : a.k>b.k ? 1 : 0);
               if (items.length === 0) return (
                 <div style={{fontSize:13,color:'var(--ink-3)',textAlign:'center',padding:'12px 0'}}>{tr('មិន​ទាន់​មាន​មេរៀន','No lessons yet')}</div>
               );
@@ -1120,7 +1162,7 @@ const StudentsScreenV2 = () => {
                 if (row.t === 'exam') {
                   return <ExamFeedbackRow key={row.item.id||('ex'+i)} e={row.item} sid={s.id} tr={tr} onSave={saveExamResult}/>;
                 }
-                return <CvLessonRow key={row.item.id||('ls'+i)} l={row.item} tr={tr} onSave={saveLessonFeedback}/>;
+                return <CvLessonRow key={(row.item.id||('ls'+i))+'-'+row.sl.offset} l={row.item} offset={row.sl.offset} h={row.sl.h} total={row.sl.total} tr={tr} onSave={saveLessonFeedback}/>;
               });
             })()}
             <div style={{fontSize:11,color:'var(--ink-3)',marginTop:12,marginBottom:4}}>⬇ {tr('ទាញយក PDF — ជ្រើសភាសា','Download PDF — choose language')}</div>

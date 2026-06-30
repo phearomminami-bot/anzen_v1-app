@@ -935,6 +935,7 @@ window.__trRegistry = {
   "Order": "លំដាប់",
   "No vehicles to display": "មិន​ទាន់​មាន​យានយន្ត",
   "Toggle vehicles visible in Vehicle management": "ធ្វើ​ឲ្យ​យានយន្ត​មើលឃើញ​នៅ​ Vehicle management",
+  "Hr": "ម៉ោងទី",
   "Lessons (from Tab Lessons)": "មេរៀន (ពី Tab Lessons)",
   "Theory · 学科": "ទ្រឹស្ដី",
   "Practical · 技能": "អនុវត្តន៍",
@@ -1524,6 +1525,7 @@ window.__trGroups = {
     "Class": "ថ្នាក់"
   },
   "សិស្ស · Students": {
+    "Hr": "ម៉ោងទី",
     "Lessons (from Tab Lessons)": "មេរៀន (ពី Tab Lessons)",
     "Theory · 学科": "ទ្រឹស្ដី",
     "Practical · 技能": "អនុវត្តន៍",
@@ -38499,15 +38501,15 @@ var lessonTypeKm = l => {
   if (l.color === 'c' || l.color === 'e') return 'ទ្រឹស្ដី';
   return 'អនុវត្តន៍';
 };
-var lessonsCoveredBy = l => {
+var lessonsCoveredByIds = (lessonIds, lessonNo) => {
   var lib = typeof window !== 'undefined' && window.__lessonsLib || {};
   var all = [...(lib.theoryTexts || []), ...(lib.practicalTexts || []), ...(lib.theoryVideos || []), ...(lib.practicalVideos || [])];
   var num = no => {
     var m = String(no || '').match(/\d+/);
     return m ? m[0] : String(no || '').trim();
   };
-  if (Array.isArray(l.lessonIds) && l.lessonIds.length) {
-    return l.lessonIds.map(id => {
+  if (Array.isArray(lessonIds) && lessonIds.length) {
+    return lessonIds.map(id => {
       var u = all.find(x => x.id === id);
       return u ? {
         no: num(u.no),
@@ -38515,11 +38517,34 @@ var lessonsCoveredBy = l => {
       } : null;
     }).filter(Boolean);
   }
-  if (l.lessonNo) return String(l.lessonNo).split(',').map(x => ({
+  if (lessonNo) return String(lessonNo).split(',').map(x => ({
     no: num(x),
     name: ''
   })).filter(c => c.no);
   return [];
+};
+var lessonsCoveredBy = l => lessonsCoveredByIds(l.lessonIds, l.lessonNo);
+var lessonHourSlices = l => {
+  var n = Math.max(1, Math.round(l && l.len || 1));
+  var out = [];
+  for (var o = 0; o < n; o++) out.push({
+    offset: o,
+    h: (l && l.h || 0) + o,
+    total: n
+  });
+  return out;
+};
+var hourFbOf = (l, o) => {
+  var src = o === 0 ? l : l.hourNotes && l.hourNotes[o] || {};
+  return {
+    rating: src.rating || 0,
+    didWell: src.didWell || '',
+    toImprove: src.toImprove || '',
+    note: src.note || '',
+    status: l.status || 'pending',
+    lessonIds: Array.isArray(src.lessonIds) ? src.lessonIds : [],
+    lessonNo: src.lessonNo || ''
+  };
 };
 var lessonLibGroups = () => {
   var lib = typeof window !== 'undefined' && window.__lessonsLib || {};
@@ -38534,21 +38559,28 @@ var lessonNumOf = no => {
 };
 var CvLessonRow = ({
   l,
+  offset = 0,
+  h,
+  total = 1,
   tr,
   onSave
 }) => {
+  var fb0 = hourFbOf(l, offset);
+  var hr = h == null ? l.h || 0 : h;
+  var pad = n => String(n).padStart(2, '0');
+  var timeLabel = `${pad(hr)}:00–${pad(hr + 1)}:00`;
   var [open, setOpen] = React.useState(false);
-  var covered = lessonsCoveredBy(l);
-  var [rating, setRating] = React.useState(l.rating || 0);
-  var [didWell, setDidWell] = React.useState(l.didWell || '');
-  var [toImprove, setToImprove] = React.useState(l.toImprove || '');
-  var [note, setNote] = React.useState(l.note || '');
-  var [done, setDone] = React.useState(l.status === 'done');
-  var [lessonIds, setLessonIds] = React.useState(Array.isArray(l.lessonIds) ? [...l.lessonIds] : []);
+  var covered = lessonsCoveredByIds(fb0.lessonIds, fb0.lessonNo);
+  var [rating, setRating] = React.useState(fb0.rating);
+  var [didWell, setDidWell] = React.useState(fb0.didWell);
+  var [toImprove, setToImprove] = React.useState(fb0.toImprove);
+  var [note, setNote] = React.useState(fb0.note);
+  var [done, setDone] = React.useState(fb0.status === 'done');
+  var [lessonIds, setLessonIds] = React.useState([...fb0.lessonIds]);
   var [editing, setEditing] = React.useState(false);
   var groups = lessonLibGroups();
   var allLib = [...groups.theory, ...groups.practical];
-  var hasFeedback = !!(l.rating || String(l.didWell || '').trim() || String(l.toImprove || '').trim() || String(l.note || '').trim());
+  var hasFeedback = !!(fb0.rating || String(fb0.didWell || '').trim() || String(fb0.toImprove || '').trim() || String(fb0.note || '').trim());
   var fieldStyle = {
     width: '100%',
     padding: '8px 10px',
@@ -38568,12 +38600,12 @@ var CvLessonRow = ({
     margin: '10px 0 4px'
   };
   var resetFields = () => {
-    setRating(l.rating || 0);
-    setDidWell(l.didWell || '');
-    setToImprove(l.toImprove || '');
-    setNote(l.note || '');
-    setDone(l.status === 'done');
-    setLessonIds(Array.isArray(l.lessonIds) ? [...l.lessonIds] : []);
+    setRating(fb0.rating);
+    setDidWell(fb0.didWell);
+    setToImprove(fb0.toImprove);
+    setNote(fb0.note);
+    setDone(fb0.status === 'done');
+    setLessonIds([...fb0.lessonIds]);
   };
   var toggleOpen = () => {
     if (open) {
@@ -38593,7 +38625,7 @@ var CvLessonRow = ({
       status: done ? 'done' : 'pending',
       lessonIds: [...lessonIds],
       lessonNo
-    });
+    }, offset);
     setEditing(false);
   };
   var showForm = editing || !hasFeedback;
@@ -38631,11 +38663,30 @@ var CvLessonRow = ({
     }
   }, React.createElement("div", {
     style: {
+      display: 'flex',
+      alignItems: 'baseline',
+      gap: 8,
+      flexWrap: 'wrap'
+    }
+  }, React.createElement("span", {
+    style: {
       fontSize: 12.5,
       fontWeight: 600,
       color: 'var(--ink)'
     }
-  }, l.date), React.createElement("div", {
+  }, l.date), React.createElement("span", {
+    style: {
+      fontSize: 11.5,
+      fontWeight: 600,
+      color: 'var(--accent)',
+      fontFamily: 'monospace'
+    }
+  }, timeLabel), total > 1 && React.createElement("span", {
+    style: {
+      fontSize: 10,
+      color: 'var(--ink-3)'
+    }
+  }, tr('ម៉ោងទី', 'Hr'), " ", offset + 1, "/", total)), React.createElement("div", {
     style: {
       fontSize: 12,
       color: 'var(--ink-2)',
@@ -38658,18 +38709,18 @@ var CvLessonRow = ({
       color: 'var(--accent)',
       whiteSpace: 'nowrap'
     }
-  }, React.createElement("b", null, c.no), c.name ? ' · ' + c.name : ''))), l.rating > 0 && React.createElement("div", {
+  }, React.createElement("b", null, c.no), c.name ? ' · ' + c.name : ''))), fb0.rating > 0 && React.createElement("div", {
     style: {
       fontSize: 12,
       color: 'var(--gold)',
       marginTop: 1,
       letterSpacing: 1
     }
-  }, '★'.repeat(l.rating), React.createElement("span", {
+  }, '★'.repeat(fb0.rating), React.createElement("span", {
     style: {
       color: 'var(--border-strong)'
     }
-  }, '★'.repeat(5 - l.rating))), l.note && !open && React.createElement("div", {
+  }, '★'.repeat(5 - fb0.rating))), fb0.note && !open && React.createElement("div", {
     style: {
       fontSize: 11,
       color: 'var(--ink-3)',
@@ -38679,7 +38730,7 @@ var CvLessonRow = ({
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap'
     }
-  }, l.note)), React.createElement("span", {
+  }, fb0.note)), React.createElement("span", {
     style: {
       fontSize: 11,
       color: done ? 'var(--good)' : 'var(--ink-3)',
@@ -38979,15 +39030,15 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
       if (!v) return '';
       return lang === 'en' ? eyeEn(v) : normEye(v);
     };
-    var coveredFor = l => {
+    var coveredFor = (lessonIds, lessonNo) => {
       var lib = typeof window !== 'undefined' && window.__lessonsLib || {};
       var all = [...(lib.theoryTexts || []), ...(lib.practicalTexts || []), ...(lib.theoryVideos || []), ...(lib.practicalVideos || [])];
       var num = no => {
         var m = String(no || '').match(/\d+/);
         return m ? m[0] : String(no || '').trim();
       };
-      if (Array.isArray(l.lessonIds) && l.lessonIds.length) {
-        return l.lessonIds.map(id => {
+      if (Array.isArray(lessonIds) && lessonIds.length) {
+        return lessonIds.map(id => {
           var u = all.find(x => x.id === id);
           if (!u) return null;
           var name = lang === 'en' ? u.en || u.km || '' : u.km || u.en || '';
@@ -38997,7 +39048,7 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
           };
         }).filter(Boolean);
       }
-      if (l.lessonNo) return String(l.lessonNo).split(',').map(x => ({
+      if (lessonNo) return String(lessonNo).split(',').map(x => ({
         no: num(x),
         name: ''
       })).filter(c => c.no);
@@ -39021,22 +39072,26 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
       if (theory) accT += n;else accP += n;
       hourMap[l.id] = nums;
     });
-    var items = [...lessons.map(l => ({
+    var items = [...lessons.flatMap(l => lessonHourSlices(l).map(sl => ({
       t: 'lesson',
-      k: (l.date || '') + ' ' + String(l.h || 0).padStart(2, '0'),
-      item: l
-    })), ...exams.map(e => ({
+      k: (l.date || '') + ' ' + String(sl.h).padStart(2, '0'),
+      item: l,
+      sl
+    }))), ...exams.map(e => ({
       t: 'exam',
       k: (e.date || '') + ' ' + String(e.time || '').slice(0, 5),
       item: e
-    }))].sort((a, b) => a.k < b.k ? 1 : a.k > b.k ? -1 : 0);
+    }))].sort((a, b) => a.k < b.k ? -1 : a.k > b.k ? 1 : 0);
     var txMap = {};
     if (lang === 'en') {
       var hasKh = x => typeof x === 'string' && /[ក-៿]/.test(x);
       var src = [];
       lessons.forEach(l => {
-        [l.didWell, l.toImprove, l.note].forEach(v => {
-          if (hasKh(v)) src.push(v);
+        lessonHourSlices(l).forEach(sl => {
+          var f = hourFbOf(l, sl.offset);
+          [f.didWell, f.toImprove, f.note].forEach(v => {
+            if (hasKh(v)) src.push(v);
+          });
         });
       });
       exams.forEach(e => {
@@ -39074,20 +39129,25 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
       </tr>`;
       }
       var l = row.item;
+      var o = row.sl.offset;
+      var f = hourFbOf(l, o);
       var it = instById(l.instId);
       var inst = it ? esc(it.en || it.name) : '—';
-      var coveredArr = coveredFor(l).map(c => esc(c.no + (c.name ? ' ' + c.name : '')));
+      var coveredArr = coveredFor(f.lessonIds, f.lessonNo).map(c => esc(c.no + (c.name ? ' ' + c.name : '')));
       var coveredHtml = coveredArr.length ? '<div style="color:#1A4F96;margin-top:2px">' + coveredArr.map(c => '<div>' + c + '</div>').join('') + '</div>' : '';
       var fb = [];
-      if (l.rating) fb.push('<div>' + stars(l.rating) + '</div>');
-      if (l.didWell) fb.push('<div><b>' + L('ធ្វើបានល្អ', 'Did well') + ':</b> ' + esc(T(l.didWell)) + '</div>');
-      if (l.toImprove) fb.push('<div><b>' + L('ខ្វះខាត', 'Needs work') + ':</b> ' + esc(T(l.toImprove)) + '</div>');
-      if (l.note) fb.push('<div><b>' + L('មតិ', 'Comment') + ':</b> ' + esc(T(l.note)) + '</div>');
+      if (f.rating) fb.push('<div>' + stars(f.rating) + '</div>');
+      if (f.didWell) fb.push('<div><b>' + L('ធ្វើបានល្អ', 'Did well') + ':</b> ' + esc(T(f.didWell)) + '</div>');
+      if (f.toImprove) fb.push('<div><b>' + L('ខ្វះខាត', 'Needs work') + ':</b> ' + esc(T(f.toImprove)) + '</div>');
+      if (f.note) fb.push('<div><b>' + L('មតិ', 'Comment') + ':</b> ' + esc(T(f.note)) + '</div>');
       var status = l.status === 'done' ? `<b style="color:#1A6B3C">${L('រួចរាល់', 'Done')}</b>` : l.status === 'cancelled' ? `<span style="color:#999">${L('បានលុប', 'Cancelled')}</span>` : L('កំពុង', 'Pending');
       var hrs = hourMap[l.id];
-      var hrLabel = hrs && hrs.length ? ` <span style="color:#888;font-weight:400;font-size:10px">(${hrs.join(', ')})</span>` : '';
+      var cumNo = hrs && hrs[o] != null ? hrs[o] : null;
+      var hrLabel = cumNo != null ? ` <span style="color:#888;font-weight:400;font-size:10px">(${cumNo})</span>` : '';
+      var hh = (l.h || 0) + o;
+      var timeStr = `${String(hh).padStart(2, '0')}:00-${String(hh + 1).padStart(2, '0')}:00`;
       return `<tr>
-      <td style="white-space:nowrap;font-family:monospace;color:#444;font-weight:700">${esc(l.date)}<br>${String(l.h || 0).padStart(2, '0')}:00${hrLabel}</td>
+      <td style="white-space:nowrap;font-family:monospace;color:#444;font-weight:700">${esc(l.date)}<br>${timeStr}${hrLabel}</td>
       <td><b>${typeKm(l)}</b>${coveredHtml}<div style="color:#888;margin-top:2px">${inst}</div></td>
       <td>${status}${fb.length ? '<div style="margin-top:3px;color:#333">' + fb.join('') + '</div>' : ''}</td>
     </tr>`;
@@ -40071,14 +40131,29 @@ var StudentsScreenV2 = () => {
     forceUpdate();
     toast(STUDENTS[i].graduated ? tr('បាន​សម្គាល់​ថា​បញ្ចប់​ការសិក្សា ✓', 'Marked as graduated ✓') : tr('បាន​យក​មក​សិក្សា​វិញ', 'Restored to active'), 'good');
   };
-  var saveLessonFeedback = (lesson, fields) => {
+  var saveLessonFeedback = (lesson, fields, offset = 0) => {
     var i = LESSONS.findIndex(l => l.id === lesson.id);
-    if (i !== -1) {
-      Object.assign(LESSONS[i], fields);
-      if (window.saveAllData) window.saveAllData();
-      forceUpdate();
-      toast(tr('បាន​រក្សា​ទុក​មតិ ✓', 'Feedback saved ✓'), 'good');
+    if (i === -1) return;
+    var {
+      status,
+      ...rest
+    } = fields;
+    if (status !== undefined) LESSONS[i].status = status;
+    if (offset === 0) {
+      Object.assign(LESSONS[i], rest);
+    } else {
+      var hn = {
+        ...(LESSONS[i].hourNotes || {})
+      };
+      hn[offset] = {
+        ...(hn[offset] || {}),
+        ...rest
+      };
+      LESSONS[i].hourNotes = hn;
     }
+    if (window.saveAllData) window.saveAllData();
+    forceUpdate();
+    toast(tr('បាន​រក្សា​ទុក​មតិ ✓', 'Feedback saved ✓'), 'good');
   };
   var saveExamResult = (examId, studentId, patch) => {
     var list = window.__schoolSettings && window.__schoolSettings.scheduleExams || [];
@@ -40594,15 +40669,16 @@ var StudentsScreenV2 = () => {
         isOpen: openSections.lessons,
         onToggle: () => toggleSection('lessons')
       }, (() => {
-        var items = [...studentLessons.map(l => ({
+        var items = [...studentLessons.flatMap(l => lessonHourSlices(l).map(sl => ({
           t: 'lesson',
-          k: (l.date || '') + ' ' + String(l.h || 0).padStart(2, '0'),
-          item: l
-        })), ...studentExams.map(e => ({
+          k: (l.date || '') + ' ' + String(sl.h).padStart(2, '0'),
+          item: l,
+          sl
+        }))), ...studentExams.map(e => ({
           t: 'exam',
           k: (e.date || '') + ' ' + String(e.time || '').slice(0, 5),
           item: e
-        }))].sort((a, b) => a.k < b.k ? 1 : a.k > b.k ? -1 : 0);
+        }))].sort((a, b) => a.k < b.k ? -1 : a.k > b.k ? 1 : 0);
         if (items.length === 0) return React.createElement("div", {
           style: {
             fontSize: 13,
@@ -40622,8 +40698,11 @@ var StudentsScreenV2 = () => {
             });
           }
           return React.createElement(CvLessonRow, {
-            key: row.item.id || 'ls' + i,
+            key: (row.item.id || 'ls' + i) + '-' + row.sl.offset,
             l: row.item,
+            offset: row.sl.offset,
+            h: row.sl.h,
+            total: row.sl.total,
             tr: tr,
             onSave: saveLessonFeedback
           });
