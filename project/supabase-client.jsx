@@ -46,6 +46,44 @@
     }
   };
 
+  // One-time migration: find every inline base64 image/file in the dataset,
+  // upload each to Storage and replace it with a URL. onProgress({done,total,
+  // failed}) fires after every item. Safe to re-run (already-migrated URLs are
+  // skipped). Returns { total, done, failed }.
+  window.__migrateMediaToStorage = async (onProgress) => {
+    if (!window.sb || !window.__sbUploadMedia) throw new Error('not-connected');
+    const isB64 = (x) => typeof x === 'string' && x.startsWith('data:');
+    const seen = new Set();   // object identity, so two devices/arrays sharing the same row aren't double-processed
+    const tasks = [];
+    const add = (folder, name, obj, field) => {
+      if (!obj || !isB64(obj[field]) || seen.has(obj)) return;
+      seen.add(obj);
+      tasks.push({ folder, name, get: () => obj[field], set: (u) => { obj[field] = u; } });
+    };
+    (window.STUDENTS || []).forEach(s => {
+      add('avatars', s.id, s, 'photo');
+      (s.schoolDocs || []).forEach(d => add('docs', (s.id||'') + '-' + (d.fileName||'doc'), d, 'file'));
+    });
+    (window.VEHICLES   || []).forEach(v => add('photos',  v.id, v, 'photo'));
+    (window.INSTRUCTORS || []).forEach(i => add('avatars', i.id, i, 'photo'));
+    (window.STAFF       || []).forEach(p => add('avatars', p.id, p, 'photo'));
+    (window.__staffData || []).forEach(p => add('avatars', p.id || 'st', p, 'photo'));
+    add('logo', 'logo', (window.__schoolSettings || {}), 'logo');
+
+    const total = tasks.length;
+    let done = 0, failed = 0;
+    if (onProgress) onProgress({ done, total, failed });
+    for (const t of tasks) {
+      try {
+        const url = await window.__sbUploadMedia(t.get(), { folder: t.folder, name: t.name });
+        if (url) { t.set(url); done++; } else failed++;
+      } catch (e) { failed++; }
+      if (onProgress) onProgress({ done, total, failed });
+    }
+    if (total > 0 && window.saveAllData) window.saveAllData();   // persist URLs + push
+    return { total, done, failed };
+  };
+
   // Load the profile row (role + linked_id) for the current auth user.
   window.__sbLoadProfile = async () => {
     if (!window.sb) return null;

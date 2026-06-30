@@ -1250,6 +1250,8 @@ window.__trRegistry = {
   "Activity will be recorded here as the system is used": "សកម្មភាព​នឹង​ត្រូវ​កត់ត្រា​នៅ​ទីនេះ",
   "Pushed to cloud ✓": "បានផ្ទេរទិន្នន័យទៅ Cloud ✓",
   "Push failed": "ផ្ទេរមានបញ្ហា — ' + (r?.error||''), 'Push failed — ' + (r?.error||'')), 'danger');\n    } catch (e) { toast(tr('ផ្ទេរមានបញ្ហា",
+  "Nothing to migrate — all clear": "គ្មាន​រូប base64 ត្រូវ​ផ្លាស់ — រួចរាល់​ហើយ",
+  "Migration failed": "ផ្លាស់​មាន​បញ្ហា",
   "Reloaded from cloud ✓": "បានទាញទិន្នន័យពី Cloud ✓ — កំពុង reload",
   "Reload failed": "ទាញមានបញ្ហា",
   "Folder set ✓ — first backup saved": "បាន​កំណត់​ Folder ✓ — backup ដំបូង​បាន​ save",
@@ -1271,6 +1273,9 @@ window.__trRegistry = {
   "⬆️ Push to cloud": "⬆️ ផ្ទេរ​ទៅ Cloud",
   "Reloading…": "កំពុង​ទាញ…",
   "⬇️ Reload from cloud": "⬇️ ទាញ​ពី Cloud",
+  "Move old images: upload existing base64 photos/files to Storage to shrink the database (create the “media” bucket first).": "ផ្លាស់​រូប​ចាស់៖ ផ្ទេរ​រូប/ឯកសារ base64 ដែល​មាន​ស្រាប់​ទៅ Storage ដើម្បី​បង្រួម database (ត្រូវ​បាន​បង្កើត bucket “media” សិន)។",
+  "🖼 Migrating…": "🖼 កំពុង​ផ្លាស់…",
+  "🖼 Move old images to Storage": "🖼 ផ្លាស់​រូប​ចាស់​ទៅ Storage",
   "Auto-backup": "Backup ស្វ័យប្រវត្តិ",
   "Saves anzen-backup.json to a folder on every data change": "save ជា anzen-backup.json រៀងរាល់ពេលមានការផ្លាស់ប្ដូរ",
   "Your browser does not support this feature (use Chrome or Edge)": "Browser របស់លោកអ្នក​មិន​គាំទ្រ​មុខ​ងារ​នេះ​ទេ (ប្រើ Chrome / Edge)",
@@ -2362,6 +2367,8 @@ window.__trGroups = {
     "Activity will be recorded here as the system is used": "សកម្មភាព​នឹង​ត្រូវ​កត់ត្រា​នៅ​ទីនេះ",
     "Pushed to cloud ✓": "បានផ្ទេរទិន្នន័យទៅ Cloud ✓",
     "Push failed": "ផ្ទេរមានបញ្ហា — ' + (r?.error||''), 'Push failed — ' + (r?.error||'')), 'danger');\n    } catch (e) { toast(tr('ផ្ទេរមានបញ្ហា",
+    "Nothing to migrate — all clear": "គ្មាន​រូប base64 ត្រូវ​ផ្លាស់ — រួចរាល់​ហើយ",
+    "Migration failed": "ផ្លាស់​មាន​បញ្ហា",
     "Reloaded from cloud ✓": "បានទាញទិន្នន័យពី Cloud ✓ — កំពុង reload",
     "Reload failed": "ទាញមានបញ្ហា",
     "Folder set ✓ — first backup saved": "បាន​កំណត់​ Folder ✓ — backup ដំបូង​បាន​ save",
@@ -2383,6 +2390,9 @@ window.__trGroups = {
     "⬆️ Push to cloud": "⬆️ ផ្ទេរ​ទៅ Cloud",
     "Reloading…": "កំពុង​ទាញ…",
     "⬇️ Reload from cloud": "⬇️ ទាញ​ពី Cloud",
+    "Move old images: upload existing base64 photos/files to Storage to shrink the database (create the “media” bucket first).": "ផ្លាស់​រូប​ចាស់៖ ផ្ទេរ​រូប/ឯកសារ base64 ដែល​មាន​ស្រាប់​ទៅ Storage ដើម្បី​បង្រួម database (ត្រូវ​បាន​បង្កើត bucket “media” សិន)។",
+    "🖼 Migrating…": "🖼 កំពុង​ផ្លាស់…",
+    "🖼 Move old images to Storage": "🖼 ផ្លាស់​រូប​ចាស់​ទៅ Storage",
     "Auto-backup": "Backup ស្វ័យប្រវត្តិ",
     "Saves anzen-backup.json to a folder on every data change": "save ជា anzen-backup.json រៀងរាល់ពេលមានការផ្លាស់ប្ដូរ",
     "Your browser does not support this feature (use Chrome or Edge)": "Browser របស់លោកអ្នក​មិន​គាំទ្រ​មុខ​ងារ​នេះ​ទេ (ប្រើ Chrome / Edge)",
@@ -55678,6 +55688,24 @@ var DataBackup = ({
     }
     setCloudBusy('');
   };
+  var [migBusy, setMigBusy] = React.useState(false);
+  var [migProg, setMigProg] = React.useState(null);
+  var migrateMedia = async () => {
+    if (migBusy || !window.__migrateMediaToStorage) return;
+    setMigBusy(true);
+    setMigProg({
+      done: 0,
+      total: 0,
+      failed: 0
+    });
+    try {
+      var r = await window.__migrateMediaToStorage(p => setMigProg(p));
+      if (r.total === 0) toast(tr('គ្មាន​រូប base64 ត្រូវ​ផ្លាស់ — រួចរាល់​ហើយ', 'Nothing to migrate — all clear'), 'neutral');else toast(tr(`បាន​ផ្លាស់ ${r.done}/${r.total} រូប​ទៅ Storage ✓` + (r.failed ? ` (${r.failed} បរាជ័យ)` : ''), `Moved ${r.done}/${r.total} to Storage ✓` + (r.failed ? ` (${r.failed} failed)` : '')), 'good');
+    } catch (e) {
+      toast(tr('ផ្លាស់​មាន​បញ្ហា', 'Migration failed'), 'danger');
+    }
+    setMigBusy(false);
+  };
   var reloadFromCloud = async () => {
     if (cloudBusy) return;
     setCloudBusy('pull');
@@ -55968,7 +55996,28 @@ var DataBackup = ({
       opacity: .6,
       pointerEvents: 'none'
     } : {}
-  }, cloudBusy === 'pull' ? tr('កំពុង​ទាញ…', 'Reloading…') : tr('⬇️ ទាញ​ពី Cloud', '⬇️ Reload from cloud')))))), React.createElement(Card, null, React.createElement("div", {
+  }, cloudBusy === 'pull' ? tr('កំពុង​ទាញ…', 'Reloading…') : tr('⬇️ ទាញ​ពី Cloud', '⬇️ Reload from cloud'))), React.createElement("div", {
+    style: {
+      padding: '10px 14px',
+      background: 'var(--surface-muted)',
+      borderRadius: 10,
+      border: '1px dashed var(--border)',
+      fontSize: 11,
+      color: 'var(--ink-3)',
+      lineHeight: 1.6
+    }
+  }, tr('ផ្លាស់​រូប​ចាស់៖ ផ្ទេរ​រូប/ឯកសារ base64 ដែល​មាន​ស្រាប់​ទៅ Storage ដើម្បី​បង្រួម database (ត្រូវ​បាន​បង្កើត bucket “media” សិន)។', 'Move old images: upload existing base64 photos/files to Storage to shrink the database (create the “media” bucket first).')), React.createElement(Btn, {
+    kind: "ghost",
+    size: "lg",
+    onClick: migrateMedia,
+    style: migBusy ? {
+      opacity: .6,
+      pointerEvents: 'none',
+      justifyContent: 'center'
+    } : {
+      justifyContent: 'center'
+    }
+  }, migBusy ? migProg && migProg.total ? `🖼 ${migProg.done}/${migProg.total}…` : tr('🖼 កំពុង​ផ្លាស់…', '🖼 Migrating…') : tr('🖼 ផ្លាស់​រូប​ចាស់​ទៅ Storage', '🖼 Move old images to Storage'))))), React.createElement(Card, null, React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
@@ -59581,6 +59630,66 @@ Object.assign(window, {
       console.warn('[Anzen] media upload failed (kept inline):', e && e.message);
       return null;
     }
+  };
+  window.__migrateMediaToStorage = async onProgress => {
+    if (!window.sb || !window.__sbUploadMedia) throw new Error('not-connected');
+    var isB64 = x => typeof x === 'string' && x.startsWith('data:');
+    var seen = new Set();
+    var tasks = [];
+    var add = (folder, name, obj, field) => {
+      if (!obj || !isB64(obj[field]) || seen.has(obj)) return;
+      seen.add(obj);
+      tasks.push({
+        folder,
+        name,
+        get: () => obj[field],
+        set: u => {
+          obj[field] = u;
+        }
+      });
+    };
+    (window.STUDENTS || []).forEach(s => {
+      add('avatars', s.id, s, 'photo');
+      (s.schoolDocs || []).forEach(d => add('docs', (s.id || '') + '-' + (d.fileName || 'doc'), d, 'file'));
+    });
+    (window.VEHICLES || []).forEach(v => add('photos', v.id, v, 'photo'));
+    (window.INSTRUCTORS || []).forEach(i => add('avatars', i.id, i, 'photo'));
+    (window.STAFF || []).forEach(p => add('avatars', p.id, p, 'photo'));
+    (window.__staffData || []).forEach(p => add('avatars', p.id || 'st', p, 'photo'));
+    add('logo', 'logo', window.__schoolSettings || {}, 'logo');
+    var total = tasks.length;
+    var done = 0,
+      failed = 0;
+    if (onProgress) onProgress({
+      done,
+      total,
+      failed
+    });
+    for (var t of tasks) {
+      try {
+        var url = await window.__sbUploadMedia(t.get(), {
+          folder: t.folder,
+          name: t.name
+        });
+        if (url) {
+          t.set(url);
+          done++;
+        } else failed++;
+      } catch (e) {
+        failed++;
+      }
+      if (onProgress) onProgress({
+        done,
+        total,
+        failed
+      });
+    }
+    if (total > 0 && window.saveAllData) window.saveAllData();
+    return {
+      total,
+      done,
+      failed
+    };
   };
   window.__sbLoadProfile = async () => {
     if (!window.sb) return null;

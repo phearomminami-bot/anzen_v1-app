@@ -2089,6 +2089,19 @@ const DataBackup = ({ toast, tr }) => {
     } catch (e) { toast(tr('ផ្ទេរមានបញ្ហា', 'Push failed'), 'danger'); }
     setCloudBusy('');
   };
+  const [migBusy, setMigBusy] = React.useState(false);
+  const [migProg, setMigProg] = React.useState(null); // {done,total,failed}
+  const migrateMedia = async () => {
+    if (migBusy || !window.__migrateMediaToStorage) return;
+    setMigBusy(true); setMigProg({ done:0, total:0, failed:0 });
+    try {
+      const r = await window.__migrateMediaToStorage((p) => setMigProg(p));
+      if (r.total === 0) toast(tr('គ្មាន​រូប base64 ត្រូវ​ផ្លាស់ — រួចរាល់​ហើយ','Nothing to migrate — all clear'), 'neutral');
+      else toast(tr(`បាន​ផ្លាស់ ${r.done}/${r.total} រូប​ទៅ Storage ✓` + (r.failed?` (${r.failed} បរាជ័យ)`:''),
+                    `Moved ${r.done}/${r.total} to Storage ✓` + (r.failed?` (${r.failed} failed)`:'')), 'good');
+    } catch (e) { toast(tr('ផ្លាស់​មាន​បញ្ហា','Migration failed'), 'danger'); }
+    setMigBusy(false);
+  };
   const reloadFromCloud = async () => {
     if (cloudBusy) return;
     setCloudBusy('pull');
@@ -2284,6 +2297,15 @@ const DataBackup = ({ toast, tr }) => {
                   {cloudBusy==='pull' ? tr('កំពុង​ទាញ…','Reloading…') : tr('⬇️ ទាញ​ពី Cloud','⬇️ Reload from cloud')}
                 </Btn>
               </div>
+              <div style={{padding:'10px 14px',background:'var(--surface-muted)',borderRadius:10,border:'1px dashed var(--border)',fontSize:11,color:'var(--ink-3)',lineHeight:1.6}}>
+                {tr('ផ្លាស់​រូប​ចាស់៖ ផ្ទេរ​រូប/ឯកសារ base64 ដែល​មាន​ស្រាប់​ទៅ Storage ដើម្បី​បង្រួម database (ត្រូវ​បាន​បង្កើត bucket “media” សិន)។',
+                    'Move old images: upload existing base64 photos/files to Storage to shrink the database (create the “media” bucket first).')}
+              </div>
+              <Btn kind="ghost" size="lg" onClick={migrateMedia} style={migBusy?{opacity:.6,pointerEvents:'none',justifyContent:'center'}:{justifyContent:'center'}}>
+                {migBusy
+                  ? (migProg && migProg.total ? `🖼 ${migProg.done}/${migProg.total}…` : tr('🖼 កំពុង​ផ្លាស់…','🖼 Migrating…'))
+                  : tr('🖼 ផ្លាស់​រូប​ចាស់​ទៅ Storage','🖼 Move old images to Storage')}
+              </Btn>
             </>
           )}
         </div>
