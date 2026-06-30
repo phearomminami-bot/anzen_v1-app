@@ -201,8 +201,10 @@ const CvLessonRow = ({ l, tr, onSave }) => {
 };
 
 // Print a student's lessons + exams (with feedback / results) as an A4 PDF.
-const printStudentLessonsPDF = (s, lessons, exams) => {
+const printStudentLessonsPDF = (s, lessons, exams, lang) => {
   if (!s) return;
+  lang = lang === 'en' ? 'en' : 'km';
+  const L = (km, en) => lang === 'en' ? en : km;   // structural labels only — entered data is left as-is
   const esc = (x) => String(x == null ? '' : x).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
   const ss = window.__schoolSettings || {};
   const school = ss.name || 'Anzen';
@@ -210,7 +212,7 @@ const printStudentLessonsPDF = (s, lessons, exams) => {
   const schoolEn = ss.nameEn || '';
   const logo = ss.logo || '';
   const isUrl = (x) => typeof x === 'string' && /^(data:|https?:)/.test(x);
-  const typeKm = (l) => (l.color==='c'||l.color==='e') ? 'ទ្រឹស្ដី' : 'អនុវត្តន៍';
+  const typeKm = (l) => (l.color==='c'||l.color==='e') ? L('ទ្រឹស្ដី','Theory') : L('អនុវត្តន៍','Practical');
   const stars = (n) => '★'.repeat(n||0) + '☆'.repeat(5-(n||0));
 
   // Cumulative lesson-hour numbering (oldest first, skipping cancelled lessons).
@@ -239,11 +241,11 @@ const printStudentLessonsPDF = (s, lessons, exams) => {
       const e = row.item; const r = (e.results && e.results[sid]) || {};
       const ins = (e.instIds||[]).map(id=>{ const it=instById(id); return it?esc(it.en||it.name):null; }).filter(Boolean).join(', ') || '—';
       const isFail = r.result === 'fail';
-      const badge = r.result==='pass' ? '<b style="color:#12A302">ជាប់ ✓</b>' : isFail ? '<b style="color:#B0413E">ធ្លាក់ ✗</b>' : '—';
+      const badge = r.result==='pass' ? `<b style="color:#12A302">${L('ជាប់','Pass')} ✓</b>` : isFail ? `<b style="color:#B0413E">${L('ធ្លាក់','Fail')} ✗</b>` : '—';
       const failInfo = isFail ? `${r.failLocation?'<div>📍 '+esc(r.failLocation)+'</div>':''}${r.failReason?'<div style="color:#7a2b29">'+esc(r.failReason)+'</div>':''}` : '';
       return `<tr style="background:${isFail?'#fbeceb':'#eafbe7'};-webkit-print-color-adjust:exact;print-color-adjust:exact">
         <td style="white-space:nowrap;font-family:monospace;color:#12A302;font-weight:700">${esc(e.date)}<br>${esc(String(e.time||'').slice(0,5))}</td>
-        <td><b>🎓 ប្រឡង</b><br><span style="color:#555">${ins}</span></td>
+        <td><b>🎓 ${L('ប្រឡង','Exam')}</b><br><span style="color:#555">${ins}</span></td>
         <td>${badge}${failInfo}</td>
       </tr>`;
     }
@@ -254,10 +256,10 @@ const printStudentLessonsPDF = (s, lessons, exams) => {
     const coveredHtml = coveredArr.length ? '<div style="color:#1A4F96;margin-top:2px">' + coveredArr.map(c=>'<div>'+c+'</div>').join('') + '</div>' : '';
     const fb = [];
     if (l.rating)     fb.push('<div>'+stars(l.rating)+'</div>');
-    if (l.didWell)    fb.push('<div><b>ធ្វើបានល្អ:</b> '+esc(l.didWell)+'</div>');
-    if (l.toImprove)  fb.push('<div><b>ខ្វះខាត:</b> '+esc(l.toImprove)+'</div>');
-    if (l.note)       fb.push('<div><b>មតិ:</b> '+esc(l.note)+'</div>');
-    const status = l.status==='done' ? '<b style="color:#1A6B3C">រួចរាល់</b>' : l.status==='cancelled' ? '<span style="color:#999">បានលុប</span>' : 'កំពុង';
+    if (l.didWell)    fb.push('<div><b>'+L('ធ្វើបានល្អ','Did well')+':</b> '+esc(l.didWell)+'</div>');
+    if (l.toImprove)  fb.push('<div><b>'+L('ខ្វះខាត','Needs work')+':</b> '+esc(l.toImprove)+'</div>');
+    if (l.note)       fb.push('<div><b>'+L('មតិ','Comment')+':</b> '+esc(l.note)+'</div>');
+    const status = l.status==='done' ? `<b style="color:#1A6B3C">${L('រួចរាល់','Done')}</b>` : l.status==='cancelled' ? `<span style="color:#999">${L('បានលុប','Cancelled')}</span>` : L('កំពុង','Pending');
     const hrs = hourMap[l.id];
     const hrLabel = hrs && hrs.length ? ` <span style="color:#888;font-weight:400;font-size:10px">(${hrs.join(', ')})</span>` : '';
     return `<tr>
@@ -282,15 +284,15 @@ const printStudentLessonsPDF = (s, lessons, exams) => {
     : `<div style="width:100%;height:100%;background:#eef1f5;display:flex;align-items:center;justify-content:center;color:#9aa6b5;font-size:11px">គ្មានរូប</div>`;
 
   const ir = (lab, val) => `<tr><td class="lab">${lab}</td><td class="val">${val && String(val).trim() ? esc(val) : '—'}</td></tr>`;
-  const aptBox = (km, jp, val) => `<div class="apt"><div class="aptlab">${km} · ${jp}</div><div class="aptval">${val && String(val).trim() ? esc(val) : '—'}</div></div>`;
+  const aptBox = (km, en, val) => `<div class="apt"><div class="aptlab">${L(km,en)}</div><div class="aptval">${val && String(val).trim() ? esc(val) : '—'}</div></div>`;
 
   const doc = `<!DOCTYPE html><html><head><meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;600;700;800&family=Noto+Sans+JP:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<title>សៀវភៅប្រវត្តិសិក្សាបើកបរ · ${esc(s.name||s.en||'')}</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<title>${L('សៀវភៅប្រវត្តិសិក្សាបើកបរ','Driving Lesson Record Book')} · ${esc(s.name||s.en||'')}</title>
 <style>
-  @page { size:A4 portrait; margin:14mm 12mm; @bottom-right { content:"PAGE " counter(page) " / " counter(pages); font:700 9px Inter,sans-serif; color:${NV}; } }
+  @page { size:A4 portrait; margin:14mm 12mm; @bottom-right { content:"${L('ទំព័រ','PAGE')} " counter(page) " / " counter(pages); font:700 9px Inter,sans-serif; color:${NV}; } }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:#e8e8e8;font-family:'Noto Sans Khmer','Noto Sans JP','Inter',sans-serif;color:#222;}
+  body{background:#e8e8e8;font-family:'Noto Sans Khmer','Inter',sans-serif;color:#222;}
   .bar{position:fixed;top:0;left:0;right:0;z-index:9;background:#1a1a19;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 18px;}
   .bar button{background:#2a5db0;color:#fff;border:none;border-radius:6px;padding:9px 18px;font:inherit;font-weight:700;cursor:pointer;}
   .bar .t{font-size:13px;font-weight:600;}
@@ -332,7 +334,7 @@ const printStudentLessonsPDF = (s, lessons, exams) => {
   .lt td{padding:7px 8px;border:1px solid #d7dde6;vertical-align:top;line-height:1.5;}
   @media print{ body{background:#fff;} .bar{display:none;} .sheet{margin:0;box-shadow:none;width:auto;min-height:auto;padding:0;} }
 </style></head><body>
-<div class="bar"><span class="t">សៀវភៅប្រវត្តិសិក្សាបើកបរ · ${esc(s.name||s.en||'')}</span><button onclick="window.print()">🖨 បោះពុម្ព / រក្សាជា PDF</button></div>
+<div class="bar"><span class="t">${L('សៀវភៅប្រវត្តិសិក្សាបើកបរ','Driving Lesson Record Book')} · ${esc(s.name||s.en||'')}</span><button onclick="window.print()">🖨 ${L('បោះពុម្ព / រក្សាជា PDF','Print / Save as PDF')}</button></div>
 <div class="sheet">
   <div class="head">
     ${logoHtml}
@@ -341,48 +343,46 @@ const printStudentLessonsPDF = (s, lessons, exams) => {
       ${schoolEn?`<div class="en">${esc(schoolEn)}</div>`:''}
       ${address?`<div class="ad">${esc(address)}</div>`:''}
     </div>
-    <div class="pg"><div class="l">PAGE</div><div class="n">1</div><div class="t">/${Math.max(1,Math.ceil(items.length/18)+1)}</div></div>
+    <div class="pg"><div class="l">${L('ទំព័រ','PAGE')}</div><div class="n">1</div><div class="t">/${Math.max(1,Math.ceil(items.length/18)+1)}</div></div>
   </div>
   <div class="rule"></div>
 
   <div class="title">
-    <div class="k">សៀវភៅប្រវត្តិសិក្សាបើកបរ</div>
-    <div class="j jp">教習原簿</div>
-    <div class="e">DRIVING LESSON RECORD BOOK · JAPANESE STANDARD</div>
+    <div class="k">${L('សៀវភៅប្រវត្តិសិក្សាបើកបរ','Driving Lesson Record Book')}</div>
   </div>
 
-  <div class="secbar">ពត៌មានសិស្ស<span class="r jp">教習生情報 · Student Information</span></div>
+  <div class="secbar">${L('ពត៌មានសិស្ស','Student Information')}</div>
   <div class="inforow">
     <div class="photo">${photoHtml}</div>
     <table class="itbl" style="margin-top:0">
-      ${ir('ឈ្មោះ', s.name)}
-      ${ir('ឈ្មោះឡាតាំង', s.en)}
-      ${ir('លេខសម្គាល់', s.id)}
-      ${ir('ភេទ', genderTxt)}
-      ${ir('ថ្ងៃកំណើត', fmtDob(s.dob))}
-      ${ir('ប្រភេទសិស្ស', s.studentType)}
+      ${ir(L('ឈ្មោះ','Name'), s.name)}
+      ${ir(L('ឈ្មោះឡាតាំង','Latin name'), s.en)}
+      ${ir(L('លេខសម្គាល់','ID'), s.id)}
+      ${ir(L('ភេទ','Gender'), genderTxt)}
+      ${ir(L('ថ្ងៃកំណើត','Date of birth'), fmtDob(s.dob))}
+      ${ir(L('ប្រភេទសិស្ស','Student type'), s.studentType)}
     </table>
   </div>
   <table class="itbl">
-    ${ir('សញ្ជាតិ', s.nationality)}
-    ${ir('ទូរស័ព្ទ', s.phone)}
-    ${ir('ប្រភេទប័ណ្ណ', permit)}
-    ${ir('ថ្ងៃចុះឈ្មោះ', s.regDate)}
-    ${ir('គ្រូទទួលបន្ទុក', instr)}
-    ${ir('អាសយដ្ឋាន', s.address)}
+    ${ir(L('សញ្ជាតិ','Nationality'), s.nationality)}
+    ${ir(L('ទូរស័ព្ទ','Phone'), s.phone)}
+    ${ir(L('ប្រភេទប័ណ្ណ','Licence type'), permit)}
+    ${ir(L('ថ្ងៃចុះឈ្មោះ','Reg. date'), s.regDate)}
+    ${ir(L('គ្រូទទួលបន្ទុក','Instructor'), instr)}
+    ${ir(L('អាសយដ្ឋាន','Address'), s.address)}
   </table>
 
-  <div class="secbar">ការត្រួតពិនិត្យសុខភាព<span class="r jp">適性検査 · Aptitude Test</span></div>
+  <div class="secbar">${L('ការត្រួតពិនិត្យសុខភាព','Aptitude Test')}</div>
   <div class="aptrow">
-    ${aptBox('ភ្នែកឆ្វេង','左眼', s.eye_left)}
-    ${aptBox('ភ្នែកស្ដាំ','右眼', s.eye_right)}
-    ${aptBox('ភ្នែកទាំងពីរ','両眼', s.eye_both)}
-    ${aptBox('វ៉ែនតា','眼鏡', s.glasses)}
+    ${aptBox('ភ្នែកឆ្វេង','Left eye', s.eye_left)}
+    ${aptBox('ភ្នែកស្ដាំ','Right eye', s.eye_right)}
+    ${aptBox('ភ្នែកទាំងពីរ','Both eyes', s.eye_both)}
+    ${aptBox('វ៉ែនតា','Glasses', s.glasses)}
   </div>
 
-  <div class="secbar">ប្រវត្តិសិក្សា<span class="r jp">教習記録 · Lesson Records · ${items.length}</span></div>
+  <div class="secbar">${L('ប្រវត្តិសិក្សា','Lesson Records')}<span class="r">${items.length}</span></div>
   <table class="lt">
-    <thead><tr><th style="width:124px">ថ្ងៃ/ម៉ោង</th><th style="width:36%">ប្រភេទ · គ្រូ</th><th>លទ្ធផល · មតិគ្រូ</th></tr></thead>
+    <thead><tr><th style="width:124px">${L('ថ្ងៃ/ម៉ោង','Date / Time')}</th><th style="width:36%">${L('ប្រភេទ · គ្រូ','Type · Instructor')}</th><th>${L('លទ្ធផល · មតិគ្រូ','Result · Feedback')}</th></tr></thead>
     <tbody>${rows || '<tr><td colspan="3" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr>'}</tbody>
   </table>
 </div>
@@ -1038,18 +1038,24 @@ const StudentsScreenV2 = () => {
                 return <CvLessonRow key={row.item.id||('ls'+i)} l={row.item} tr={tr} onSave={saveLessonFeedback}/>;
               });
             })()}
-            <div style={{display:'flex',gap:8,marginTop:12}}>
-              <button onClick={()=>printStudentLessonsPDF(s, studentLessons, studentExams)} style={{
+            <div style={{fontSize:11,color:'var(--ink-3)',marginTop:12,marginBottom:4}}>⬇ {tr('ទាញយក PDF — ជ្រើសភាសា','Download PDF — choose language')}</div>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={()=>printStudentLessonsPDF(s, studentLessons, studentExams, 'km')} style={{
                 flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',
                 background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,
                 display:'flex',alignItems:'center',justifyContent:'center',gap:6,
-              }}>⬇ {tr('ទាញយក PDF','Download PDF')}</button>
-              <button onClick={()=>bookLesson(s)} style={{
-                flex:1,padding:'10px',borderRadius:8,
-                border:'none',background:'var(--accent)',color:'#fff',
-                cursor:'pointer',fontSize:13,fontWeight:600,
-              }}>{tr('ណាត់​មេរៀន​ថ្មី','Book new lesson')}</button>
+              }}>🇰🇭 {tr('ខ្មែរ','Khmer')}</button>
+              <button onClick={()=>printStudentLessonsPDF(s, studentLessons, studentExams, 'en')} style={{
+                flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',
+                background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,
+                display:'flex',alignItems:'center',justifyContent:'center',gap:6,
+              }}>🇬🇧 English</button>
             </div>
+            <button onClick={()=>bookLesson(s)} style={{
+              width:'100%',marginTop:8,padding:'10px',borderRadius:8,
+              border:'none',background:'var(--accent)',color:'#fff',
+              cursor:'pointer',fontSize:13,fontWeight:600,
+            }}>{tr('ណាត់​មេរៀន​ថ្មី','Book new lesson')}</button>
           </CvSection>
         </div>
       );
