@@ -2089,6 +2089,35 @@ const DataBackup = ({ toast, tr }) => {
     } catch (e) { toast(tr('ផ្ទេរមានបញ្ហា', 'Push failed'), 'danger'); }
     setCloudBusy('');
   };
+  // ── Usage panel ─────────────────────────────────────────────────────────────
+  const fmtBytes = (n) => {
+    if (!n) return '0 KB';
+    if (n < 1024*1024) return (n/1024).toFixed(0) + ' KB';
+    if (n < 1024*1024*1024) return (n/1024/1024).toFixed(1) + ' MB';
+    return (n/1024/1024/1024).toFixed(2) + ' GB';
+  };
+  const dbBytes = React.useMemo(() => { try { return new Blob([localStorage.getItem('anzen_v1')||'']).size; } catch(e){ return 0; } }, []);
+  const [usage, setUsage] = React.useState(null);     // {bytes,files} from Storage
+  const [usageBusy, setUsageBusy] = React.useState(false);
+  const loadUsage = async () => {
+    if (usageBusy || !window.__sbStorageUsage) return;
+    setUsageBusy(true);
+    try { setUsage(await window.__sbStorageUsage()); }
+    catch (e) { toast(tr('ទាញ​ការ​ប្រើ​ប្រាស់​មិន​បាន','Could not load usage'), 'danger'); }
+    setUsageBusy(false);
+  };
+  React.useEffect(() => { if (window.__sbConfigured && window.__sbConfigured()) loadUsage(); }, []);
+  const STORAGE_LIMIT = 1024*1024*1024;   // ~1 GB free
+  const DB_LIMIT      = 500*1024*1024;    // ~500 MB free
+  const UsageBar = ({ used, limit, color }) => {
+    const pct = Math.min(100, Math.round((used/limit)*100));
+    return (
+      <div style={{height:8,background:'var(--surface-muted)',borderRadius:999,overflow:'hidden',marginTop:6}}>
+        <div style={{width:`${pct}%`,height:'100%',background:pct>=90?'var(--danger)':pct>=70?'var(--warn)':color,borderRadius:999}}/>
+      </div>
+    );
+  };
+
   const [migBusy, setMigBusy] = React.useState(false);
   const [migProg, setMigProg] = React.useState(null); // {done,total,failed}
   const migrateMedia = async () => {
@@ -2306,6 +2335,46 @@ const DataBackup = ({ toast, tr }) => {
                   ? (migProg && migProg.total ? `🖼 ${migProg.done}/${migProg.total}…` : tr('🖼 កំពុង​ផ្លាស់…','🖼 Migrating…'))
                   : tr('🖼 ផ្លាស់​រូប​ចាស់​ទៅ Storage','🖼 Move old images to Storage')}
               </Btn>
+
+              {/* Usage */}
+              <div style={{borderTop:'1px solid var(--border)',paddingTop:14,marginTop:4}}>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
+                  <div style={{fontSize:13,fontWeight:700}}>{tr('ការ​ប្រើ​ប្រាស់','Usage')}</div>
+                  <Btn kind="ghost" size="sm" onClick={loadUsage} style={usageBusy?{opacity:.6,pointerEvents:'none'}:{}}>
+                    {usageBusy ? tr('កំពុង…','…') : tr('↻ ផ្ទុក​ឡើង​វិញ','↻ Refresh')}
+                  </Btn>
+                </div>
+
+                {/* Storage (real) */}
+                <div style={{marginBottom:12}}>
+                  <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}>
+                    <span style={{color:'var(--ink-2)'}}>📦 Storage {usage ? `· ${usage.files} ${tr('ឯកសារ','files')}` : ''}</span>
+                    <span style={{fontWeight:600}}>{usage ? `${fmtBytes(usage.bytes)} / 1 GB` : (usageBusy ? '…' : '—')}</span>
+                  </div>
+                  {usage && <UsageBar used={usage.bytes} limit={STORAGE_LIMIT} color="var(--accent)"/>}
+                </div>
+
+                {/* Database (estimate) */}
+                <div style={{marginBottom:12}}>
+                  <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}>
+                    <span style={{color:'var(--ink-2)'}}>🗄 {tr('Database (ប៉ាន់ស្មាន)','Database (est.)')}</span>
+                    <span style={{fontWeight:600}}>~{fmtBytes(dbBytes)} / 500 MB</span>
+                  </div>
+                  <UsageBar used={dbBytes} limit={DB_LIMIT} color="var(--good)"/>
+                </div>
+
+                {/* Egress — not available via API */}
+                <div style={{padding:'9px 12px',background:'var(--surface-muted)',borderRadius:8,fontSize:11,color:'var(--ink-3)',lineHeight:1.6,display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+                  <span>📊 {tr('Egress (ទាញ​ចេញ/ខែ) មើល​បាន​តែ​នៅ Dashboard','Egress (per month) is only visible on the Dashboard')}</span>
+                  <button onClick={()=>window.open(window.__sbDashboardUsageUrl(),'_blank')}
+                    style={{border:'1px solid var(--accent)',background:'var(--surface)',color:'var(--accent)',borderRadius:6,padding:'4px 10px',fontSize:11,fontWeight:600,cursor:'pointer'}}>
+                    ↗ {tr('បើក Dashboard','Open Dashboard')}
+                  </button>
+                </div>
+                <div style={{fontSize:10,color:'var(--ink-3)',marginTop:6}}>
+                  {tr('Free: ~5GB egress · 1GB storage · 500MB database ក្នុង​មួយ​ខែ','Free: ~5GB egress · 1GB storage · 500MB database per month')}
+                </div>
+              </div>
             </>
           )}
         </div>

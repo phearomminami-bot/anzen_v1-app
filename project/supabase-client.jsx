@@ -84,6 +84,36 @@
     return { total, done, failed };
   };
 
+  // Real Storage usage: walks the media bucket and sums file sizes.
+  // Returns { bytes, files } or null when not connected.
+  window.__sbStorageUsage = async () => {
+    if (!window.sb) return null;
+    const bucket = window.sb.storage.from('media');
+    let bytes = 0, files = 0;
+    const walk = async (prefix) => {
+      const { data, error } = await bucket.list(prefix, { limit: 1000 });
+      if (error || !data) return;
+      for (const item of data) {
+        if (item.id === null) {                 // a folder → recurse
+          await walk(prefix ? prefix + '/' + item.name : item.name);
+        } else {
+          files++;
+          bytes += (item.metadata && item.metadata.size) || 0;
+        }
+      }
+    };
+    await walk('');
+    return { bytes, files };
+  };
+
+  // Direct link to this project's usage report on the Supabase dashboard.
+  window.__sbDashboardUsageUrl = () => {
+    try {
+      const ref = ((window.__ANZEN_SUPABASE || {}).url || '').match(/https?:\/\/([^.]+)\./);
+      return ref ? `https://supabase.com/dashboard/project/${ref[1]}/reports` : 'https://supabase.com/dashboard';
+    } catch (e) { return 'https://supabase.com/dashboard'; }
+  };
+
   // Load the profile row (role + linked_id) for the current auth user.
   window.__sbLoadProfile = async () => {
     if (!window.sb) return null;
