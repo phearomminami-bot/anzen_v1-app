@@ -1377,6 +1377,37 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
   else if (vehFilter) { const v = VEHICLES.find(x=>x.id===vehFilter); filterInfo = `Vehicle: ${v?v.plate:vehFilter}`; }
   else if (studentFilter) { const s = STUDENTS.find(x=>x.id===studentFilter); filterInfo = `Student: ${s?s.name:studentFilter}`; }
 
+  // Exams + applications (not lessons). Respect the same filters; hide when a
+  // vehicle filter is set since these have no vehicle.
+  const exams = (((ss.scheduleExams) || []).filter(e =>
+    (!instFilter    || (e.instIds||[]).includes(instFilter)) &&
+    (!studentFilter || (e.studentIds||[]).includes(studentFilter)) &&
+    (!vehFilter)));
+  const examByDate = {};
+  exams.forEach(e => { if (e.date) (examByDate[e.date] = examByDate[e.date] || []).push(e); });
+  const eh = (e) => { const [h,m] = String(e.time||'').split(':').map(Number); return (h||0) + (m||0)/60; };
+  const exMeta = (e) => e.kind==='apply'
+    ? { col:'#CA8A04', bg:'#fff8e1', lab:'📝 ដាក់ពាក្យ' }
+    : { col:'#12A302', bg:'#eafbe7', lab:'🎓 ប្រឡង' };
+  const examNames = (ids, arr, key) => (ids||[]).map(id=>{ const o=arr.find(x=>x.id===id); return o?(o.en||o[key]||o.name):null; }).filter(Boolean).join(', ');
+  const examCard = (e) => {
+    const m = exMeta(e); const t = String(e.time||'').slice(0,5);
+    const stu = examNames(e.studentIds, STUDENTS, 'name');
+    const ins = examNames(e.instIds, INSTRUCTORS, 'en');
+    return `<div style="background:${m.bg};border:1px solid ${m.col}66;border-left:3px solid ${m.col};border-radius:4px;padding:4px 6px;margin-bottom:3px;font-size:10px;line-height:1.4;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+      <div style="font-weight:700;color:${m.col}">${m.lab}${t?' · '+t:''}</div>
+      ${stu?`<div style="font-weight:600;color:#222">${stu}</div>`:''}
+      ${ins?`<div style="color:#555">${ins}</div>`:''}
+      ${e.note?`<div style="color:#888;font-size:9px">${e.note}</div>`:''}
+    </div>`;
+  };
+  const examMini = (e) => {
+    const m = exMeta(e); const t = String(e.time||'').slice(0,5);
+    const stu = examNames(e.studentIds, STUDENTS, 'name');
+    return `<div style="background:${m.bg};border-left:2px solid ${m.col};border-radius:2px;padding:2px 3px;margin-top:2px;font-size:7.5px;line-height:1.3;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+      <b style="color:${m.col}">${t?t+' ':''}${m.lab}</b>${stu?`<div style="font-weight:600;color:#222">${stu}</div>`:''}</div>`;
+  };
+
   // ── Month helpers (so the PDF month grid can be regenerated for any month) ──
   const EN_MO = (typeof EN_MONTHS !== 'undefined' && EN_MONTHS) || ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const pad2 = n => String(n).padStart(2,'0');
@@ -1422,9 +1453,10 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
           </div>`;
         }).join('');
         const more = dl.length > 8 ? `<div style="font-size:7.5px;color:#999;margin-top:1px">+${dl.length-8}…</div>` : '';
+        const exItems = (examByDate[ds] || []).slice().sort((a,b)=>eh(a)-eh(b)).map(examMini).join('');
         cells += `<td style="border:1px solid #ddd;vertical-align:top;padding:3px 4px;min-height:78px;width:14.28%;background:${inMonth ? (isSun ? '#fff7f7' : '#fff') : '#f7f7f5'}">
           <div style="font-size:11px;font-weight:700;color:${!inMonth ? '#bbb' : isSun ? '#c04040' : '#444'}">${d.getDate()}</div>
-          ${inMonth ? items + more : ''}
+          ${inMonth ? items + more + exItems : ''}
         </td>`;
       }
       rows += `<tr>${cells}</tr>`;
@@ -1444,12 +1476,13 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
   if (viewType === 'agenda') {
     const grouped = {};
     lessons.forEach(l => { if (!grouped[l.date]) grouped[l.date] = []; grouped[l.date].push(l); });
-    const dates = Object.keys(grouped).sort();
+    const dates = [...new Set([...Object.keys(grouped), ...Object.keys(examByDate)])].sort();
     if (dates.length === 0) {
       bodyHTML = `<p style="color:#888;text-align:center;padding:20px">No lessons in this period.</p>`;
     } else {
       bodyHTML = dates.map(date => {
-        const dayLessons = grouped[date].sort((a,b) => a.h - b.h);
+        const dayLessons = (grouped[date]||[]).slice().sort((a,b) => a.h - b.h);
+        const dayExams   = (examByDate[date]||[]).slice().sort((a,b)=>eh(a)-eh(b));
         const d = new Date(date+'T00:00:00');
         const dayLabel = DAYS[d.getDay()===0?6:d.getDay()-1];
         return `<div style="margin-bottom:16px">
@@ -1457,6 +1490,10 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
           ${dayLessons.map(l => `<div style="display:flex;gap:10px;padding:6px 10px;border-bottom:1px solid #eee;align-items:flex-start">
             <div style="min-width:78px;font-size:11px;font-weight:600;color:#444;font-family:monospace">${fmtH(l.h)}-${fmtH(l.h+(l.len||1))}</div>
             <div style="flex:1">${lessonCard(l)}</div>
+          </div>`).join('')}
+          ${dayExams.map(e => `<div style="display:flex;gap:10px;padding:6px 10px;border-bottom:1px solid #eee;align-items:flex-start">
+            <div style="min-width:78px;font-size:11px;font-weight:600;color:#444;font-family:monospace">${String(e.time||'').slice(0,5)}</div>
+            <div style="flex:1">${examCard(e)}</div>
           </div>`).join('')}
         </div>`;
       }).join('');
@@ -1489,8 +1526,9 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
           <td style="padding:4px 6px;border:1px solid #eee;background:#fafaf7;font-family:monospace;font-size:10px;color:#888;vertical-align:top;white-space:nowrap">${fmtH(h)}</td>
           ${allDates.map(date => {
             const slotLessons = lessons.filter(l => l.date === date && l.status !== 'cancelled' && l.h <= h && h < l.h + (l.len||1));
+            const slotExams = (examByDate[date]||[]).filter(e => { const s=Math.floor(eh(e)); return s <= h && h < s + (e.len||1); });
             return `<td style="padding:3px;border:1px solid #eee;vertical-align:top;min-height:30px">
-              ${slotLessons.map(l => lessonCard(l)).join('')}
+              ${slotLessons.map(l => lessonCard(l)).join('')}${slotExams.map(e => examCard(e)).join('')}
             </td>`;
           }).join('')}
         </tr>`).join('')}
