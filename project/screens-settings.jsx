@@ -1653,6 +1653,19 @@ const Integrations = () => {
 };
 
 // ── Appearance ────────────────────────────────────────────────────────────
+// One notification-preference row. This is its OWN component so each row owns
+// its useState — calling a Hook inside a .map() callback (as this used to do)
+// violates the Rules of Hooks and breaks the moment the list becomes dynamic.
+const NotifPrefRow = ({ p, i, tr }) => {
+  const [on, setOn] = React.useState(p.def);
+  return (
+    <div style={{display:'flex',alignItems:'center',padding:'10px 0',borderTop:i?'1px solid var(--border)':'none'}}>
+      <div style={{flex:1,fontSize:13}}>{tr(p.km,p.en)}</div>
+      <StToggleFn on={on} onChange={v=>setOn(v)}/>
+    </div>
+  );
+};
+
 const AppearanceSettings = ({ lang, setLang, tr, toast, fontSize, setFontSize, role, dark, toggleDark }) => {
   const getInstData = () => {
     if (window.__loggedInInstructorData) return window.__loggedInInstructorData;
@@ -1821,15 +1834,9 @@ const AppearanceSettings = ({ lang, setLang, tr, toast, fontSize, setFontSize, r
 
       {/* Notification toggles */}
       <Card label={tr('ការ​ជូន​ដំណឹង','NOTIFICATIONS · ការ​ជូន​ដំណឹង')}>
-        {[{km:'អ៊ីមែល',en:'Email',def:true},{km:'SMS · សារ',en:'SMS',def:true},{km:'Push',en:'Push (app)',def:false}].map((p,i)=>{
-          const [on, setOn] = React.useState(p.def);
-          return (
-            <div key={i} style={{display:'flex',alignItems:'center',padding:'10px 0',borderTop:i?'1px solid var(--border)':'none'}}>
-              <div style={{flex:1,fontSize:13}}>{tr(p.km,p.en)}</div>
-              <StToggleFn on={on} onChange={v=>setOn(v)}/>
-            </div>
-          );
-        })}
+        {[{km:'អ៊ីមែល',en:'Email',def:true},{km:'SMS · សារ',en:'SMS',def:true},{km:'Push',en:'Push (app)',def:false}].map((p,i)=>(
+          <NotifPrefRow key={i} p={p} i={i} tr={tr}/>
+        ))}
       </Card>
 
       {/* Danger zone */}

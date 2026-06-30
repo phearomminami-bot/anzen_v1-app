@@ -941,7 +941,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(o=>o-1)}>{tr('◀ មុន','◀ Prev')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(0)}>{tr('ថ្ងៃ​នេះ','Today')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(o=>o+1)}>{tr('បន្ទាប់ ▶','Next ▶')}</Btn>
-            <Btn kind="ghost" size="md" onClick={()=>generateSchedulePDF({lessons:visibleLessons.filter(l=>l.status!=='cancelled'),weekDates:allWeekDates,viewType:v,labelEn,instFilter,vehFilter,studentFilter})} icon={<Icon name="download" size={14}/>}>{tr('PDF','PDF')}</Btn>
+            <Btn kind="ghost" size="md" onClick={()=>generateSchedulePDF({lessons:visibleLessons.filter(l=>l.status!=='cancelled'),weekDates:allWeekDates,viewType:v,labelEn,instFilter,vehFilter,studentFilter,lang})} icon={<Icon name="download" size={14}/>}>{tr('PDF','PDF')}</Btn>
             {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:allWeekDates[0]||today,time:'09:00',title:'',description:'',author:meName,invited:[]})} icon={<Icon name="bell" size={14}/>}>{tr('+ ចំណាំ','+ Note')}</Btn>}
             {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setExamModal({kind:'exam',date:allWeekDates[0]||today,time:'08:00',len:2,studentIds:[],instIds:[],note:''})} icon={<Icon name="star" size={14}/>} style={{color:'#12A302',borderColor:'#12A302'}}>{tr('+ ប្រឡង','+ Exam')}</Btn>}
             {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setExamModal({kind:'apply',date:allWeekDates[0]||today,time:'08:00',len:2,studentIds:[],instIds:[],note:''})} icon={<Icon name="book" size={14}/>} style={{color:'#CA8A04',borderColor:'#CA8A04'}}>{tr('+ ដាក់​ពាក្យ','+ Apply')}</Btn>}
@@ -1114,7 +1114,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
         <Btn kind="ghost" size="md" style={{justifyContent:'center'}}
           onClick={()=>{
             const mLabel = `${EN_MONTHS[parseInt(mobileDate.slice(5,7))-1]} ${mobileDate.slice(0,4)}`;
-            generateSchedulePDF({lessons:visibleLessons.filter(l=>l.status!=='cancelled'),weekDates:allWeekDates,viewType:'month',monthAnchor:mobileDate,labelEn:mLabel,instFilter,vehFilter,studentFilter});
+            generateSchedulePDF({lessons:visibleLessons.filter(l=>l.status!=='cancelled'),weekDates:allWeekDates,viewType:'month',monthAnchor:mobileDate,labelEn:mLabel,instFilter,vehFilter,studentFilter,lang});
           }}
           icon={<Icon name="download" size={14}/>}>{tr('ទាញ​យក PDF (ប្រចាំ​ខែ)','Download PDF (month)')}</Btn>
       )}
@@ -1353,44 +1353,59 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
 };
 
 // ── Schedule PDF Generator ────────────────────────────────────────────────────
-const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter, vehFilter, studentFilter, monthAnchor }) => {
+const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter, vehFilter, studentFilter, monthAnchor, lang }) => {
   const ss   = window.__schoolSettings || {};
   const name = ss.name || 'Anzen Driving School';
   const HOURS = Array.from({length:12}, (_,i) => i+7);
-  const DAYS  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const EN_DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const KM_DAYS = (typeof DAYS_KM !== 'undefined' && DAYS_KM) || EN_DAYS;
   const LC    = { a:'#1A4F96', b:'#1A4F96', c:'#5B2EA0', d:'#1A6B3C', e:'#9B4D10' };
   const LBG   = { a:'#D6E4F5', b:'#D6E4F5', c:'#E5DAF5', d:'#D4F0E4', e:'#FAE8CC' };
 
-  const fmtH = h => `${String(h).padStart(2,'0')}:00`;
+  // ── Language: pure Khmer or pure English. The toolbar toggle re-renders the
+  // whole PDF in the chosen language (re-invokes this fn with the new `lang`). ─
+  const curLang = (lang || window.__anzenLang || 'km') === 'en' ? 'en' : 'km';
+  const L  = (km,en) => curLang==='km' ? km : en;
+  const kd = s => curLang==='km' ? String(s).replace(/[0-9]/g, d=>'០១២៣៤៥៦៧៨៩'[+d]) : String(s);
+  const DAYS = curLang==='km' ? KM_DAYS : EN_DAYS;
+  const sName = s => !s ? '' : (curLang==='km' ? (s.name||s.en||'') : (s.en||s.name||''));
+  const iName = i => !i ? '' : (curLang==='km' ? (i.name||i.en||'') : (i.en||i.name||''));
 
+  const fmtH = h => kd(`${String(h).padStart(2,'0')}:00`);
+  const fmtRange = (h,len) => `${fmtH(h)}-${fmtH(h+(len||1))}`;
+
+  // Per-student colour + Theory(dark)/Practice(light) shading, via the shared
+  // lessonBlockColor() helper (studentMode=false → colour by student).
   const lessonCard = (l) => {
-    const key = l.color || l.cat || 'a';
-    const col = LC[key]  || '#444';
-    const bg  = LBG[key] || '#eee';
-    const ht  = Math.max(1, l.len || 1);
+    const c    = lessonBlockColor(l);
+    const isTh = isTheoryLesson(l);
     const inst = INSTRUCTORS.find(i => i.id === l.instId);
     const veh  = VEHICLES.find(v => v.id === l.veh);
     const stu  = STUDENTS.find(s => s.id === l.studentId);
-    const typeLabel = (key==='c' || key==='e') ? 'Theory' : 'Practice';
-    const locLabel  = locLabelOf(l);
-    const locBg     = locLabel === 'School' ? '#2A5DB0' : locLabel === 'Course' ? '#B0413E' : '#888';
+    const typeLabel = isTh ? L('ទ្រឹស្ដី','Theory') : L('អនុវត្តន៍','Practice');
+    const locRaw   = locLabelOf(l);
+    const locLabel = locRaw==='School' ? L('សាលា','School') : locRaw==='Course' ? L('ទីលាន','Course') : locRaw;
+    const locBg    = locRaw==='School' ? '#2A5DB0' : locRaw==='Course' ? '#B0413E' : '#888';
     const transLabel = veh?.trans || '';
-    return `<div style="background:${bg};border:1px solid ${col}55;border-left:3px solid ${col};border-radius:4px;padding:4px 6px;margin-bottom:3px;font-size:10px;line-height:1.4;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+    const nameCol = isTh ? '#fff' : '#16181d';
+    const subCol  = isTh ? 'rgba(255,255,255,.82)' : '#4a4a4a';
+    const metaCol = isTh ? 'rgba(255,255,255,.68)' : '#777';
+    return `<div style="background:${c.bg};border:1px solid ${c.bd};border-left:3px solid ${c.accent};border-radius:4px;padding:4px 6px;margin-bottom:3px;font-size:10px;line-height:1.4;-webkit-print-color-adjust:exact;print-color-adjust:exact">
       <div style="display:flex;align-items:center;gap:4px;margin-bottom:1px">
-        <span style="font-weight:700;color:${col};font-size:9px;text-transform:uppercase">${typeLabel}</span>
+        <span style="font-weight:700;color:${c.text};font-size:9px">${typeLabel}</span>
         ${locLabel ? `<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;background:${locBg};color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">${locLabel}</span>` : ''}
         ${transLabel ? `<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;background:${transLabel==='MT'?'#7A3B2B':'#3B7A57'};color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">${transLabel}</span>` : ''}
       </div>
-      ${stu ? `<div style="font-weight:600;color:#222">${stu.name||''}</div>` : ''}
-      <div style="color:#555">${inst ? (inst.en||inst.name||'') : '—'}</div>
-      <div style="color:#888;font-size:9px">${veh ? veh.plate : '—'} · ${fmtH(l.h)}-${fmtH(l.h+(l.len||1))}</div>
+      ${stu ? `<div style="font-weight:600;color:${nameCol}">${sName(stu)}</div>` : ''}
+      <div style="color:${subCol}">${inst ? iName(inst) : '—'}</div>
+      <div style="color:${metaCol};font-size:9px">${veh ? veh.plate : '—'} · ${fmtRange(l.h,l.len)}</div>
     </div>`;
   };
 
   let filterInfo = '';
-  if (instFilter) { const i = INSTRUCTORS.find(x=>x.id===instFilter); filterInfo = `Instructor: ${i?i.en:instFilter}`; }
-  else if (vehFilter) { const v = VEHICLES.find(x=>x.id===vehFilter); filterInfo = `Vehicle: ${v?v.plate:vehFilter}`; }
-  else if (studentFilter) { const s = STUDENTS.find(x=>x.id===studentFilter); filterInfo = `Student: ${s?s.name:studentFilter}`; }
+  if (instFilter) { const i = INSTRUCTORS.find(x=>x.id===instFilter); filterInfo = `${L('គ្រូ','Instructor')}: ${i?iName(i):instFilter}`; }
+  else if (vehFilter) { const v = VEHICLES.find(x=>x.id===vehFilter); filterInfo = `${L('យានយន្ត','Vehicle')}: ${v?v.plate:vehFilter}`; }
+  else if (studentFilter) { const s = STUDENTS.find(x=>x.id===studentFilter); filterInfo = `${L('សិស្ស','Student')}: ${s?sName(s):studentFilter}`; }
 
   // Exams + applications (not lessons). Respect the same filters; hide when a
   // vehicle filter is set since these have no vehicle.
@@ -1402,13 +1417,13 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
   exams.forEach(e => { if (e.date) (examByDate[e.date] = examByDate[e.date] || []).push(e); });
   const eh = (e) => { const [h,m] = String(e.time||'').split(':').map(Number); return (h||0) + (m||0)/60; };
   const exMeta = (e) => e.kind==='apply'
-    ? { col:'#CA8A04', bg:'#fff8e1', lab:'📝 ដាក់ពាក្យ' }
-    : { col:'#12A302', bg:'#eafbe7', lab:'🎓 ប្រឡង' };
-  const examNames = (ids, arr, key) => (ids||[]).map(id=>{ const o=arr.find(x=>x.id===id); return o?(o.en||o[key]||o.name):null; }).filter(Boolean).join(', ');
+    ? { col:'#CA8A04', bg:'#fff8e1', lab:'📝 '+L('ដាក់ពាក្យ','Application') }
+    : { col:'#12A302', bg:'#eafbe7', lab:'🎓 '+L('ប្រឡង','Exam') };
+  const examNames = (ids, arr, namer) => (ids||[]).map(id=>{ const o=arr.find(x=>x.id===id); return o?namer(o):null; }).filter(Boolean).join(', ');
   const examCard = (e) => {
-    const m = exMeta(e); const t = String(e.time||'').slice(0,5);
-    const stu = examNames(e.studentIds, STUDENTS, 'name');
-    const ins = examNames(e.instIds, INSTRUCTORS, 'en');
+    const m = exMeta(e); const t = kd(String(e.time||'').slice(0,5));
+    const stu = examNames(e.studentIds, STUDENTS, sName);
+    const ins = examNames(e.instIds, INSTRUCTORS, iName);
     return `<div style="background:${m.bg};border:1px solid ${m.col}66;border-left:3px solid ${m.col};border-radius:4px;padding:4px 6px;margin-bottom:3px;font-size:10px;line-height:1.4;-webkit-print-color-adjust:exact;print-color-adjust:exact">
       <div style="font-weight:700;color:${m.col}">${m.lab}${t?' · '+t:''}</div>
       ${stu?`<div style="font-weight:600;color:#222">${stu}</div>`:''}
@@ -1417,16 +1432,17 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
     </div>`;
   };
   const examMini = (e) => {
-    const m = exMeta(e); const t = String(e.time||'').slice(0,5);
-    const stu = examNames(e.studentIds, STUDENTS, 'name');
+    const m = exMeta(e); const t = kd(String(e.time||'').slice(0,5));
+    const stu = examNames(e.studentIds, STUDENTS, sName);
     return `<div style="background:${m.bg};border-left:2px solid ${m.col};border-radius:2px;padding:2px 3px;margin-top:2px;font-size:7.5px;line-height:1.3;-webkit-print-color-adjust:exact;print-color-adjust:exact">
       <b style="color:${m.col}">${t?t+' ':''}${m.lab}</b>${stu?`<div style="font-weight:600;color:#222">${stu}</div>`:''}</div>`;
   };
 
   // ── Month helpers (so the PDF month grid can be regenerated for any month) ──
   const EN_MO = (typeof EN_MONTHS !== 'undefined' && EN_MONTHS) || ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const KM_MO = (typeof KM_MONTHS !== 'undefined' && KM_MONTHS) || EN_MO;
   const pad2 = n => String(n).padStart(2,'0');
-  const fmtMonthLabel = (Y,M) => `${EN_MO[M]} ${Y}`;
+  const fmtMonthLabel = (Y,M) => curLang==='km' ? `${KM_MO[M]} ${kd(Y)}` : `${EN_MO[M]} ${Y}`;
   const monthHours = (Y,M) => lessons.filter(l => { const d = new Date((l.date||'')+'T00:00:00'); return d.getFullYear()===Y && d.getMonth()===M; }).reduce((a,l)=>a+(l.len||1),0);
   // Full-month wall-calendar grid (Mon–Sun columns, week rows) for the given anchor.
   const buildMonthGrid = (anchor) => {
@@ -1447,23 +1463,27 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
         const isSun = d.getDay() === 0;
         const ds = fmtD(d);
         const lMini = (l) => {
-          const k = l.color || 'a';
+          const c    = lessonBlockColor(l);
+          const isTh = isTheoryLesson(l);
           const s = STUDENTS.find(x => x.id === l.studentId);
           const inst = INSTRUCTORS.find(i => i.id === l.instId);
           const veh = VEHICLES.find(v => v.id === l.veh);
-          const typeLabel = (k==='c' || k==='e') ? 'Theory' : 'Practice';
-          const loc = locLabelOf(l);
-          const locBg = loc==='School'?'#2A5DB0':loc==='Course'?'#B0413E':'#888';
+          const typeLabel = isTh ? L('ទ្រឹស្ដី','Theory') : L('អនុវត្តន៍','Practice');
+          const locRaw = locLabelOf(l);
+          const loc = locRaw==='School' ? L('សាលា','School') : locRaw==='Course' ? L('ទីលាន','Course') : locRaw;
+          const locBg = locRaw==='School'?'#2A5DB0':locRaw==='Course'?'#B0413E':'#888';
           const trans = veh && veh.trans ? veh.trans : '';
+          const nameCol = isTh ? '#fff' : '#16181d';
+          const subCol  = isTh ? 'rgba(255,255,255,.8)' : '#555';
           const bdg = (txt,bg) => `<span style="font-size:6.5px;font-weight:700;padding:0 3px;border-radius:2px;background:${bg};color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">${txt}</span>`;
-          return `<div style="background:${LBG[k]||'#eee'};border-left:2px solid ${LC[k]||'#888'};border-radius:2px;padding:2px 3px;margin-top:2px;font-size:7.5px;line-height:1.3;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+          return `<div style="background:${c.bg};border-left:2px solid ${c.accent};border-radius:2px;padding:2px 3px;margin-top:2px;font-size:7.5px;line-height:1.3;-webkit-print-color-adjust:exact;print-color-adjust:exact">
             <div style="display:flex;gap:2px;align-items:center;flex-wrap:wrap">
-              <b style="color:${LC[k]}">${fmtH(l.h)}-${fmtH(l.h+(l.len||1))}</b>
-              <span style="font-weight:700;color:${LC[k]}">${typeLabel}</span>
+              <b style="color:${c.text}">${fmtRange(l.h,l.len)}</b>
+              <span style="font-weight:700;color:${c.text}">${typeLabel}</span>
               ${loc?bdg(loc,locBg):''}${trans?bdg(trans,trans==='MT'?'#7A3B2B':'#3B7A57'):''}
             </div>
-            ${s?`<div style="font-weight:600;color:#222">${s.name}</div>`:''}
-            <div style="color:#555">${inst?(inst.en||inst.name||''):'—'}${veh&&veh.plate?' · '+veh.plate:''}</div>
+            ${s?`<div style="font-weight:600;color:${nameCol}">${sName(s)}</div>`:''}
+            <div style="color:${subCol}">${inst?iName(inst):'—'}${veh&&veh.plate?' · '+veh.plate:''}</div>
           </div>`;
         };
         // Lessons + exams + applications merged and sorted by time together.
@@ -1472,9 +1492,9 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
           ...(examByDate[ds] || []).map(e => ({ h:eh(e), html:examMini(e) })),
         ].sort((a,b) => a.h - b.h);
         const items = merged.slice(0, 9).map(x => x.html).join('');
-        const more = merged.length > 9 ? `<div style="font-size:7.5px;color:#999;margin-top:1px">+${merged.length-9}…</div>` : '';
+        const more = merged.length > 9 ? `<div style="font-size:7.5px;color:#999;margin-top:1px">+${kd(merged.length-9)}…</div>` : '';
         cells += `<td style="border:1px solid #ddd;vertical-align:top;padding:3px 4px;min-height:78px;width:14.28%;background:${inMonth ? (isSun ? '#fff7f7' : '#fff') : '#f7f7f5'}">
-          <div style="font-size:11px;font-weight:700;color:${!inMonth ? '#bbb' : isSun ? '#c04040' : '#444'}">${d.getDate()}</div>
+          <div style="font-size:11px;font-weight:700;color:${!inMonth ? '#bbb' : isSun ? '#c04040' : '#444'}">${kd(d.getDate())}</div>
           ${inMonth ? items + more : ''}
         </td>`;
       }
@@ -1486,8 +1506,17 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
     </table>`;
   };
 
+  // Lang-aware date-range label for week/agenda (built from the visible dates).
+  const rangeLabel = () => {
+    const ds = (weekDates || []).filter(Boolean);
+    if (!ds.length) return kd(labelEn || '');
+    const a = new Date(ds[0]+'T00:00:00'), b = new Date(ds[ds.length-1]+'T00:00:00');
+    const MO = curLang==='km' ? KM_MO : EN_MO;
+    return `${MO[a.getMonth()]} ${kd(a.getDate())} – ${MO[b.getMonth()]} ${kd(b.getDate())}, ${kd(b.getFullYear())}`;
+  };
+
   let bodyHTML = '';
-  let curLabel = labelEn;
+  let curLabel = rangeLabel();
   let curHours = lessons.reduce((a,l)=>a+(l.len||1),0);
   // Mutable anchor for the month view so the month switcher can change it.
   let monthAnchorDate = new Date((monthAnchor || (lessons[0] && lessons[0].date) || todayStr()) + 'T00:00:00');
@@ -1497,7 +1526,7 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
     lessons.forEach(l => { if (!grouped[l.date]) grouped[l.date] = []; grouped[l.date].push(l); });
     const dates = [...new Set([...Object.keys(grouped), ...Object.keys(examByDate)])].sort();
     if (dates.length === 0) {
-      bodyHTML = `<p style="color:#888;text-align:center;padding:20px">No lessons in this period.</p>`;
+      bodyHTML = `<p style="color:#888;text-align:center;padding:20px">${L('គ្មាន​មេរៀន​ក្នុង​អំឡុង​ពេល​នេះ','No lessons in this period.')}</p>`;
     } else {
       bodyHTML = dates.map(date => {
         const dayLessons = (grouped[date]||[]).slice().sort((a,b) => a.h - b.h);
@@ -1510,12 +1539,12 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
             <div style="flex:1">${lessonCard(l)}</div>
           </div>` })),
           ...dayExams.map(e => ({ h:eh(e), html:`<div style="display:flex;gap:10px;padding:6px 10px;border-bottom:1px solid #eee;align-items:flex-start">
-            <div style="min-width:78px;font-size:11px;font-weight:600;color:#444;font-family:monospace">${String(e.time||'').slice(0,5)}</div>
+            <div style="min-width:78px;font-size:11px;font-weight:600;color:#444;font-family:monospace">${kd(String(e.time||'').slice(0,5))}</div>
             <div style="flex:1">${examCard(e)}</div>
           </div>` })),
         ].sort((a,b)=> a.h - b.h);
         return `<div style="margin-bottom:16px">
-          <div style="font-size:12px;font-weight:700;color:#1A4F96;padding:6px 10px;background:#E8F0FB;border-radius:6px;margin-bottom:6px">${dayLabel} ${date}</div>
+          <div style="font-size:12px;font-weight:700;color:#1A4F96;padding:6px 10px;background:#E8F0FB;border-radius:6px;margin-bottom:6px">${dayLabel} ${kd(date)}</div>
           ${dayRows.map(x=>x.html).join('')}
         </div>`;
       }).join('');
@@ -1530,12 +1559,12 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
     bodyHTML = `<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:11px">
       <thead>
         <tr>
-          <th style="width:50px;padding:6px;border:1px solid #ddd;background:#f5f5f3;font-size:10px;color:#888">Time</th>
+          <th style="width:50px;padding:6px;border:1px solid #ddd;background:#f5f5f3;font-size:10px;color:#888">${L('ម៉ោង','Time')}</th>
           ${allDates.map((date,i) => {
             const d = new Date(date+'T00:00:00');
             const isSun = d.getDay() === 0;
             const dayLbl = DAYS[i] || '';
-            const dayNum = date ? parseInt(date.slice(8)) : '';
+            const dayNum = date ? kd(parseInt(date.slice(8))) : '';
             return `<th style="padding:6px;border:1px solid #ddd;background:${isSun?'#fff0f0':'#f5f5f3'};color:${isSun?'#c04040':'#333'};font-size:10px">
               <div style="font-weight:700">${dayLbl}</div>
               <div style="font-size:12px;font-weight:600">${dayNum}</div>
@@ -1558,30 +1587,68 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
     </table>`;
   }
 
+  // Students shown in the export — for the colour key. Month view restricts to
+  // the visible month so the key matches what's on the page.
+  const legendStudents = () => {
+    let ls = lessons;
+    if (viewType === 'month') {
+      const Y = monthAnchorDate.getFullYear(), M = monthAnchorDate.getMonth();
+      ls = lessons.filter(l => { const d = new Date((l.date||'')+'T00:00:00'); return d.getFullYear()===Y && d.getMonth()===M; });
+    }
+    const ids = [...new Set(ls.map(l => l.studentId).filter(x => x && x !== '—'))];
+    return ids.map(id => STUDENTS.find(s => s.id === id)).filter(Boolean)
+      .sort((a,b) => sName(a).localeCompare(sName(b)));
+  };
+
+  // Colour key: one chip per student (a split swatch — dark half = Theory,
+  // light half = Practice — so the dark/light shading is self-explanatory).
+  const legendHTML = () => {
+    const studs = legendStudents();
+    const studentChips = studs.map(s => {
+      const th = lessonBlockColor({ studentId:s.id, color:'c' });   // theory shade
+      const pr = lessonBlockColor({ studentId:s.id, color:'a' });   // practice shade
+      return `<span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;color:#333">
+        <span style="display:inline-flex;width:18px;height:12px;border-radius:3px;overflow:hidden;border:1px solid ${pr.bd};-webkit-print-color-adjust:exact;print-color-adjust:exact">
+          <span style="flex:1;background:${th.bg};-webkit-print-color-adjust:exact;print-color-adjust:exact"></span><span style="flex:1;background:${pr.bg};-webkit-print-color-adjust:exact;print-color-adjust:exact"></span>
+        </span>${sName(s)}</span>`;
+    }).join('');
+    const sw = (bg,bd) => `<span style="width:11px;height:11px;border-radius:3px;background:${bg};border:1px solid ${bd};-webkit-print-color-adjust:exact;print-color-adjust:exact"></span>`;
+    const badge = (txt,bg) => `<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;background:${bg};color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">${txt}</span>`;
+    const shadeRow = `<div style="display:flex;gap:12px 14px;flex-wrap:wrap;align-items:center;font-size:10px;color:#555">
+      <span style="display:inline-flex;align-items:center;gap:5px">${sw('#3a3f4a','#2a2e36')}${L('ទ្រឹស្ដី (ពណ៌​ដិត)','Theory (dark)')}</span>
+      <span style="display:inline-flex;align-items:center;gap:5px">${sw('#dfe3ea','#c4ccd6')}${L('អនុវត្តន៍ (ពណ៌​ស្រាល)','Practice (light)')}</span>
+      <span style="width:1px;height:12px;background:#ddd"></span>
+      <span style="display:inline-flex;align-items:center;gap:5px">${badge(L('សាលា','School'),'#2A5DB0')}${L('ទីតាំង​សាលា','At school')}</span>
+      <span style="display:inline-flex;align-items:center;gap:5px">${badge(L('ទីលាន','Course'),'#B0413E')}${L('ទីលាន​ហ្វឹក​ហាត់','Practice ground')}</span>
+    </div>`;
+    return `<div style="padding:0 20px 12px;display:flex;flex-direction:column;gap:7px">
+      ${studs.length ? `<div style="display:flex;gap:10px 14px;flex-wrap:wrap;align-items:center">
+        <span style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em">${L('សិស្ស','Students')}</span>${studentChips}
+      </div>` : ''}
+      ${shadeRow}
+    </div>`;
+  };
+
   // Assemble the printable page (header + legend + body) for a given label /
   // hours / inner-grid. Re-callable so the month switcher can repaint it.
+  const viewTitle = viewType==='agenda' ? L('កាលវិភាគ​ប្រចាំ​ថ្ងៃ','Agenda')
+    : viewType==='month' ? L('កាលវិភាគ​ប្រចាំ​ខែ','Monthly Schedule')
+    : L('កាលវិភាគ​ប្រចាំ​សប្ដាហ៍','Weekly Schedule');
   const assemble = (inner, lbl, hrs) => `
   <div style="padding:16px 20px 10px;border-bottom:2px solid #1A4F96;display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px">
     <div>
       <div style="font-size:18px;font-weight:700;color:#1A4F96">${name}</div>
       <div style="font-size:13px;font-weight:600;color:#333;margin-top:2px">
-        ${viewType==='agenda'?'Agenda':viewType==='month'?'Monthly Schedule':'Weekly Schedule'} · ${lbl}
+        ${viewTitle} · ${lbl}
       </div>
-      ${filterInfo ? `<div style="font-size:11px;color:#777;margin-top:2px">Filter: ${filterInfo}</div>` : ''}
+      ${filterInfo ? `<div style="font-size:11px;color:#777;margin-top:2px">${filterInfo}</div>` : ''}
     </div>
     <div style="text-align:right;font-size:10px;color:#aaa">
-      <div>Printed: ${new Date().toLocaleDateString()}</div>
-      <div>${hrs} hour${hrs!==1?'s':''}</div>
+      <div>${L('បោះពុម្ព','Printed')}: ${kd(new Date().toLocaleDateString('en-GB'))}</div>
+      <div>${curLang==='km' ? `${kd(hrs)} ម៉ោង` : `${hrs} hour${hrs!==1?'s':''}`}</div>
     </div>
   </div>
-  <div style="display:flex;gap:14px;flex-wrap:wrap;padding:0 20px 10px;font-size:10px;color:#555;align-items:center">
-    ${[['Practice','a'],['Theory','c']].map(([lbl2,k])=>
-      `<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;border-radius:3px;background:${LBG[k]};border:1px solid ${LC[k]};-webkit-print-color-adjust:exact;print-color-adjust:exact"></span>${lbl2}</span>`
-    ).join('')}
-    <span style="width:1px;height:12px;background:#ddd"></span>
-    <span style="display:inline-flex;align-items:center;gap:5px"><span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;background:#2A5DB0;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">School</span> ទីតាំង​សាលា</span>
-    <span style="display:inline-flex;align-items:center;gap:5px"><span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;background:#B0413E;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">Course</span> ទីលាន​ហ្វឹក​ហាត់</span>
-  </div>
+  ${legendHTML()}
   <div style="padding:0 20px 20px">${inner}</div>`;
 
   const bodyContent = assemble(bodyHTML, curLabel, curHours);
@@ -1614,13 +1681,23 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
         <button id="__pdfMNext" title="បន្ទាប់" style="border:none;background:rgba(255,255,255,.2);color:#fff;font-size:16px;font-weight:700;width:38px;height:38px;border-radius:9px;cursor:pointer">▶</button>
       </div>` : '';
 
+  // Language toggle — pure Khmer or pure English. Re-renders the whole PDF.
+  const langToggle = `
+      <div style="display:flex;background:rgba(255,255,255,.16);border-radius:9px;padding:2px">
+        <button id="__pdfLangKm" style="border:none;background:${curLang==='km'?'#fff':'transparent'};color:${curLang==='km'?'#1A4F96':'#fff'};font-size:13px;font-weight:700;padding:8px 13px;border-radius:7px;cursor:pointer">ខ្មែរ</button>
+        <button id="__pdfLangEn" style="border:none;background:${curLang==='en'?'#fff':'transparent'};color:${curLang==='en'?'#1A4F96':'#fff'};font-size:13px;font-weight:700;padding:8px 13px;border-radius:7px;cursor:pointer">EN</button>
+      </div>`;
+
   const host = document.createElement('div');
   host.id = HOST_ID;
   host.innerHTML = `
     <div class="pdf-toolbar" style="position:sticky;top:0;z-index:2;display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;align-items:center;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;background:#1A4F96;color:#fff;box-shadow:0 1px 8px rgba(0,0,0,.25)">
-      <button id="__pdfBack" style="display:inline-flex;align-items:center;gap:6px;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:15px;font-weight:600;padding:10px 16px;border-radius:9px;cursor:pointer">⬅ ត្រឡប់ · Back</button>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button id="__pdfBack" style="display:inline-flex;align-items:center;gap:6px;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:15px;font-weight:600;padding:10px 16px;border-radius:9px;cursor:pointer">⬅ ${L('ត្រឡប់','Back')}</button>
+        ${langToggle}
+      </div>
       ${monthSwitcher}
-      <button id="__pdfPrint" style="display:inline-flex;align-items:center;gap:6px;border:none;background:#fff;color:#1A4F96;font-size:15px;font-weight:700;padding:10px 16px;border-radius:9px;cursor:pointer">🖨 បោះពុម្ព / PDF</button>
+      <button id="__pdfPrint" style="display:inline-flex;align-items:center;gap:6px;border:none;background:#fff;color:#1A4F96;font-size:15px;font-weight:700;padding:10px 16px;border-radius:9px;cursor:pointer">🖨 ${L('បោះពុម្ព / PDF','Print / PDF')}</button>
     </div>
     <div class="pdf-paper">${bodyContent}</div>`;
   document.body.appendChild(host);
@@ -1628,6 +1705,19 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
   const cleanup = () => { host.remove(); style.remove(); };
   host.querySelector('#__pdfBack').onclick  = cleanup;
   host.querySelector('#__pdfPrint').onclick = () => { try { window.print(); } catch(e) {} };
+
+  // Switch language → re-render the whole PDF in the chosen language, keeping
+  // the same view and (for month view) the currently-selected month.
+  const reinvokeLang = (newLang) => {
+    if (newLang === curLang) return;
+    let nextMonth = monthAnchor;
+    const mi = host.querySelector('#__pdfMonth');
+    if (mi && mi.value) nextMonth = mi.value + '-01';
+    cleanup();
+    generateSchedulePDF({ lessons, weekDates, viewType, labelEn, instFilter, vehFilter, studentFilter, monthAnchor: nextMonth, lang: newLang });
+  };
+  host.querySelector('#__pdfLangKm').onclick = () => reinvokeLang('km');
+  host.querySelector('#__pdfLangEn').onclick = () => reinvokeLang('en');
 
   // Repaint the printable page for the currently-selected month.
   if (viewType === 'month') {

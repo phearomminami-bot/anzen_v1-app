@@ -3349,8 +3349,9 @@ const printLicenseAbroadRequest = (s) => {
   /* Left-aligned (not justified) so unfilled lines don't stretch the spaces. */
   .p { text-indent:48px; margin:14px 0; text-align:left; }
   .strong { font-weight:700; font-family:'Moul','Noto Serif Khmer',serif; }
-  .sign { margin-top:26px; text-align:center; line-height:2.3; }
-  .signname { margin-top:46px; text-align:center; font-weight:700; font-family:'Moul','Noto Serif Khmer',serif; }
+  .signwrap { width:58%; margin:26px 0 0 auto; text-align:center; }
+  .sign { line-height:2.3; }
+  .signname { margin-top:46px; font-weight:700; font-family:'Moul','Noto Serif Khmer',serif; }
   .attach { margin-top:34px; font-size:14px; line-height:2; }
   @media print { body { background:#fff; } .pdf-bar { display:none; } .sheet { margin:0; box-shadow:none; width:auto; min-height:auto; } }
 </style></head><body>
@@ -3373,10 +3374,12 @@ const printLicenseAbroadRequest = (s) => {
 
   <div class="p">សូម <span class="strong">លោកប្រធានមន្ទីរ</span> មេត្ដាទទួលនូវការគោរពដ៏ខ្ពង់ខ្ពស់ពី${honor}។</div>
 
-  <div class="sign">ថ្ងៃ ${blank(40)} ខែ ${blank(40)} ឆ្នាំ ${blank(50)} ព.ស ${blank(70)}<br/>
-    ធ្វើនៅ${blank(70)}ថ្ងៃទី${blank(36)}ខែ${blank(36)}ឆ្នាំ${blank(50)}<br/>
-    <span class="strong">ស្នាមមេដៃស្ដាំ</span></div>
-  <div class="signname">${v(name,140)}</div>
+  <div class="signwrap">
+    <div class="sign">ថ្ងៃ ${blank(40)} ខែ ${blank(40)} ឆ្នាំ ${blank(50)} ព.ស ${blank(70)}<br/>
+      ធ្វើនៅ${blank(70)}ថ្ងៃទី${blank(36)}ខែ${blank(36)}ឆ្នាំ${blank(50)}<br/>
+      <span class="strong">ស្នាមមេដៃស្ដាំ</span></div>
+    <div class="signname">${v(name,140)}</div>
+  </div>
 
   <div class="attach">សូមជូនភ្ជាប់មកជាមួយនូវ ៖
     <div style="display:flex;align-items:baseline;margin-top:4px">
