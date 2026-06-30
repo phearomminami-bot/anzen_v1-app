@@ -214,11 +214,20 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
       )}
       {/* Body */}
       <div style={{display:'grid',gridTemplateColumns:`56px repeat(${weekDates.length},1fr)`,position:'relative'}}>
-        {/* Hour labels */}
+        {/* Hour labels — tappable in single-day view to open the create chooser */}
         <div>
-          {hours.map(h => (
-            <div key={h} style={{height:48,padding:'4px 8px',borderBottom:'1px solid var(--border)',fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{String(h).padStart(2,'0')}:00</div>
-          ))}
+          {hours.map(h => {
+            const tappable = weekDates.length === 1 && !isPaint;
+            return (
+              <div key={h}
+                onClick={tappable ? ()=>onSlot(weekDates[0], h) : undefined}
+                title={tappable ? `${String(h).padStart(2,'0')}:00` : ''}
+                style={{height:48,padding:'4px 8px',borderBottom:'1px solid var(--border)',fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',cursor:tappable?'pointer':'default',transition:'background .1s'}}
+                onMouseEnter={tappable?e=>{e.currentTarget.style.background='rgba(42,93,176,.06)';}:undefined}
+                onMouseLeave={tappable?e=>{e.currentTarget.style.background='transparent';}:undefined}
+              >{String(h).padStart(2,'0')}:00</div>
+            );
+          })}
         </div>
         {/* Day columns */}
         {weekDates.map((date,dayIdx)=>{

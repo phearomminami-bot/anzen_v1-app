@@ -17502,17 +17502,30 @@ var ScheduleWeek = ({
       gridTemplateColumns: `56px repeat(${weekDates.length},1fr)`,
       position: 'relative'
     }
-  }, React.createElement("div", null, hours.map(h => React.createElement("div", {
-    key: h,
-    style: {
-      height: 48,
-      padding: '4px 8px',
-      borderBottom: '1px solid var(--border)',
-      fontSize: 10,
-      color: 'var(--ink-3)',
-      fontFamily: '"JetBrains Mono",monospace'
-    }
-  }, String(h).padStart(2, '0'), ":00"))), weekDates.map((date, dayIdx) => {
+  }, React.createElement("div", null, hours.map(h => {
+    var tappable = weekDates.length === 1 && !isPaint;
+    return React.createElement("div", {
+      key: h,
+      onClick: tappable ? () => onSlot(weekDates[0], h) : undefined,
+      title: tappable ? `${String(h).padStart(2, '0')}:00` : '',
+      style: {
+        height: 48,
+        padding: '4px 8px',
+        borderBottom: '1px solid var(--border)',
+        fontSize: 10,
+        color: 'var(--ink-3)',
+        fontFamily: '"JetBrains Mono",monospace',
+        cursor: tappable ? 'pointer' : 'default',
+        transition: 'background .1s'
+      },
+      onMouseEnter: tappable ? e => {
+        e.currentTarget.style.background = 'rgba(42,93,176,.06)';
+      } : undefined,
+      onMouseLeave: tappable ? e => {
+        e.currentTarget.style.background = 'transparent';
+      } : undefined
+    }, String(h).padStart(2, '0'), ":00");
+  })), weekDates.map((date, dayIdx) => {
     var dayLessons = lessons.filter(l => l.date === date);
     var dayNotes = notes.filter(n => n.date === date && n.time).map(n => {
       var [hh, mm] = n.time.split(':').map(Number);
