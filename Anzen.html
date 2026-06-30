@@ -45352,9 +45352,11 @@ var printLicenseAbroadRequest = s => {
   var honor = s.gender === 'F' ? 'នាងខ្ញុំ' : 'ខ្ញុំបាទ';
   var genderTxt = s.gender === 'F' ? 'ស្រី' : s.gender === 'M' ? 'ប្រុស' : '';
   var dob = s.dob && /^\d{4}-\d{2}-\d{2}/.test(s.dob) ? s.dob : '';
-  var bDay = dob ? dob.slice(8, 10) : '';
-  var bMonth = dob ? dob.slice(5, 7) : '';
-  var bYear = dob ? dob.slice(0, 4) : '';
+  var toKh = x => String(x).replace(/[0-9]/g, d => '០១២៣៤៥៦៧៨៩'[+d]);
+  var KMM = typeof KM_MONTHS !== 'undefined' && KM_MONTHS || ['មករា', 'កុម្ភៈ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា', 'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ'];
+  var bDay = dob ? toKh(dob.slice(8, 10)) : '';
+  var bMonth = dob ? KMM[+dob.slice(5, 7) - 1] || toKh(dob.slice(5, 7)) : '';
+  var bYear = dob ? toKh(dob.slice(0, 4)) : '';
   var addr = [s.addr_house && 'ផ្ទះលេខ ' + s.addr_house, s.addr_street && 'ផ្លូវ ' + s.addr_street, s.addr_village && 'ភូមិ' + s.addr_village, s.addr_commune && 'ឃុំ/សង្កាត់ ' + s.addr_commune, (s.addr_district || s.district) && 'ស្រុក/ខណ្ឌ ' + (s.addr_district || s.district), s.addr_province && 'ខេត្ត/រាជធានី ' + s.addr_province].filter(Boolean).join(' ');
   var name = s.name || s.en || '';
   var w = window.open('', '_blank', 'width=900,height=1100');
@@ -45390,14 +45392,14 @@ var printLicenseAbroadRequest = s => {
   <div class="center moul sub">ជាតិ&nbsp;&nbsp;សាសនា&nbsp;&nbsp;ព្រះមហាក្សត្រ</div>
   <div style="height:18px"></div>
 
-  <div class="p">${honor}ឈ្មោះ៖ <span class="strong">${v(name, 140)}</span> ភេទ ${v(genderTxt, 40)} កើតថ្ងៃទី${v(bDay, 34)} ខែ${v(bMonth, 34)} ឆ្នាំ${v(bYear, 54)} ជនជាតិ ខ្មែរ កាន់អត្តសញ្ញាណប័ណ្ណសញ្ជាតិខ្មែរ លេខ ${v(s.natId, 120)} អាស័យដ្ឋាន៖ ${v(addr, 220)} ។</div>
+  <div class="p">${honor}ឈ្មោះ <span class="strong">${v(name, 140)}</span> ភេទ ${v(genderTxt, 40)} កើតថ្ងៃទី${v(bDay, 34)} ខែ${v(bMonth, 34)} ឆ្នាំ${v(bYear, 54)} ជនជាតិ ខ្មែរ កាន់អត្តសញ្ញាណប័ណ្ណសញ្ជាតិខ្មែរ លេខ ${v(s.natId, 120)} អាស័យដ្ឋាន៖ ${v(addr, 220)} ។</div>
 
   <div class="center sub" style="margin-top:8px">សូមគោរពជូន</div>
   <div class="center sub">លោកប្រធានមន្ទីរសាធារណការ និង ដឹកជញ្ជូន${v(s.exam_location, 120)}</div>
 
   <div class="p"><span class="strong">កម្មវត្ថុ ៖</span> សំណើសុំបញ្ជាក់ភាពត្រឹមត្រូវលើបណ្ណបើកបរយានយន្តរបស់${honor} លេខ ${v(s.license_no, 120)}។</div>
 
-  <div class="p">សេចក្ដីដូចមានសរសេរក្នុងកម្មវត្ថុខាងលើ ${honor}សូមគោរពជូន <span class="strong">លោកប្រធានមន្ទីរ</span> មេត្ដាជ្រាបៈ ដោយ${honor}ត្រូវទៅធ្វើការនៅក្រៅប្រទេស ហើយត្រូវការបញ្ជាក់ភាពត្រឹមត្រូវលើបណ្ណបើកបរយានយន្តរបស់${honor} លេខ ${v(s.license_no, 120)} ដើម្បីយកទៅប្រើប្រាស់នៅក្រៅប្រទេសបាន។</div>
+  <div class="p">សេចក្ដីដូចមានសរសេរក្នុងកម្មវត្ថុខាងលើ ${honor}សូមគោរពជូន <span class="strong">លោកប្រធានមន្ទីរ</span> មេត្ដាជ្រាប ៖ ដោយ${honor}ត្រូវទៅធ្វើការនៅក្រៅប្រទេស ហើយត្រូវការបញ្ជាក់ភាពត្រឹមត្រូវលើបណ្ណបើកបរយានយន្តរបស់${honor} លេខ ${v(s.license_no, 120)} ដើម្បីយកទៅប្រើប្រាស់នៅក្រៅប្រទេសបាន។</div>
 
   <div class="p">អាស្រ័យដូចបានជម្រាបជូនខាងលើ សូម <span class="strong">លោកប្រធានមន្ទីរ</span> មេត្ដាពិនិត្យ និងជួយសម្រួលដោយក្ដីអនុគ្រោះ។</div>
 
