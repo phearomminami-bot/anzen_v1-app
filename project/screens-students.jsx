@@ -202,14 +202,15 @@ const CvLessonRow = ({ l, tr, onSave }) => {
 
 // Print a student's lessons + exams (with feedback / results) as an A4 PDF.
 // Eye condition (was "glasses"): Normal / Glasses / Contact Lens.
-const EYE_OPTS = [
+// NB: distinct from forms.jsx EYE_OPTS (the vision-value list) — different name.
+const EYE_COND_OPTS = [
   { v:'ធម្មតា',        en:'Normal' },
   { v:'វ៉ែនតា',        en:'Glasses' },
   { v:'កែវ​ប៉ះ​ភ្នែក',  en:'Contact Lens' },
 ];
 // Normalise legacy values (មិនពាក់/ពាក់) to the new option set.
 const normEye = (v) => v==='មិនពាក់' ? 'ធម្មតា' : v==='ពាក់' ? 'វ៉ែនតា' : (v || 'ធម្មតា');
-const eyeEn   = (v) => { const o = EYE_OPTS.find(x => x.v === normEye(v)); return o ? o.en : (v || ''); };
+const eyeEn   = (v) => { const o = EYE_COND_OPTS.find(x => x.v === normEye(v)); return o ? o.en : (v || ''); };
 
 // Translate short free-text feedback to the target language via the configured
 // Anthropic key. Returns a map original→translation, or {} if no key / failure.
@@ -1655,7 +1656,7 @@ const BiographyCard = ({ s, onSave }) => {
         <div {...g2}>
           <div><Lbl>ស្ថានភាពភ្នែក · Eye condition</Lbl>
             <select {...sel} value={normEye(glasses)} onChange={e=>setGlasses(e.target.value)}>
-              {EYE_OPTS.map(o=> <option key={o.v} value={o.v}>{o.v} · {o.en}</option>)}
+              {EYE_COND_OPTS.map(o=> <option key={o.v} value={o.v}>{o.v} · {o.en}</option>)}
             </select>
           </div>
         </div>
@@ -2255,7 +2256,7 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
         <SEField label={tr('ជនជាតិ','Nationality')}><input {...inp} value={nationality} onChange={e=>setNationality(e.target.value)} placeholder="ខ្មែរ"/></SEField>
         <SEField label={tr('ស្ថានភាពភ្នែក','Eye condition')}>
           <select {...sel} value={normEye(glasses)} onChange={e=>setGlasses(e.target.value)}>
-            {EYE_OPTS.map(o=> <option key={o.v} value={o.v}>{tr(o.v, o.en)}</option>)}
+            {EYE_COND_OPTS.map(o=> <option key={o.v} value={o.v}>{tr(o.v, o.en)}</option>)}
           </select>
         </SEField>
         <SEField label={tr('ស្គាល់​សាលា​តាម','Referral')}>

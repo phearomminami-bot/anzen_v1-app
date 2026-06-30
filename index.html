@@ -38655,7 +38655,7 @@ var CvLessonRow = ({
     size: 13
   }), tr('កែ​មតិ', 'Edit'))));
 };
-var EYE_OPTS = [{
+var EYE_COND_OPTS = [{
   v: 'ធម្មតា',
   en: 'Normal'
 }, {
@@ -38667,7 +38667,7 @@ var EYE_OPTS = [{
 }];
 var normEye = v => v === 'មិនពាក់' ? 'ធម្មតា' : v === 'ពាក់' ? 'វ៉ែនតា' : v || 'ធម្មតា';
 var eyeEn = v => {
-  var o = EYE_OPTS.find(x => x.v === normEye(v));
+  var o = EYE_COND_OPTS.find(x => x.v === normEye(v));
   return o ? o.en : v || '';
 };
 var translateFeedbackTexts = async (texts, target) => {
@@ -41615,7 +41615,7 @@ var BiographyCard = ({
   }, v || '—'))))), React.createElement("div", g2, React.createElement("div", null, React.createElement(Lbl, null, "\u179F\u17D2\u1790\u17B6\u1793\u1797\u17B6\u1796\u1797\u17D2\u1793\u17C2\u1780 \xB7 Eye condition"), React.createElement("select", _extends({}, sel, {
     value: normEye(glasses),
     onChange: e => setGlasses(e.target.value)
-  }), EYE_OPTS.map(o => React.createElement("option", {
+  }), EYE_COND_OPTS.map(o => React.createElement("option", {
     key: o.v,
     value: o.v
   }, o.v, " \xB7 ", o.en))))), React.createElement("div", {
@@ -42910,7 +42910,7 @@ var StudentEditPanel = ({
   }, React.createElement("select", _extends({}, sel, {
     value: normEye(glasses),
     onChange: e => setGlasses(e.target.value)
-  }), EYE_OPTS.map(o => React.createElement("option", {
+  }), EYE_COND_OPTS.map(o => React.createElement("option", {
     key: o.v,
     value: o.v
   }, tr(o.v, o.en))))), React.createElement(SEField, {
