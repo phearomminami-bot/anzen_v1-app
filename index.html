@@ -936,6 +936,7 @@ window.__trRegistry = {
   "No vehicles to display": "មិន​ទាន់​មាន​យានយន្ត",
   "Toggle vehicles visible in Vehicle management": "ធ្វើ​ឲ្យ​យានយន្ត​មើលឃើញ​នៅ​ Vehicle management",
   "Hr": "ម៉ោងទី",
+  "Changed": "បានប្ដូរថ្ងៃ",
   "Lessons (from Tab Lessons)": "មេរៀន (ពី Tab Lessons)",
   "Theory · 学科": "ទ្រឹស្ដី",
   "Practical · 技能": "អនុវត្តន៍",
@@ -1526,6 +1527,7 @@ window.__trGroups = {
   },
   "សិស្ស · Students": {
     "Hr": "ម៉ោងទី",
+    "Changed": "បានប្ដូរថ្ងៃ",
     "Lessons (from Tab Lessons)": "មេរៀន (ពី Tab Lessons)",
     "Theory · 学科": "ទ្រឹស្ដី",
     "Practical · 技能": "អនុវត្តន៍",
@@ -38591,6 +38593,7 @@ var CvLessonRow = ({
   var hr = h == null ? l.h || 0 : h;
   var pad = n => String(n).padStart(2, '0');
   var timeLabel = `${pad(hr)}:00–${pad(hr + 1)}:00`;
+  var cancelled = l.status === 'cancelled';
   var [open, setOpen] = React.useState(false);
   var covered = lessonsCoveredByIds(fb0.lessonIds, fb0.lessonNo);
   var [rating, setRating] = React.useState(fb0.rating);
@@ -38663,7 +38666,8 @@ var CvLessonRow = ({
   }, '★'.repeat(5 - n)));
   return React.createElement("div", {
     style: {
-      borderBottom: '1px solid var(--border)'
+      borderBottom: '1px solid var(--border)',
+      opacity: cancelled ? .55 : 1
     }
   }, React.createElement("button", {
     onClick: toggleOpen,
@@ -38694,7 +38698,8 @@ var CvLessonRow = ({
     style: {
       fontSize: 12.5,
       fontWeight: 600,
-      color: 'var(--ink)'
+      color: 'var(--ink)',
+      textDecoration: cancelled ? 'line-through' : 'none'
     }
   }, l.date), React.createElement("span", {
     style: {
@@ -38757,14 +38762,14 @@ var CvLessonRow = ({
   }, fb0.note)), React.createElement("span", {
     style: {
       fontSize: 11,
-      color: done ? 'var(--good)' : 'var(--ink-3)',
+      color: cancelled ? 'var(--warn)' : done ? 'var(--good)' : 'var(--ink-3)',
       fontWeight: 500,
       flexShrink: 0,
       display: 'flex',
       alignItems: 'center',
       gap: 4
     }
-  }, done ? tr('រួចរាល់', 'Done') : tr('កំពុង', 'Pending'), React.createElement("span", {
+  }, cancelled ? tr('បានប្ដូរថ្ងៃ', 'Changed') : done ? tr('រួចរាល់', 'Done') : tr('កំពុង', 'Pending'), React.createElement("span", {
     style: {
       transition: 'transform .2s',
       transform: open ? 'rotate(180deg)' : 'none',
@@ -40072,6 +40077,13 @@ var StudentsScreenV2 = () => {
     window.__notifyStudentsChanged = forceUpdate;
     return () => {
       delete window.__notifyStudentsChanged;
+    };
+  }, [forceUpdate]);
+  React.useEffect(() => {
+    var prev = window.__notifyLessonsChanged;
+    window.__notifyLessonsChanged = forceUpdate;
+    return () => {
+      window.__notifyLessonsChanged = prev && prev !== forceUpdate ? prev : null;
     };
   }, [forceUpdate]);
   var allStudents = STUDENTS.map(extendStudent).sort((a, b) => String(a.id || '').localeCompare(String(b.id || ''), undefined, {

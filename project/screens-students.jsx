@@ -99,6 +99,7 @@ const CvLessonRow = ({ l, offset = 0, h, total = 1, cumNo, tr, onSave }) => {
   const hr  = (h == null ? (l.h || 0) : h);
   const pad = (n) => String(n).padStart(2, '0');
   const timeLabel = `${pad(hr)}:00–${pad(hr+1)}:00`;
+  const cancelled = l.status === 'cancelled';   // "change day" in the schedule
   const [open, setOpen]           = React.useState(false);
   const covered = lessonsCoveredByIds(fb0.lessonIds, fb0.lessonNo);
   const [rating, setRating]       = React.useState(fb0.rating);
@@ -125,14 +126,14 @@ const CvLessonRow = ({ l, offset = 0, h, total = 1, cumNo, tr, onSave }) => {
   const showForm = editing || !hasFeedback;   // first time (no feedback) → form; otherwise read-only
   const stars = (n) => <span style={{color:'var(--gold)',letterSpacing:1}}>{'★'.repeat(n)}<span style={{color:'var(--border-strong)'}}>{'★'.repeat(5-n)}</span></span>;
   return (
-    <div style={{borderBottom:'1px solid var(--border)'}}>
+    <div style={{borderBottom:'1px solid var(--border)', opacity: cancelled ? .55 : 1}}>
       <button onClick={toggleOpen} style={{
         width:'100%', textAlign:'left', background:'transparent', border:'none', cursor:'pointer',
         padding:'10px 0', display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:10,
       }}>
         <div style={{minWidth:0}}>
           <div style={{display:'flex',alignItems:'baseline',gap:8,flexWrap:'wrap'}}>
-            <span style={{fontSize:12.5,fontWeight:600,color:'var(--ink)'}}>{l.date}</span>
+            <span style={{fontSize:12.5,fontWeight:600,color:'var(--ink)',textDecoration:cancelled?'line-through':'none'}}>{l.date}</span>
             <span style={{fontSize:11.5,fontWeight:600,color:'var(--accent)',fontFamily:'monospace'}}>{timeLabel}</span>
             {/* Running Theory/Practical hour count — italic so it isn't read as a date. */}
             {cumNo != null && <span style={{fontSize:12,fontStyle:'italic',fontWeight:700,color:'var(--accent)'}}>({cumNo})</span>}
@@ -150,8 +151,8 @@ const CvLessonRow = ({ l, offset = 0, h, total = 1, cumNo, tr, onSave }) => {
           {(fb0.rating > 0) && <div style={{fontSize:12,color:'var(--gold)',marginTop:1,letterSpacing:1}}>{'★'.repeat(fb0.rating)}<span style={{color:'var(--border-strong)'}}>{'★'.repeat(5-fb0.rating)}</span></div>}
           {fb0.note && !open && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2,fontStyle:'italic',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{fb0.note}</div>}
         </div>
-        <span style={{fontSize:11,color:done?'var(--good)':'var(--ink-3)',fontWeight:500,flexShrink:0,display:'flex',alignItems:'center',gap:4}}>
-          {done?tr('រួចរាល់','Done'):tr('កំពុង','Pending')}
+        <span style={{fontSize:11,color:cancelled?'var(--warn)':done?'var(--good)':'var(--ink-3)',fontWeight:500,flexShrink:0,display:'flex',alignItems:'center',gap:4}}>
+          {cancelled?tr('បានប្ដូរថ្ងៃ','Changed'):done?tr('រួចរាល់','Done'):tr('កំពុង','Pending')}
           <span style={{transition:'transform .2s',transform:open?'rotate(180deg)':'none',color:'var(--ink-3)'}}>▾</span>
         </span>
       </button>
@@ -822,6 +823,15 @@ const StudentsScreenV2 = () => {
   React.useEffect(() => {
     window.__notifyStudentsChanged = forceUpdate;
     return () => { delete window.__notifyStudentsChanged; };
+  }, [forceUpdate]);
+
+  // Keep the lesson record in sync with the schedule: when a lesson is logged,
+  // moved (change-day → cancelled), deleted, restored or synced from the cloud,
+  // re-render so the student's history reflects it immediately.
+  React.useEffect(() => {
+    const prev = window.__notifyLessonsChanged;
+    window.__notifyLessonsChanged = forceUpdate;
+    return () => { window.__notifyLessonsChanged = (prev && prev !== forceUpdate) ? prev : null; };
   }, [forceUpdate]);
 
   const allStudents = STUDENTS.map(extendStudent)
