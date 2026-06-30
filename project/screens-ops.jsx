@@ -1437,8 +1437,7 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
         const inMonth = d.getMonth() === M;
         const isSun = d.getDay() === 0;
         const ds = fmtD(d);
-        const dl = (byDate[ds] || []).sort((a,b) => a.h - b.h);
-        const items = dl.slice(0, 8).map(l => {
+        const lMini = (l) => {
           const k = l.color || 'a';
           const s = STUDENTS.find(x => x.id === l.studentId);
           const inst = INSTRUCTORS.find(i => i.id === l.instId);
@@ -1457,12 +1456,17 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
             ${s?`<div style="font-weight:600;color:#222">${s.name}</div>`:''}
             <div style="color:#555">${inst?(inst.en||inst.name||''):'—'}${veh&&veh.plate?' · '+veh.plate:''}</div>
           </div>`;
-        }).join('');
-        const more = dl.length > 8 ? `<div style="font-size:7.5px;color:#999;margin-top:1px">+${dl.length-8}…</div>` : '';
-        const exItems = (examByDate[ds] || []).slice().sort((a,b)=>eh(a)-eh(b)).map(examMini).join('');
+        };
+        // Lessons + exams + applications merged and sorted by time together.
+        const merged = [
+          ...(byDate[ds] || []).map(l => ({ h:l.h, html:lMini(l) })),
+          ...(examByDate[ds] || []).map(e => ({ h:eh(e), html:examMini(e) })),
+        ].sort((a,b) => a.h - b.h);
+        const items = merged.slice(0, 9).map(x => x.html).join('');
+        const more = merged.length > 9 ? `<div style="font-size:7.5px;color:#999;margin-top:1px">+${merged.length-9}…</div>` : '';
         cells += `<td style="border:1px solid #ddd;vertical-align:top;padding:3px 4px;min-height:78px;width:14.28%;background:${inMonth ? (isSun ? '#fff7f7' : '#fff') : '#f7f7f5'}">
           <div style="font-size:11px;font-weight:700;color:${!inMonth ? '#bbb' : isSun ? '#c04040' : '#444'}">${d.getDate()}</div>
-          ${inMonth ? items + more + exItems : ''}
+          ${inMonth ? items + more : ''}
         </td>`;
       }
       rows += `<tr>${cells}</tr>`;
@@ -1491,16 +1495,19 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
         const dayExams   = (examByDate[date]||[]).slice().sort((a,b)=>eh(a)-eh(b));
         const d = new Date(date+'T00:00:00');
         const dayLabel = DAYS[d.getDay()===0?6:d.getDay()-1];
-        return `<div style="margin-bottom:16px">
-          <div style="font-size:12px;font-weight:700;color:#1A4F96;padding:6px 10px;background:#E8F0FB;border-radius:6px;margin-bottom:6px">${dayLabel} ${date}</div>
-          ${dayLessons.map(l => `<div style="display:flex;gap:10px;padding:6px 10px;border-bottom:1px solid #eee;align-items:flex-start">
+        const dayRows = [
+          ...dayLessons.map(l => ({ h:l.h, html:`<div style="display:flex;gap:10px;padding:6px 10px;border-bottom:1px solid #eee;align-items:flex-start">
             <div style="min-width:78px;font-size:11px;font-weight:600;color:#444;font-family:monospace">${fmtH(l.h)}-${fmtH(l.h+(l.len||1))}</div>
             <div style="flex:1">${lessonCard(l)}</div>
-          </div>`).join('')}
-          ${dayExams.map(e => `<div style="display:flex;gap:10px;padding:6px 10px;border-bottom:1px solid #eee;align-items:flex-start">
+          </div>` })),
+          ...dayExams.map(e => ({ h:eh(e), html:`<div style="display:flex;gap:10px;padding:6px 10px;border-bottom:1px solid #eee;align-items:flex-start">
             <div style="min-width:78px;font-size:11px;font-weight:600;color:#444;font-family:monospace">${String(e.time||'').slice(0,5)}</div>
             <div style="flex:1">${examCard(e)}</div>
-          </div>`).join('')}
+          </div>` })),
+        ].sort((a,b)=> a.h - b.h);
+        return `<div style="margin-bottom:16px">
+          <div style="font-size:12px;font-weight:700;color:#1A4F96;padding:6px 10px;background:#E8F0FB;border-radius:6px;margin-bottom:6px">${dayLabel} ${date}</div>
+          ${dayRows.map(x=>x.html).join('')}
         </div>`;
       }).join('');
     }
