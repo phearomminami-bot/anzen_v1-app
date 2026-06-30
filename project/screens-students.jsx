@@ -214,10 +214,20 @@ const printStudentLessonsPDF = (s, lessons, exams) => {
   const stars = (n) => '★'.repeat(n||0) + '☆'.repeat(5-(n||0));
 
   // Cumulative lesson-hour numbering (oldest first, skipping cancelled lessons).
+  // Theory and Practical each keep their OWN running count.
+  const isTheory = (l) => l.color==='c' || l.color==='e';
   const chrono = lessons.filter(l => l.status !== 'cancelled').slice()
     .sort((a,b)=>{ const ka=(a.date||'')+' '+String(a.h||0).padStart(2,'0'), kb=(b.date||'')+' '+String(b.h||0).padStart(2,'0'); return ka<kb?-1:ka>kb?1:0; });
-  const hourMap = {}; let acc = 0;
-  chrono.forEach(l => { const n=Math.max(1,Math.round(l.len||1)); const nums=[]; for(let i=0;i<n;i++) nums.push(acc+1+i); acc+=n; hourMap[l.id]=nums; });
+  const hourMap = {}; let accT = 0, accP = 0;
+  chrono.forEach(l => {
+    const n = Math.max(1, Math.round(l.len||1));
+    const theory = isTheory(l);
+    const start = theory ? accT : accP;
+    const nums = [];
+    for (let i=0;i<n;i++) nums.push(start+1+i);
+    if (theory) accT += n; else accP += n;
+    hourMap[l.id] = nums;
+  });
 
   const items = [
     ...lessons.map(l => ({ t:'lesson', k:(l.date||'')+' '+String(l.h||0).padStart(2,'0'), item:l })),
