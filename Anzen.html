@@ -38676,6 +38676,47 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
   var isUrl = x => typeof x === 'string' && /^(data:|https?:)/.test(x);
   var typeKm = l => l.color === 'c' || l.color === 'e' ? L('ទ្រឹស្ដី', 'Theory') : L('អនុវត្តន៍', 'Practical');
   var stars = n => '★'.repeat(n || 0) + '☆'.repeat(5 - (n || 0));
+  var trGender = g => g === 'M' ? L('ប្រុស', 'Male') : g === 'F' ? L('ស្រី', 'Female') : g || '';
+  var trNat = v => {
+    if (!v) return '';
+    var m = {
+      'ខ្មែរ': 'Khmer',
+      'ខ្មែរ​': 'Khmer'
+    };
+    return lang === 'en' ? m[v] || v : v;
+  };
+  var trGlasses = v => {
+    if (!v) return '';
+    var m = {
+      'ពាក់': 'Worn',
+      'មិនពាក់': 'Not worn'
+    };
+    return lang === 'en' ? m[v] || v : v;
+  };
+  var coveredFor = l => {
+    var lib = typeof window !== 'undefined' && window.__lessonsLib || {};
+    var all = [...(lib.theoryTexts || []), ...(lib.practicalTexts || []), ...(lib.theoryVideos || []), ...(lib.practicalVideos || [])];
+    var num = no => {
+      var m = String(no || '').match(/\d+/);
+      return m ? m[0] : String(no || '').trim();
+    };
+    if (Array.isArray(l.lessonIds) && l.lessonIds.length) {
+      return l.lessonIds.map(id => {
+        var u = all.find(x => x.id === id);
+        if (!u) return null;
+        var name = lang === 'en' ? u.en || u.km || '' : u.km || u.en || '';
+        return {
+          no: num(u.no),
+          name
+        };
+      }).filter(Boolean);
+    }
+    if (l.lessonNo) return String(l.lessonNo).split(',').map(x => ({
+      no: num(x),
+      name: ''
+    })).filter(c => c.no);
+    return [];
+  };
   var isTheory = l => l.color === 'c' || l.color === 'e';
   var chrono = lessons.filter(l => l.status !== 'cancelled').slice().sort((a, b) => {
     var ka = (a.date || '') + ' ' + String(a.h || 0).padStart(2, '0'),
@@ -38723,7 +38764,7 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
     var l = row.item;
     var it = instById(l.instId);
     var inst = it ? esc(it.en || it.name) : '—';
-    var coveredArr = lessonsCoveredBy(l).map(c => esc(c.no + (c.name ? ' ' + c.name : '')));
+    var coveredArr = coveredFor(l).map(c => esc(c.no + (c.name ? ' ' + c.name : '')));
     var coveredHtml = coveredArr.length ? '<div style="color:#1A4F96;margin-top:2px">' + coveredArr.map(c => '<div>' + c + '</div>').join('') + '</div>' : '';
     var fb = [];
     if (l.rating) fb.push('<div>' + stars(l.rating) + '</div>');
@@ -38743,10 +38784,13 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
   var address = ss.address || '';
   var fmtDob = d => {
     if (!/^\d{4}-\d{2}-\d{2}/.test(d || '')) return '';
-    var M = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return d.slice(8, 10) + ' ' + M[+d.slice(5, 7) - 1] + ' ' + d.slice(0, 4);
+    var mi = +d.slice(5, 7) - 1;
+    var enM = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    var kmM = typeof KM_MONTHS !== 'undefined' && KM_MONTHS ? KM_MONTHS : enM;
+    var mon = lang === 'en' ? enM[mi] : kmM[mi] || enM[mi];
+    return d.slice(8, 10) + ' ' + mon + ' ' + d.slice(0, 4);
   };
-  var genderTxt = s.gender === 'M' ? 'ប្រុស' : s.gender === 'F' ? 'ស្រី' : s.gender || '';
+  var genderTxt = trGender(s.gender);
   var instr = (() => {
     var it = instById(s.instId);
     return it ? it.en || it.name : '';
@@ -38834,7 +38878,7 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
     </table>
   </div>
   <table class="itbl">
-    ${ir(L('សញ្ជាតិ', 'Nationality'), s.nationality)}
+    ${ir(L('សញ្ជាតិ', 'Nationality'), trNat(s.nationality))}
     ${ir(L('ទូរស័ព្ទ', 'Phone'), s.phone)}
     ${ir(L('ប្រភេទប័ណ្ណ', 'Licence type'), permit)}
     ${ir(L('ថ្ងៃចុះឈ្មោះ', 'Reg. date'), s.regDate)}
@@ -38847,7 +38891,7 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
     ${aptBox('ភ្នែកឆ្វេង', 'Left eye', s.eye_left)}
     ${aptBox('ភ្នែកស្ដាំ', 'Right eye', s.eye_right)}
     ${aptBox('ភ្នែកទាំងពីរ', 'Both eyes', s.eye_both)}
-    ${aptBox('វ៉ែនតា', 'Glasses', s.glasses)}
+    ${aptBox('វ៉ែនតា', 'Glasses', trGlasses(s.glasses))}
   </div>
 
   <div class="secbar">${L('ប្រវត្តិសិក្សា', 'Lesson Records')}<span class="r">${items.length}</span></div>
