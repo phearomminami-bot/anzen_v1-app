@@ -201,6 +201,16 @@ const CvLessonRow = ({ l, tr, onSave }) => {
 };
 
 // Print a student's lessons + exams (with feedback / results) as an A4 PDF.
+// Eye condition (was "glasses"): Normal / Glasses / Contact Lens.
+const EYE_OPTS = [
+  { v:'ធម្មតា',        en:'Normal' },
+  { v:'វ៉ែនតា',        en:'Glasses' },
+  { v:'កែវ​ប៉ះ​ភ្នែក',  en:'Contact Lens' },
+];
+// Normalise legacy values (មិនពាក់/ពាក់) to the new option set.
+const normEye = (v) => v==='មិនពាក់' ? 'ធម្មតា' : v==='ពាក់' ? 'វ៉ែនតា' : (v || 'ធម្មតា');
+const eyeEn   = (v) => { const o = EYE_OPTS.find(x => x.v === normEye(v)); return o ? o.en : (v || ''); };
+
 // Translate short free-text feedback to the target language via the configured
 // Anthropic key. Returns a map original→translation, or {} if no key / failure.
 const translateFeedbackTexts = async (texts, target) => {
@@ -251,7 +261,7 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
   // Translate enumerable data values (not free text) to the chosen language.
   const trGender = (g) => g==='M' ? L('ប្រុស','Male') : g==='F' ? L('ស្រី','Female') : (g||'');
   const trNat = (v) => { if(!v) return ''; const m={'ខ្មែរ':'Khmer','ខ្មែរ​':'Khmer'}; return lang==='en' ? (m[v]||v) : v; };
-  const trGlasses = (v) => { if(!v) return ''; const m={'ពាក់':'Worn','មិនពាក់':'Not worn'}; return lang==='en' ? (m[v]||v) : v; };
+  const trGlasses = (v) => { if(!v) return ''; return lang==='en' ? eyeEn(v) : normEye(v); };
   // Covered curriculum lessons, names in the chosen language (library has km+en).
   const coveredFor = (l) => {
     const lib = (typeof window !== 'undefined' && window.__lessonsLib) || {};
@@ -345,8 +355,8 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
   const instr = (()=>{ const it = instById(s.instId); return it ? (it.en||it.name) : ''; })();
   const permit = [s.cls, s.trans].filter(Boolean).join(' · ');
   const logoHtml = isUrl(logo)
-    ? `<img src="${esc(logo)}" style="width:62px;height:62px;border-radius:50%;object-fit:cover;border:2px solid ${NV}">`
-    : `<div style="width:62px;height:62px;border-radius:50%;border:2px solid ${NV};display:flex;flex-direction:column;align-items:center;justify-content:center;color:${NV};line-height:1.05;text-align:center"><div style="font-size:11px;font-weight:800">${esc((school||'').slice(0,6))}</div><div style="font-size:6.5px;letter-spacing:.5px">DRIVE</div></div>`;
+    ? `<img src="${esc(logo)}" style="width:62px;height:62px;border-radius:50%;object-fit:cover">`
+    : `<div style="width:62px;height:62px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:${NV};line-height:1.05;text-align:center"><div style="font-size:11px;font-weight:800">${esc((school||'').slice(0,6))}</div><div style="font-size:6.5px;letter-spacing:.5px">DRIVE</div></div>`;
   const photoHtml = isUrl(s.photo)
     ? `<img src="${esc(s.photo)}" style="width:100%;height:100%;object-fit:cover">`
     : `<div style="width:100%;height:100%;background:#eef1f5;display:flex;align-items:center;justify-content:center;color:#9aa6b5;font-size:11px">គ្មានរូប</div>`;
@@ -445,7 +455,7 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
     ${aptBox('ភ្នែកឆ្វេង','Left eye', s.eye_left)}
     ${aptBox('ភ្នែកស្ដាំ','Right eye', s.eye_right)}
     ${aptBox('ភ្នែកទាំងពីរ','Both eyes', s.eye_both)}
-    ${aptBox('វ៉ែនតា','Glasses', trGlasses(s.glasses))}
+    ${aptBox('ស្ថានភាពភ្នែក','Eye condition', trGlasses(s.glasses))}
   </div>
 
   <div class="secbar">${L('ប្រវត្តិសិក្សា','Lesson Records')}<span class="r">${items.length}</span></div>
@@ -697,7 +707,7 @@ const extendStudent = (s) => {
     eye_left:      s.eye_left      || '',
     eye_right:     s.eye_right     || '',
     eye_both:      s.eye_both      || '',
-    glasses:       s.glasses       || 'មិនពាក់',
+    glasses:       normEye(s.glasses),
     addr_house:    s.addr_house    || '',
     addr_street:   s.addr_street   || '',
     addr_village:  s.addr_village  || '',
@@ -1534,7 +1544,7 @@ const BiographyCard = ({ s, onSave }) => {
   const [eyeLeft,     setEyeLeft]     = React.useState(s.eye_left      || '');
   const [eyeRight,    setEyeRight]    = React.useState(s.eye_right     || '');
   const [eyeBoth,     setEyeBoth]     = React.useState(s.eye_both      || '');
-  const [glasses,     setGlasses]     = React.useState(s.glasses       || 'មិនពាក់');
+  const [glasses,     setGlasses]     = React.useState(normEye(s.glasses));
   const [addrHouse,   setAddrHouse]   = React.useState(s.addr_house    || '');
   const [addrStreet,  setAddrStreet]  = React.useState(s.addr_street   || '');
   const [addrVillage, setAddrVillage] = React.useState(s.addr_village  || '');
@@ -1550,7 +1560,7 @@ const BiographyCard = ({ s, onSave }) => {
     if (editing) return;
     setName(s.name || ''); setEn(s.en || ''); setGender(s.gender || 'M');
     setAge(String(s.age || '')); setNationality(s.nationality || 'ខ្មែរ');
-    setPhone(s.phone || ''); setTelegram(s.telegram || ''); setLicenseNo(s.license_no || ''); setExamLoc(s.exam_location || ''); setEyeLeft(s.eye_left || ''); setEyeRight(s.eye_right || ''); setEyeBoth(s.eye_both || ''); setGlasses(s.glasses || 'មិនពាក់');
+    setPhone(s.phone || ''); setTelegram(s.telegram || ''); setLicenseNo(s.license_no || ''); setExamLoc(s.exam_location || ''); setEyeLeft(s.eye_left || ''); setEyeRight(s.eye_right || ''); setEyeBoth(s.eye_both || ''); setGlasses(normEye(s.glasses));
     setAddrHouse(s.addr_house || ''); setAddrStreet(s.addr_street || '');
     setAddrVillage(s.addr_village || ''); setAddrCommune(s.addr_commune || '');
     setAddrDist(s.addr_district || s.district || ''); setAddrProv(s.addr_province || '');
@@ -1561,7 +1571,7 @@ const BiographyCard = ({ s, onSave }) => {
     setEditing(false);
     setName(s.name || ''); setEn(s.en || ''); setGender(s.gender || 'M');
     setAge(String(s.age || '')); setNationality(s.nationality || 'ខ្មែរ');
-    setPhone(s.phone || ''); setTelegram(s.telegram || ''); setLicenseNo(s.license_no || ''); setExamLoc(s.exam_location || ''); setEyeLeft(s.eye_left || ''); setEyeRight(s.eye_right || ''); setEyeBoth(s.eye_both || ''); setGlasses(s.glasses || 'មិនពាក់');
+    setPhone(s.phone || ''); setTelegram(s.telegram || ''); setLicenseNo(s.license_no || ''); setExamLoc(s.exam_location || ''); setEyeLeft(s.eye_left || ''); setEyeRight(s.eye_right || ''); setEyeBoth(s.eye_both || ''); setGlasses(normEye(s.glasses));
     setAddrHouse(s.addr_house || ''); setAddrStreet(s.addr_street || '');
     setAddrVillage(s.addr_village || ''); setAddrCommune(s.addr_commune || '');
     setAddrDist(s.addr_district || s.district || ''); setAddrProv(s.addr_province || '');
@@ -1643,10 +1653,9 @@ const BiographyCard = ({ s, onSave }) => {
           </div>
         </div>
         <div {...g2}>
-          <div><Lbl>វែន​តា · Glasses</Lbl>
-            <select {...sel} value={glasses} onChange={e=>setGlasses(e.target.value)}>
-              <option value="មិនពាក់">មិនពាក់ · No</option>
-              <option value="ពាក់">ពាក់ · Yes</option>
+          <div><Lbl>ស្ថានភាពភ្នែក · Eye condition</Lbl>
+            <select {...sel} value={normEye(glasses)} onChange={e=>setGlasses(e.target.value)}>
+              {EYE_OPTS.map(o=> <option key={o.v} value={o.v}>{o.v} · {o.en}</option>)}
             </select>
           </div>
         </div>
@@ -1702,7 +1711,7 @@ const BiographyCard = ({ s, onSave }) => {
     {l:'ភ្នែកឆ្វេង',     v: s.eye_left                                || '—'},
     {l:'ភ្នែកស្ដាំ',      v: s.eye_right                               || '—'},
     {l:'ភ្នែកទាំងពីរ',    v: s.eye_both                                || '—'},
-    {l:'វែន​តា',          v: s.glasses                                  || '—'},
+    {l:'ស្ថានភាពភ្នែក',   v: s.glasses ? normEye(s.glasses)             : '—'},
     {l:'អាសយដ្ឋាន',      v: (s.address && s.address!=='—') ? s.address : (addrParts.length ? addrParts.join(', ') : '—')},
     {l:'គោលបំណង​សិក្សា', v: s.study_goal                              || '—'},
     {l:'ស្គាល់​សាលា​តាម', v: s.referral                                || '—'},
@@ -2058,7 +2067,7 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
   const [eyeLeft,       setEyeLeft]       = React.useState(s.eye_left      || '');
   const [eyeRight,      setEyeRight]      = React.useState(s.eye_right     || '');
   const [eyeBoth,       setEyeBoth]       = React.useState(s.eye_both      || '');
-  const [glasses,       setGlasses]       = React.useState(s.glasses       || 'មិនពាក់');
+  const [glasses,       setGlasses]       = React.useState(normEye(s.glasses));
   // Single address box — start from the saved address, or compose it from any
   // legacy split address fields so existing data still shows.
   const [address, setAddress] = React.useState(
@@ -2244,10 +2253,9 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
       </div>
       <div {...g2}>
         <SEField label={tr('ជនជាតិ','Nationality')}><input {...inp} value={nationality} onChange={e=>setNationality(e.target.value)} placeholder="ខ្មែរ"/></SEField>
-        <SEField label={tr('វែន​តា','Glasses')}>
-          <select {...sel} value={glasses} onChange={e=>setGlasses(e.target.value)}>
-            <option value="មិនពាក់">{tr('មិនពាក់','No glasses')}</option>
-            <option value="ពាក់">{tr('ពាក់','Wears glasses')}</option>
+        <SEField label={tr('ស្ថានភាពភ្នែក','Eye condition')}>
+          <select {...sel} value={normEye(glasses)} onChange={e=>setGlasses(e.target.value)}>
+            {EYE_OPTS.map(o=> <option key={o.v} value={o.v}>{tr(o.v, o.en)}</option>)}
           </select>
         </SEField>
         <SEField label={tr('ស្គាល់​សាលា​តាម','Referral')}>
@@ -4060,7 +4068,7 @@ const printStudyRecord = (s) => {
     <div class="cell"><div class="l">ភ្នែកឆ្វេង · 左眼</div><div class="v">${esc(s.eye_left)||'—'}</div></div>
     <div class="cell"><div class="l">ភ្នែកស្ដាំ · 右眼</div><div class="v">${esc(s.eye_right)||'—'}</div></div>
     <div class="cell"><div class="l">ភ្នែកទាំងពីរ · 両眼</div><div class="v">${esc(s.eye_both)||'—'}</div></div>
-    <div class="cell"><div class="l">វ៉ែនតា · 眼鏡</div><div class="v" style="font-size:9pt;font-family:'Noto Sans Khmer'">${esc(s.glasses)||'—'}</div></div>
+    <div class="cell"><div class="l">ស្ថានភាពភ្នែក · Eye condition</div><div class="v" style="font-size:9pt;font-family:'Noto Sans Khmer'">${esc(normEye(s.glasses))||'—'}</div></div>
   </div>
 
   <div class="sec-h">ខ្លឹមសារកម្មវិធីសិក្សា <span class="ja">教習課程の概要 · Curriculum Overview</span></div>
