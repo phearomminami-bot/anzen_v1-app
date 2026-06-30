@@ -38733,59 +38733,121 @@ var printStudentLessonsPDF = (s, lessons, exams) => {
       <td>${status}${fb.length ? '<div style="margin-top:3px;color:#333">' + fb.join('') + '</div>' : ''}</td>
     </tr>`;
   }).join('');
-  var header = `
-    <div style="text-align:center;border-bottom:2px solid #1A4F96;padding-bottom:10px;margin-bottom:12px">
-      <span style="font-size:22px;font-weight:700;color:#1A4F96">${esc(school)}</span>
-      ${schoolEn ? `<div style="font-size:12px;color:#666">${esc(schoolEn)}</div>` : ''}
-    </div>`;
-  var photoHtml = isUrl(s.photo) ? `<img src="${esc(s.photo)}" style="width:84px;height:104px;object-fit:cover;border:1px solid #ccc;border-radius:4px">` : `<div style="width:84px;height:104px;background:#eee;border:1px solid #ccc;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:10px">គ្មានរូប</div>`;
+  var NV = '#1e3a6e';
+  var address = ss.address || '';
+  var fmtDob = d => {
+    if (!/^\d{4}-\d{2}-\d{2}/.test(d || '')) return '';
+    var M = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return d.slice(8, 10) + ' ' + M[+d.slice(5, 7) - 1] + ' ' + d.slice(0, 4);
+  };
   var genderTxt = s.gender === 'M' ? 'ប្រុស' : s.gender === 'F' ? 'ស្រី' : s.gender || '';
-  var info = (lab, val) => val ? `<div style="margin-bottom:2px"><span style="color:#888">${lab}:</span> <b>${esc(val)}</b></div>` : '';
-  var infoBlock = `
-    <div style="display:flex;gap:14px;margin:0 0 14px;padding:12px;border:1px solid #e5e5e5;border-radius:8px;background:#fafafa;-webkit-print-color-adjust:exact;print-color-adjust:exact">
-      ${photoHtml}
-      <div style="flex:1;font-size:12px;line-height:1.5">
-        <div style="font-size:16px;font-weight:700;color:#1A4F96">${esc(s.name || '')}</div>
-        <div style="color:#666;margin-bottom:6px">${esc(s.en || '')} · ${esc(s.id || '')}</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">
-          ${info('ភេទ', genderTxt)}
-          ${info('អាយុ', s.age ? s.age + ' ឆ្នាំ' : '')}
-          ${info('ទូរស័ព្ទ', s.phone)}
-          ${info('ថ្នាក់', s.cls)}
-          ${info('ប្រអប់លេខ', s.trans)}
-          ${info('ប្រភេទ', s.studentType)}
-          ${info('ស្ថានភាព', s.status)}
-          ${info('ទីតាំងប្រឡង', s.exam_location)}
-          ${info('ថ្ងៃចុះឈ្មោះ', s.regDate)}
-          ${info('លេខបណ្ណបើកបរ', s.license_no)}
-        </div>
-      </div>
-    </div>`;
+  var instr = (() => {
+    var it = instById(s.instId);
+    return it ? it.en || it.name : '';
+  })();
+  var permit = [s.cls, s.trans].filter(Boolean).join(' · ');
+  var logoHtml = isUrl(logo) ? `<img src="${esc(logo)}" style="width:62px;height:62px;border-radius:50%;object-fit:cover;border:2px solid ${NV}">` : `<div style="width:62px;height:62px;border-radius:50%;border:2px solid ${NV};display:flex;flex-direction:column;align-items:center;justify-content:center;color:${NV};line-height:1.05;text-align:center"><div style="font-size:11px;font-weight:800">${esc((school || '').slice(0, 6))}</div><div style="font-size:6.5px;letter-spacing:.5px">DRIVE</div></div>`;
+  var photoHtml = isUrl(s.photo) ? `<img src="${esc(s.photo)}" style="width:100%;height:100%;object-fit:cover">` : `<div style="width:100%;height:100%;background:#eef1f5;display:flex;align-items:center;justify-content:center;color:#9aa6b5;font-size:11px">គ្មានរូប</div>`;
+  var ir = (lab, val) => `<tr><td class="lab">${lab}</td><td class="val">${val && String(val).trim() ? esc(val) : '—'}</td></tr>`;
+  var aptBox = (km, jp, val) => `<div class="apt"><div class="aptlab">${km} · ${jp}</div><div class="aptval">${val && String(val).trim() ? esc(val) : '—'}</div></div>`;
   var doc = `<!DOCTYPE html><html><head><meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<title>ពត៌មានសិស្ស · ${esc(s.name || s.en || '')}</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;600;700;800&family=Noto+Sans+JP:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<title>សៀវភៅប្រវត្តិសិក្សាបើកបរ · ${esc(s.name || s.en || '')}</title>
 <style>
-  @page { size:A4 portrait; margin:0; }
+  @page { size:A4 portrait; margin:14mm 12mm; @bottom-right { content:"PAGE " counter(page) " / " counter(pages); font:700 9px Inter,sans-serif; color:${NV}; } }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:#e8e8e8;font-family:'Noto Sans Khmer','Inter',sans-serif;}
+  body{background:#e8e8e8;font-family:'Noto Sans Khmer','Noto Sans JP','Inter',sans-serif;color:#222;}
   .bar{position:fixed;top:0;left:0;right:0;z-index:9;background:#1a1a19;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 18px;}
   .bar button{background:#2a5db0;color:#fff;border:none;border-radius:6px;padding:9px 18px;font:inherit;font-weight:700;cursor:pointer;}
   .bar .t{font-size:13px;font-weight:600;}
-  .sheet{width:210mm;min-height:297mm;margin:58px auto 30px;background:#fff;padding:12.7mm;box-shadow:0 6px 30px rgba(0,0,0,.18);}
-  h1{font-size:18px;color:#1A4F96;}
-  .sub{font-size:13px;color:#333;margin:2px 0 14px;}
-  table{width:100%;border-collapse:collapse;font-size:12px;}
-  th{background:#f0f0ee;text-align:left;padding:7px 8px;border:1px solid #ddd;font-size:11px;color:#555;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  td{padding:7px 8px;border:1px solid #e5e5e5;vertical-align:top;line-height:1.5;}
-  @media print{ body{background:#fff;} .bar{display:none;} .sheet{margin:0;box-shadow:none;width:auto;min-height:auto;} }
+  .sheet{width:210mm;min-height:297mm;margin:58px auto 30px;background:#fff;padding:12mm;box-shadow:0 6px 30px rgba(0,0,0,.18);}
+  .jp{font-family:'Noto Sans JP',sans-serif;}
+  /* top header */
+  .head{display:flex;align-items:center;gap:14px;}
+  .head .nm{font-size:21px;font-weight:800;color:${NV};line-height:1.1;}
+  .head .en{font-size:13px;font-weight:700;color:#2a5db0;}
+  .head .ad{font-size:10px;color:#666;margin-top:2px;}
+  .head .pg{margin-left:auto;text-align:right;color:${NV};}
+  .head .pg .l{font-size:10px;font-weight:700;letter-spacing:.1em;color:#888;}
+  .head .pg .n{font-size:26px;font-weight:800;line-height:1;}
+  .head .pg .t{font-size:11px;color:#888;}
+  .rule{border-top:3px double ${NV};margin:8px 0 0;}
+  /* title */
+  .title{text-align:center;margin:14px 0 16px;}
+  .title .k{font-size:27px;font-weight:800;color:${NV};letter-spacing:.01em;}
+  .title .j{font-size:15px;font-weight:700;color:#2a5db0;margin-top:1px;}
+  .title .e{font-size:11px;color:#8a93a0;letter-spacing:.22em;margin-top:3px;}
+  /* section bar */
+  .secbar{display:flex;justify-content:space-between;align-items:center;background:${NV};color:#fff;padding:7px 12px;font-size:14px;font-weight:700;border-radius:3px;-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:14px 0 0;}
+  .secbar .r{font-size:11px;font-weight:500;opacity:.92;}
+  /* info tables */
+  .itbl{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px;}
+  .itbl td{border:1px solid #c7d0dd;padding:7px 10px;vertical-align:middle;}
+  .itbl .lab{width:34%;background:#eef2f7;color:#33445c;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .itbl .val{font-weight:700;color:#1a2433;}
+  .inforow{display:flex;gap:10px;align-items:stretch;margin-top:8px;}
+  .photo{width:150px;height:190px;border:1px solid #c7d0dd;flex-shrink:0;overflow:hidden;}
+  /* aptitude boxes */
+  .aptrow{display:flex;gap:10px;margin-top:10px;}
+  .apt{flex:1;border:1px solid #c7d0dd;border-radius:4px;padding:10px 8px;text-align:center;}
+  .apt .aptlab{font-size:10px;color:#7a8597;margin-bottom:6px;}
+  .apt .aptval{font-size:14px;font-weight:700;color:#1a2433;min-height:18px;}
+  /* lessons table */
+  .lt{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;}
+  .lt th{background:${NV};color:#fff;text-align:left;padding:7px 8px;border:1px solid ${NV};font-size:11px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .lt td{padding:7px 8px;border:1px solid #d7dde6;vertical-align:top;line-height:1.5;}
+  @media print{ body{background:#fff;} .bar{display:none;} .sheet{margin:0;box-shadow:none;width:auto;min-height:auto;padding:0;} }
 </style></head><body>
-<div class="bar"><span class="t">ពត៌មានសិស្ស · ${esc(s.name || s.en || '')}</span><button onclick="window.print()">🖨 បោះពុម្ព / រក្សាជា PDF</button></div>
+<div class="bar"><span class="t">សៀវភៅប្រវត្តិសិក្សាបើកបរ · ${esc(s.name || s.en || '')}</span><button onclick="window.print()">🖨 បោះពុម្ព / រក្សាជា PDF</button></div>
 <div class="sheet">
-  ${header}
-  <div style="text-align:center;font-size:15px;font-weight:700;color:#333;margin-bottom:12px">ពត៌មានសិស្ស</div>
-  ${infoBlock}
-  <div style="font-size:15px;font-weight:700;color:#1A4F96;margin:4px 0 8px">ប្រវត្តសិក្សា <span style="font-size:11px;color:#888;font-weight:400">· ${items.length} កំណត់ត្រា</span></div>
-  <table>
+  <div class="head">
+    ${logoHtml}
+    <div>
+      <div class="nm">${esc(school)}</div>
+      ${schoolEn ? `<div class="en">${esc(schoolEn)}</div>` : ''}
+      ${address ? `<div class="ad">${esc(address)}</div>` : ''}
+    </div>
+    <div class="pg"><div class="l">PAGE</div><div class="n">1</div><div class="t">/${Math.max(1, Math.ceil(items.length / 18) + 1)}</div></div>
+  </div>
+  <div class="rule"></div>
+
+  <div class="title">
+    <div class="k">សៀវភៅប្រវត្តិសិក្សាបើកបរ</div>
+    <div class="j jp">教習原簿</div>
+    <div class="e">DRIVING LESSON RECORD BOOK · JAPANESE STANDARD</div>
+  </div>
+
+  <div class="secbar">ពត៌មានសិស្ស<span class="r jp">教習生情報 · Student Information</span></div>
+  <div class="inforow">
+    <div class="photo">${photoHtml}</div>
+    <table class="itbl" style="margin-top:0">
+      ${ir('ឈ្មោះ', s.name)}
+      ${ir('ឈ្មោះឡាតាំង', s.en)}
+      ${ir('លេខសម្គាល់', s.id)}
+      ${ir('ភេទ', genderTxt)}
+      ${ir('ថ្ងៃកំណើត', fmtDob(s.dob))}
+      ${ir('ប្រភេទសិស្ស', s.studentType)}
+    </table>
+  </div>
+  <table class="itbl">
+    ${ir('សញ្ជាតិ', s.nationality)}
+    ${ir('ទូរស័ព្ទ', s.phone)}
+    ${ir('ប្រភេទប័ណ្ណ', permit)}
+    ${ir('ថ្ងៃចុះឈ្មោះ', s.regDate)}
+    ${ir('គ្រូទទួលបន្ទុក', instr)}
+    ${ir('អាសយដ្ឋាន', s.address)}
+  </table>
+
+  <div class="secbar">ការត្រួតពិនិត្យសុខភាព<span class="r jp">適性検査 · Aptitude Test</span></div>
+  <div class="aptrow">
+    ${aptBox('ភ្នែកឆ្វេង', '左眼', s.eye_left)}
+    ${aptBox('ភ្នែកស្ដាំ', '右眼', s.eye_right)}
+    ${aptBox('ភ្នែកទាំងពីរ', '両眼', s.eye_both)}
+    ${aptBox('វ៉ែនតា', '眼鏡', s.glasses)}
+  </div>
+
+  <div class="secbar">ប្រវត្តិសិក្សា<span class="r jp">教習記録 · Lesson Records · ${items.length}</span></div>
+  <table class="lt">
     <thead><tr><th style="width:124px">ថ្ងៃ/ម៉ោង</th><th style="width:36%">ប្រភេទ · គ្រូ</th><th>លទ្ធផល · មតិគ្រូ</th></tr></thead>
     <tbody>${rows || '<tr><td colspan="3" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr>'}</tbody>
   </table>
