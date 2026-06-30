@@ -3347,8 +3347,8 @@ const printLicenseAbroadRequest = (s) => {
   /* Left-aligned (not justified) so unfilled lines don't stretch the spaces. */
   .p { text-indent:48px; margin:14px 0; text-align:left; }
   .strong { font-weight:700; font-family:'Moul','Noto Serif Khmer',serif; }
-  .sign { margin-top:26px; text-align:right; line-height:2.3; }
-  .signname { margin-top:46px; text-align:right; font-weight:700; padding-right:24px; font-family:'Moul','Noto Serif Khmer',serif; }
+  .sign { margin-top:26px; text-align:center; line-height:2.3; }
+  .signname { margin-top:46px; text-align:center; font-weight:700; font-family:'Moul','Noto Serif Khmer',serif; }
   .attach { margin-top:34px; font-size:14px; line-height:2; }
   @media print { body { background:#fff; } .pdf-bar { display:none; } .sheet { margin:0; box-shadow:none; width:auto; min-height:auto; } }
 </style></head><body>
@@ -3376,9 +3376,18 @@ const printLicenseAbroadRequest = (s) => {
     <span class="strong">ស្នាមមេដៃស្ដាំ</span></div>
   <div class="signname">${v(name,140)}</div>
 
-  <div class="attach">សូមជូនភ្ជាប់មកជាមួយនូវ ៖<br/>
-    - ច្បាប់ចម្លងបណ្ណបើកបរ ${blank(60)} ១ច្បាប់<br/>
-    - ច្បាប់ចម្លងអត្តសញ្ញាណប័ណ្ណ ${blank(60)} ១ច្បាប់</div>
+  <div class="attach">សូមជូនភ្ជាប់មកជាមួយនូវ ៖
+    <div style="display:flex;align-items:baseline;margin-top:4px">
+      <span style="flex:0 0 270px">- ច្បាប់ចម្លងបណ្ណបើកបរ</span>
+      <span class="blank" style="width:80px"></span>
+      <span style="padding-left:10px">១ច្បាប់</span>
+    </div>
+    <div style="display:flex;align-items:baseline">
+      <span style="flex:0 0 270px">- ច្បាប់ចម្លងអត្តសញ្ញាណប័ណ្ណ</span>
+      <span class="blank" style="width:80px"></span>
+      <span style="padding-left:10px">១ច្បាប់</span>
+    </div>
+  </div>
 </div>
 </body></html>`);
   w.document.close();
