@@ -38546,6 +38546,27 @@ var hourFbOf = (l, o) => {
     lessonNo: src.lessonNo || ''
   };
 };
+var buildHourNumbering = lessons => {
+  var isTh = l => l.color === 'c' || l.color === 'e';
+  var chrono = lessons.filter(l => l.status !== 'cancelled').slice().sort((a, b) => {
+    var ka = (a.date || '') + ' ' + String(a.h || 0).padStart(2, '0'),
+      kb = (b.date || '') + ' ' + String(b.h || 0).padStart(2, '0');
+    return ka < kb ? -1 : ka > kb ? 1 : 0;
+  });
+  var map = {};
+  var accT = 0,
+    accP = 0;
+  chrono.forEach(l => {
+    var n = Math.max(1, Math.round(l.len || 1));
+    var theory = isTh(l);
+    var start = theory ? accT : accP;
+    var nums = [];
+    for (var i = 0; i < n; i++) nums.push(start + 1 + i);
+    if (theory) accT += n;else accP += n;
+    map[l.id] = nums;
+  });
+  return map;
+};
 var lessonLibGroups = () => {
   var lib = typeof window !== 'undefined' && window.__lessonsLib || {};
   return {
@@ -38562,6 +38583,7 @@ var CvLessonRow = ({
   offset = 0,
   h,
   total = 1,
+  cumNo,
   tr,
   onSave
 }) => {
@@ -38681,18 +38703,20 @@ var CvLessonRow = ({
       color: 'var(--accent)',
       fontFamily: 'monospace'
     }
-  }, timeLabel), total > 1 && React.createElement("span", {
+  }, timeLabel), cumNo != null && React.createElement("span", {
     style: {
-      fontSize: 10,
-      color: 'var(--ink-3)'
+      fontSize: 12,
+      fontStyle: 'italic',
+      fontWeight: 700,
+      color: 'var(--accent)'
     }
-  }, tr('ម៉ោងទី', 'Hr'), " ", offset + 1, "/", total)), React.createElement("div", {
+  }, "(", cumNo, ")")), React.createElement("div", {
     style: {
       fontSize: 12,
       color: 'var(--ink-2)',
       marginTop: 1
     }
-  }, lessonTypeKm(l)), covered.length > 0 && React.createElement("div", {
+  }, lessonTypeKm(l), total > 1 ? ` · ${tr('ម៉ោងទី', 'Hr')} ${offset + 1}/${total}` : ''), covered.length > 0 && React.createElement("div", {
     style: {
       display: 'flex',
       flexWrap: 'wrap',
@@ -39054,24 +39078,7 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
       })).filter(c => c.no);
       return [];
     };
-    var isTheory = l => l.color === 'c' || l.color === 'e';
-    var chrono = lessons.filter(l => l.status !== 'cancelled').slice().sort((a, b) => {
-      var ka = (a.date || '') + ' ' + String(a.h || 0).padStart(2, '0'),
-        kb = (b.date || '') + ' ' + String(b.h || 0).padStart(2, '0');
-      return ka < kb ? -1 : ka > kb ? 1 : 0;
-    });
-    var hourMap = {};
-    var accT = 0,
-      accP = 0;
-    chrono.forEach(l => {
-      var n = Math.max(1, Math.round(l.len || 1));
-      var theory = isTheory(l);
-      var start = theory ? accT : accP;
-      var nums = [];
-      for (var i = 0; i < n; i++) nums.push(start + 1 + i);
-      if (theory) accT += n;else accP += n;
-      hourMap[l.id] = nums;
-    });
+    var hourMap = buildHourNumbering(lessons);
     var items = [...lessons.flatMap(l => lessonHourSlices(l).map(sl => ({
       t: 'lesson',
       k: (l.date || '') + ' ' + String(sl.h).padStart(2, '0'),
@@ -39143,7 +39150,7 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
       var status = l.status === 'done' ? `<b style="color:#1A6B3C">${L('រួចរាល់', 'Done')}</b>` : l.status === 'cancelled' ? `<span style="color:#999">${L('បានលុប', 'Cancelled')}</span>` : L('កំពុង', 'Pending');
       var hrs = hourMap[l.id];
       var cumNo = hrs && hrs[o] != null ? hrs[o] : null;
-      var hrLabel = cumNo != null ? ` <span style="color:#888;font-weight:400;font-size:10px">(${cumNo})</span>` : '';
+      var hrLabel = cumNo != null ? ` <span style="color:#2a5db0;font-weight:700;font-size:10px;font-style:italic">(${cumNo})</span>` : '';
       var hh = (l.h || 0) + o;
       var timeStr = `${String(hh).padStart(2, '0')}:00-${String(hh + 1).padStart(2, '0')}:00`;
       return `<tr>
@@ -40669,6 +40676,7 @@ var StudentsScreenV2 = () => {
         isOpen: openSections.lessons,
         onToggle: () => toggleSection('lessons')
       }, (() => {
+        var hourNumMap = buildHourNumbering(studentLessons);
         var items = [...studentLessons.flatMap(l => lessonHourSlices(l).map(sl => ({
           t: 'lesson',
           k: (l.date || '') + ' ' + String(sl.h).padStart(2, '0'),
@@ -40697,12 +40705,14 @@ var StudentsScreenV2 = () => {
               onSave: saveExamResult
             });
           }
+          var cumNo = (hourNumMap[row.item.id] || [])[row.sl.offset];
           return React.createElement(CvLessonRow, {
             key: (row.item.id || 'ls' + i) + '-' + row.sl.offset,
             l: row.item,
             offset: row.sl.offset,
             h: row.sl.h,
             total: row.sl.total,
+            cumNo: cumNo,
             tr: tr,
             onSave: saveLessonFeedback
           });

@@ -68,6 +68,24 @@ const hourFbOf = (l, o) => {
     lessonIds: Array.isArray(src.lessonIds) ? src.lessonIds : [], lessonNo: src.lessonNo || '',
   };
 };
+// Cumulative lesson-hour numbering, oldest-first, skipping cancelled lessons.
+// Theory and Practical each keep their OWN running count → {lessonId:[n0,n1,…]}.
+const buildHourNumbering = (lessons) => {
+  const isTh = (l) => l.color === 'c' || l.color === 'e';
+  const chrono = lessons.filter(l => l.status !== 'cancelled').slice()
+    .sort((a,b)=>{ const ka=(a.date||'')+' '+String(a.h||0).padStart(2,'0'), kb=(b.date||'')+' '+String(b.h||0).padStart(2,'0'); return ka<kb?-1:ka>kb?1:0; });
+  const map = {}; let accT = 0, accP = 0;
+  chrono.forEach(l => {
+    const n = Math.max(1, Math.round(l.len||1));
+    const theory = isTh(l);
+    const start = theory ? accT : accP;
+    const nums = [];
+    for (let i=0;i<n;i++) nums.push(start+1+i);
+    if (theory) accT += n; else accP += n;
+    map[l.id] = nums;
+  });
+  return map;
+};
 
 // Curriculum lessons (from Tab Lessons) grouped by type, for the feedback picker.
 const lessonLibGroups = () => {
@@ -76,7 +94,7 @@ const lessonLibGroups = () => {
 };
 const lessonNumOf = (no) => { const m = String(no||'').match(/\d+/); return m ? m[0] : String(no||'').trim(); };
 
-const CvLessonRow = ({ l, offset = 0, h, total = 1, tr, onSave }) => {
+const CvLessonRow = ({ l, offset = 0, h, total = 1, cumNo, tr, onSave }) => {
   const fb0 = hourFbOf(l, offset);
   const hr  = (h == null ? (l.h || 0) : h);
   const pad = (n) => String(n).padStart(2, '0');
@@ -116,9 +134,10 @@ const CvLessonRow = ({ l, offset = 0, h, total = 1, tr, onSave }) => {
           <div style={{display:'flex',alignItems:'baseline',gap:8,flexWrap:'wrap'}}>
             <span style={{fontSize:12.5,fontWeight:600,color:'var(--ink)'}}>{l.date}</span>
             <span style={{fontSize:11.5,fontWeight:600,color:'var(--accent)',fontFamily:'monospace'}}>{timeLabel}</span>
-            {total > 1 && <span style={{fontSize:10,color:'var(--ink-3)'}}>{tr('ម៉ោងទី','Hr')} {offset+1}/{total}</span>}
+            {/* Running Theory/Practical hour count — italic so it isn't read as a date. */}
+            {cumNo != null && <span style={{fontSize:12,fontStyle:'italic',fontWeight:700,color:'var(--accent)'}}>({cumNo})</span>}
           </div>
-          <div style={{fontSize:12,color:'var(--ink-2)',marginTop:1}}>{lessonTypeKm(l)}</div>
+          <div style={{fontSize:12,color:'var(--ink-2)',marginTop:1}}>{lessonTypeKm(l)}{total > 1 ? ` · ${tr('ម៉ោងទី','Hr')} ${offset+1}/${total}` : ''}</div>
           {covered.length > 0 && (
             <div style={{display:'flex',flexWrap:'wrap',gap:4,marginTop:3}}>
               {covered.map((c,i)=>(
@@ -305,21 +324,8 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
     return [];
   };
 
-  // Cumulative lesson-hour numbering (oldest first, skipping cancelled lessons).
-  // Theory and Practical each keep their OWN running count.
-  const isTheory = (l) => l.color==='c' || l.color==='e';
-  const chrono = lessons.filter(l => l.status !== 'cancelled').slice()
-    .sort((a,b)=>{ const ka=(a.date||'')+' '+String(a.h||0).padStart(2,'0'), kb=(b.date||'')+' '+String(b.h||0).padStart(2,'0'); return ka<kb?-1:ka>kb?1:0; });
-  const hourMap = {}; let accT = 0, accP = 0;
-  chrono.forEach(l => {
-    const n = Math.max(1, Math.round(l.len||1));
-    const theory = isTheory(l);
-    const start = theory ? accT : accP;
-    const nums = [];
-    for (let i=0;i<n;i++) nums.push(start+1+i);
-    if (theory) accT += n; else accP += n;
-    hourMap[l.id] = nums;
-  });
+  // Cumulative lesson-hour numbering (Theory & Practical counted separately).
+  const hourMap = buildHourNumbering(lessons);
 
   // Split each lesson into its hours; order oldest-first (earlier on top).
   const items = [
@@ -368,7 +374,8 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
     const status = l.status==='done' ? `<b style="color:#1A6B3C">${L('រួចរាល់','Done')}</b>` : l.status==='cancelled' ? `<span style="color:#999">${L('បានលុប','Cancelled')}</span>` : L('កំពុង','Pending');
     const hrs = hourMap[l.id];
     const cumNo = hrs && hrs[o] != null ? hrs[o] : null;
-    const hrLabel = cumNo != null ? ` <span style="color:#888;font-weight:400;font-size:10px">(${cumNo})</span>` : '';
+    // Italic so the running hour count isn't mistaken for the date number.
+    const hrLabel = cumNo != null ? ` <span style="color:#2a5db0;font-weight:700;font-size:10px;font-style:italic">(${cumNo})</span>` : '';
     const hh = (l.h||0) + o;
     const timeStr = `${String(hh).padStart(2,'0')}:00-${String(hh+1).padStart(2,'0')}:00`;
     return `<tr>
@@ -1151,6 +1158,8 @@ const StudentsScreenV2 = () => {
             {(() => {
               // Merge lessons + exams, split each lesson into its hours, and order
               // oldest-first (earlier on top) by date + hour — same as the PDF.
+              // Theory & Practical hours are numbered separately (1),(2),…
+              const hourNumMap = buildHourNumbering(studentLessons);
               const items = [
                 ...studentLessons.flatMap(l => lessonHourSlices(l).map(sl => ({ t:'lesson', k:(l.date||'')+' '+String(sl.h).padStart(2,'0'), item:l, sl }))),
                 ...studentExams.map(e  => ({ t:'exam',   k:(e.date||'')+' '+String(e.time||'').slice(0,5),    item:e })),
@@ -1162,7 +1171,8 @@ const StudentsScreenV2 = () => {
                 if (row.t === 'exam') {
                   return <ExamFeedbackRow key={row.item.id||('ex'+i)} e={row.item} sid={s.id} tr={tr} onSave={saveExamResult}/>;
                 }
-                return <CvLessonRow key={(row.item.id||('ls'+i))+'-'+row.sl.offset} l={row.item} offset={row.sl.offset} h={row.sl.h} total={row.sl.total} tr={tr} onSave={saveLessonFeedback}/>;
+                const cumNo = (hourNumMap[row.item.id] || [])[row.sl.offset];
+                return <CvLessonRow key={(row.item.id||('ls'+i))+'-'+row.sl.offset} l={row.item} offset={row.sl.offset} h={row.sl.h} total={row.sl.total} cumNo={cumNo} tr={tr} onSave={saveLessonFeedback}/>;
               });
             })()}
             <div style={{fontSize:11,color:'var(--ink-3)',marginTop:12,marginBottom:4}}>⬇ {tr('ទាញយក PDF — ជ្រើសភាសា','Download PDF — choose language')}</div>
