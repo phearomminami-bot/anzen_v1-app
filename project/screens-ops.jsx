@@ -1434,8 +1434,9 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
   const examMini = (e) => {
     const m = exMeta(e); const t = kd(String(e.time||'').slice(0,5));
     const stu = examNames(e.studentIds, STUDENTS, sName);
+    const ins = examNames(e.instIds, INSTRUCTORS, iName);
     return `<div style="background:${m.bg};border-left:2px solid ${m.col};border-radius:2px;padding:2px 3px;margin-top:2px;font-size:7.5px;line-height:1.3;-webkit-print-color-adjust:exact;print-color-adjust:exact">
-      <b style="color:${m.col}">${t?t+' ':''}${m.lab}</b>${stu?`<div style="font-weight:600;color:#222">${stu}</div>`:''}</div>`;
+      <b style="color:${m.col}">${t?t+' ':''}${m.lab}</b>${stu?`<div style="font-weight:600;color:#222">${stu}</div>`:''}${ins?`<div style="color:#555">${ins}</div>`:''}</div>`;
   };
 
   // ── Month helpers (so the PDF month grid can be regenerated for any month) ──
