@@ -653,7 +653,8 @@ const NoteDetail = ({ note, onClose }) => {
 const ExamDetail = ({ exam, onClose }) => {
   const { tr, confirm } = useAppActions();
   if (!exam) return null;
-  const EX = '#12A302';
+  const km = window.__SCHED_KIND ? window.__SCHED_KIND(exam.kind) : {km:'ប្រឡង',en:'Exam',icon:'🎓',color:'#12A302',soft:'rgba(18,163,2,.14)',border:'rgba(18,163,2,.4)'};
+  const EX = km.color;
   const students    = (exam.studentIds || []).map(id => studentById(id)).filter(Boolean);
   const instructors = (exam.instIds    || []).map(id => instById(id)).filter(Boolean);
   const dateLabel = exam.date ? formatDateShort(exam.date, 'en') : '';
@@ -665,8 +666,8 @@ const ExamDetail = ({ exam, onClose }) => {
   })();
   const doEdit = () => { if (window.__editScheduleExam) window.__editScheduleExam(exam); onClose && onClose(); };
   const doDelete = () => confirm?.({
-    title: tr('លុប​កាលវិភាគ​ប្រឡង?', 'Delete this exam?'),
-    body:  tr('អ្នក​ប្រាកដ​ទេ? កាលវិភាគ​ប្រឡង​នេះ​នឹង​ត្រូវ​លុប។', 'Are you sure? This exam will be removed.'),
+    title: tr('លុប​'+km.km+'?', 'Delete this '+km.en.toLowerCase()+'?'),
+    body:  tr('អ្នក​ប្រាកដ​ទេ? កាលវិភាគ​នេះ​នឹង​ត្រូវ​លុប។', 'Are you sure? This entry will be removed.'),
     confirmText: tr('លុប', 'Delete'), danger: true,
     onConfirm: () => { if (window.__deleteScheduleExam) window.__deleteScheduleExam(exam.id); onClose && onClose(); },
   });
@@ -675,7 +676,7 @@ const ExamDetail = ({ exam, onClose }) => {
       {/* Header */}
       <div>
         <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-          <span style={{display:'inline-flex',alignItems:'center',gap:5,fontSize:12,fontWeight:700,padding:'3px 10px',borderRadius:6,background:'rgba(18,163,2,.14)',color:EX}}>🎓 {tr('ប្រឡង','Exam')}</span>
+          <span style={{display:'inline-flex',alignItems:'center',gap:5,fontSize:12,fontWeight:700,padding:'3px 10px',borderRadius:6,background:km.soft,color:EX}}>{km.icon} {tr(km.km,km.en)}</span>
         </div>
         <div style={{fontSize:32,fontWeight:600,marginTop:10,letterSpacing:'-.02em',fontFamily:'var(--font-display)'}}>
           {String(exam.time||'').slice(0,5)}{endTime ? '–'+endTime : ''}

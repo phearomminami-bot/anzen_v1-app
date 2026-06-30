@@ -145,6 +145,13 @@ const computeLayout = (dayLessons) => {
   return result;
 };
 
+// Schedule entry kinds that aren't lessons (exam / application). Shared with
+// the detail panel, dashboard, student profile and PDF via window.
+window.__SCHED_KIND = (kind) => ({
+  exam:  { km:'ប្រឡង',      en:'Exam',        icon:'🎓', color:'#12A302', soft:'rgba(18,163,2,.14)',  border:'rgba(18,163,2,.4)',  text:'#0c5a01' },
+  apply: { km:'ដាក់​ពាក្យ',  en:'Application', icon:'📝', color:'#C2410C', soft:'rgba(194,65,12,.12)', border:'rgba(194,65,12,.4)', text:'#7c2d12' },
+}[kind === 'apply' ? 'apply' : 'exam']);
+
 // ── Week view ──
 const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], highlights = {}, onHighlight, hlColor = '', notes = [], onSlotClick, onNoteClick, dayNav = null, clip = null, onStartCopy, onStartMove, onPlace, onMoveLesson, exams = [], onExamClick }) => {
   const { openDetail, openForm, tr } = useAppActions();
@@ -385,21 +392,22 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                 const stuNames = (e.studentIds||[]).map(id=>{ const s=studentById(id); return s?(s.en||s.name):null; }).filter(Boolean);
                 const instNames = (e.instIds||[]).map(id=>{ const i=instById(id); return i?(i.en||i.name):null; }).filter(Boolean);
                 const timeLbl = String(e.time||'').slice(0,5);
+                const km = window.__SCHED_KIND(e.kind);
                 return (
                   <button key={e.id} onClick={ev=>{ ev.stopPropagation(); onExamClick && onExamClick(e); }}
-                    title={`${tr('ប្រឡង','Exam')} ${timeLbl}`}
+                    title={`${tr(km.km,km.en)} ${timeLbl}`}
                     style={{
                       position:'absolute', top,
                       left:`calc(${col * pct}% + 4px)`,
                       width:`calc(${pct}% - 8px)`,
                       height,
-                      background:'rgba(18,163,2,.16)', border:'1px solid #12A302', borderLeft:'3px solid #12A302',
+                      background:km.soft, border:`1px solid ${km.color}`, borderLeft:`3px solid ${km.color}`,
                       borderRadius:6, padding:'4px 6px', overflow:'hidden', zIndex:3,
-                      fontSize:10.5, textAlign:'left', cursor:'pointer', font:'inherit', color:'#0c5a01', boxSizing:'border-box',
+                      fontSize:10.5, textAlign:'left', cursor:'pointer', font:'inherit', color:km.text, boxSizing:'border-box',
                     }}>
                     <div style={{display:'flex',alignItems:'center',gap:4,minWidth:0}}>
-                      <span style={{flexShrink:0}}>🎓</span>
-                      <span style={{fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',minWidth:0}}>{tr('ប្រឡង','Exam')}</span>
+                      <span style={{flexShrink:0}}>{km.icon}</span>
+                      <span style={{fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',minWidth:0}}>{tr(km.km,km.en)}</span>
                     </div>
                     {stuNames.length > 0 && (
                       <div style={{fontWeight:600,fontSize:10,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{stuNames.join(', ')}</div>
@@ -690,16 +698,17 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   const submitExam = () => {
     const m = examModal; if (!m) return;
     if (!(m.studentIds||[]).length && !(m.instIds||[]).length && !(m.note||'').trim()) { setExamModal(null); return; }
-    const rec = { date:m.date, time:m.time||'', len:Number(m.len)||2, studentIds:m.studentIds||[], instIds:m.instIds||[], note:(m.note||'').trim() };
+    const rec = { kind:(m.kind==='apply'?'apply':'exam'), date:m.date, time:m.time||'', len:Number(m.len)||2, studentIds:m.studentIds||[], instIds:m.instIds||[], note:(m.note||'').trim() };
     if (m.id) saveExams(exams.map(e => e.id===m.id ? {...e,...rec} : e));
     else      saveExams([...exams, { id:'E'+Date.now(), ...rec, author: meName }]);
-    if (window.__logActivity) window.__logActivity(m.id?'edit':'create', 'exam', tr('ប្រឡង','Exam')+' '+m.date);
+    const km = window.__SCHED_KIND(rec.kind);
+    if (window.__logActivity) window.__logActivity(m.id?'edit':'create', 'exam', tr(km.km,km.en)+' '+m.date);
     setExamModal(null);
   };
   const removeExam = (id) => { saveExams(exams.filter(e => e.id !== id)); };
   const toggleExamStudent = (sid) => setExamModal(m => { const c=m.studentIds||[]; return {...m, studentIds: c.includes(sid)?c.filter(x=>x!==sid):[...c,sid]}; });
   const toggleExamInst    = (iid) => setExamModal(m => { const c=m.instIds||[];    return {...m, instIds:    c.includes(iid)?c.filter(x=>x!==iid):[...c,iid]}; });
-  const openExamEdit = (e) => setExamModal({ id:e.id, date:e.date, time:e.time||'', len:e.len||2, studentIds:[...(e.studentIds||[])], instIds:[...(e.instIds||[])], note:e.note||'' });
+  const openExamEdit = (e) => setExamModal({ id:e.id, kind:e.kind||'exam', date:e.date, time:e.time||'', len:e.len||2, studentIds:[...(e.studentIds||[])], instIds:[...(e.instIds||[])], note:e.note||'' });
 
   React.useEffect(()=>{ if(view) setV(view); }, [view]);
   // When data reloads (cloud sync / realtime), refresh notes from the shared
@@ -919,7 +928,8 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(o=>o+1)}>{tr('បន្ទាប់ ▶','Next ▶')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>generateSchedulePDF({lessons:visibleLessons.filter(l=>l.status!=='cancelled'),weekDates:allWeekDates,viewType:v,labelEn,instFilter,vehFilter,studentFilter})} icon={<Icon name="download" size={14}/>}>{tr('PDF','PDF')}</Btn>
             {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:allWeekDates[0]||today,time:'09:00',title:'',description:'',author:meName,invited:[]})} icon={<Icon name="bell" size={14}/>}>{tr('+ ចំណាំ','+ Note')}</Btn>}
-            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setExamModal({date:allWeekDates[0]||today,time:'08:00',len:2,studentIds:[],instIds:[],note:''})} icon={<Icon name="star" size={14}/>} style={{color:'#12A302',borderColor:'#12A302'}}>{tr('+ ប្រឡង','+ Exam')}</Btn>}
+            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setExamModal({kind:'exam',date:allWeekDates[0]||today,time:'08:00',len:2,studentIds:[],instIds:[],note:''})} icon={<Icon name="star" size={14}/>} style={{color:'#12A302',borderColor:'#12A302'}}>{tr('+ ប្រឡង','+ Exam')}</Btn>}
+            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setExamModal({kind:'apply',date:allWeekDates[0]||today,time:'08:00',len:2,studentIds:[],instIds:[],note:''})} icon={<Icon name="book" size={14}/>} style={{color:'#C2410C',borderColor:'#C2410C'}}>{tr('+ ដាក់​ពាក្យ','+ Apply')}</Btn>}
             {can(role,'create','lesson') && <Btn kind="primary" size="md" onClick={()=>openForm('newLesson')} icon={<Icon name="plus" size={14}/>}>{tr('មេរៀន​ថ្មី','New lesson')}</Btn>}
           </div>
         )}
@@ -1134,7 +1144,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
             {/* Lesson / Note toggle — only when creating from a time slot */}
             {noteModal.mode && !noteModal.id && (
               <div style={{display:'flex',background:'var(--surface-muted)',borderRadius:9,padding:3,gap:3}}>
-                {[{k:'lesson',km:'មេរៀន',en:'Lesson',icon:'plus'},{k:'note',km:'ចំណាំ',en:'Note',icon:'bell'},{k:'exam',km:'ប្រឡង',en:'Exam',icon:'star'}].map(t=>(
+                {[{k:'lesson',km:'មេរៀន',en:'Lesson',icon:'plus'},{k:'note',km:'ចំណាំ',en:'Note',icon:'bell'},{k:'exam',km:'ប្រឡង',en:'Exam',icon:'star'},{k:'apply',km:'ដាក់ពាក្យ',en:'Apply',icon:'book'}].map(t=>(
                   <button key={t.k} onClick={()=>setNoteModal(m=>({...m,mode:t.k}))} style={{
                     flex:1,padding:'8px 10px',border:'none',borderRadius:7,cursor:'pointer',fontSize:13,fontWeight:600,
                     display:'flex',alignItems:'center',justifyContent:'center',gap:6,
@@ -1157,19 +1167,22 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
                 </Btn>
                 <Btn kind="ghost" size="md" onClick={()=>setNoteModal(null)} style={{justifyContent:'center'}}>{tr('បោះបង់','Cancel')}</Btn>
               </div>
-            ) : noteModal.mode === 'exam' ? (
+            ) : (noteModal.mode === 'exam' || noteModal.mode === 'apply') ? (() => {
+              const km = window.__SCHED_KIND(noteModal.mode);
+              return (
               <div style={{display:'flex',flexDirection:'column',gap:14}}>
                 <div style={{fontSize:13,color:'var(--ink-2)',background:'var(--surface-muted)',borderRadius:8,padding:'11px 13px',fontFamily:'"JetBrains Mono",monospace'}}>
                   📅 {noteModal.date}　🕒 {noteModal.time}
                 </div>
-                <div style={{fontSize:11,color:'var(--ink-3)'}}>{tr('កាលវិភាគ​ប្រឡង — មិន​រាប់​ជា​មេរៀន','Exam slot — not counted as a lesson')}</div>
-                <Btn kind="primary" size="lg" icon={<Icon name="star" size={15}/>} style={{justifyContent:'center',background:'#12A302',borderColor:'#12A302'}}
-                  onClick={()=>{ const d=noteModal.date, t=noteModal.time; setNoteModal(null); setExamModal({date:d,time:t,len:2,studentIds:[],instIds:[],note:''}); }}>
-                  {tr('បង្កើត​កាលវិភាគ​ប្រឡង','Create exam')}
+                <div style={{fontSize:11,color:'var(--ink-3)'}}>{tr(km.km+' — មិន​រាប់​ជា​មេរៀន', tr(km.km,km.en)+' — not counted as a lesson')}</div>
+                <Btn kind="primary" size="lg" icon={<Icon name={noteModal.mode==='apply'?'book':'star'} size={15}/>} style={{justifyContent:'center',background:km.color,borderColor:km.color}}
+                  onClick={()=>{ const d=noteModal.date, t=noteModal.time, k=noteModal.mode; setNoteModal(null); setExamModal({kind:k,date:d,time:t,len:2,studentIds:[],instIds:[],note:''}); }}>
+                  {tr('បង្កើត '+km.km, 'Create '+km.en.toLowerCase())}
                 </Btn>
                 <Btn kind="ghost" size="md" onClick={()=>setNoteModal(null)} style={{justifyContent:'center'}}>{tr('បោះបង់','Cancel')}</Btn>
               </div>
-            ) : (
+              );
+            })() : (
             <>
             <div style={{display:'grid',gridTemplateColumns:'1fr 130px',gap:10}}>
               <div>
@@ -1251,12 +1264,13 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
 
       {/* Exam scheduling modal — separate from lessons, multi-student + multi-instructor */}
       {examModal && (() => {
+        const km = window.__SCHED_KIND(examModal.kind);
         const inp = {width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',colorScheme:'light dark'};
         const lblSt = {fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5};
         const chip = (label, onRemove, key) => (
-          <span key={key} style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 10px',borderRadius:20,border:'1px solid #12A302',background:'rgba(18,163,2,.12)',color:'#0c5a01',fontSize:12,fontWeight:600}}>
+          <span key={key} style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 10px',borderRadius:20,border:`1px solid ${km.color}`,background:km.soft,color:km.text,fontSize:12,fontWeight:600}}>
             {label}
-            <button onClick={onRemove} title={tr('ដក​ចេញ','Remove')} style={{border:'none',background:'none',cursor:'pointer',color:'#0f3d22',fontSize:15,lineHeight:1,padding:0}}>×</button>
+            <button onClick={onRemove} title={tr('ដក​ចេញ','Remove')} style={{border:'none',background:'none',cursor:'pointer',color:km.text,fontSize:15,lineHeight:1,padding:0}}>×</button>
           </span>
         );
         const selStu = examModal.studentIds||[]; const selIns = examModal.instIds||[];
@@ -1264,7 +1278,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
         <Modal open onClose={()=>setExamModal(null)} width={440}>
           <div style={{padding:20,display:'flex',flexDirection:'column',gap:14}}>
             <div style={{fontSize:16,fontWeight:700,display:'flex',alignItems:'center',gap:8}}>
-              <span>🎓</span>{examModal.id ? tr('កែ​កាលវិភាគ​ប្រឡង','Edit exam') : tr('កាលវិភាគ​ប្រឡង​ថ្មី','New exam')}
+              <span>{window.__SCHED_KIND(examModal.kind).icon}</span>{examModal.id ? tr('កែ '+window.__SCHED_KIND(examModal.kind).km, 'Edit '+window.__SCHED_KIND(examModal.kind).en.toLowerCase()) : tr(window.__SCHED_KIND(examModal.kind).km+' ថ្មី', 'New '+window.__SCHED_KIND(examModal.kind).en.toLowerCase())}
             </div>
             <div style={{fontSize:11,color:'var(--ink-3)',marginTop:-6}}>{tr('មិន​រាប់​បញ្ចូល​ជា​មេរៀន','Not counted as a lesson')}</div>
 
@@ -1303,7 +1317,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
 
             <div>
               <label style={lblSt}>{tr('កំណត់​សម្គាល់','Note')}</label>
-              <input value={examModal.note||''} onChange={e=>setExamModal(m=>({...m,note:e.target.value}))} placeholder={tr('ឧ. ប្រឡង​ផ្លូវ','e.g. road test')} style={inp}/>
+              <input value={examModal.note||''} onChange={e=>setExamModal(m=>({...m,note:e.target.value}))} placeholder={examModal.kind==='apply'?tr('ឧ. ដាក់​ពាក្យ​ប្រឡង​ផ្លូវ','e.g. road-test application'):tr('ឧ. ប្រឡង​ផ្លូវ','e.g. road test')} style={inp}/>
             </div>
 
             <div style={{display:'flex',gap:8,justifyContent:'space-between',alignItems:'center'}}>

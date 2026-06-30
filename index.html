@@ -409,9 +409,8 @@ window.__trRegistry = {
   "Mark done ✓": "ចប់​មេរៀន ✓",
   "Delete this note?": "លុប​ចំណាំ?",
   "Are you sure? This note will be removed.": "អ្នក​ប្រាកដ​ទេ? ចំណាំ​នេះ​នឹង​ត្រូវ​លុប។",
-  "Delete this exam?": "លុប​កាលវិភាគ​ប្រឡង?",
-  "Are you sure? This exam will be removed.": "អ្នក​ប្រាកដ​ទេ? កាលវិភាគ​ប្រឡង​នេះ​នឹង​ត្រូវ​លុប។",
-  "Exam": "ប្រឡង",
+  "Delete this '+km.en.toLowerCase()+'?": "លុប​'+km.km+'?",
+  "Are you sure? This entry will be removed.": "អ្នក​ប្រាកដ​ទេ? កាលវិភាគ​នេះ​នឹង​ត្រូវ​លុប។",
   "h": "ម៉ោង",
   "Feedback saved": "បាន​រក្សា​ទុក​មតិ",
   "Reminder: your lesson is coming up. See you soon!": "សូម​ចំណាំ​មេរៀន​​របស់​អ្នក​",
@@ -492,7 +491,7 @@ window.__trRegistry = {
   "No active lessons now": "គ្មាន​មេរៀន​ឥឡូវ",
   "Cleared rate": "អត្រា​ជោគ​ជ័យ",
   "No data yet": "មិន​ទាន់​មាន​ទិន្នន័យ",
-  "TODAY\\'S EXAMS": "ប្រឡង​ថ្ងៃ​នេះ",
+  "TODAY\\'S EXAMS / APPLICATIONS": "ប្រឡង / ដាក់ពាក្យ ថ្ងៃ​នេះ",
   "TODAY\\'S LESSONS": "មេរៀន​ថ្ងៃ​នេះ",
   "No lessons scheduled today": "គ្មាន​មេរៀន​ថ្ងៃ​នេះ",
   "TOMORROW\\'S LESSONS": "មេរៀន​ថ្ងៃ​ស្អែក",
@@ -579,6 +578,7 @@ window.__trRegistry = {
   "PDF": "PDF",
   "+ Note": "+ ចំណាំ",
   "+ Exam": "+ ប្រឡង",
+  "+ Apply": "+ ដាក់​ពាក្យ",
   "New lesson": "មេរៀន​ថ្មី",
   "All": "ទាំងអស់",
   "Clear": "សម្អាត",
@@ -591,8 +591,6 @@ window.__trRegistry = {
   "Add at this time": "បន្ថែម​នៅ​ម៉ោង​នេះ",
   "New note": "ចំណាំ​ថ្មី",
   "Book new lesson": "ណាត់​មេរៀន​ថ្មី",
-  "Exam slot — not counted as a lesson": "កាលវិភាគ​ប្រឡង — មិន​រាប់​ជា​មេរៀន",
-  "Create exam": "បង្កើត​កាលវិភាគ​ប្រឡង",
   "Time": "ម៉ោង",
   "e.g. Teacher meeting": "ឧ. ប្រជុំគ្រូ",
   "e.g. All-instructor meeting in the conference room at 2pm": "ឧ. ប្រជុំគ្រូទាំងអស់ នៅបន្ទប់ប្រជុំ ម៉ោង ២ រសៀល",
@@ -600,14 +598,14 @@ window.__trRegistry = {
   "+ Select instructor": "+ ជ្រើស​គ្រូ",
   "Remove": "ដក​ចេញ",
   "No instructors": "មិន​មាន​គ្រូ",
-  "Edit exam": "កែ​កាលវិភាគ​ប្រឡង",
-  "New exam": "កាលវិភាគ​ប្រឡង​ថ្មី",
+  "New '+window.__SCHED_KIND(examModal.kind).en.toLowerCase())}\n            </div>\n            <div style={{fontSize:11,color:'var(--ink-3)": "កែ '+window.__SCHED_KIND(examModal.kind).km, 'Edit '+window.__SCHED_KIND(examModal.kind).en.toLowerCase()) : tr(window.__SCHED_KIND(examModal.kind).km+' ថ្មី",
   "Not counted as a lesson": "មិន​រាប់​បញ្ចូល​ជា​មេរៀន",
   "Hrs": "រយៈ(ម៉ោង)",
   "Students (multiple)": "សិស្ស (ច្រើន​នាក់)",
   "+ Add student": "+ ជ្រើស​សិស្ស",
   "Instructors (multiple)": "គ្រូ (ច្រើន​នាក់)",
   "+ Add instructor": "+ ជ្រើស​គ្រូ",
+  "e.g. road-test application": "ឧ. ដាក់​ពាក្យ​ប្រឡង​ផ្លូវ",
   "e.g. road test": "ឧ. ប្រឡង​ផ្លូវ",
   "Maintenance": "កាលវិភាគ​ថែទាំ",
   "Add vehicle": "បន្ថែមរថយន្ត",
@@ -1474,7 +1472,7 @@ window.__trGroups = {
     "No active lessons now": "គ្មាន​មេរៀន​ឥឡូវ",
     "Cleared rate": "អត្រា​ជោគ​ជ័យ",
     "No data yet": "មិន​ទាន់​មាន​ទិន្នន័យ",
-    "TODAY\\'S EXAMS": "ប្រឡង​ថ្ងៃ​នេះ",
+    "TODAY\\'S EXAMS / APPLICATIONS": "ប្រឡង / ដាក់ពាក្យ ថ្ងៃ​នេះ",
     "TODAY\\'S LESSONS": "មេរៀន​ថ្ងៃ​នេះ",
     "No lessons scheduled today": "គ្មាន​មេរៀន​ថ្ងៃ​នេះ",
     "TOMORROW\\'S LESSONS": "មេរៀន​ថ្ងៃ​ស្អែក",
@@ -1700,6 +1698,7 @@ window.__trGroups = {
     "PDF": "PDF",
     "+ Note": "+ ចំណាំ",
     "+ Exam": "+ ប្រឡង",
+    "+ Apply": "+ ដាក់​ពាក្យ",
     "New lesson": "មេរៀន​ថ្មី",
     "All": "ទាំងអស់",
     "Clear": "ដោះ​ស្រាយ",
@@ -1712,8 +1711,6 @@ window.__trGroups = {
     "Add at this time": "បន្ថែម​នៅ​ម៉ោង​នេះ",
     "New note": "ចំណាំ​ថ្មី",
     "Book new lesson": "កក់​មេរៀន​ថ្មី",
-    "Exam slot — not counted as a lesson": "កាលវិភាគ​ប្រឡង — មិន​រាប់​ជា​មេរៀន",
-    "Create exam": "បង្កើត​កាលវិភាគ​ប្រឡង",
     "Time": "ម៉ោង",
     "e.g. Teacher meeting": "ឧ. ប្រជុំគ្រូ",
     "e.g. All-instructor meeting in the conference room at 2pm": "ឧ. ប្រជុំគ្រូទាំងអស់ នៅបន្ទប់ប្រជុំ ម៉ោង ២ រសៀល",
@@ -1721,14 +1718,14 @@ window.__trGroups = {
     "+ Select instructor": "+ ជ្រើស​គ្រូ",
     "Remove": "ដក​ចេញ",
     "No instructors": "មិន​មាន​គ្រូ",
-    "Edit exam": "កែ​កាលវិភាគ​ប្រឡង",
-    "New exam": "កាលវិភាគ​ប្រឡង​ថ្មី",
+    "New '+window.__SCHED_KIND(examModal.kind).en.toLowerCase())}\n            </div>\n            <div style={{fontSize:11,color:'var(--ink-3)": "កែ '+window.__SCHED_KIND(examModal.kind).km, 'Edit '+window.__SCHED_KIND(examModal.kind).en.toLowerCase()) : tr(window.__SCHED_KIND(examModal.kind).km+' ថ្មី",
     "Not counted as a lesson": "មិន​រាប់​បញ្ចូល​ជា​មេរៀន",
     "Hrs": "រយៈ(ម៉ោង)",
     "Students (multiple)": "សិស្ស (ច្រើន​នាក់)",
     "+ Add student": "+ ជ្រើស​សិស្ស",
     "Instructors (multiple)": "គ្រូ (ច្រើន​នាក់)",
     "+ Add instructor": "+ ជ្រើស​គ្រូ",
+    "e.g. road-test application": "ឧ. ដាក់​ពាក្យ​ប្រឡង​ផ្លូវ",
     "e.g. road test": "ឧ. ប្រឡង​ផ្លូវ",
     "Maintenance": "កាលវិភាគ​ថែទាំ",
     "Add vehicle": "បន្ថែម​យានយន្ត",
@@ -2626,9 +2623,8 @@ window.__trGroups = {
     "Mark done ✓": "ចប់​មេរៀន ✓",
     "Delete this note?": "លុប​ចំណាំ?",
     "Are you sure? This note will be removed.": "អ្នក​ប្រាកដ​ទេ? ចំណាំ​នេះ​នឹង​ត្រូវ​លុប។",
-    "Delete this exam?": "លុប​កាលវិភាគ​ប្រឡង?",
-    "Are you sure? This exam will be removed.": "អ្នក​ប្រាកដ​ទេ? កាលវិភាគ​ប្រឡង​នេះ​នឹង​ត្រូវ​លុប។",
-    "Exam": "ប្រឡង",
+    "Delete this '+km.en.toLowerCase()+'?": "លុប​'+km.km+'?",
+    "Are you sure? This entry will be removed.": "អ្នក​ប្រាកដ​ទេ? កាលវិភាគ​នេះ​នឹង​ត្រូវ​លុប។",
     "h": "ម៉ោង",
     "Feedback saved": "បាន​រក្សា​ទុក​មតិ",
     "Reminder: your lesson is coming up. See you soon!": "សូម​ចំណាំ​មេរៀន​​របស់​អ្នក​",
@@ -10333,7 +10329,15 @@ var ExamDetail = ({
     confirm
   } = useAppActions();
   if (!exam) return null;
-  var EX = '#12A302';
+  var km = window.__SCHED_KIND ? window.__SCHED_KIND(exam.kind) : {
+    km: 'ប្រឡង',
+    en: 'Exam',
+    icon: '🎓',
+    color: '#12A302',
+    soft: 'rgba(18,163,2,.14)',
+    border: 'rgba(18,163,2,.4)'
+  };
+  var EX = km.color;
   var students = (exam.studentIds || []).map(id => studentById(id)).filter(Boolean);
   var instructors = (exam.instIds || []).map(id => instById(id)).filter(Boolean);
   var dateLabel = exam.date ? formatDateShort(exam.date, 'en') : '';
@@ -10348,8 +10352,8 @@ var ExamDetail = ({
     onClose && onClose();
   };
   var doDelete = () => confirm?.({
-    title: tr('លុប​កាលវិភាគ​ប្រឡង?', 'Delete this exam?'),
-    body: tr('អ្នក​ប្រាកដ​ទេ? កាលវិភាគ​ប្រឡង​នេះ​នឹង​ត្រូវ​លុប។', 'Are you sure? This exam will be removed.'),
+    title: tr('លុប​' + km.km + '?', 'Delete this ' + km.en.toLowerCase() + '?'),
+    body: tr('អ្នក​ប្រាកដ​ទេ? កាលវិភាគ​នេះ​នឹង​ត្រូវ​លុប។', 'Are you sure? This entry will be removed.'),
     confirmText: tr('លុប', 'Delete'),
     danger: true,
     onConfirm: () => {
@@ -10379,10 +10383,10 @@ var ExamDetail = ({
       fontWeight: 700,
       padding: '3px 10px',
       borderRadius: 6,
-      background: 'rgba(18,163,2,.14)',
+      background: km.soft,
       color: EX
     }
-  }, "\uD83C\uDF93 ", tr('ប្រឡង', 'Exam'))), React.createElement("div", {
+  }, km.icon, " ", tr(km.km, km.en))), React.createElement("div", {
     style: {
       fontSize: 32,
       fontWeight: 600,
@@ -15196,7 +15200,7 @@ var DashboardAdmin = () => {
           gap: 8
         }
       }, todayExams.length > 0 && React.createElement(Card, {
-        label: tr('ប្រឡង​ថ្ងៃ​នេះ', 'TODAY\'S EXAMS')
+        label: tr('ប្រឡង / ដាក់ពាក្យ ថ្ងៃ​នេះ', 'TODAY\'S EXAMS / APPLICATIONS')
       }, todayExams.map((e, i) => {
         var stu = (e.studentIds || []).map(id => {
           var s = studentById(id);
@@ -15206,6 +15210,7 @@ var DashboardAdmin = () => {
           var it = instById(id);
           return it ? it.en || it.name : null;
         }).filter(Boolean);
+        var km = window.__SCHED_KIND(e.kind);
         return React.createElement("button", {
           key: e.id || i,
           onClick: () => openDetail('exam', e),
@@ -15227,7 +15232,7 @@ var DashboardAdmin = () => {
             fontSize: 12,
             fontWeight: 700,
             fontFamily: '"JetBrains Mono",monospace',
-            color: '#12A302',
+            color: km.color,
             minWidth: 42
           }
         }, String(e.time || '').slice(0, 5)), React.createElement("div", {
@@ -15241,7 +15246,7 @@ var DashboardAdmin = () => {
             fontWeight: 600,
             color: 'var(--ink)'
           }
-        }, "\uD83C\uDF93 ", tr('ប្រឡង', 'Exam'), stu.length ? ' · ' + stu.join(', ') : ''), ins.length > 0 && React.createElement("div", {
+        }, km.icon, " ", tr(km.km, km.en), stu.length ? ' · ' + stu.join(', ') : ''), ins.length > 0 && React.createElement("div", {
           style: {
             fontSize: 11,
             color: 'var(--ink-3)',
@@ -17261,6 +17266,26 @@ var computeLayout = dayLessons => {
   }
   return result;
 };
+window.__SCHED_KIND = kind => ({
+  exam: {
+    km: 'ប្រឡង',
+    en: 'Exam',
+    icon: '🎓',
+    color: '#12A302',
+    soft: 'rgba(18,163,2,.14)',
+    border: 'rgba(18,163,2,.4)',
+    text: '#0c5a01'
+  },
+  apply: {
+    km: 'ដាក់​ពាក្យ',
+    en: 'Application',
+    icon: '📝',
+    color: '#C2410C',
+    soft: 'rgba(194,65,12,.12)',
+    border: 'rgba(194,65,12,.4)',
+    text: '#7c2d12'
+  }
+})[kind === 'apply' ? 'apply' : 'exam'];
 var ScheduleWeek = ({
   lessons = LESSONS,
   studentMode = false,
@@ -17890,22 +17915,23 @@ var ScheduleWeek = ({
         return i ? i.en || i.name : null;
       }).filter(Boolean);
       var timeLbl = String(e.time || '').slice(0, 5);
+      var km = window.__SCHED_KIND(e.kind);
       return React.createElement("button", {
         key: e.id,
         onClick: ev => {
           ev.stopPropagation();
           onExamClick && onExamClick(e);
         },
-        title: `${tr('ប្រឡង', 'Exam')} ${timeLbl}`,
+        title: `${tr(km.km, km.en)} ${timeLbl}`,
         style: {
           position: 'absolute',
           top,
           left: `calc(${col * pct}% + 4px)`,
           width: `calc(${pct}% - 8px)`,
           height,
-          background: 'rgba(18,163,2,.16)',
-          border: '1px solid #12A302',
-          borderLeft: '3px solid #12A302',
+          background: km.soft,
+          border: `1px solid ${km.color}`,
+          borderLeft: `3px solid ${km.color}`,
           borderRadius: 6,
           padding: '4px 6px',
           overflow: 'hidden',
@@ -17914,7 +17940,7 @@ var ScheduleWeek = ({
           textAlign: 'left',
           cursor: 'pointer',
           font: 'inherit',
-          color: '#0c5a01',
+          color: km.text,
           boxSizing: 'border-box'
         }
       }, React.createElement("div", {
@@ -17928,7 +17954,7 @@ var ScheduleWeek = ({
         style: {
           flexShrink: 0
         }
-      }, "\uD83C\uDF93"), React.createElement("span", {
+      }, km.icon), React.createElement("span", {
         style: {
           fontWeight: 700,
           whiteSpace: 'nowrap',
@@ -17936,7 +17962,7 @@ var ScheduleWeek = ({
           textOverflow: 'ellipsis',
           minWidth: 0
         }
-      }, tr('ប្រឡង', 'Exam'))), stuNames.length > 0 && React.createElement("div", {
+      }, tr(km.km, km.en))), stuNames.length > 0 && React.createElement("div", {
         style: {
           fontWeight: 600,
           fontSize: 10,
@@ -18439,6 +18465,7 @@ var ScheduleScreen = ({
       return;
     }
     var rec = {
+      kind: m.kind === 'apply' ? 'apply' : 'exam',
       date: m.date,
       time: m.time || '',
       len: Number(m.len) || 2,
@@ -18454,7 +18481,8 @@ var ScheduleScreen = ({
       ...rec,
       author: meName
     }]);
-    if (window.__logActivity) window.__logActivity(m.id ? 'edit' : 'create', 'exam', tr('ប្រឡង', 'Exam') + ' ' + m.date);
+    var km = window.__SCHED_KIND(rec.kind);
+    if (window.__logActivity) window.__logActivity(m.id ? 'edit' : 'create', 'exam', tr(km.km, km.en) + ' ' + m.date);
     setExamModal(null);
   };
   var removeExam = id => {
@@ -18476,6 +18504,7 @@ var ScheduleScreen = ({
   });
   var openExamEdit = e => setExamModal({
     id: e.id,
+    kind: e.kind || 'exam',
     date: e.date,
     time: e.time || '',
     len: e.len || 2,
@@ -18898,6 +18927,7 @@ var ScheduleScreen = ({
       kind: "ghost",
       size: "md",
       onClick: () => setExamModal({
+        kind: 'exam',
         date: allWeekDates[0] || today,
         time: '08:00',
         len: 2,
@@ -18913,7 +18943,27 @@ var ScheduleScreen = ({
         color: '#12A302',
         borderColor: '#12A302'
       }
-    }, tr('+ ប្រឡង', '+ Exam')), can(role, 'create', 'lesson') && React.createElement(Btn, {
+    }, tr('+ ប្រឡង', '+ Exam')), !studentMode && React.createElement(Btn, {
+      kind: "ghost",
+      size: "md",
+      onClick: () => setExamModal({
+        kind: 'apply',
+        date: allWeekDates[0] || today,
+        time: '08:00',
+        len: 2,
+        studentIds: [],
+        instIds: [],
+        note: ''
+      }),
+      icon: React.createElement(Icon, {
+        name: "book",
+        size: 14
+      }),
+      style: {
+        color: '#C2410C',
+        borderColor: '#C2410C'
+      }
+    }, tr('+ ដាក់​ពាក្យ', '+ Apply')), can(role, 'create', 'lesson') && React.createElement(Btn, {
       kind: "primary",
       size: "md",
       onClick: () => openForm('newLesson'),
@@ -19425,6 +19475,11 @@ var ScheduleScreen = ({
     km: 'ប្រឡង',
     en: 'Exam',
     icon: 'star'
+  }, {
+    k: 'apply',
+    km: 'ដាក់ពាក្យ',
+    en: 'Apply',
+    icon: 'book'
   }].map(t => React.createElement("button", {
     key: t.k,
     onClick: () => setNoteModal(m => ({
@@ -19491,59 +19546,64 @@ var ScheduleScreen = ({
     style: {
       justifyContent: 'center'
     }
-  }, tr('បោះបង់', 'Cancel'))) : noteModal.mode === 'exam' ? React.createElement("div", {
-    style: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 14
-    }
-  }, React.createElement("div", {
-    style: {
-      fontSize: 13,
-      color: 'var(--ink-2)',
-      background: 'var(--surface-muted)',
-      borderRadius: 8,
-      padding: '11px 13px',
-      fontFamily: '"JetBrains Mono",monospace'
-    }
-  }, "\uD83D\uDCC5 ", noteModal.date, "\u3000\uD83D\uDD52 ", noteModal.time), React.createElement("div", {
-    style: {
-      fontSize: 11,
-      color: 'var(--ink-3)'
-    }
-  }, tr('កាលវិភាគ​ប្រឡង — មិន​រាប់​ជា​មេរៀន', 'Exam slot — not counted as a lesson')), React.createElement(Btn, {
-    kind: "primary",
-    size: "lg",
-    icon: React.createElement(Icon, {
-      name: "star",
-      size: 15
-    }),
-    style: {
-      justifyContent: 'center',
-      background: '#12A302',
-      borderColor: '#12A302'
-    },
-    onClick: () => {
-      var d = noteModal.date,
-        t = noteModal.time;
-      setNoteModal(null);
-      setExamModal({
-        date: d,
-        time: t,
-        len: 2,
-        studentIds: [],
-        instIds: [],
-        note: ''
-      });
-    }
-  }, tr('បង្កើត​កាលវិភាគ​ប្រឡង', 'Create exam')), React.createElement(Btn, {
-    kind: "ghost",
-    size: "md",
-    onClick: () => setNoteModal(null),
-    style: {
-      justifyContent: 'center'
-    }
-  }, tr('បោះបង់', 'Cancel'))) : React.createElement(React.Fragment, null, React.createElement("div", {
+  }, tr('បោះបង់', 'Cancel'))) : noteModal.mode === 'exam' || noteModal.mode === 'apply' ? (() => {
+    var km = window.__SCHED_KIND(noteModal.mode);
+    return React.createElement("div", {
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 14
+      }
+    }, React.createElement("div", {
+      style: {
+        fontSize: 13,
+        color: 'var(--ink-2)',
+        background: 'var(--surface-muted)',
+        borderRadius: 8,
+        padding: '11px 13px',
+        fontFamily: '"JetBrains Mono",monospace'
+      }
+    }, "\uD83D\uDCC5 ", noteModal.date, "\u3000\uD83D\uDD52 ", noteModal.time), React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: 'var(--ink-3)'
+      }
+    }, tr(km.km + ' — មិន​រាប់​ជា​មេរៀន', tr(km.km, km.en) + ' — not counted as a lesson')), React.createElement(Btn, {
+      kind: "primary",
+      size: "lg",
+      icon: React.createElement(Icon, {
+        name: noteModal.mode === 'apply' ? 'book' : 'star',
+        size: 15
+      }),
+      style: {
+        justifyContent: 'center',
+        background: km.color,
+        borderColor: km.color
+      },
+      onClick: () => {
+        var d = noteModal.date,
+          t = noteModal.time,
+          k = noteModal.mode;
+        setNoteModal(null);
+        setExamModal({
+          kind: k,
+          date: d,
+          time: t,
+          len: 2,
+          studentIds: [],
+          instIds: [],
+          note: ''
+        });
+      }
+    }, tr('បង្កើត ' + km.km, 'Create ' + km.en.toLowerCase())), React.createElement(Btn, {
+      kind: "ghost",
+      size: "md",
+      onClick: () => setNoteModal(null),
+      style: {
+        justifyContent: 'center'
+      }
+    }, tr('បោះបង់', 'Cancel')));
+  })() : React.createElement(React.Fragment, null, React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 130px',
@@ -19789,6 +19849,7 @@ var ScheduleScreen = ({
     size: "md",
     onClick: submitNote
   }, tr('រក្សាទុក', 'Save'))))))), examModal && (() => {
+    var km = window.__SCHED_KIND(examModal.kind);
     var inp = {
       width: '100%',
       padding: '9px 12px',
@@ -19816,9 +19877,9 @@ var ScheduleScreen = ({
         gap: 6,
         padding: '5px 10px',
         borderRadius: 20,
-        border: '1px solid #12A302',
-        background: 'rgba(18,163,2,.12)',
-        color: '#0c5a01',
+        border: `1px solid ${km.color}`,
+        background: km.soft,
+        color: km.text,
         fontSize: 12,
         fontWeight: 600
       }
@@ -19829,7 +19890,7 @@ var ScheduleScreen = ({
         border: 'none',
         background: 'none',
         cursor: 'pointer',
-        color: '#0f3d22',
+        color: km.text,
         fontSize: 15,
         lineHeight: 1,
         padding: 0
@@ -19856,7 +19917,7 @@ var ScheduleScreen = ({
         alignItems: 'center',
         gap: 8
       }
-    }, React.createElement("span", null, "\uD83C\uDF93"), examModal.id ? tr('កែ​កាលវិភាគ​ប្រឡង', 'Edit exam') : tr('កាលវិភាគ​ប្រឡង​ថ្មី', 'New exam')), React.createElement("div", {
+    }, React.createElement("span", null, window.__SCHED_KIND(examModal.kind).icon), examModal.id ? tr('កែ ' + window.__SCHED_KIND(examModal.kind).km, 'Edit ' + window.__SCHED_KIND(examModal.kind).en.toLowerCase()) : tr(window.__SCHED_KIND(examModal.kind).km + ' ថ្មី', 'New ' + window.__SCHED_KIND(examModal.kind).en.toLowerCase())), React.createElement("div", {
       style: {
         fontSize: 11,
         color: 'var(--ink-3)',
@@ -19967,7 +20028,7 @@ var ScheduleScreen = ({
         ...m,
         note: e.target.value
       })),
-      placeholder: tr('ឧ. ប្រឡង​ផ្លូវ', 'e.g. road test'),
+      placeholder: examModal.kind === 'apply' ? tr('ឧ. ដាក់​ពាក្យ​ប្រឡង​ផ្លូវ', 'e.g. road-test application') : tr('ឧ. ប្រឡង​ផ្លូវ', 'e.g. road test'),
       style: inp
     })), React.createElement("div", {
       style: {
@@ -38816,16 +38877,24 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
       if (row.t === 'exam') {
         var e = row.item;
         var r = e.results && e.results[sid] || {};
+        var km = window.__SCHED_KIND ? window.__SCHED_KIND(e.kind) : {
+          km: 'ប្រឡង',
+          en: 'Exam',
+          icon: '🎓',
+          color: '#12A302'
+        };
         var ins = (e.instIds || []).map(id => {
           var it = instById(id);
           return it ? esc(it.en || it.name) : null;
         }).filter(Boolean).join(', ') || '—';
-        var isFail = r.result === 'fail';
-        var badge = r.result === 'pass' ? `<b style="color:#12A302">${L('ជាប់', 'Pass')} ✓</b>` : isFail ? `<b style="color:#B0413E">${L('ធ្លាក់', 'Fail')} ✗</b>` : '—';
+        var isApply = e.kind === 'apply';
+        var isFail = !isApply && r.result === 'fail';
+        var badge = isApply ? '—' : r.result === 'pass' ? `<b style="color:#12A302">${L('ជាប់', 'Pass')} ✓</b>` : r.result === 'fail' ? `<b style="color:#B0413E">${L('ធ្លាក់', 'Fail')} ✗</b>` : '—';
         var failInfo = isFail ? `${r.failLocation ? '<div>📍 ' + esc(T(r.failLocation)) + '</div>' : ''}${r.failReason ? '<div style="color:#7a2b29">' + esc(T(r.failReason)) + '</div>' : ''}` : '';
-        return `<tr style="background:${isFail ? '#fbeceb' : '#eafbe7'};-webkit-print-color-adjust:exact;print-color-adjust:exact">
-        <td style="white-space:nowrap;font-family:monospace;color:#12A302;font-weight:700">${esc(e.date)}<br>${esc(String(e.time || '').slice(0, 5))}</td>
-        <td><b>🎓 ${L('ប្រឡង', 'Exam')}</b><br><span style="color:#555">${ins}</span></td>
+        var bg = isApply ? '#fff3ea' : isFail ? '#fbeceb' : '#eafbe7';
+        return `<tr style="background:${bg};-webkit-print-color-adjust:exact;print-color-adjust:exact">
+        <td style="white-space:nowrap;font-family:monospace;color:${km.color};font-weight:700">${esc(e.date)}<br>${esc(String(e.time || '').slice(0, 5))}</td>
+        <td><b>${km.icon} ${L(km.km, km.en)}</b><br><span style="color:#555">${ins}</span>${e.note ? '<div style="color:#777;font-size:11px">' + esc(e.note) + '</div>' : ''}</td>
         <td>${badge}${failInfo}</td>
       </tr>`;
       }
@@ -38982,6 +39051,8 @@ var ExamFeedbackRow = ({
   tr,
   onSave
 }) => {
+  var isApply = e.kind === 'apply';
+  var km = window.__SCHED_KIND(e.kind);
   var r = e.results && e.results[sid] || {};
   var [open, setOpen] = React.useState(false);
   var [editing, setEditing] = React.useState(false);
@@ -39016,7 +39087,12 @@ var ExamFeedbackRow = ({
     });
     setEditing(false);
   };
-  var th = savedFail ? {
+  var th = isApply ? {
+    bg: km.soft,
+    bd: km.border,
+    accent: km.color,
+    text: km.text
+  } : savedFail ? {
     bg: 'rgba(176,65,62,.08)',
     bd: 'rgba(176,65,62,.4)',
     accent: '#B0413E',
@@ -39086,26 +39162,32 @@ var ExamFeedbackRow = ({
       fontWeight: 700,
       color: th.text
     }
-  }, "\uD83C\uDF93 ", tr('ប្រឡង', 'Exam')), ins.length > 0 && React.createElement("div", {
+  }, km.icon, " ", tr(km.km, km.en)), ins.length > 0 && React.createElement("div", {
     style: {
       fontSize: 11,
       color: 'var(--ink-3)',
       marginTop: 1
     }
-  }, "\uD83D\uDC68\u200D\uD83C\uDFEB ", ins.join(' · ')), savedFail && r.failLocation && React.createElement("div", {
+  }, "\uD83D\uDC68\u200D\uD83C\uDFEB ", ins.join(' · ')), !isApply && savedFail && r.failLocation && React.createElement("div", {
     style: {
       fontSize: 11,
       color: th.text,
       marginTop: 1
     }
-  }, "\uD83D\uDCCD ", r.failLocation)), React.createElement("span", {
+  }, "\uD83D\uDCCD ", r.failLocation), isApply && e.note && React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--ink-3)',
+      marginTop: 1
+    }
+  }, e.note)), React.createElement("span", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 4,
       flexShrink: 0
     }
-  }, savedPass && React.createElement("span", {
+  }, !isApply && savedPass && React.createElement("span", {
     style: {
       fontSize: 11,
       fontWeight: 700,
@@ -39114,7 +39196,7 @@ var ExamFeedbackRow = ({
       background: 'rgba(18,163,2,.16)',
       color: '#12A302'
     }
-  }, tr('ជាប់', 'Pass')), savedFail && React.createElement("span", {
+  }, tr('ជាប់', 'Pass')), !isApply && savedFail && React.createElement("span", {
     style: {
       fontSize: 11,
       fontWeight: 700,
@@ -39123,18 +39205,18 @@ var ExamFeedbackRow = ({
       background: 'rgba(176,65,62,.16)',
       color: '#B0413E'
     }
-  }, tr('ធ្លាក់', 'Fail')), !hasResult && React.createElement("span", {
+  }, tr('ធ្លាក់', 'Fail')), !isApply && !hasResult && React.createElement("span", {
     style: {
       fontSize: 11,
       color: 'var(--ink-3)'
     }
-  }, tr('កំណត់​លទ្ធផល', 'Set result')), React.createElement("span", {
+  }, tr('កំណត់​លទ្ធផល', 'Set result')), !isApply && React.createElement("span", {
     style: {
       transition: 'transform .2s',
       transform: open ? 'rotate(180deg)' : 'none',
       color: 'var(--ink-3)'
     }
-  }, "\u25BE"))), open && React.createElement("div", {
+  }, "\u25BE"))), open && !isApply && React.createElement("div", {
     style: {
       padding: '2px 10px 12px'
     }
@@ -60959,10 +61041,16 @@ var DETAILS = {
   },
   exam: {
     Component: ExamDetail,
-    titleFn: () => ({
-      km: 'ប្រឡង',
-      en: 'Exam detail'
-    })
+    titleFn: d => {
+      var k = window.__SCHED_KIND ? window.__SCHED_KIND(d && d.kind) : {
+        km: 'ប្រឡង',
+        en: 'Exam'
+      };
+      return {
+        km: k.km,
+        en: k.en + ' detail'
+      };
+    }
   },
   student: {
     Component: StudentProfile,

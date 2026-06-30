@@ -311,13 +311,16 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
   const rows = items.map(row => {
     if (row.t === 'exam') {
       const e = row.item; const r = (e.results && e.results[sid]) || {};
+      const km = window.__SCHED_KIND ? window.__SCHED_KIND(e.kind) : {km:'ប្រឡង',en:'Exam',icon:'🎓',color:'#12A302'};
       const ins = (e.instIds||[]).map(id=>{ const it=instById(id); return it?esc(it.en||it.name):null; }).filter(Boolean).join(', ') || '—';
-      const isFail = r.result === 'fail';
-      const badge = r.result==='pass' ? `<b style="color:#12A302">${L('ជាប់','Pass')} ✓</b>` : isFail ? `<b style="color:#B0413E">${L('ធ្លាក់','Fail')} ✗</b>` : '—';
+      const isApply = e.kind === 'apply';
+      const isFail = !isApply && r.result === 'fail';
+      const badge = isApply ? '—' : (r.result==='pass' ? `<b style="color:#12A302">${L('ជាប់','Pass')} ✓</b>` : (r.result==='fail') ? `<b style="color:#B0413E">${L('ធ្លាក់','Fail')} ✗</b>` : '—');
       const failInfo = isFail ? `${r.failLocation?'<div>📍 '+esc(T(r.failLocation))+'</div>':''}${r.failReason?'<div style="color:#7a2b29">'+esc(T(r.failReason))+'</div>':''}` : '';
-      return `<tr style="background:${isFail?'#fbeceb':'#eafbe7'};-webkit-print-color-adjust:exact;print-color-adjust:exact">
-        <td style="white-space:nowrap;font-family:monospace;color:#12A302;font-weight:700">${esc(e.date)}<br>${esc(String(e.time||'').slice(0,5))}</td>
-        <td><b>🎓 ${L('ប្រឡង','Exam')}</b><br><span style="color:#555">${ins}</span></td>
+      const bg = isApply ? '#fff3ea' : (isFail ? '#fbeceb' : '#eafbe7');
+      return `<tr style="background:${bg};-webkit-print-color-adjust:exact;print-color-adjust:exact">
+        <td style="white-space:nowrap;font-family:monospace;color:${km.color};font-weight:700">${esc(e.date)}<br>${esc(String(e.time||'').slice(0,5))}</td>
+        <td><b>${km.icon} ${L(km.km,km.en)}</b><br><span style="color:#555">${ins}</span>${e.note?'<div style="color:#777;font-size:11px">'+esc(e.note)+'</div>':''}</td>
         <td>${badge}${failInfo}</td>
       </tr>`;
     }
@@ -473,6 +476,8 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
 // Exam row in a student's Lessons & Comments — mark pass/fail per student and
 // record where they failed. Fail turns the row red.
 const ExamFeedbackRow = ({ e, sid, tr, onSave }) => {
+  const isApply = e.kind === 'apply';
+  const km = window.__SCHED_KIND(e.kind);
   const r = (e.results && e.results[sid]) || {};
   const [open, setOpen]                 = React.useState(false);
   const [editing, setEditing]           = React.useState(false);
@@ -487,9 +492,11 @@ const ExamFeedbackRow = ({ e, sid, tr, onSave }) => {
   const reset = () => { setResult(r.result||''); setFailLocation(r.failLocation||''); setFailReason(r.failReason||''); };
   const toggleOpen = () => { if (open) { setEditing(false); reset(); } setOpen(o=>!o); };
   const save = () => { onSave(e.id, sid, { result, failLocation: failLocation.trim(), failReason: failReason.trim() }); setEditing(false); };
-  const th = savedFail
-    ? { bg:'rgba(176,65,62,.08)', bd:'rgba(176,65,62,.4)', accent:'#B0413E', text:'#7a2b29' }
-    : { bg:'rgba(18,163,2,.08)',  bd:'rgba(18,163,2,.35)', accent:'#12A302', text:'#0c5a01' };
+  const th = isApply
+    ? { bg:km.soft, bd:km.border, accent:km.color, text:km.text }
+    : savedFail
+      ? { bg:'rgba(176,65,62,.08)', bd:'rgba(176,65,62,.4)', accent:'#B0413E', text:'#7a2b29' }
+      : { bg:'rgba(18,163,2,.08)',  bd:'rgba(18,163,2,.35)', accent:'#12A302', text:'#0c5a01' };
   const fld = { width:'100%', padding:'8px 10px', border:'1px solid var(--border)', borderRadius:8, fontSize:13, fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)', boxSizing:'border-box' };
   const lbl = { fontSize:11, color:'var(--ink-3)', fontWeight:600, margin:'10px 0 4px' };
   return (
@@ -497,18 +504,19 @@ const ExamFeedbackRow = ({ e, sid, tr, onSave }) => {
       <button onClick={toggleOpen} style={{width:'100%',textAlign:'left',background:'none',border:'none',cursor:'pointer',padding:'9px 10px',display:'flex',gap:10,alignItems:'flex-start'}}>
         <div style={{fontSize:11,fontWeight:700,fontFamily:'"JetBrains Mono",monospace',color:th.accent,minWidth:54,lineHeight:1.5}}>{e.date}<br/>{String(e.time||'').slice(0,5)}</div>
         <div style={{flex:1,minWidth:0}}>
-          <div style={{fontSize:13,fontWeight:700,color:th.text}}>🎓 {tr('ប្រឡង','Exam')}</div>
+          <div style={{fontSize:13,fontWeight:700,color:th.text}}>{km.icon} {tr(km.km,km.en)}</div>
           {ins.length>0 && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:1}}>👨‍🏫 {ins.join(' · ')}</div>}
-          {savedFail && r.failLocation && <div style={{fontSize:11,color:th.text,marginTop:1}}>📍 {r.failLocation}</div>}
+          {!isApply && savedFail && r.failLocation && <div style={{fontSize:11,color:th.text,marginTop:1}}>📍 {r.failLocation}</div>}
+          {isApply && e.note && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:1}}>{e.note}</div>}
         </div>
         <span style={{display:'flex',alignItems:'center',gap:4,flexShrink:0}}>
-          {savedPass && <span style={{fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:6,background:'rgba(18,163,2,.16)',color:'#12A302'}}>{tr('ជាប់','Pass')}</span>}
-          {savedFail && <span style={{fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:6,background:'rgba(176,65,62,.16)',color:'#B0413E'}}>{tr('ធ្លាក់','Fail')}</span>}
-          {!hasResult && <span style={{fontSize:11,color:'var(--ink-3)'}}>{tr('កំណត់​លទ្ធផល','Set result')}</span>}
-          <span style={{transition:'transform .2s',transform:open?'rotate(180deg)':'none',color:'var(--ink-3)'}}>▾</span>
+          {!isApply && savedPass && <span style={{fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:6,background:'rgba(18,163,2,.16)',color:'#12A302'}}>{tr('ជាប់','Pass')}</span>}
+          {!isApply && savedFail && <span style={{fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:6,background:'rgba(176,65,62,.16)',color:'#B0413E'}}>{tr('ធ្លាក់','Fail')}</span>}
+          {!isApply && !hasResult && <span style={{fontSize:11,color:'var(--ink-3)'}}>{tr('កំណត់​លទ្ធផល','Set result')}</span>}
+          {!isApply && <span style={{transition:'transform .2s',transform:open?'rotate(180deg)':'none',color:'var(--ink-3)'}}>▾</span>}
         </span>
       </button>
-      {open && (
+      {open && !isApply && (
         <div style={{padding:'2px 10px 12px'}}>
           {!showForm && hasResult ? (
             <div style={{display:'flex',flexDirection:'column',gap:6}}>

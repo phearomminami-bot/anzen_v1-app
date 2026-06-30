@@ -267,15 +267,16 @@ const DashboardAdmin = () => {
             return (
               <div style={{display:'flex',flexDirection:'column',gap:8}}>
                 {todayExams.length > 0 && (
-                  <Card label={tr('ប្រឡង​ថ្ងៃ​នេះ','TODAY\'S EXAMS')}>
+                  <Card label={tr('ប្រឡង / ដាក់ពាក្យ ថ្ងៃ​នេះ','TODAY\'S EXAMS / APPLICATIONS')}>
                     {todayExams.map((e,i) => {
                       const stu = (e.studentIds||[]).map(id=>{const s=studentById(id);return s?(s.en||s.name):null;}).filter(Boolean);
                       const ins = (e.instIds||[]).map(id=>{const it=instById(id);return it?(it.en||it.name):null;}).filter(Boolean);
+                      const km = window.__SCHED_KIND(e.kind);
                       return (
                         <button key={e.id||i} onClick={()=>openDetail('exam', e)} style={{width:'100%',textAlign:'left',display:'flex',gap:10,alignItems:'flex-start',padding:'9px 0',borderTop:i?'1px solid var(--border)':'none',background:'none',border:'none',cursor:'pointer',font:'inherit'}}>
-                          <div style={{fontSize:12,fontWeight:700,fontFamily:'"JetBrains Mono",monospace',color:'#12A302',minWidth:42}}>{String(e.time||'').slice(0,5)}</div>
+                          <div style={{fontSize:12,fontWeight:700,fontFamily:'"JetBrains Mono",monospace',color:km.color,minWidth:42}}>{String(e.time||'').slice(0,5)}</div>
                           <div style={{flex:1,minWidth:0}}>
-                            <div style={{fontSize:13,fontWeight:600,color:'var(--ink)'}}>🎓 {tr('ប្រឡង','Exam')}{stu.length?' · '+stu.join(', '):''}</div>
+                            <div style={{fontSize:13,fontWeight:600,color:'var(--ink)'}}>{km.icon} {tr(km.km,km.en)}{stu.length?' · '+stu.join(', '):''}</div>
                             {ins.length>0 && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:1}}>👨‍🏫 {ins.join(' · ')}</div>}
                           </div>
                         </button>

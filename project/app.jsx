@@ -76,7 +76,7 @@ const FORM_DARK    = new Set();
 const DETAILS = {
   lesson:       { Component: LessonDetail,      titleFn: () => ({km:'មេរៀន',         en:'Lesson detail'   }) },
   note:         { Component: NoteDetail,        titleFn: () => ({km:'ចំណាំ',          en:'Note detail'     }) },
-  exam:         { Component: ExamDetail,        titleFn: () => ({km:'ប្រឡង',          en:'Exam detail'     }) },
+  exam:         { Component: ExamDetail,        titleFn: (d) => { const k = window.__SCHED_KIND ? window.__SCHED_KIND(d && d.kind) : {km:'ប្រឡង',en:'Exam'}; return {km:k.km, en:k.en+' detail'}; } },
   student:      { Component: StudentProfile,    titleFn: (d) => ({km:d?.name,                 en:`${d?.id} · ${d?.cls}`}) },
   instructor:   { Component: InstructorProfile, titleFn: (d) => ({km:d?.name,                 en:d?.en}) },
   vehicle:      { Component: VehicleDetail,     titleFn: (d) => ({km:d?.plate || 'Vehicle',   en:d?.make}) },
