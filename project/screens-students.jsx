@@ -317,7 +317,7 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
       const isFail = !isApply && r.result === 'fail';
       const badge = isApply ? '—' : (r.result==='pass' ? `<b style="color:#12A302">${L('ជាប់','Pass')} ✓</b>` : (r.result==='fail') ? `<b style="color:#B0413E">${L('ធ្លាក់','Fail')} ✗</b>` : '—');
       const failInfo = isFail ? `${r.failLocation?'<div>📍 '+esc(T(r.failLocation))+'</div>':''}${r.failReason?'<div style="color:#7a2b29">'+esc(T(r.failReason))+'</div>':''}` : '';
-      const bg = isApply ? '#fff3ea' : (isFail ? '#fbeceb' : '#eafbe7');
+      const bg = isApply ? '#fff8e1' : (isFail ? '#fbeceb' : '#eafbe7');
       return `<tr style="background:${bg};-webkit-print-color-adjust:exact;print-color-adjust:exact">
         <td style="white-space:nowrap;font-family:monospace;color:${km.color};font-weight:700">${esc(e.date)}<br>${esc(String(e.time||'').slice(0,5))}</td>
         <td><b>${km.icon} ${L(km.km,km.en)}</b><br><span style="color:#555">${ins}</span>${e.note?'<div style="color:#777;font-size:11px">'+esc(e.note)+'</div>':''}</td>

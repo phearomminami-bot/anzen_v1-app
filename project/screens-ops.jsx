@@ -149,7 +149,7 @@ const computeLayout = (dayLessons) => {
 // the detail panel, dashboard, student profile and PDF via window.
 window.__SCHED_KIND = (kind) => ({
   exam:  { km:'ប្រឡង',      en:'Exam',        icon:'🎓', color:'#12A302', soft:'rgba(18,163,2,.14)',  border:'rgba(18,163,2,.4)',  text:'#0c5a01' },
-  apply: { km:'ដាក់​ពាក្យ',  en:'Application', icon:'📝', color:'#C2410C', soft:'rgba(194,65,12,.12)', border:'rgba(194,65,12,.4)', text:'#7c2d12' },
+  apply: { km:'ដាក់​ពាក្យ',  en:'Application', icon:'📝', color:'#CA8A04', soft:'rgba(202,138,4,.18)', border:'rgba(202,138,4,.5)', text:'#713F12' },
 }[kind === 'apply' ? 'apply' : 'exam']);
 
 // ── Week view ──
@@ -929,7 +929,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
             <Btn kind="ghost" size="md" onClick={()=>generateSchedulePDF({lessons:visibleLessons.filter(l=>l.status!=='cancelled'),weekDates:allWeekDates,viewType:v,labelEn,instFilter,vehFilter,studentFilter})} icon={<Icon name="download" size={14}/>}>{tr('PDF','PDF')}</Btn>
             {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:allWeekDates[0]||today,time:'09:00',title:'',description:'',author:meName,invited:[]})} icon={<Icon name="bell" size={14}/>}>{tr('+ ចំណាំ','+ Note')}</Btn>}
             {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setExamModal({kind:'exam',date:allWeekDates[0]||today,time:'08:00',len:2,studentIds:[],instIds:[],note:''})} icon={<Icon name="star" size={14}/>} style={{color:'#12A302',borderColor:'#12A302'}}>{tr('+ ប្រឡង','+ Exam')}</Btn>}
-            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setExamModal({kind:'apply',date:allWeekDates[0]||today,time:'08:00',len:2,studentIds:[],instIds:[],note:''})} icon={<Icon name="book" size={14}/>} style={{color:'#C2410C',borderColor:'#C2410C'}}>{tr('+ ដាក់​ពាក្យ','+ Apply')}</Btn>}
+            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setExamModal({kind:'apply',date:allWeekDates[0]||today,time:'08:00',len:2,studentIds:[],instIds:[],note:''})} icon={<Icon name="book" size={14}/>} style={{color:'#CA8A04',borderColor:'#CA8A04'}}>{tr('+ ដាក់​ពាក្យ','+ Apply')}</Btn>}
             {can(role,'create','lesson') && <Btn kind="primary" size="md" onClick={()=>openForm('newLesson')} icon={<Icon name="plus" size={14}/>}>{tr('មេរៀន​ថ្មី','New lesson')}</Btn>}
           </div>
         )}

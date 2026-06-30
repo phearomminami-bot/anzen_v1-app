@@ -17280,10 +17280,10 @@ window.__SCHED_KIND = kind => ({
     km: 'ដាក់​ពាក្យ',
     en: 'Application',
     icon: '📝',
-    color: '#C2410C',
-    soft: 'rgba(194,65,12,.12)',
-    border: 'rgba(194,65,12,.4)',
-    text: '#7c2d12'
+    color: '#CA8A04',
+    soft: 'rgba(202,138,4,.18)',
+    border: 'rgba(202,138,4,.5)',
+    text: '#713F12'
   }
 })[kind === 'apply' ? 'apply' : 'exam'];
 var ScheduleWeek = ({
@@ -18960,8 +18960,8 @@ var ScheduleScreen = ({
         size: 14
       }),
       style: {
-        color: '#C2410C',
-        borderColor: '#C2410C'
+        color: '#CA8A04',
+        borderColor: '#CA8A04'
       }
     }, tr('+ ដាក់​ពាក្យ', '+ Apply')), can(role, 'create', 'lesson') && React.createElement(Btn, {
       kind: "primary",
@@ -38891,7 +38891,7 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
         var isFail = !isApply && r.result === 'fail';
         var badge = isApply ? '—' : r.result === 'pass' ? `<b style="color:#12A302">${L('ជាប់', 'Pass')} ✓</b>` : r.result === 'fail' ? `<b style="color:#B0413E">${L('ធ្លាក់', 'Fail')} ✗</b>` : '—';
         var failInfo = isFail ? `${r.failLocation ? '<div>📍 ' + esc(T(r.failLocation)) + '</div>' : ''}${r.failReason ? '<div style="color:#7a2b29">' + esc(T(r.failReason)) + '</div>' : ''}` : '';
-        var bg = isApply ? '#fff3ea' : isFail ? '#fbeceb' : '#eafbe7';
+        var bg = isApply ? '#fff8e1' : isFail ? '#fbeceb' : '#eafbe7';
         return `<tr style="background:${bg};-webkit-print-color-adjust:exact;print-color-adjust:exact">
         <td style="white-space:nowrap;font-family:monospace;color:${km.color};font-weight:700">${esc(e.date)}<br>${esc(String(e.time || '').slice(0, 5))}</td>
         <td><b>${km.icon} ${L(km.km, km.en)}</b><br><span style="color:#555">${ins}</span>${e.note ? '<div style="color:#777;font-size:11px">' + esc(e.note) + '</div>' : ''}</td>
