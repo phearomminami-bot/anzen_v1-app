@@ -207,8 +207,18 @@ const printStudentLessonsPDF = (s, lessons, exams) => {
   const ss = window.__schoolSettings || {};
   const school = ss.name || 'Anzen';
   const sid = s.id;
+  const schoolEn = ss.nameEn || '';
+  const logo = ss.logo || '';
+  const isUrl = (x) => typeof x === 'string' && /^(data:|https?:)/.test(x);
   const typeKm = (l) => (l.color==='c'||l.color==='e') ? 'ទ្រឹស្ដី' : 'អនុវត្តន៍';
   const stars = (n) => '★'.repeat(n||0) + '☆'.repeat(5-(n||0));
+
+  // Cumulative lesson-hour numbering (oldest first, skipping cancelled lessons).
+  const chrono = lessons.filter(l => l.status !== 'cancelled').slice()
+    .sort((a,b)=>{ const ka=(a.date||'')+' '+String(a.h||0).padStart(2,'0'), kb=(b.date||'')+' '+String(b.h||0).padStart(2,'0'); return ka<kb?-1:ka>kb?1:0; });
+  const hourMap = {}; let acc = 0;
+  chrono.forEach(l => { const n=Math.max(1,Math.round(l.len||1)); const nums=[]; for(let i=0;i<n;i++) nums.push(acc+1+i); acc+=n; hourMap[l.id]=nums; });
+
   const items = [
     ...lessons.map(l => ({ t:'lesson', k:(l.date||'')+' '+String(l.h||0).padStart(2,'0'), item:l })),
     ...exams.map(e  => ({ t:'exam',   k:(e.date||'')+' '+String(e.time||'').slice(0,5),    item:e })),
@@ -229,19 +239,56 @@ const printStudentLessonsPDF = (s, lessons, exams) => {
     }
     const l = row.item;
     const it = instById(l.instId); const inst = it ? esc(it.en||it.name) : '—';
-    const covered = lessonsCoveredBy(l).map(c => esc(c.no + (c.name ? ' '+c.name : ''))).join(', ');
+    // Each covered curriculum lesson on its own line (not joined together).
+    const coveredArr = lessonsCoveredBy(l).map(c => esc(c.no + (c.name ? ' '+c.name : '')));
+    const coveredHtml = coveredArr.length ? '<div style="color:#1A4F96;margin-top:2px">' + coveredArr.map(c=>'<div>'+c+'</div>').join('') + '</div>' : '';
     const fb = [];
     if (l.rating)     fb.push('<div>'+stars(l.rating)+'</div>');
     if (l.didWell)    fb.push('<div><b>ធ្វើបានល្អ:</b> '+esc(l.didWell)+'</div>');
     if (l.toImprove)  fb.push('<div><b>ខ្វះខាត:</b> '+esc(l.toImprove)+'</div>');
     if (l.note)       fb.push('<div><b>មតិ:</b> '+esc(l.note)+'</div>');
     const status = l.status==='done' ? '<b style="color:#1A6B3C">រួចរាល់</b>' : l.status==='cancelled' ? '<span style="color:#999">បានលុប</span>' : 'កំពុង';
+    const hrs = hourMap[l.id];
+    const hrLabel = hrs && hrs.length ? `<div style="color:#888;font-weight:400;font-size:10px">(${hrs.join(', ')})</div>` : '';
     return `<tr>
-      <td style="white-space:nowrap;font-family:monospace;color:#444;font-weight:700">${esc(l.date)}<br>${String(l.h||0).padStart(2,'0')}:00</td>
-      <td><b>${typeKm(l)}</b>${covered?'<br><span style="color:#1A4F96">'+covered+'</span>':''}<br><span style="color:#888">${inst}</span></td>
+      <td style="white-space:nowrap;font-family:monospace;color:#444;font-weight:700">${esc(l.date)}<br>${String(l.h||0).padStart(2,'0')}:00${hrLabel}</td>
+      <td><b>${typeKm(l)}</b>${coveredHtml}<div style="color:#888;margin-top:2px">${inst}</div></td>
       <td>${status}${fb.length?'<div style="margin-top:3px;color:#333">'+fb.join('')+'</div>':''}</td>
     </tr>`;
   }).join('');
+
+  // Letterhead + student info block (photo + bio).
+  const header = `
+    <div style="text-align:center;border-bottom:2px solid #1A4F96;padding-bottom:10px;margin-bottom:12px">
+      ${isUrl(logo) ? `<img src="${esc(logo)}" style="height:46px;margin-bottom:6px"><br>` : ''}
+      <span style="font-size:22px;font-weight:700;color:#1A4F96">${esc(school)}</span>
+      ${schoolEn ? `<div style="font-size:12px;color:#666">${esc(schoolEn)}</div>` : ''}
+    </div>`;
+  const photoHtml = isUrl(s.photo)
+    ? `<img src="${esc(s.photo)}" style="width:84px;height:104px;object-fit:cover;border:1px solid #ccc;border-radius:4px">`
+    : `<div style="width:84px;height:104px;background:#eee;border:1px solid #ccc;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:10px">គ្មានរូប</div>`;
+  const genderTxt = s.gender==='M'?'ប្រុស':s.gender==='F'?'ស្រី':(s.gender||'');
+  const info = (lab,val) => val ? `<div style="margin-bottom:2px"><span style="color:#888">${lab}:</span> <b>${esc(val)}</b></div>` : '';
+  const infoBlock = `
+    <div style="display:flex;gap:14px;margin:0 0 14px;padding:12px;border:1px solid #e5e5e5;border-radius:8px;background:#fafafa;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+      ${photoHtml}
+      <div style="flex:1;font-size:12px;line-height:1.5">
+        <div style="font-size:16px;font-weight:700;color:#1A4F96">${esc(s.name||'')}</div>
+        <div style="color:#666;margin-bottom:6px">${esc(s.en||'')} · ${esc(s.id||'')}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">
+          ${info('ភេទ', genderTxt)}
+          ${info('អាយុ', s.age ? s.age+' ឆ្នាំ' : '')}
+          ${info('ទូរស័ព្ទ', s.phone)}
+          ${info('ថ្នាក់', s.cls)}
+          ${info('ប្រអប់លេខ', s.trans)}
+          ${info('ប្រភេទ', s.studentType)}
+          ${info('ស្ថានភាព', s.status)}
+          ${info('ទីតាំងប្រឡង', s.exam_location)}
+          ${info('ថ្ងៃចុះឈ្មោះ', s.regDate)}
+          ${info('លេខបណ្ណបើកបរ', s.license_no)}
+        </div>
+      </div>
+    </div>`;
 
   const doc = `<!DOCTYPE html><html><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -263,8 +310,10 @@ const printStudentLessonsPDF = (s, lessons, exams) => {
 </style></head><body>
 <div class="bar"><span class="t">បញ្ជីមេរៀន · ${esc(s.name||s.en||'')}</span><button onclick="window.print()">🖨 បោះពុម្ព / រក្សាជា PDF</button></div>
 <div class="sheet">
-  <h1>${esc(school)}</h1>
-  <div class="sub">បញ្ជីមេរៀន និង មតិគ្រូ · <b>${esc(s.name||'')}</b> ${esc(s.en||'')} · ${esc(s.id||'')} · ${items.length} កំណត់ត្រា</div>
+  ${header}
+  <div style="text-align:center;font-size:15px;font-weight:700;color:#333;margin-bottom:12px">បញ្ជីមេរៀន និង មតិគ្រូ</div>
+  ${infoBlock}
+  <div style="font-size:11px;color:#888;margin-bottom:8px">${items.length} កំណត់ត្រា</div>
   <table>
     <thead><tr><th style="width:80px">ថ្ងៃ/ម៉ោង</th><th style="width:38%">ប្រភេទ · គ្រូ</th><th>លទ្ធផល · មតិគ្រូ</th></tr></thead>
     <tbody>${rows || '<tr><td colspan="3" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr>'}</tbody>
