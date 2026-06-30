@@ -249,7 +249,7 @@ const printStudentLessonsPDF = (s, lessons, exams) => {
     if (l.note)       fb.push('<div><b>មតិ:</b> '+esc(l.note)+'</div>');
     const status = l.status==='done' ? '<b style="color:#1A6B3C">រួចរាល់</b>' : l.status==='cancelled' ? '<span style="color:#999">បានលុប</span>' : 'កំពុង';
     const hrs = hourMap[l.id];
-    const hrLabel = hrs && hrs.length ? `<div style="color:#888;font-weight:400;font-size:10px">(${hrs.join(', ')})</div>` : '';
+    const hrLabel = hrs && hrs.length ? ` <span style="color:#888;font-weight:400;font-size:10px">(${hrs.join(', ')})</span>` : '';
     return `<tr>
       <td style="white-space:nowrap;font-family:monospace;color:#444;font-weight:700">${esc(l.date)}<br>${String(l.h||0).padStart(2,'0')}:00${hrLabel}</td>
       <td><b>${typeKm(l)}</b>${coveredHtml}<div style="color:#888;margin-top:2px">${inst}</div></td>
@@ -260,7 +260,6 @@ const printStudentLessonsPDF = (s, lessons, exams) => {
   // Letterhead + student info block (photo + bio).
   const header = `
     <div style="text-align:center;border-bottom:2px solid #1A4F96;padding-bottom:10px;margin-bottom:12px">
-      ${isUrl(logo) ? `<img src="${esc(logo)}" style="height:46px;margin-bottom:6px"><br>` : ''}
       <span style="font-size:22px;font-weight:700;color:#1A4F96">${esc(school)}</span>
       ${schoolEn ? `<div style="font-size:12px;color:#666">${esc(schoolEn)}</div>` : ''}
     </div>`;
@@ -292,7 +291,7 @@ const printStudentLessonsPDF = (s, lessons, exams) => {
 
   const doc = `<!DOCTYPE html><html><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<title>បញ្ជីមេរៀន · ${esc(s.name||s.en||'')}</title>
+<title>ពត៌មានសិស្ស · ${esc(s.name||s.en||'')}</title>
 <style>
   @page { size:A4 portrait; margin:0; }
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -308,14 +307,14 @@ const printStudentLessonsPDF = (s, lessons, exams) => {
   td{padding:7px 8px;border:1px solid #e5e5e5;vertical-align:top;line-height:1.5;}
   @media print{ body{background:#fff;} .bar{display:none;} .sheet{margin:0;box-shadow:none;width:auto;min-height:auto;} }
 </style></head><body>
-<div class="bar"><span class="t">បញ្ជីមេរៀន · ${esc(s.name||s.en||'')}</span><button onclick="window.print()">🖨 បោះពុម្ព / រក្សាជា PDF</button></div>
+<div class="bar"><span class="t">ពត៌មានសិស្ស · ${esc(s.name||s.en||'')}</span><button onclick="window.print()">🖨 បោះពុម្ព / រក្សាជា PDF</button></div>
 <div class="sheet">
   ${header}
-  <div style="text-align:center;font-size:15px;font-weight:700;color:#333;margin-bottom:12px">បញ្ជីមេរៀន និង មតិគ្រូ</div>
+  <div style="text-align:center;font-size:15px;font-weight:700;color:#333;margin-bottom:12px">ពត៌មានសិស្ស</div>
   ${infoBlock}
-  <div style="font-size:11px;color:#888;margin-bottom:8px">${items.length} កំណត់ត្រា</div>
+  <div style="font-size:15px;font-weight:700;color:#1A4F96;margin:4px 0 8px">ប្រវត្តសិក្សា <span style="font-size:11px;color:#888;font-weight:400">· ${items.length} កំណត់ត្រា</span></div>
   <table>
-    <thead><tr><th style="width:80px">ថ្ងៃ/ម៉ោង</th><th style="width:38%">ប្រភេទ · គ្រូ</th><th>លទ្ធផល · មតិគ្រូ</th></tr></thead>
+    <thead><tr><th style="width:124px">ថ្ងៃ/ម៉ោង</th><th style="width:36%">ប្រភេទ · គ្រូ</th><th>លទ្ធផល · មតិគ្រូ</th></tr></thead>
     <tbody>${rows || '<tr><td colspan="3" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr>'}</tbody>
   </table>
 </div>
