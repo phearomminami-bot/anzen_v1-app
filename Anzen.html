@@ -38659,148 +38659,209 @@ var CvLessonRow = ({
     size: 13
   }), tr('កែ​មតិ', 'Edit'))));
 };
+var translateFeedbackTexts = async (texts, target) => {
+  var key = (window.__schoolSettings || {}).anthropicKey;
+  var list = [...new Set((texts || []).filter(Boolean))];
+  if (!key || !list.length) return {};
+  try {
+    var r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1500,
+        messages: [{
+          role: 'user',
+          content: 'Translate each item in this JSON array of short driving-lesson feedback notes to ' + (target === 'en' ? 'natural English' : 'ខ្មែរ') + '. Keep them concise. Return ONLY a JSON array of strings in the same order, nothing else.\n\n' + JSON.stringify(list)
+        }]
+      })
+    });
+    if (!r.ok) return {};
+    var j = await r.json();
+    var txt = j.content && j.content[0] && j.content[0].text || '';
+    var m = txt.match(/\[[\s\S]*\]/);
+    var arr = m ? JSON.parse(m[0]) : null;
+    if (!Array.isArray(arr) || arr.length !== list.length) return {};
+    var map = {};
+    list.forEach((k, i) => {
+      if (typeof arr[i] === 'string') map[k] = arr[i];
+    });
+    return map;
+  } catch (e) {
+    return {};
+  }
+};
 var printStudentLessonsPDF = (s, lessons, exams, lang) => {
   if (!s) return;
   lang = lang === 'en' ? 'en' : 'km';
-  var L = (km, en) => lang === 'en' ? en : km;
-  var esc = x => String(x == null ? '' : x).replace(/[&<>]/g, m => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;'
-  })[m]);
-  var ss = window.__schoolSettings || {};
-  var school = ss.name || 'Anzen';
-  var sid = s.id;
-  var schoolEn = ss.nameEn || '';
-  var logo = ss.logo || '';
-  var isUrl = x => typeof x === 'string' && /^(data:|https?:)/.test(x);
-  var typeKm = l => l.color === 'c' || l.color === 'e' ? L('ទ្រឹស្ដី', 'Theory') : L('អនុវត្តន៍', 'Practical');
-  var stars = n => '★'.repeat(n || 0) + '☆'.repeat(5 - (n || 0));
-  var trGender = g => g === 'M' ? L('ប្រុស', 'Male') : g === 'F' ? L('ស្រី', 'Female') : g || '';
-  var trNat = v => {
-    if (!v) return '';
-    var m = {
-      'ខ្មែរ': 'Khmer',
-      'ខ្មែរ​': 'Khmer'
+  var win = window.open('', '_blank', 'width=900,height=1100');
+  if (!win) return;
+  try {
+    win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>PDF</title></head><body style="font-family:system-ui,sans-serif;padding:40px;color:#555;font-size:15px">' + (lang === 'en' ? 'Preparing the document…' : 'កំពុង​រៀបចំ​ឯកសារ…') + '</body></html>');
+  } catch (e) {}
+  (async () => {
+    var L = (km, en) => lang === 'en' ? en : km;
+    var esc = x => String(x == null ? '' : x).replace(/[&<>]/g, m => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;'
+    })[m]);
+    var ss = window.__schoolSettings || {};
+    var school = ss.name || 'Anzen';
+    var sid = s.id;
+    var schoolEn = ss.nameEn || '';
+    var logo = ss.logo || '';
+    var isUrl = x => typeof x === 'string' && /^(data:|https?:)/.test(x);
+    var typeKm = l => l.color === 'c' || l.color === 'e' ? L('ទ្រឹស្ដី', 'Theory') : L('អនុវត្តន៍', 'Practical');
+    var stars = n => '★'.repeat(n || 0) + '☆'.repeat(5 - (n || 0));
+    var trGender = g => g === 'M' ? L('ប្រុស', 'Male') : g === 'F' ? L('ស្រី', 'Female') : g || '';
+    var trNat = v => {
+      if (!v) return '';
+      var m = {
+        'ខ្មែរ': 'Khmer',
+        'ខ្មែរ​': 'Khmer'
+      };
+      return lang === 'en' ? m[v] || v : v;
     };
-    return lang === 'en' ? m[v] || v : v;
-  };
-  var trGlasses = v => {
-    if (!v) return '';
-    var m = {
-      'ពាក់': 'Worn',
-      'មិនពាក់': 'Not worn'
+    var trGlasses = v => {
+      if (!v) return '';
+      var m = {
+        'ពាក់': 'Worn',
+        'មិនពាក់': 'Not worn'
+      };
+      return lang === 'en' ? m[v] || v : v;
     };
-    return lang === 'en' ? m[v] || v : v;
-  };
-  var coveredFor = l => {
-    var lib = typeof window !== 'undefined' && window.__lessonsLib || {};
-    var all = [...(lib.theoryTexts || []), ...(lib.practicalTexts || []), ...(lib.theoryVideos || []), ...(lib.practicalVideos || [])];
-    var num = no => {
-      var m = String(no || '').match(/\d+/);
-      return m ? m[0] : String(no || '').trim();
+    var coveredFor = l => {
+      var lib = typeof window !== 'undefined' && window.__lessonsLib || {};
+      var all = [...(lib.theoryTexts || []), ...(lib.practicalTexts || []), ...(lib.theoryVideos || []), ...(lib.practicalVideos || [])];
+      var num = no => {
+        var m = String(no || '').match(/\d+/);
+        return m ? m[0] : String(no || '').trim();
+      };
+      if (Array.isArray(l.lessonIds) && l.lessonIds.length) {
+        return l.lessonIds.map(id => {
+          var u = all.find(x => x.id === id);
+          if (!u) return null;
+          var name = lang === 'en' ? u.en || u.km || '' : u.km || u.en || '';
+          return {
+            no: num(u.no),
+            name
+          };
+        }).filter(Boolean);
+      }
+      if (l.lessonNo) return String(l.lessonNo).split(',').map(x => ({
+        no: num(x),
+        name: ''
+      })).filter(c => c.no);
+      return [];
     };
-    if (Array.isArray(l.lessonIds) && l.lessonIds.length) {
-      return l.lessonIds.map(id => {
-        var u = all.find(x => x.id === id);
-        if (!u) return null;
-        var name = lang === 'en' ? u.en || u.km || '' : u.km || u.en || '';
-        return {
-          no: num(u.no),
-          name
-        };
-      }).filter(Boolean);
+    var isTheory = l => l.color === 'c' || l.color === 'e';
+    var chrono = lessons.filter(l => l.status !== 'cancelled').slice().sort((a, b) => {
+      var ka = (a.date || '') + ' ' + String(a.h || 0).padStart(2, '0'),
+        kb = (b.date || '') + ' ' + String(b.h || 0).padStart(2, '0');
+      return ka < kb ? -1 : ka > kb ? 1 : 0;
+    });
+    var hourMap = {};
+    var accT = 0,
+      accP = 0;
+    chrono.forEach(l => {
+      var n = Math.max(1, Math.round(l.len || 1));
+      var theory = isTheory(l);
+      var start = theory ? accT : accP;
+      var nums = [];
+      for (var i = 0; i < n; i++) nums.push(start + 1 + i);
+      if (theory) accT += n;else accP += n;
+      hourMap[l.id] = nums;
+    });
+    var items = [...lessons.map(l => ({
+      t: 'lesson',
+      k: (l.date || '') + ' ' + String(l.h || 0).padStart(2, '0'),
+      item: l
+    })), ...exams.map(e => ({
+      t: 'exam',
+      k: (e.date || '') + ' ' + String(e.time || '').slice(0, 5),
+      item: e
+    }))].sort((a, b) => a.k < b.k ? 1 : a.k > b.k ? -1 : 0);
+    var txMap = {};
+    if (lang === 'en') {
+      var hasKh = x => typeof x === 'string' && /[ក-៿]/.test(x);
+      var src = [];
+      lessons.forEach(l => {
+        [l.didWell, l.toImprove, l.note].forEach(v => {
+          if (hasKh(v)) src.push(v);
+        });
+      });
+      exams.forEach(e => {
+        var r = e.results && e.results[sid] || {};
+        [r.failLocation, r.failReason].forEach(v => {
+          if (hasKh(v)) src.push(v);
+        });
+      });
+      if (src.length) txMap = await translateFeedbackTexts(src, 'en');
     }
-    if (l.lessonNo) return String(l.lessonNo).split(',').map(x => ({
-      no: num(x),
-      name: ''
-    })).filter(c => c.no);
-    return [];
-  };
-  var isTheory = l => l.color === 'c' || l.color === 'e';
-  var chrono = lessons.filter(l => l.status !== 'cancelled').slice().sort((a, b) => {
-    var ka = (a.date || '') + ' ' + String(a.h || 0).padStart(2, '0'),
-      kb = (b.date || '') + ' ' + String(b.h || 0).padStart(2, '0');
-    return ka < kb ? -1 : ka > kb ? 1 : 0;
-  });
-  var hourMap = {};
-  var accT = 0,
-    accP = 0;
-  chrono.forEach(l => {
-    var n = Math.max(1, Math.round(l.len || 1));
-    var theory = isTheory(l);
-    var start = theory ? accT : accP;
-    var nums = [];
-    for (var i = 0; i < n; i++) nums.push(start + 1 + i);
-    if (theory) accT += n;else accP += n;
-    hourMap[l.id] = nums;
-  });
-  var items = [...lessons.map(l => ({
-    t: 'lesson',
-    k: (l.date || '') + ' ' + String(l.h || 0).padStart(2, '0'),
-    item: l
-  })), ...exams.map(e => ({
-    t: 'exam',
-    k: (e.date || '') + ' ' + String(e.time || '').slice(0, 5),
-    item: e
-  }))].sort((a, b) => a.k < b.k ? 1 : a.k > b.k ? -1 : 0);
-  var rows = items.map(row => {
-    if (row.t === 'exam') {
-      var e = row.item;
-      var r = e.results && e.results[sid] || {};
-      var ins = (e.instIds || []).map(id => {
-        var it = instById(id);
-        return it ? esc(it.en || it.name) : null;
-      }).filter(Boolean).join(', ') || '—';
-      var isFail = r.result === 'fail';
-      var badge = r.result === 'pass' ? `<b style="color:#12A302">${L('ជាប់', 'Pass')} ✓</b>` : isFail ? `<b style="color:#B0413E">${L('ធ្លាក់', 'Fail')} ✗</b>` : '—';
-      var failInfo = isFail ? `${r.failLocation ? '<div>📍 ' + esc(r.failLocation) + '</div>' : ''}${r.failReason ? '<div style="color:#7a2b29">' + esc(r.failReason) + '</div>' : ''}` : '';
-      return `<tr style="background:${isFail ? '#fbeceb' : '#eafbe7'};-webkit-print-color-adjust:exact;print-color-adjust:exact">
+    var T = x => x && txMap[x] ? txMap[x] : x;
+    var rows = items.map(row => {
+      if (row.t === 'exam') {
+        var e = row.item;
+        var r = e.results && e.results[sid] || {};
+        var ins = (e.instIds || []).map(id => {
+          var it = instById(id);
+          return it ? esc(it.en || it.name) : null;
+        }).filter(Boolean).join(', ') || '—';
+        var isFail = r.result === 'fail';
+        var badge = r.result === 'pass' ? `<b style="color:#12A302">${L('ជាប់', 'Pass')} ✓</b>` : isFail ? `<b style="color:#B0413E">${L('ធ្លាក់', 'Fail')} ✗</b>` : '—';
+        var failInfo = isFail ? `${r.failLocation ? '<div>📍 ' + esc(T(r.failLocation)) + '</div>' : ''}${r.failReason ? '<div style="color:#7a2b29">' + esc(T(r.failReason)) + '</div>' : ''}` : '';
+        return `<tr style="background:${isFail ? '#fbeceb' : '#eafbe7'};-webkit-print-color-adjust:exact;print-color-adjust:exact">
         <td style="white-space:nowrap;font-family:monospace;color:#12A302;font-weight:700">${esc(e.date)}<br>${esc(String(e.time || '').slice(0, 5))}</td>
         <td><b>🎓 ${L('ប្រឡង', 'Exam')}</b><br><span style="color:#555">${ins}</span></td>
         <td>${badge}${failInfo}</td>
       </tr>`;
-    }
-    var l = row.item;
-    var it = instById(l.instId);
-    var inst = it ? esc(it.en || it.name) : '—';
-    var coveredArr = coveredFor(l).map(c => esc(c.no + (c.name ? ' ' + c.name : '')));
-    var coveredHtml = coveredArr.length ? '<div style="color:#1A4F96;margin-top:2px">' + coveredArr.map(c => '<div>' + c + '</div>').join('') + '</div>' : '';
-    var fb = [];
-    if (l.rating) fb.push('<div>' + stars(l.rating) + '</div>');
-    if (l.didWell) fb.push('<div><b>' + L('ធ្វើបានល្អ', 'Did well') + ':</b> ' + esc(l.didWell) + '</div>');
-    if (l.toImprove) fb.push('<div><b>' + L('ខ្វះខាត', 'Needs work') + ':</b> ' + esc(l.toImprove) + '</div>');
-    if (l.note) fb.push('<div><b>' + L('មតិ', 'Comment') + ':</b> ' + esc(l.note) + '</div>');
-    var status = l.status === 'done' ? `<b style="color:#1A6B3C">${L('រួចរាល់', 'Done')}</b>` : l.status === 'cancelled' ? `<span style="color:#999">${L('បានលុប', 'Cancelled')}</span>` : L('កំពុង', 'Pending');
-    var hrs = hourMap[l.id];
-    var hrLabel = hrs && hrs.length ? ` <span style="color:#888;font-weight:400;font-size:10px">(${hrs.join(', ')})</span>` : '';
-    return `<tr>
+      }
+      var l = row.item;
+      var it = instById(l.instId);
+      var inst = it ? esc(it.en || it.name) : '—';
+      var coveredArr = coveredFor(l).map(c => esc(c.no + (c.name ? ' ' + c.name : '')));
+      var coveredHtml = coveredArr.length ? '<div style="color:#1A4F96;margin-top:2px">' + coveredArr.map(c => '<div>' + c + '</div>').join('') + '</div>' : '';
+      var fb = [];
+      if (l.rating) fb.push('<div>' + stars(l.rating) + '</div>');
+      if (l.didWell) fb.push('<div><b>' + L('ធ្វើបានល្អ', 'Did well') + ':</b> ' + esc(T(l.didWell)) + '</div>');
+      if (l.toImprove) fb.push('<div><b>' + L('ខ្វះខាត', 'Needs work') + ':</b> ' + esc(T(l.toImprove)) + '</div>');
+      if (l.note) fb.push('<div><b>' + L('មតិ', 'Comment') + ':</b> ' + esc(T(l.note)) + '</div>');
+      var status = l.status === 'done' ? `<b style="color:#1A6B3C">${L('រួចរាល់', 'Done')}</b>` : l.status === 'cancelled' ? `<span style="color:#999">${L('បានលុប', 'Cancelled')}</span>` : L('កំពុង', 'Pending');
+      var hrs = hourMap[l.id];
+      var hrLabel = hrs && hrs.length ? ` <span style="color:#888;font-weight:400;font-size:10px">(${hrs.join(', ')})</span>` : '';
+      return `<tr>
       <td style="white-space:nowrap;font-family:monospace;color:#444;font-weight:700">${esc(l.date)}<br>${String(l.h || 0).padStart(2, '0')}:00${hrLabel}</td>
       <td><b>${typeKm(l)}</b>${coveredHtml}<div style="color:#888;margin-top:2px">${inst}</div></td>
       <td>${status}${fb.length ? '<div style="margin-top:3px;color:#333">' + fb.join('') + '</div>' : ''}</td>
     </tr>`;
-  }).join('');
-  var NV = '#1e3a6e';
-  var address = ss.address || '';
-  var fmtDob = d => {
-    if (!/^\d{4}-\d{2}-\d{2}/.test(d || '')) return '';
-    var mi = +d.slice(5, 7) - 1;
-    var enM = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    var kmM = typeof KM_MONTHS !== 'undefined' && KM_MONTHS ? KM_MONTHS : enM;
-    var mon = lang === 'en' ? enM[mi] : kmM[mi] || enM[mi];
-    return d.slice(8, 10) + ' ' + mon + ' ' + d.slice(0, 4);
-  };
-  var genderTxt = trGender(s.gender);
-  var instr = (() => {
-    var it = instById(s.instId);
-    return it ? it.en || it.name : '';
-  })();
-  var permit = [s.cls, s.trans].filter(Boolean).join(' · ');
-  var logoHtml = isUrl(logo) ? `<img src="${esc(logo)}" style="width:62px;height:62px;border-radius:50%;object-fit:cover;border:2px solid ${NV}">` : `<div style="width:62px;height:62px;border-radius:50%;border:2px solid ${NV};display:flex;flex-direction:column;align-items:center;justify-content:center;color:${NV};line-height:1.05;text-align:center"><div style="font-size:11px;font-weight:800">${esc((school || '').slice(0, 6))}</div><div style="font-size:6.5px;letter-spacing:.5px">DRIVE</div></div>`;
-  var photoHtml = isUrl(s.photo) ? `<img src="${esc(s.photo)}" style="width:100%;height:100%;object-fit:cover">` : `<div style="width:100%;height:100%;background:#eef1f5;display:flex;align-items:center;justify-content:center;color:#9aa6b5;font-size:11px">គ្មានរូប</div>`;
-  var ir = (lab, val) => `<tr><td class="lab">${lab}</td><td class="val">${val && String(val).trim() ? esc(val) : '—'}</td></tr>`;
-  var aptBox = (km, en, val) => `<div class="apt"><div class="aptlab">${L(km, en)}</div><div class="aptval">${val && String(val).trim() ? esc(val) : '—'}</div></div>`;
-  var doc = `<!DOCTYPE html><html><head><meta charset="utf-8">
+    }).join('');
+    var NV = '#1e3a6e';
+    var address = ss.address || '';
+    var fmtDob = d => {
+      if (!/^\d{4}-\d{2}-\d{2}/.test(d || '')) return '';
+      var mi = +d.slice(5, 7) - 1;
+      var enM = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      var kmM = typeof KM_MONTHS !== 'undefined' && KM_MONTHS ? KM_MONTHS : enM;
+      var mon = lang === 'en' ? enM[mi] : kmM[mi] || enM[mi];
+      return d.slice(8, 10) + ' ' + mon + ' ' + d.slice(0, 4);
+    };
+    var genderTxt = trGender(s.gender);
+    var instr = (() => {
+      var it = instById(s.instId);
+      return it ? it.en || it.name : '';
+    })();
+    var permit = [s.cls, s.trans].filter(Boolean).join(' · ');
+    var logoHtml = isUrl(logo) ? `<img src="${esc(logo)}" style="width:62px;height:62px;border-radius:50%;object-fit:cover;border:2px solid ${NV}">` : `<div style="width:62px;height:62px;border-radius:50%;border:2px solid ${NV};display:flex;flex-direction:column;align-items:center;justify-content:center;color:${NV};line-height:1.05;text-align:center"><div style="font-size:11px;font-weight:800">${esc((school || '').slice(0, 6))}</div><div style="font-size:6.5px;letter-spacing:.5px">DRIVE</div></div>`;
+    var photoHtml = isUrl(s.photo) ? `<img src="${esc(s.photo)}" style="width:100%;height:100%;object-fit:cover">` : `<div style="width:100%;height:100%;background:#eef1f5;display:flex;align-items:center;justify-content:center;color:#9aa6b5;font-size:11px">គ្មានរូប</div>`;
+    var ir = (lab, val) => `<tr><td class="lab">${lab}</td><td class="val">${val && String(val).trim() ? esc(val) : '—'}</td></tr>`;
+    var aptBox = (km, en, val) => `<div class="apt"><div class="aptlab">${L(km, en)}</div><div class="aptval">${val && String(val).trim() ? esc(val) : '—'}</div></div>`;
+    var doc = `<!DOCTYPE html><html><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <title>${L('សៀវភៅប្រវត្តិសិក្សាបើកបរ', 'Driving Lesson Record Book')} · ${esc(s.name || s.en || '')}</title>
 <style>
@@ -38901,10 +38962,12 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
   </table>
 </div>
 </body></html>`;
-  var w = window.open('', '_blank', 'width=900,height=1100');
-  if (!w) return;
-  w.document.write(doc);
-  w.document.close();
+    try {
+      win.document.open();
+      win.document.write(doc);
+      win.document.close();
+    } catch (e) {}
+  })();
 };
 var ExamFeedbackRow = ({
   e,

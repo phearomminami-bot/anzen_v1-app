@@ -201,9 +201,42 @@ const CvLessonRow = ({ l, tr, onSave }) => {
 };
 
 // Print a student's lessons + exams (with feedback / results) as an A4 PDF.
+// Translate short free-text feedback to the target language via the configured
+// Anthropic key. Returns a map original→translation, or {} if no key / failure.
+const translateFeedbackTexts = async (texts, target) => {
+  const key = (window.__schoolSettings || {}).anthropicKey;
+  const list = [...new Set((texts||[]).filter(Boolean))];
+  if (!key || !list.length) return {};
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'x-api-key':key, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
+      body: JSON.stringify({ model:'claude-haiku-4-5-20251001', max_tokens:1500,
+        messages:[{ role:'user', content:
+          'Translate each item in this JSON array of short driving-lesson feedback notes to ' + (target==='en'?'natural English':'ខ្មែរ') +
+          '. Keep them concise. Return ONLY a JSON array of strings in the same order, nothing else.\n\n' + JSON.stringify(list) }] })
+    });
+    if (!r.ok) return {};
+    const j = await r.json();
+    const txt = (j.content && j.content[0] && j.content[0].text) || '';
+    const m = txt.match(/\[[\s\S]*\]/);
+    const arr = m ? JSON.parse(m[0]) : null;
+    if (!Array.isArray(arr) || arr.length !== list.length) return {};
+    const map = {};
+    list.forEach((k,i)=>{ if (typeof arr[i] === 'string') map[k] = arr[i]; });
+    return map;
+  } catch (e) { return {}; }
+};
+
 const printStudentLessonsPDF = (s, lessons, exams, lang) => {
   if (!s) return;
   lang = lang === 'en' ? 'en' : 'km';
+  // Open the window synchronously (so the popup isn't blocked), show a loading
+  // note, then fill it after any async translation.
+  const win = window.open('', '_blank', 'width=900,height=1100');
+  if (!win) return;
+  try { win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>PDF</title></head><body style="font-family:system-ui,sans-serif;padding:40px;color:#555;font-size:15px">' + (lang==='en'?'Preparing the document…':'កំពុង​រៀបចំ​ឯកសារ…') + '</body></html>'); } catch(e){}
+  (async () => {
   const L = (km, en) => lang === 'en' ? en : km;   // structural labels only — entered data is left as-is
   const esc = (x) => String(x == null ? '' : x).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
   const ss = window.__schoolSettings || {};
@@ -252,13 +285,25 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
     ...exams.map(e  => ({ t:'exam',   k:(e.date||'')+' '+String(e.time||'').slice(0,5),    item:e })),
   ].sort((a,b)=> a.k<b.k ? 1 : a.k>b.k ? -1 : 0);
 
+  // For the English export, machine-translate Khmer free-text feedback (if a key
+  // is set). T(x) returns the translation when available, else the original.
+  let txMap = {};
+  if (lang === 'en') {
+    const hasKh = (x) => typeof x==='string' && /[ក-៿]/.test(x);
+    const src = [];
+    lessons.forEach(l => { [l.didWell, l.toImprove, l.note].forEach(v=>{ if(hasKh(v)) src.push(v); }); });
+    exams.forEach(e => { const r=(e.results&&e.results[sid])||{}; [r.failLocation, r.failReason].forEach(v=>{ if(hasKh(v)) src.push(v); }); });
+    if (src.length) txMap = await translateFeedbackTexts(src, 'en');
+  }
+  const T = (x) => (x && txMap[x]) ? txMap[x] : x;
+
   const rows = items.map(row => {
     if (row.t === 'exam') {
       const e = row.item; const r = (e.results && e.results[sid]) || {};
       const ins = (e.instIds||[]).map(id=>{ const it=instById(id); return it?esc(it.en||it.name):null; }).filter(Boolean).join(', ') || '—';
       const isFail = r.result === 'fail';
       const badge = r.result==='pass' ? `<b style="color:#12A302">${L('ជាប់','Pass')} ✓</b>` : isFail ? `<b style="color:#B0413E">${L('ធ្លាក់','Fail')} ✗</b>` : '—';
-      const failInfo = isFail ? `${r.failLocation?'<div>📍 '+esc(r.failLocation)+'</div>':''}${r.failReason?'<div style="color:#7a2b29">'+esc(r.failReason)+'</div>':''}` : '';
+      const failInfo = isFail ? `${r.failLocation?'<div>📍 '+esc(T(r.failLocation))+'</div>':''}${r.failReason?'<div style="color:#7a2b29">'+esc(T(r.failReason))+'</div>':''}` : '';
       return `<tr style="background:${isFail?'#fbeceb':'#eafbe7'};-webkit-print-color-adjust:exact;print-color-adjust:exact">
         <td style="white-space:nowrap;font-family:monospace;color:#12A302;font-weight:700">${esc(e.date)}<br>${esc(String(e.time||'').slice(0,5))}</td>
         <td><b>🎓 ${L('ប្រឡង','Exam')}</b><br><span style="color:#555">${ins}</span></td>
@@ -272,9 +317,9 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
     const coveredHtml = coveredArr.length ? '<div style="color:#1A4F96;margin-top:2px">' + coveredArr.map(c=>'<div>'+c+'</div>').join('') + '</div>' : '';
     const fb = [];
     if (l.rating)     fb.push('<div>'+stars(l.rating)+'</div>');
-    if (l.didWell)    fb.push('<div><b>'+L('ធ្វើបានល្អ','Did well')+':</b> '+esc(l.didWell)+'</div>');
-    if (l.toImprove)  fb.push('<div><b>'+L('ខ្វះខាត','Needs work')+':</b> '+esc(l.toImprove)+'</div>');
-    if (l.note)       fb.push('<div><b>'+L('មតិ','Comment')+':</b> '+esc(l.note)+'</div>');
+    if (l.didWell)    fb.push('<div><b>'+L('ធ្វើបានល្អ','Did well')+':</b> '+esc(T(l.didWell))+'</div>');
+    if (l.toImprove)  fb.push('<div><b>'+L('ខ្វះខាត','Needs work')+':</b> '+esc(T(l.toImprove))+'</div>');
+    if (l.note)       fb.push('<div><b>'+L('មតិ','Comment')+':</b> '+esc(T(l.note))+'</div>');
     const status = l.status==='done' ? `<b style="color:#1A6B3C">${L('រួចរាល់','Done')}</b>` : l.status==='cancelled' ? `<span style="color:#999">${L('បានលុប','Cancelled')}</span>` : L('កំពុង','Pending');
     const hrs = hourMap[l.id];
     const hrLabel = hrs && hrs.length ? ` <span style="color:#888;font-weight:400;font-size:10px">(${hrs.join(', ')})</span>` : '';
@@ -410,10 +455,8 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
   </table>
 </div>
 </body></html>`;
-  const w = window.open('', '_blank', 'width=900,height=1100');
-  if (!w) return;
-  w.document.write(doc);
-  w.document.close();
+  try { win.document.open(); win.document.write(doc); win.document.close(); } catch(e){}
+  })();
 };
 
 // Exam row in a student's Lessons & Comments — mark pass/fail per student and
