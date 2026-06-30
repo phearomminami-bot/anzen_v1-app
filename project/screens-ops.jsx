@@ -801,7 +801,13 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   const visNoteSet = new Set(weekDates);
   const visNotes = notes.filter(n => visNoteSet.has(n.date)).sort((a,b)=> noteSortKey(a)<noteSortKey(b)?-1: noteSortKey(a)>noteSortKey(b)?1:0);
   // Exams visible in this view. In student mode show only exams the student is in.
-  const visExams = exams.filter(e => visNoteSet.has(e.date) && (!studentMode || (e.studentIds||[]).includes(studentId)));
+  const visExams = exams.filter(e => visNoteSet.has(e.date) && (
+    studentMode
+      ? (e.studentIds||[]).includes(studentId)
+      : (!instFilter    || (e.instIds||[]).includes(instFilter)) &&
+        (!studentFilter || (e.studentIds||[]).includes(studentFilter)) &&
+        (!vehFilter)   // exams/applications have no vehicle → hide under a vehicle filter
+  ));
   // Click a time slot → open the create modal defaulting to the lesson tab,
   // pre-filled with that slot's date+hour (switchable to a note).
   const openSlot = (date, hour) => setNoteModal({ mode:'lesson', date, hour, time:String(hour).padStart(2,'0')+':00', title:'', description:'', author:meName, invited:[] });
@@ -984,7 +990,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
             <select value={studentFilter} onChange={e=>{ setStudentFilter(e.target.value); setInstFilter(''); setVehFilter(''); }}
               style={selActive(studentFilter)}>
               <option value="">— សិស្ស​ទាំងអស់ All students —</option>
-              {STUDENTS.filter(s => LESSONS.some(l=>l.studentId===s.id)).map(s => (
+              {STUDENTS.filter(s => LESSONS.some(l=>l.studentId===s.id) || (((window.__schoolSettings&&window.__schoolSettings.scheduleExams)||[]).some(e=>(e.studentIds||[]).includes(s.id)))).map(s => (
                 <option key={s.id} value={s.id}>{s.name} ({s.id})</option>
               ))}
             </select>
@@ -1010,7 +1016,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
           <select value={studentFilter} onChange={e=>{ setStudentFilter(e.target.value); setInstFilter(''); setVehFilter(''); }}
             style={{...selActive(studentFilter),flex:1,minWidth:0,fontSize:12}}>
             <option value="">សិស្ស​ទាំងអស់</option>
-            {STUDENTS.filter(s=>LESSONS.some(l=>l.studentId===s.id)).map(s=>(
+            {STUDENTS.filter(s=>LESSONS.some(l=>l.studentId===s.id) || (((window.__schoolSettings&&window.__schoolSettings.scheduleExams)||[]).some(e=>(e.studentIds||[]).includes(s.id)))).map(s=>(
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}
           </select>

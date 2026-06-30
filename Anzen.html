@@ -18591,7 +18591,7 @@ var ScheduleScreen = ({
   var noteSortKey = n => n.date + ' ' + (n.time || '99:99');
   var visNoteSet = new Set(weekDates);
   var visNotes = notes.filter(n => visNoteSet.has(n.date)).sort((a, b) => noteSortKey(a) < noteSortKey(b) ? -1 : noteSortKey(a) > noteSortKey(b) ? 1 : 0);
-  var visExams = exams.filter(e => visNoteSet.has(e.date) && (!studentMode || (e.studentIds || []).includes(studentId)));
+  var visExams = exams.filter(e => visNoteSet.has(e.date) && (studentMode ? (e.studentIds || []).includes(studentId) : (!instFilter || (e.instIds || []).includes(instFilter)) && (!studentFilter || (e.studentIds || []).includes(studentFilter)) && !vehFilter));
   var openSlot = (date, hour) => setNoteModal({
     mode: 'lesson',
     date,
@@ -19083,7 +19083,7 @@ var ScheduleScreen = ({
     style: selActive(studentFilter)
   }, React.createElement("option", {
     value: ""
-  }, "\u2014 \u179F\u17B7\u179F\u17D2\u179F\u200B\u1791\u17B6\u17C6\u1784\u17A2\u179F\u17CB All students \u2014"), STUDENTS.filter(s => LESSONS.some(l => l.studentId === s.id)).map(s => React.createElement("option", {
+  }, "\u2014 \u179F\u17B7\u179F\u17D2\u179F\u200B\u1791\u17B6\u17C6\u1784\u17A2\u179F\u17CB All students \u2014"), STUDENTS.filter(s => LESSONS.some(l => l.studentId === s.id) || (window.__schoolSettings && window.__schoolSettings.scheduleExams || []).some(e => (e.studentIds || []).includes(s.id))).map(s => React.createElement("option", {
     key: s.id,
     value: s.id
   }, s.name, " (", s.id, ")")))), anyFilter && React.createElement("button", {
@@ -19140,7 +19140,7 @@ var ScheduleScreen = ({
     }
   }, React.createElement("option", {
     value: ""
-  }, "\u179F\u17B7\u179F\u17D2\u179F\u200B\u1791\u17B6\u17C6\u1784\u17A2\u179F\u17CB"), STUDENTS.filter(s => LESSONS.some(l => l.studentId === s.id)).map(s => React.createElement("option", {
+  }, "\u179F\u17B7\u179F\u17D2\u179F\u200B\u1791\u17B6\u17C6\u1784\u17A2\u179F\u17CB"), STUDENTS.filter(s => LESSONS.some(l => l.studentId === s.id) || (window.__schoolSettings && window.__schoolSettings.scheduleExams || []).some(e => (e.studentIds || []).includes(s.id))).map(s => React.createElement("option", {
     key: s.id,
     value: s.id
   }, s.name)))), !bp.mobile && v !== 'agenda' && React.createElement("div", {
