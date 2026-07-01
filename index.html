@@ -770,6 +770,17 @@ window.__trRegistry = {
   "ID (Username) — can be long": "ID (Username) — អាច​វែង",
   "e.g. chhorn.sovannara": "ឧ. chhorn.sovannara",
   "(blank = keep)": "(ទុក​ទទេ​បើ​មិន​ប្ដូរ)",
+  "Father": "ឪពុក",
+  "Mother": "ម្ដាយ",
+  "Spouse": "ប្ដី/ប្រពន្ធ",
+  "Sibling": "បង/ប្អូន",
+  "Child": "កូន",
+  "Relative": "សាច់​ញាតិ",
+  "Friend": "មិត្តភក្ដិ",
+  "Other": "ផ្សេងៗ",
+  "Senior Instructor": "គ្រូ​ជាន់​ខ្ពស់",
+  "Lead Instructor": "មេ​បង្រៀន",
+  "Apprentice": "ហាត់​ការ",
   "PERSONAL": "ផ្ទាល់ខ្លួន",
   "Name (KH)": "ឈ្មោះ (ខ្មែរ)",
   "Name (EN) *": "ឈ្មោះ (EN)",
@@ -1016,10 +1027,8 @@ window.__trRegistry = {
   "Referral": "ស្គាល់​សាលា​តាម",
   "Not specified": "មិន​ទាន់​បញ្ជាក់",
   "Near school": "នៅជិតសាលា",
-  "Friend": "មិត្តភក្ដិ",
   "Family": "គ្រួសារ",
   "Advertisement": "ការផ្សព្វផ្សាយ",
-  "Other": "ផ្សេងៗ",
   "ADDRESS": "អាសយដ្ឋាន",
   "Full address": "អាសយដ្ឋាន​ពេញ",
   "e.g. House:15, St.310, Village..., Commune..., District..., Province...": "ឧ. ផ្ទះ:១៥ ផ្លូវ៣១០ ភូមិ... ឃុំ/សង្កាត់... ស្រុក/ខណ្ឌ... ខេត្ត/រាជធានី...",
@@ -1696,10 +1705,8 @@ window.__trGroups = {
     "Referral": "ស្គាល់​សាលា​តាម",
     "Not specified": "មិន​ទាន់​បញ្ជាក់",
     "Near school": "នៅជិតសាលា",
-    "Friend": "មិត្តភក្ដិ",
     "Family": "គ្រួសារ",
     "Advertisement": "ការផ្សព្វផ្សាយ",
-    "Other": "ផ្សេងៗ",
     "ADDRESS": "អាសយដ្ឋាន",
     "Full address": "អាសយដ្ឋាន​ពេញ",
     "e.g. House:15, St.310, Village..., Commune..., District..., Province...": "ឧ. ផ្ទះ:១៥ ផ្លូវ៣១០ ភូមិ... ឃុំ/សង្កាត់... ស្រុក/ខណ្ឌ... ខេត្ត/រាជធានី...",
@@ -2101,6 +2108,17 @@ window.__trGroups = {
     "ID (Username) — can be long": "ID (Username) — អាច​វែង",
     "e.g. chhorn.sovannara": "ឧ. chhorn.sovannara",
     "(blank = keep)": "(ទុក​ទទេ​បើ​មិន​ប្ដូរ)",
+    "Father": "ឪពុក",
+    "Mother": "ម្ដាយ",
+    "Spouse": "ប្ដី/ប្រពន្ធ",
+    "Sibling": "បង/ប្អូន",
+    "Child": "កូន",
+    "Relative": "សាច់​ញាតិ",
+    "Friend": "មិត្ត​ភក្ដិ",
+    "Other": "ផ្សេងៗ",
+    "Senior Instructor": "គ្រូ​ជាន់​ខ្ពស់",
+    "Lead Instructor": "មេ​បង្រៀន",
+    "Apprentice": "ហាត់​ការ",
     "PERSONAL": "ព័ត៌មាន",
     "Name (KH)": "ឈ្មោះ (ខ្មែរ)",
     "Name (EN) *": "ឈ្មោះ (EN)",
@@ -28291,6 +28309,26 @@ var SfEditPanel = ({
     ...prev,
     [k]: prev[k] ? 0 : 1
   }));
+  var relOpts = [tr('ឪពុក', 'Father'), tr('ម្ដាយ', 'Mother'), tr('ប្ដី/ប្រពន្ធ', 'Spouse'), tr('បង/ប្អូន', 'Sibling'), tr('កូន', 'Child'), tr('សាច់​ញាតិ', 'Relative'), tr('មិត្ត​ភក្ដិ', 'Friend'), tr('ផ្សេងៗ', 'Other')];
+  var licenseOpts = ['A', 'A1', 'B', 'B1', 'B2', 'C', 'D', 'E'];
+  var instRolesCfg = (window.__schoolSettings && window.__schoolSettings.instructorRoles || []).map(r => tr(r.km, r.en)).filter(Boolean);
+  var instLevelOpts = instRolesCfg.length ? instRolesCfg : [tr('គ្រូ​ជាន់​ខ្ពស់', 'Senior Instructor'), tr('មេ​បង្រៀន', 'Lead Instructor'), tr('គ្រូ​បង្រៀន', 'Instructor'), tr('ហាត់​ការ', 'Apprentice')];
+  var vehicleOpts = (typeof VEHICLES !== 'undefined' ? VEHICLES : []).map(v => v.plate || v.id).filter(Boolean);
+  var Dd = ({
+    value,
+    onChange,
+    options
+  }) => React.createElement(Select, {
+    value: value || '',
+    onChange: onChange
+  }, React.createElement("option", {
+    value: ""
+  }, "\u2014"), value && !options.includes(value) && React.createElement("option", {
+    value: value
+  }, value), options.map(o => React.createElement("option", {
+    key: o,
+    value: o
+  }, o)));
   var save = () => {
     if (!nameEn.trim()) {
       toast('សូម​ បំពេញ​ Name EN', 'warn');
@@ -28678,12 +28716,13 @@ var SfEditPanel = ({
     }))
   })), React.createElement(Field, {
     label: tr('ទំ​នាក់', 'Relation')
-  }, React.createElement(Input, {
+  }, React.createElement(Dd, {
     value: ext.emergencyRel,
     onChange: e => setExt(p => ({
       ...p,
       emergencyRel: e.target.value
-    }))
+    })),
+    options: relOpts
   })), React.createElement(Field, {
     label: tr('ទូរស័ព្ទ', 'Phone')
   }, React.createElement(Input, {
@@ -28802,13 +28841,13 @@ var SfEditPanel = ({
     }
   }, tr('ជំនាញ​បើក​បរ', 'DRIVING')), React.createElement(Field, {
     label: tr('ប្រភេទ​ប័ណ្ណ', 'License')
-  }, React.createElement(Input, {
+  }, React.createElement(Dd, {
     value: ext.licenseType,
     onChange: e => setExt(p => ({
       ...p,
       licenseType: e.target.value
     })),
-    placeholder: "B1, B2\u2026"
+    options: licenseOpts
   })), React.createElement(Field, {
     label: tr('ផុត​', 'Expiry')
   }, React.createElement(Input, {
@@ -28829,20 +28868,22 @@ var SfEditPanel = ({
     }))
   })), React.createElement(Field, {
     label: tr('ថ្នាក់​គ្រូ', 'Inst. Level')
-  }, React.createElement(Input, {
+  }, React.createElement(Dd, {
     value: ext.instLevel,
     onChange: e => setExt(p => ({
       ...p,
       instLevel: e.target.value
-    }))
+    })),
+    options: instLevelOpts
   })), React.createElement(Field, {
     label: tr('យានយន្ត', 'Vehicle')
-  }, React.createElement(Input, {
+  }, React.createElement(Dd, {
     value: ext.assignedVehicle,
     onChange: e => setExt(p => ({
       ...p,
       assignedVehicle: e.target.value
-    }))
+    })),
+    options: vehicleOpts
   })), React.createElement(Field, {
     label: tr('ប្រវត្តិ​គ្រោះ', 'Accidents')
   }, React.createElement(Input, {

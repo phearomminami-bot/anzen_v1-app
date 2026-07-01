@@ -667,6 +667,21 @@ const SfEditPanel = ({ s, onSave, onCancel, onDelete, onSavePhoto }) => {
 
   const toggleDoc = (k) => setDocs(prev => ({...prev, [k]: prev[k] ? 0 : 1}));
 
+  // Option lists for the extended-profile dropdowns.
+  const relOpts    = [tr('ឪពុក','Father'),tr('ម្ដាយ','Mother'),tr('ប្ដី/ប្រពន្ធ','Spouse'),tr('បង/ប្អូន','Sibling'),tr('កូន','Child'),tr('សាច់​ញាតិ','Relative'),tr('មិត្ត​ភក្ដិ','Friend'),tr('ផ្សេងៗ','Other')];
+  const licenseOpts = ['A','A1','B','B1','B2','C','D','E'];
+  const instRolesCfg = ((window.__schoolSettings && window.__schoolSettings.instructorRoles) || []).map(r=>tr(r.km,r.en)).filter(Boolean);
+  const instLevelOpts = instRolesCfg.length ? instRolesCfg : [tr('គ្រូ​ជាន់​ខ្ពស់','Senior Instructor'),tr('មេ​បង្រៀន','Lead Instructor'),tr('គ្រូ​បង្រៀន','Instructor'),tr('ហាត់​ការ','Apprentice')];
+  const vehicleOpts = (typeof VEHICLES !== 'undefined' ? VEHICLES : []).map(v=>v.plate || v.id).filter(Boolean);
+  // Dropdown that keeps an existing custom value selectable even if it's not in the list.
+  const Dd = ({ value, onChange, options }) => (
+    <Select value={value || ''} onChange={onChange}>
+      <option value="">—</option>
+      {value && !options.includes(value) && <option value={value}>{value}</option>}
+      {options.map(o => <option key={o} value={o}>{o}</option>)}
+    </Select>
+  );
+
   const save = () => {
     if (!nameEn.trim()) { toast('សូម​ បំពេញ​ Name EN','warn'); return; }
     onSave({
@@ -792,7 +807,7 @@ const SfEditPanel = ({ s, onSave, onCancel, onDelete, onSavePhoto }) => {
 
             <div style={{gridColumn:'1/-1',font:'600 10px/1 "JetBrains Mono",monospace',letterSpacing:'.07em',color:'var(--ink-3)',paddingTop:6}}>{tr('ទំ​នាក់​ទំ​នង​អន្ត​រាយ','EMERGENCY CONTACT')}</div>
             <Field label={tr('ឈ្មោះ','Name')}><Input value={ext.emergencyName} onChange={e=>setExt(p=>({...p,emergencyName:e.target.value}))}/></Field>
-            <Field label={tr('ទំ​នាក់','Relation')}><Input value={ext.emergencyRel} onChange={e=>setExt(p=>({...p,emergencyRel:e.target.value}))}/></Field>
+            <Field label={tr('ទំ​នាក់','Relation')}><Dd value={ext.emergencyRel} onChange={e=>setExt(p=>({...p,emergencyRel:e.target.value}))} options={relOpts}/></Field>
             <Field label={tr('ទូរស័ព្ទ','Phone')}><Input value={ext.emergencyPhone} onChange={e=>setExt(p=>({...p,emergencyPhone:e.target.value}))}/></Field>
 
             <div style={{gridColumn:'1/-1',font:'600 10px/1 "JetBrains Mono",monospace',letterSpacing:'.07em',color:'var(--ink-3)',paddingTop:6}}>{tr('ប្រភេទ​ការ​ងារ','EMPLOYMENT')}</div>
@@ -823,11 +838,11 @@ const SfEditPanel = ({ s, onSave, onCancel, onDelete, onSavePhoto }) => {
             <Field label={tr('ជំនាញ','Skills')}><Input value={ext.skills} onChange={e=>setExt(p=>({...p,skills:e.target.value}))}/></Field>
 
             <div style={{gridColumn:'1/-1',font:'600 10px/1 "JetBrains Mono",monospace',letterSpacing:'.07em',color:'var(--ink-3)',paddingTop:6}}>{tr('ជំនាញ​បើក​បរ','DRIVING')}</div>
-            <Field label={tr('ប្រភេទ​ប័ណ្ណ','License')}><Input value={ext.licenseType} onChange={e=>setExt(p=>({...p,licenseType:e.target.value}))} placeholder="B1, B2…"/></Field>
+            <Field label={tr('ប្រភេទ​ប័ណ្ណ','License')}><Dd value={ext.licenseType} onChange={e=>setExt(p=>({...p,licenseType:e.target.value}))} options={licenseOpts}/></Field>
             <Field label={tr('ផុត​','Expiry')}><Input type="date" value={ext.licenseExpiry} onChange={e=>setExt(p=>({...p,licenseExpiry:e.target.value}))}/></Field>
             <Field label={tr('បទ​ពិសោធន៍','Exp (yr)')}><Input type="number" value={ext.drivingExp} onChange={e=>setExt(p=>({...p,drivingExp:parseFloat(e.target.value)||0}))}/></Field>
-            <Field label={tr('ថ្នាក់​គ្រូ','Inst. Level')}><Input value={ext.instLevel} onChange={e=>setExt(p=>({...p,instLevel:e.target.value}))}/></Field>
-            <Field label={tr('យានយន្ត','Vehicle')}><Input value={ext.assignedVehicle} onChange={e=>setExt(p=>({...p,assignedVehicle:e.target.value}))}/></Field>
+            <Field label={tr('ថ្នាក់​គ្រូ','Inst. Level')}><Dd value={ext.instLevel} onChange={e=>setExt(p=>({...p,instLevel:e.target.value}))} options={instLevelOpts}/></Field>
+            <Field label={tr('យានយន្ត','Vehicle')}><Dd value={ext.assignedVehicle} onChange={e=>setExt(p=>({...p,assignedVehicle:e.target.value}))} options={vehicleOpts}/></Field>
             <Field label={tr('ប្រវត្តិ​គ្រោះ','Accidents')}><Input value={ext.accidentHistory} onChange={e=>setExt(p=>({...p,accidentHistory:e.target.value}))}/></Field>
           </div>
         )}
