@@ -506,6 +506,7 @@ function App() {
     booking:     <BookingScreen studentId={activeStudentId} role={role}/>,
     vehicle:     <VehicleScreen/>,
     finance:     <FinanceScreen role={role}/>,
+    analytics:   <AnalyticsScreen role={role}/>,
     announce:    <AnnounceScreen role={role}/>,
     settings:    <SettingsScreen role={role} fontSize={t.fontSize} setFontSize={(v)=>setTweak('fontSize',v)}/>,
   };

@@ -50,6 +50,7 @@ FILE_GROUPS = {
     "screens-staff.jsx":        "បុគ្គលិក · Staff",
     "screens-invoice.jsx":      "វិក្កយបត្រ · Billing",
     "screens-finance.jsx":      "ហិរញ្ញវត្ថុ · Finance",
+    "screens-analytics.jsx":    "ការវិភាគ · Analytics",
     "screens-announce.jsx":     "ការ​ជូន​ដំណឹង · Announcements",
     "screens-bookings.jsx":     "ការ​កក់ · Booking",
     "screens-public.jsx":       "ទំព័រ​សាធារណៈ · Public site",
@@ -141,6 +142,7 @@ JSX_ORDER = [
     "screens-bookings.jsx",
     "screens-settings.jsx",
     "screens-finance.jsx",
+    "screens-analytics.jsx", # dedicated analytics dashboard (charts from live data)
     "screens-announce.jsx",
     "supabase-client.jsx",   # Supabase auth/client helpers (window.sb, __sbSignIn…)
     "supabase-data.jsx",     # Supabase load/save of all app data (Phase 2)
