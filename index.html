@@ -26907,6 +26907,7 @@ var StaffScreen = () => {
   var [view, setView] = React.useState('cards');
   var [dept, setDept] = React.useState('all');
   var [selectedId, setSelId] = React.useState(null);
+  var [detailOpen, setDetailOpen] = React.useState(false);
   var [editing, setEditing] = React.useState(false);
   var [addLeave, setAddLeave] = React.useState(false);
   React.useEffect(() => {
@@ -26925,6 +26926,7 @@ var StaffScreen = () => {
       if (found) {
         setSelId(found.id);
         setTab('directory');
+        setDetailOpen(true);
       }
     }
   }, []);
@@ -26938,6 +26940,7 @@ var StaffScreen = () => {
   var selectStaff = id => {
     setSelId(id);
     setEditing(false);
+    setDetailOpen(true);
   };
   var approveLeave = lv => {
     lv.status = 'Approved';
@@ -27315,11 +27318,22 @@ var StaffScreen = () => {
   }), tab === 'docs' && React.createElement(SfDocs, {
     staff: staff,
     forceUpdate: forceUpdate
-  })), tab === 'directory' && selected && (editing ? React.createElement(SfEditPanel, {
+  })), tab === 'directory' && selected && detailOpen && React.createElement(Modal, {
+    open: true,
+    onClose: () => {
+      setDetailOpen(false);
+      setEditing(false);
+    },
+    width: 780
+  }, editing ? React.createElement(SfEditPanel, {
     s: selected,
     onSave: saveEdit,
     onCancel: () => setEditing(false),
-    onDelete: deleteStaff,
+    onDelete: id => {
+      deleteStaff(id);
+      setDetailOpen(false);
+      setEditing(false);
+    },
     onSavePhoto: savePhoto
   }) : React.createElement(SfDetailRow, {
     s: selected,

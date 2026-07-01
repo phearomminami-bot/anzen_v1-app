@@ -21,6 +21,7 @@ const StaffScreen = () => {
   const [view, setView]       = React.useState('cards');
   const [dept, setDept]       = React.useState('all');
   const [selectedId, setSelId] = React.useState(null);
+  const [detailOpen, setDetailOpen] = React.useState(false);   // staff detail shows as a popup, not inline
   const [editing, setEditing] = React.useState(false);
   const [addLeave, setAddLeave] = React.useState(false);
 
@@ -38,7 +39,7 @@ const StaffScreen = () => {
       const target = window.__staffNavTarget;
       delete window.__staffNavTarget;
       const found = staff.find(s => s.id === target || s.en === target);
-      if (found) { setSelId(found.id); setTab('directory'); }
+      if (found) { setSelId(found.id); setTab('directory'); setDetailOpen(true); }
     }
   }, []);
 
@@ -52,7 +53,7 @@ const StaffScreen = () => {
 
   const selected = staff.find(s => s.id === selectedId) || null;
 
-  const selectStaff = (id) => { setSelId(id); setEditing(false); };
+  const selectStaff = (id) => { setSelId(id); setEditing(false); setDetailOpen(true); };
 
   const approveLeave = (lv) => {
     lv.status = 'Approved';
@@ -316,11 +317,13 @@ const StaffScreen = () => {
         {tab==='docs'     && <SfDocs     staff={staff} forceUpdate={forceUpdate}/>}
       </Card>
 
-      {/* detail / edit panel */}
-      {tab==='directory' && selected && (
-        editing
-          ? <SfEditPanel s={selected} onSave={saveEdit} onCancel={()=>setEditing(false)} onDelete={deleteStaff} onSavePhoto={savePhoto}/>
-          : <SfDetailRow s={selected} onEdit={()=>setEditing(true)} onSavePhoto={savePhoto} onOffboard={offboardStaff} onRestore={restoreStaff}/>
+      {/* Detail / edit — pops out as a modal when a staff member is tapped. */}
+      {tab==='directory' && selected && detailOpen && (
+        <Modal open onClose={()=>{ setDetailOpen(false); setEditing(false); }} width={780}>
+          {editing
+            ? <SfEditPanel s={selected} onSave={saveEdit} onCancel={()=>setEditing(false)} onDelete={(id)=>{ deleteStaff(id); setDetailOpen(false); setEditing(false); }} onSavePhoto={savePhoto}/>
+            : <SfDetailRow s={selected} onEdit={()=>setEditing(true)} onSavePhoto={savePhoto} onOffboard={offboardStaff} onRestore={restoreStaff}/>}
+        </Modal>
       )}
     </div>
   );
