@@ -158,9 +158,12 @@ const CvLessonRow = ({ l, offset = 0, h, total = 1, cumNo, tr, onSave }) => {
       {open && (
         <Modal open onClose={closeEval} width={460}>
           <div style={{padding:20,maxHeight:'86vh',overflowY:'auto'}}>
-            <div style={{fontSize:15,fontWeight:700}}>{tr('វាយ​តម្លៃ​មេរៀន','Lesson evaluation')}</div>
-            <div style={{fontSize:12,color:'var(--ink-3)',margin:'2px 0 4px'}}>
-              {l.date} · <span style={{fontFamily:'monospace',fontWeight:600}}>{timeLabel}</span>{cumNo!=null?` · (${cumNo})`:''} · {lessonTypeKm(l)}
+            {/* Navy title bar — bleeds to the modal edges, white text */}
+            <div style={{background:'var(--accent)',color:'#fff',padding:'12px 20px',margin:'-20px -20px 16px'}}>
+              <div style={{fontSize:15,fontWeight:700}}>{tr('វាយ​តម្លៃ​មេរៀន','Lesson evaluation')}</div>
+              <div style={{fontSize:12,color:'rgba(255,255,255,.82)',marginTop:2}}>
+                {l.date} · <span style={{fontFamily:'monospace',fontWeight:600}}>{timeLabel}</span>{cumNo!=null?` · (${cumNo})`:''} · {lessonTypeKm(l)}
+              </div>
             </div>
 
             <div style={lbl}>{tr('មេរៀន (ពី Tab Lessons)','Lessons (from Tab Lessons)')}</div>
