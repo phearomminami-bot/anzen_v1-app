@@ -100,6 +100,7 @@ const CvLessonRow = ({ l, offset = 0, h, total = 1, cumNo, tr, onSave }) => {
   const pad = (n) => String(n).padStart(2, '0');
   const timeLabel = `${pad(hr)}:00–${pad(hr+1)}:00`;
   const cancelled = l.status === 'cancelled';   // "change day" in the schedule
+  const isTheory  = (l.color === 'c' || l.color === 'e');   // theory vs practical lesson
   const [open, setOpen]           = React.useState(false);
   const covered = lessonsCoveredByIds(fb0.lessonIds, fb0.lessonNo);
   const [rating, setRating]       = React.useState(fb0.rating);
@@ -181,21 +182,11 @@ const CvLessonRow = ({ l, offset = 0, h, total = 1, cumNo, tr, onSave }) => {
               <div style={{fontSize:12,color:'var(--ink-3)'}}>{tr('មិនទាន់មានមេរៀននៅ Tab Lessons','No lessons defined in Tab Lessons')}</div>
             ) : (
               <select value="" onChange={e=>{ const id=e.target.value; if(id && !lessonIds.includes(id)) setLessonIds(prev=>[...prev,id]); }} style={fieldStyle}>
+                {/* Only offer curriculum matching this lesson's type: theory→theory, practical→practical. */}
                 <option value="">+ {tr('បន្ថែម​មេរៀន','Add lesson')}</option>
-                {groups.theory.length>0 && (
-                  <optgroup label={tr('ទ្រឹស្ដី','Theory · 学科')}>
-                    {groups.theory.filter(u=>!lessonIds.includes(u.id)).map(u=>(
-                      <option key={u.id} value={u.id}>{u.no?lessonNumOf(u.no)+' · ':''}{tr(u.km,u.en)}</option>
-                    ))}
-                  </optgroup>
-                )}
-                {groups.practical.length>0 && (
-                  <optgroup label={tr('អនុវត្តន៍','Practical · 技能')}>
-                    {groups.practical.filter(u=>!lessonIds.includes(u.id)).map(u=>(
-                      <option key={u.id} value={u.id}>{u.no?lessonNumOf(u.no)+' · ':''}{tr(u.km,u.en)}</option>
-                    ))}
-                  </optgroup>
-                )}
+                {(isTheory ? groups.theory : groups.practical).filter(u=>!lessonIds.includes(u.id)).map(u=>(
+                  <option key={u.id} value={u.id}>{u.no?lessonNumOf(u.no)+' · ':''}{tr(u.km,u.en)}</option>
+                ))}
               </select>
             )}
 

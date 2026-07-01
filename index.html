@@ -939,8 +939,6 @@ window.__trRegistry = {
   "Changed": "បានប្ដូរថ្ងៃ",
   "Lesson evaluation": "វាយ​តម្លៃ​មេរៀន",
   "Lessons (from Tab Lessons)": "មេរៀន (ពី Tab Lessons)",
-  "Theory · 学科": "ទ្រឹស្ដី",
-  "Practical · 技能": "អនុវត្តន៍",
   "Rating": "ការ​វាយ​តម្លៃ",
   "Did well": "ធ្វើ​បាន​ល្អ",
   "e.g. good steering control": "ឧ. បញ្ជា​ចង្កូត​បាន​ល្អ",
@@ -1622,8 +1620,6 @@ window.__trGroups = {
     "Changed": "បានប្ដូរថ្ងៃ",
     "Lesson evaluation": "វាយ​តម្លៃ​មេរៀន",
     "Lessons (from Tab Lessons)": "មេរៀន (ពី Tab Lessons)",
-    "Theory · 学科": "ទ្រឹស្ដី",
-    "Practical · 技能": "អនុវត្តន៍",
     "Rating": "វាយតម្លៃ",
     "Did well": "ធ្វើ​បាន​ល្អ",
     "e.g. good steering control": "ឧ. បញ្ជា​ចង្កូត​បាន​ល្អ",
@@ -38936,6 +38932,7 @@ var CvLessonRow = ({
   var pad = n => String(n).padStart(2, '0');
   var timeLabel = `${pad(hr)}:00–${pad(hr + 1)}:00`;
   var cancelled = l.status === 'cancelled';
+  var isTheory = l.color === 'c' || l.color === 'e';
   var [open, setOpen] = React.useState(false);
   var covered = lessonsCoveredByIds(fb0.lessonIds, fb0.lessonNo);
   var [rating, setRating] = React.useState(fb0.rating);
@@ -39189,17 +39186,10 @@ var CvLessonRow = ({
     style: fieldStyle
   }, React.createElement("option", {
     value: ""
-  }, "+ ", tr('បន្ថែម​មេរៀន', 'Add lesson')), groups.theory.length > 0 && React.createElement("optgroup", {
-    label: tr('ទ្រឹស្ដី', 'Theory · 学科')
-  }, groups.theory.filter(u => !lessonIds.includes(u.id)).map(u => React.createElement("option", {
+  }, "+ ", tr('បន្ថែម​មេរៀន', 'Add lesson')), (isTheory ? groups.theory : groups.practical).filter(u => !lessonIds.includes(u.id)).map(u => React.createElement("option", {
     key: u.id,
     value: u.id
-  }, u.no ? lessonNumOf(u.no) + ' · ' : '', tr(u.km, u.en)))), groups.practical.length > 0 && React.createElement("optgroup", {
-    label: tr('អនុវត្តន៍', 'Practical · 技能')
-  }, groups.practical.filter(u => !lessonIds.includes(u.id)).map(u => React.createElement("option", {
-    key: u.id,
-    value: u.id
-  }, u.no ? lessonNumOf(u.no) + ' · ' : '', tr(u.km, u.en))))), React.createElement("div", {
+  }, u.no ? lessonNumOf(u.no) + ' · ' : '', tr(u.km, u.en)))), React.createElement("div", {
     style: lbl
   }, tr('ស្ថានភាព', 'Status')), React.createElement("div", {
     style: {
