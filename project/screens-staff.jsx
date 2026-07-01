@@ -523,7 +523,7 @@ const SfDetailRow = ({ s, onEdit, onSavePhoto, onOffboard, onRestore }) => {
         </div>
       )}
 
-      <div style={{padding:18,display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:16}}>
+      <div style={{padding:18,display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:16}}>
         <div>
           <div style={{font:'500 10px/1 "JetBrains Mono", monospace',letterSpacing:'.08em',textTransform:'uppercase',color:'var(--ink-3)',marginBottom:10}}>{tr('ការងារ','EMPLOYMENT')}</div>
           <div style={{display:'flex',flexDirection:'column',gap:8,fontSize:12}}>
@@ -684,13 +684,15 @@ const SfEditPanel = ({ s, onSave, onCancel, onDelete, onSavePhoto }) => {
 
   return (
     <Card pad={0}>
-      <div style={{padding:'14px 18px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:10}}>
+      <div style={{padding:'14px 18px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
         <UploadAvatar id={s.id} photo={s.photo} size={48} onUpload={onSavePhoto}/>
-        <div style={{flex:1,fontSize:14,fontWeight:600}}>{tr('កែ​សម្រួល','Edit')} — {s.id}</div>
-        <Btn kind="ghost" size="sm" style={{color:'var(--danger)'}}
-          onClick={()=>setConfirm(true)}>លុប</Btn>
-        <Btn kind="ghost" size="sm" onClick={onCancel}>បោះ​បង់</Btn>
-        <Btn kind="primary" size="sm" icon={<Icon name="check" size={13}/>} onClick={save}>រក្សា​ទុក</Btn>
+        <div style={{flex:'1 1 120px',minWidth:0,fontSize:14,fontWeight:600}}>{tr('កែ​សម្រួល','Edit')} — {s.id}</div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+          <Btn kind="ghost" size="sm" style={{color:'var(--danger)'}}
+            onClick={()=>setConfirm(true)}>លុប</Btn>
+          <Btn kind="ghost" size="sm" onClick={onCancel}>បោះ​បង់</Btn>
+          <Btn kind="primary" size="sm" icon={<Icon name="check" size={13}/>} onClick={save}>រក្សា​ទុក</Btn>
+        </div>
       </div>
 
       {confirm && (
@@ -704,7 +706,7 @@ const SfEditPanel = ({ s, onSave, onCancel, onDelete, onSavePhoto }) => {
         </div>
       )}
 
-      <div style={{padding:18,display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+      <div style={{padding:18,display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(250px,1fr))',gap:14}}>
         {/* Left col */}
         <div style={{display:'flex',flexDirection:'column',gap:12}}>
           <div style={{font:'600 10px/1 "JetBrains Mono",monospace',letterSpacing:'.08em',textTransform:'uppercase',color:'var(--ink-3)'}}>{tr('ព័ត៌មាន','PERSONAL')}</div>
@@ -768,7 +770,7 @@ const SfEditPanel = ({ s, onSave, onCancel, onDelete, onSavePhoto }) => {
           </button>
         </div>
         {showExt && (
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10,marginTop:12}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',gap:10,marginTop:12}}>
             <div style={{gridColumn:'1/-1',font:'600 10px/1 "JetBrains Mono",monospace',letterSpacing:'.07em',color:'var(--ink-3)',paddingTop:4}}>{tr('ផ្ទាល់ខ្លួន','PERSONAL')}</div>
             <Field label={tr('ភេទ','Gender')}>
               <Select value={ext.gender} onChange={e=>setExt(p=>({...p,gender:e.target.value}))}>

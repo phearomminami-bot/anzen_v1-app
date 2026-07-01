@@ -27855,7 +27855,7 @@ var SfDetailRow = ({
     style: {
       padding: 18,
       display: 'grid',
-      gridTemplateColumns: '1fr 1fr 1fr 1fr',
+      gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))',
       gap: 16
     }
   }, React.createElement("div", null, React.createElement("div", {
@@ -28276,7 +28276,8 @@ var SfEditPanel = ({
       borderBottom: '1px solid var(--border)',
       display: 'flex',
       alignItems: 'center',
-      gap: 10
+      gap: 10,
+      flexWrap: 'wrap'
     }
   }, React.createElement(UploadAvatar, {
     id: s.id,
@@ -28285,11 +28286,18 @@ var SfEditPanel = ({
     onUpload: onSavePhoto
   }), React.createElement("div", {
     style: {
-      flex: 1,
+      flex: '1 1 120px',
+      minWidth: 0,
       fontSize: 14,
       fontWeight: 600
     }
-  }, tr('កែ​សម្រួល', 'Edit'), " \u2014 ", s.id), React.createElement(Btn, {
+  }, tr('កែ​សម្រួល', 'Edit'), " \u2014 ", s.id), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      flexWrap: 'wrap'
+    }
+  }, React.createElement(Btn, {
     kind: "ghost",
     size: "sm",
     style: {
@@ -28308,7 +28316,7 @@ var SfEditPanel = ({
       size: 13
     }),
     onClick: save
-  }, "\u179A\u1780\u17D2\u179F\u17B6\u200B\u1791\u17BB\u1780")), confirm && React.createElement("div", {
+  }, "\u179A\u1780\u17D2\u179F\u17B6\u200B\u1791\u17BB\u1780"))), confirm && React.createElement("div", {
     style: {
       padding: 14,
       background: '#FDF2F2',
@@ -28340,7 +28348,7 @@ var SfEditPanel = ({
     style: {
       padding: 18,
       display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
+      gridTemplateColumns: 'repeat(auto-fit,minmax(250px,1fr))',
       gap: 14
     }
   }, React.createElement("div", {
@@ -28536,7 +28544,7 @@ var SfEditPanel = ({
   }, showExt ? '▲ បិទ' : '▼ បើក')), showExt && React.createElement("div", {
     style: {
       display: 'grid',
-      gridTemplateColumns: '1fr 1fr 1fr',
+      gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))',
       gap: 10,
       marginTop: 12
     }
