@@ -27622,7 +27622,8 @@ var SfDetailRow = ({
       borderBottom: '1px solid var(--border)',
       display: 'flex',
       alignItems: 'center',
-      gap: 14
+      gap: 14,
+      flexWrap: 'wrap'
     }
   }, React.createElement(UploadAvatar, {
     id: s.id,
@@ -27631,19 +27632,25 @@ var SfDetailRow = ({
     onUpload: onSavePhoto
   }), React.createElement("div", {
     style: {
-      flex: 1
+      flex: '1 1 200px',
+      minWidth: 0
     }
   }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
-      gap: 10
+      gap: 8,
+      flexWrap: 'wrap'
     }
   }, React.createElement("div", {
     style: {
       fontSize: 20,
       fontWeight: 600,
-      fontFamily: 'var(--font-display)'
+      fontFamily: 'var(--font-display)',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      maxWidth: '100%'
     }
   }, s.name), s.offboarded ? React.createElement(Badge, {
     tone: "warn"
@@ -27662,7 +27669,17 @@ var SfDetailRow = ({
       color: 'var(--ink-3)',
       marginTop: 2
     }
-  }, s.en, " \xB7 ", s.id, " \xB7 ", s.role, " \xB7 ", s.dept)), s.phone && s.phone !== '—' && React.createElement(Btn, {
+  }, s.en, " \xB7 ", s.id, " \xB7 ", s.role, " \xB7 ", s.dept)), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      flex: '1 1 auto',
+      minWidth: 0,
+      justifyContent: 'flex-end'
+    }
+  }, s.phone && s.phone !== '—' && React.createElement(Btn, {
     kind: "ghost",
     size: "sm",
     icon: React.createElement(Icon, {
@@ -27731,7 +27748,7 @@ var SfDetailRow = ({
       color: 'var(--warn)',
       borderColor: 'var(--warn)'
     }
-  }, tr('ឈប់​ពី​ការងារ', 'Offboard'))), inst && React.createElement("div", {
+  }, tr('ឈប់​ពី​ការងារ', 'Offboard')))), inst && React.createElement("div", {
     style: {
       padding: '12px 18px',
       borderBottom: '1px solid var(--border)',

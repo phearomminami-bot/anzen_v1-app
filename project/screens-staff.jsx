@@ -445,11 +445,11 @@ const SfDetailRow = ({ s, onEdit, onSavePhoto, onOffboard, onRestore }) => {
 
   return (
     <Card pad={0}>
-      <div style={{padding:'14px 18px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:14}}>
+      <div style={{padding:'14px 18px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
         <UploadAvatar id={s.id} photo={s.photo} size={64} onUpload={onSavePhoto}/>
-        <div style={{flex:1}}>
-          <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <div style={{fontSize:20,fontWeight:600,fontFamily:'var(--font-display)'}}>{s.name}</div>
+        <div style={{flex:'1 1 200px',minWidth:0}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+            <div style={{fontSize:20,fontWeight:600,fontFamily:'var(--font-display)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'100%'}}>{s.name}</div>
             {s.offboarded
               ? <Badge tone="warn">{tr('អតីត​បុគ្គលិក','Former staff')}{s.offboardedAt ? ' · ' + s.offboardedAt : ''}</Badge>
               : <><SfStatusDot status={s.status}/><span style={{fontSize:12,color:'var(--ink-3)'}}>{s.status}</span></>}
@@ -457,6 +457,7 @@ const SfDetailRow = ({ s, onEdit, onSavePhoto, onOffboard, onRestore }) => {
           </div>
           <div style={{fontSize:12,color:'var(--ink-3)',marginTop:2}}>{s.en} · {s.id} · {s.role} · {s.dept}</div>
         </div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',flex:'1 1 auto',minWidth:0,justifyContent:'flex-end'}}>
         {s.phone && s.phone !== '—' && (
           <Btn kind="ghost" size="sm" icon={<Icon name="phone" size={13}/>}
             onClick={()=>toast(s.phone,'neutral')}>{s.phone}</Btn>
@@ -502,6 +503,7 @@ const SfDetailRow = ({ s, onEdit, onSavePhoto, onOffboard, onRestore }) => {
               style={{color:'var(--warn)',borderColor:'var(--warn)'}}>
               {tr('ឈប់​ពី​ការងារ','Offboard')}
             </Btn>}
+        </div>
       </div>
 
       {/* Teaching profile strip — instructors only */}
