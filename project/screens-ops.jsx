@@ -1710,32 +1710,35 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
     }`;
   document.head.appendChild(style);
 
-  // Month switcher (month view only). Flexes to fill the toolbar's middle so the
-  // whole bar stays on one row; a plain spacer is used for other views.
+  // Month switcher (month view only). Content-sized (never flex-grows) so its
+  // ▶ can't overflow into the print button; a flexible spacer keeps Print on the
+  // right. The date input has a bounded width so long month names still fit.
   const monthSwitcher = viewType === 'month' ? `
-      <div style="display:flex;align-items:center;gap:5px;flex:1;min-width:0">
-        <button id="__pdfMPrev" title="មុន" style="flex-shrink:0;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:15px;font-weight:700;width:32px;height:38px;border-radius:9px;cursor:pointer">◀</button>
+      <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+        <button id="__pdfMPrev" title="មុន" style="flex-shrink:0;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:13px;font-weight:700;width:26px;height:36px;border-radius:8px;cursor:pointer">◀</button>
         <input id="__pdfMonth" type="month" value="${monthAnchorDate.getFullYear()}-${pad2(monthAnchorDate.getMonth()+1)}"
-          style="flex:1;min-width:0;width:100%;box-sizing:border-box;border:none;border-radius:9px;padding:9px 6px;font-size:13px;font-weight:600;color:#1A4F96;background:#fff;cursor:pointer"/>
-        <button id="__pdfMNext" title="បន្ទាប់" style="flex-shrink:0;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:15px;font-weight:700;width:32px;height:38px;border-radius:9px;cursor:pointer">▶</button>
-      </div>` : '<div style="flex:1"></div>';
+          style="width:104px;max-width:32vw;box-sizing:border-box;border:none;border-radius:8px;padding:8px 3px;font-size:11.5px;font-weight:600;color:#1A4F96;background:#fff;cursor:pointer"/>
+        <button id="__pdfMNext" title="បន្ទាប់" style="flex-shrink:0;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:13px;font-weight:700;width:26px;height:36px;border-radius:8px;cursor:pointer">▶</button>
+      </div>` : '';
 
   // Language toggle — pure Khmer or pure English. Re-renders the whole PDF.
   const langToggle = `
-      <div style="display:flex;flex-shrink:0;background:rgba(255,255,255,.16);border-radius:9px;padding:2px">
-        <button id="__pdfLangKm" style="border:none;background:${curLang==='km'?'#fff':'transparent'};color:${curLang==='km'?'#1A4F96':'#fff'};font-size:12px;font-weight:700;padding:8px 9px;border-radius:7px;cursor:pointer">ខ្មែរ</button>
-        <button id="__pdfLangEn" style="border:none;background:${curLang==='en'?'#fff':'transparent'};color:${curLang==='en'?'#1A4F96':'#fff'};font-size:12px;font-weight:700;padding:8px 9px;border-radius:7px;cursor:pointer">EN</button>
+      <div style="display:flex;flex-shrink:0;background:rgba(255,255,255,.16);border-radius:8px;padding:2px">
+        <button id="__pdfLangKm" style="border:none;background:${curLang==='km'?'#fff':'transparent'};color:${curLang==='km'?'#1A4F96':'#fff'};font-size:12px;font-weight:700;padding:7px 8px;border-radius:6px;cursor:pointer">ខ្មែរ</button>
+        <button id="__pdfLangEn" style="border:none;background:${curLang==='en'?'#fff':'transparent'};color:${curLang==='en'?'#1A4F96':'#fff'};font-size:12px;font-weight:700;padding:7px 8px;border-radius:6px;cursor:pointer">EN</button>
       </div>`;
 
   const host = document.createElement('div');
   host.id = HOST_ID;
-  // One compact row; Back / Print are icon-only to keep everything on a single line.
+  // One compact row; Back / Print are icon-only. A flex spacer sits before Print
+  // so nothing can overlap it, and the row scrolls horizontally if truly cramped.
   host.innerHTML = `
-    <div class="pdf-toolbar" style="position:sticky;top:0;z-index:2;display:flex;gap:6px;flex-wrap:nowrap;align-items:center;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;background:#1A4F96;color:#fff;box-shadow:0 1px 8px rgba(0,0,0,.25)">
-      <button id="__pdfBack" title="${L('ត្រឡប់','Back')}" style="flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:17px;width:42px;height:40px;border-radius:9px;cursor:pointer">⬅</button>
+    <div class="pdf-toolbar" style="position:sticky;top:0;z-index:2;display:flex;gap:5px;flex-wrap:nowrap;align-items:center;overflow-x:auto;padding:calc(10px + env(safe-area-inset-top,0px)) 10px 10px;background:#1A4F96;color:#fff;box-shadow:0 1px 8px rgba(0,0,0,.25)">
+      <button id="__pdfBack" title="${L('ត្រឡប់','Back')}" style="flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:16px;width:38px;height:38px;border-radius:8px;cursor:pointer">⬅</button>
       ${langToggle}
       ${monthSwitcher}
-      <button id="__pdfPrint" title="${L('បោះពុម្ព / PDF','Print / PDF')}" style="flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border:none;background:#fff;color:#1A4F96;font-size:18px;width:44px;height:40px;border-radius:9px;cursor:pointer">🖨</button>
+      <div style="flex:1;min-width:2px"></div>
+      <button id="__pdfPrint" title="${L('បោះពុម្ព / PDF','Print / PDF')}" style="flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border:none;background:#fff;color:#1A4F96;font-size:17px;width:40px;height:38px;border-radius:8px;cursor:pointer">🖨</button>
     </div>
     <div class="pdf-paper">${bodyContent}</div>`;
   document.body.appendChild(host);
