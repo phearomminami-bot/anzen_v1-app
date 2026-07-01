@@ -1426,18 +1426,6 @@ const FvCard = ({ v, onSelect, selectedId, onStatusChange, onSaveDates, onParkin
           </div>
           )}
         </div>
-        {manage && (
-          <div onClick={e=>{ e.stopPropagation(); onToggleVisible && onToggleVisible(v); }} style={{
-            marginTop:10, padding:'6px 10px', borderRadius:8, fontSize:11, fontWeight:600, cursor:'pointer',
-            textAlign:'center', border:'1px solid '+(v.visible===false?'var(--border)':'var(--good)'),
-            background: v.visible===false ? 'var(--surface-muted)' : 'var(--good)18',
-            color:       v.visible===false ? 'var(--ink-3)' : 'var(--good)',
-          }}>
-            {v.visible===false
-              ? '🚫 '+tr('លាក់​ពី Tab Vehicle — ចុច​ដើម្បី​បង្ហាញ','Hidden from Vehicle — tap to show')
-              : '👁 '+tr('បង្ហាញ​ក្នុង Tab Vehicle — ចុច​ដើម្បី​លាក់','Shown in Vehicle — tap to hide')}
-          </div>
-        )}
         <div style={{marginTop:12}}>
           <div style={{display:'flex',justifyContent:'space-between',marginBottom:4,fontSize:10,color:'var(--ink-3)'}}>
             <span>⛽ ប្រេង · Fuel</span>

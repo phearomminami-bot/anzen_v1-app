@@ -865,8 +865,6 @@ window.__trRegistry = {
   "Recent inspections (all dates)": "ប្រវត្តិពិនិត្យថ្មីៗ (គ្រប់ថ្ងៃ)",
   "Click to open this date": "ចុចដើម្បីបើកថ្ងៃនេះ",
   "Inspect": "ពិនិត្យ",
-  "Hidden from Vehicle — tap to show": "លាក់​ពី Tab Vehicle — ចុច​ដើម្បី​បង្ហាញ",
-  "Shown in Vehicle — tap to hide": "បង្ហាញ​ក្នុង Tab Vehicle — ចុច​ដើម្បី​លាក់",
   "View fullscreen": "មើលពេញអេក្រង់",
   "No photo": "គ្មានរូប",
   "Add photo": "បន្ថែមរូប",
@@ -1994,8 +1992,6 @@ window.__trGroups = {
     "Recent inspections (all dates)": "ប្រវត្តិពិនិត្យថ្មីៗ (គ្រប់ថ្ងៃ)",
     "Click to open this date": "ចុចដើម្បីបើកថ្ងៃនេះ",
     "Inspect": "ពិនិត្យ",
-    "Hidden from Vehicle — tap to show": "លាក់​ពី Tab Vehicle — ចុច​ដើម្បី​បង្ហាញ",
-    "Shown in Vehicle — tap to hide": "បង្ហាញ​ក្នុង Tab Vehicle — ចុច​ដើម្បី​លាក់",
     "View fullscreen": "មើលពេញអេក្រង់",
     "No photo": "គ្មានរូប",
     "Add photo": "បន្ថែមរូប",
@@ -34656,24 +34652,7 @@ var FvCard = ({
       color: 'var(--ink-3)',
       fontFamily: '"JetBrains Mono",monospace'
     }
-  }, "km"))), manage && React.createElement("div", {
-    onClick: e => {
-      e.stopPropagation();
-      onToggleVisible && onToggleVisible(v);
-    },
-    style: {
-      marginTop: 10,
-      padding: '6px 10px',
-      borderRadius: 8,
-      fontSize: 11,
-      fontWeight: 600,
-      cursor: 'pointer',
-      textAlign: 'center',
-      border: '1px solid ' + (v.visible === false ? 'var(--border)' : 'var(--good)'),
-      background: v.visible === false ? 'var(--surface-muted)' : 'var(--good)18',
-      color: v.visible === false ? 'var(--ink-3)' : 'var(--good)'
-    }
-  }, v.visible === false ? '🚫 ' + tr('លាក់​ពី Tab Vehicle — ចុច​ដើម្បី​បង្ហាញ', 'Hidden from Vehicle — tap to show') : '👁 ' + tr('បង្ហាញ​ក្នុង Tab Vehicle — ចុច​ដើម្បី​លាក់', 'Shown in Vehicle — tap to hide')), React.createElement("div", {
+  }, "km"))), React.createElement("div", {
     style: {
       marginTop: 12
     }
