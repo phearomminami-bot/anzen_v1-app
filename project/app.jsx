@@ -779,10 +779,13 @@ const LoginScreen = ({ onLogin, onStudentLogin, onAuthLogin }) => {
 
   const handleInstructorLogin = () => {
     const id = iid.trim().toUpperCase();
+    const raw = iid.trim();
     if (!id || !ipw) { setErr(tr('សូម​បំពេញ ID និង Password','Please enter ID and password')); return; }
-    const inst = (typeof INSTRUCTORS !== 'undefined' ? INSTRUCTORS : []).find(i => i.id === id && i.password === ipw);
+    // Match the record id (uppercase) OR a custom username (case-insensitive, may be long).
+    const matchLogin = (rec) => !!rec && (rec.id === id || (rec.username && String(rec.username).toLowerCase() === raw.toLowerCase()));
+    const inst = (typeof INSTRUCTORS !== 'undefined' ? INSTRUCTORS : []).find(i => matchLogin(i) && i.password === ipw);
     const sfByInst = inst ? (window.__staffData || []).find(s => s.instId === inst.id) : null;
-    const sfById   = !inst ? (window.__staffData || []).find(s => s.id === id && s.password === ipw) : null;
+    const sfById   = !inst ? (window.__staffData || []).find(s => matchLogin(s) && s.password === ipw) : null;
     const sf = sfByInst || sfById;
     const instFinal = inst || (sf?.instId ? (typeof INSTRUCTORS!=='undefined'?INSTRUCTORS:[]).find(i=>i.id===sf.instId) : null);
     if (!inst && !sf) { setErr(tr('ID ឬ Password មិន​ត្រឹម​ត្រូវ','Incorrect ID or password')); return; }

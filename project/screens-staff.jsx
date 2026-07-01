@@ -424,8 +424,9 @@ const SfStatusDot = ({ status }) => {
 const SfDetailRow = ({ s, onEdit, onSavePhoto, onOffboard, onRestore }) => {
   const { toast, navigate, tr } = useAppActions();
   const [showPw, setShowPw] = React.useState(false);
-  const [settingPw, setSettingPw] = React.useState(false);
+  const [settingPw, setSettingPw] = React.useState(false);   // editing credentials (ID + password)
   const [newPw, setNewPw] = React.useState('');
+  const [newId, setNewId] = React.useState('');
   const [, forceLocal] = React.useReducer(n => n + 1, 0);
   const docs  = s.docs  || {};
   const docCount = Object.values(docs).filter(v=>v).length;
@@ -434,23 +435,28 @@ const SfDetailRow = ({ s, onEdit, onSavePhoto, onOffboard, onRestore }) => {
   const todayLessons = inst ? LESSONS.filter(l=>l.instId===inst.id&&l.date===todayStr()&&l.status!=='cancelled') : [];
   const weekLessons  = inst ? LESSONS.filter(l=>l.instId===inst.id&&l.status!=='cancelled') : [];
   const myStudents   = inst ? STUDENTS.filter(st => st.inst===inst.en || st.inst===inst.name) : [];
-  const loginId = inst?.id || s.id;
+  // Login ID: a custom username (can be long) overrides the record id.
+  const loginId = s.username || inst?.username || inst?.id || s.id;
   const displayPw = s.password || inst?.password;
 
-  const saveNewPw = () => {
-    if (!newPw.trim()) return;
-    s.password = newPw.trim();
-    if (inst) inst.password = newPw.trim();
+  const openCreds = () => { setNewId(loginId); setNewPw(''); setSettingPw(true); };
+  // Save a custom login username and/or a new password (username can be a long name).
+  const saveCreds = () => {
+    const uid = newId.trim();
+    if (uid) { s.username = uid; if (inst) inst.username = uid; }
+    if (newPw.trim()) { s.password = newPw.trim(); if (inst) inst.password = newPw.trim(); }
     if (window.saveAllData) window.saveAllData();
+    if (window.__notifyStaffChanged) window.__notifyStaffChanged();
     setSettingPw(false); setNewPw(''); forceLocal();
-    toast(tr('បានរក្សាទុក Password', 'Password saved'), 'good');
+    toast(tr('បាន​រក្សា​ទុក​គណនី ✓', 'Login saved ✓'), 'good');
   };
 
   return (
     <Card pad={0}>
-      <div style={{padding:'14px 18px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
+      <div style={{padding:'14px 18px',borderBottom:'1px solid var(--border)'}}>
+        <div style={{display:'flex',alignItems:'flex-start',gap:14}}>
         <UploadAvatar id={s.id} photo={s.photo} size={64} onUpload={onSavePhoto}/>
-        <div style={{flex:'1 1 200px',minWidth:0}}>
+        <div style={{flex:1,minWidth:0}}>
           <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
             <div style={{fontSize:20,fontWeight:600,fontFamily:'var(--font-display)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'100%'}}>{s.name}</div>
             {s.offboarded
@@ -460,7 +466,14 @@ const SfDetailRow = ({ s, onEdit, onSavePhoto, onOffboard, onRestore }) => {
           </div>
           <div style={{fontSize:12,color:'var(--ink-3)',marginTop:2}}>{s.en} · {s.id} · {s.role} · {s.dept}</div>
         </div>
-        <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',flex:'1 1 auto',minWidth:0,justifyContent:'flex-end'}}>
+        {!s.offboarded && (
+          <div style={{textAlign:'right',flexShrink:0}}>
+            <div style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-display)',lineHeight:1,color:'var(--ink)'}}>${s.salary || 0}<span style={{fontSize:11,fontWeight:400,color:'var(--ink-3)'}}> /{s.salaryType==='hourly'?tr('ម៉ោង','hr'):tr('ខែ','mo')}</span></div>
+            <div style={{fontSize:9.5,color:'var(--ink-3)',textTransform:'uppercase',letterSpacing:'.06em',fontFamily:'"JetBrains Mono",monospace',marginTop:3}}>{tr('ប្រាក់​ខែ','Salary')}</div>
+          </div>
+        )}
+        </div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',marginTop:12}}>
         {s.phone && s.phone !== '—' && (
           <Btn kind="ghost" size="sm" icon={<Icon name="phone" size={13}/>}
             onClick={()=>toast(s.phone,'neutral')}>{s.phone}</Btn>
@@ -535,13 +548,6 @@ const SfDetailRow = ({ s, onEdit, onSavePhoto, onOffboard, onRestore }) => {
           </div>
         </div>
         <div>
-          <div style={{font:'500 10px/1 "JetBrains Mono", monospace',letterSpacing:'.08em',textTransform:'uppercase',color:'var(--ink-3)',marginBottom:10}}>{tr('ប្រាក់​​បំណាច់','COMPENSATION')}</div>
-          <div style={{fontSize:24,fontWeight:600,fontFamily:'var(--font-display)'}}>${s.salary || 0} <span style={{fontSize:12,fontWeight:400,color:'var(--ink-3)'}}>/ខែ</span></div>
-          <div style={{fontSize:11,color:'var(--ink-3)',marginTop:8}}>
-            {s.salaryType === 'hourly' ? tr('ប្រចាំម៉ោង','Hourly rate') : tr('ប្រចាំខែ','Monthly salary')}
-          </div>
-        </div>
-        <div>
           <div style={{font:'500 10px/1 "JetBrains Mono", monospace',letterSpacing:'.08em',textTransform:'uppercase',color:'var(--ink-3)',marginBottom:10}}>{tr('ច្បាប់ឈប់','LEAVE BALANCE')}</div>
           {(() => { const pol = window.__staffPolicy?.annual ?? 20; const lv = s.leave ?? pol; return (<>
           <div style={{display:'flex',alignItems:'baseline',gap:8}}>
@@ -587,52 +593,45 @@ const SfDetailRow = ({ s, onEdit, onSavePhoto, onOffboard, onRestore }) => {
         <div style={{fontSize:10,fontWeight:600,color:'var(--ink-3)',letterSpacing:'.07em',textTransform:'uppercase',marginBottom:10,fontFamily:'"JetBrains Mono",monospace'}}>
           {tr('គណនីប្រើប្រាស់','ACCOUNT / LOGIN')}
         </div>
-        {displayPw ? (
+        {!settingPw ? (
           <div style={{display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
-            <div>
+            <div style={{minWidth:0}}>
               <div style={{fontSize:10,color:'var(--ink-3)',marginBottom:3}}>{tr('ID (Username)','ID (Username)')}</div>
-              <div style={{fontFamily:'"JetBrains Mono",monospace',fontSize:14,fontWeight:700,letterSpacing:'.06em',color:'var(--accent)'}}>{loginId}</div>
+              <div style={{fontFamily:'"JetBrains Mono",monospace',fontSize:14,fontWeight:700,letterSpacing:'.03em',color:'var(--accent)',wordBreak:'break-all'}}>{loginId}</div>
             </div>
             <div>
               <div style={{fontSize:10,color:'var(--ink-3)',marginBottom:3}}>{tr('ពាក្យ​សម្ងាត់','Password')}</div>
               <div style={{display:'flex',alignItems:'center',gap:8}}>
                 <div style={{fontFamily:'"JetBrains Mono",monospace',fontSize:14,fontWeight:700,letterSpacing:'.1em',color:'var(--ink)'}}>
-                  {showPw ? displayPw : '••••••'}
+                  {displayPw ? (showPw ? displayPw : '••••••') : '—'}
                 </div>
-                <button onClick={()=>setShowPw(v=>!v)} style={{
+                {displayPw && <button onClick={()=>setShowPw(v=>!v)} style={{
                   padding:'2px 8px',border:'1px solid var(--border)',borderRadius:6,
                   background:'var(--surface-muted)',cursor:'pointer',fontSize:11,color:'var(--ink-2)',
-                }}>{showPw ? tr('លាក់','Hide') : tr('បង្ហាញ','Show')}</button>
-                <button onClick={()=>setSettingPw(true)} style={{
-                  padding:'2px 8px',border:'1px solid var(--border)',borderRadius:6,
-                  background:'var(--surface-muted)',cursor:'pointer',fontSize:11,color:'var(--ink-2)',
-                }}>{tr('ផ្លាស់ប្ដូរ','Change')}</button>
+                }}>{showPw ? tr('លាក់','Hide') : tr('បង្ហាញ','Show')}</button>}
               </div>
             </div>
+            <button onClick={openCreds} style={{
+              marginLeft:'auto',padding:'6px 14px',border:'1px solid var(--accent)',borderRadius:8,
+              background:'var(--accent-soft)',color:'var(--accent)',cursor:'pointer',fontSize:12,fontWeight:600,flexShrink:0,
+            }}>{tr('ផ្លាស់​ប្ដូរ ID / ពាក្យ​សម្ងាត់','Change ID / Password')}</button>
           </div>
         ) : (
-          <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <div style={{fontSize:12,color:'var(--ink-3)'}}>{tr('មិន​ទាន់​មាន​គណនី','No login account set')}</div>
-            <button onClick={()=>setSettingPw(true)} style={{
-              padding:'5px 12px',border:'1px solid var(--accent)',borderRadius:7,
-              background:'var(--accent-soft)',color:'var(--accent)',cursor:'pointer',fontSize:12,fontWeight:600,
-            }}>{tr('កំណត់​ Password','Set Password')}</button>
-          </div>
-        )}
-        {settingPw && (
-          <div style={{display:'flex',gap:8,alignItems:'center',marginTop:10}}>
-            <input value={newPw} onChange={e=>setNewPw(e.target.value)} placeholder={tr('Password ថ្មី','New password')}
-              onKeyDown={e=>e.key==='Enter'&&saveNewPw()}
-              style={{flex:1,height:36,padding:'0 12px',border:'1.5px solid var(--accent)',borderRadius:8,
-                fontSize:13,background:'var(--surface)',color:'var(--ink)',outline:'none',fontFamily:'"JetBrains Mono",monospace'}}/>
-            <button onClick={saveNewPw} style={{
-              padding:'6px 14px',border:'none',borderRadius:8,background:'var(--accent)',
-              color:'#fff',cursor:'pointer',fontSize:12,fontWeight:600,
-            }}>{tr('រក្សា​ទុក','Save')}</button>
-            <button onClick={()=>{setSettingPw(false);setNewPw('');}} style={{
-              padding:'6px 10px',border:'1px solid var(--border)',borderRadius:8,
-              background:'var(--surface)',cursor:'pointer',fontSize:12,
-            }}>{tr('បោះ​បង់','Cancel')}</button>
+          <div style={{display:'flex',flexDirection:'column',gap:10}}>
+            <div>
+              <div style={{fontSize:10,color:'var(--ink-3)',marginBottom:4}}>{tr('ID (Username) — អាច​វែង','ID (Username) — can be long')}</div>
+              <input value={newId} onChange={e=>setNewId(e.target.value)} placeholder={tr('ឧ. chhorn.sovannara','e.g. chhorn.sovannara')}
+                style={{width:'100%',height:38,padding:'0 12px',boxSizing:'border-box',border:'1.5px solid var(--accent)',borderRadius:8,fontSize:13,background:'var(--surface)',color:'var(--ink)',outline:'none',fontFamily:'"JetBrains Mono",monospace'}}/>
+            </div>
+            <div>
+              <div style={{fontSize:10,color:'var(--ink-3)',marginBottom:4}}>{tr('ពាក្យ​សម្ងាត់​ថ្មី','New password')} <span style={{color:'var(--ink-3)',fontWeight:400}}>{tr('(ទុក​ទទេ​បើ​មិន​ប្ដូរ)','(blank = keep)')}</span></div>
+              <input value={newPw} onChange={e=>setNewPw(e.target.value)} placeholder={tr('ពាក្យ​សម្ងាត់​ថ្មី','New password')} onKeyDown={e=>e.key==='Enter'&&saveCreds()}
+                style={{width:'100%',height:38,padding:'0 12px',boxSizing:'border-box',border:'1.5px solid var(--border-strong)',borderRadius:8,fontSize:13,background:'var(--surface)',color:'var(--ink)',outline:'none',fontFamily:'"JetBrains Mono",monospace'}}/>
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={()=>{setSettingPw(false);setNewPw('');}} style={{flex:1,padding:'9px',border:'1px solid var(--border-strong)',borderRadius:8,background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:12,fontWeight:600}}>{tr('បោះ​បង់','Cancel')}</button>
+              <button onClick={saveCreds} style={{flex:2,padding:'9px',border:'none',borderRadius:8,background:'var(--accent)',color:'#fff',cursor:'pointer',fontSize:12,fontWeight:700}}>{tr('រក្សា​ទុក','Save')}</button>
+            </div>
           </div>
         )}
       </div>
