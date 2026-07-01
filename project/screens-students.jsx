@@ -1029,33 +1029,24 @@ const StudentsScreenV2 = () => {
               display:'flex',alignItems:'center',justifyContent:'center'}}>
             <span style={{display:'flex',transform:'scaleX(-1)'}}><Icon name="arrow" size={22} stroke={2.4}/></span>
           </button>
-          {/* Profile title */}
-          <div style={{fontSize:15,fontWeight:700,fontFamily:'var(--font-km)',
-            overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginBottom:14}}>
-            {lang==='km' ? s.name : (s.en || s.name)}
+          {/* Profile title + graduation checkbox (icon only, turns green when checked) */}
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:14}}>
+            <button onClick={()=>toggleGraduate(s)}
+              title={grad ? tr('បាន​បញ្ចប់​ការសិក្សា — ចុច​ដើម្បី​យក​មក​វិញ','Graduated — tap to restore')
+                          : tr('សម្គាល់​ថា​បាន​បញ្ចប់​ការសិក្សា','Mark as graduated')}
+              aria-label={tr('សម្គាល់​ថា​បាន​បញ្ចប់​ការសិក្សា','Mark as graduated')}
+              style={{width:22,height:22,borderRadius:5,flexShrink:0,padding:0,cursor:'pointer',
+                display:'flex',alignItems:'center',justifyContent:'center',
+                border:'1.5px solid '+(grad?'var(--good)':'var(--border-strong)'),
+                background:grad?'var(--good)':'var(--surface)',
+                color:grad?'#fff':'transparent'}}>
+              <Icon name="check" size={14} stroke={2.8}/>
+            </button>
+            <div style={{fontSize:15,fontWeight:700,fontFamily:'var(--font-km)',
+              overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+              {lang==='km' ? s.name : (s.en || s.name)}
+            </div>
           </div>
-
-          {/* Graduation toggle — compact green checkbox chip */}
-          <button onClick={()=>toggleGraduate(s)}
-            title={grad ? tr('បាន​បញ្ចប់​ការសិក្សា — ចុច​ដើម្បី​យក​មក​វិញ','Graduated — tap to restore')
-                        : tr('សម្គាល់​ថា​បាន​បញ្ចប់​ការសិក្សា','Mark as graduated')}
-            style={{
-              display:'inline-flex',alignItems:'center',gap:8,alignSelf:'flex-start',marginBottom:12,
-              padding:'7px 12px',borderRadius:8,cursor:'pointer',fontSize:12.5,fontWeight:600,fontFamily:'inherit',
-              border:'1.5px solid var(--good)',
-              background:grad?'var(--good)':'color-mix(in srgb,var(--good) 12%,transparent)',
-              color:grad?'#fff':'var(--good)',
-          }}>
-            {/* green checkbox square */}
-            <span style={{width:18,height:18,borderRadius:4,flexShrink:0,
-              display:'flex',alignItems:'center',justifyContent:'center',
-              border:'1.5px solid '+(grad?'#fff':'var(--good)'),
-              background:grad?'transparent':'#fff', color:grad?'#fff':'var(--good)'}}>
-              <Icon name="check" size={12} stroke={2.8}/>
-            </span>
-            {grad ? tr('បាន​បញ្ចប់​ការសិក្សា','Graduated')
-                  : tr('សម្គាល់​ថា​បាន​បញ្ចប់​ការសិក្សា','Mark as graduated')}
-          </button>
 
           {/* Section 1: Photo & bio — edit toggle lives in the header */}
           <CvSection label={tr('រូបថត និង ប្រវត្តិរូបសង្ខេប','Photo & Bio')} isOpen={openSections.bio} onToggle={()=>toggleSection('bio')} action={editAction('bio')}>
