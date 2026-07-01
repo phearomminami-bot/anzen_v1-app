@@ -329,8 +329,9 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
   const hourMap = buildHourNumbering(lessons);
 
   // Split each lesson into its hours; order oldest-first (earlier on top).
+  // Cancelled ("change-day") lessons are left out of the printed record.
   const items = [
-    ...lessons.flatMap(l => lessonHourSlices(l).map(sl => ({ t:'lesson', k:(l.date||'')+' '+String(sl.h).padStart(2,'0'), item:l, sl }))),
+    ...lessons.filter(l => l.status !== 'cancelled').flatMap(l => lessonHourSlices(l).map(sl => ({ t:'lesson', k:(l.date||'')+' '+String(sl.h).padStart(2,'0'), item:l, sl }))),
     ...exams.map(e  => ({ t:'exam',   k:(e.date||'')+' '+String(e.time||'').slice(0,5),    item:e })),
   ].sort((a,b)=> a.k<b.k ? -1 : a.k>b.k ? 1 : 0);
 
