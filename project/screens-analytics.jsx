@@ -348,9 +348,23 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
 
   // ── KPI values ──────────────────────────────────────────────────────────────
   const last = a => a[a.length - 1] || 0, prev = a => a[a.length - 2] || 0;
-  const passedCnt = S.filter(s => s.exam_result === 'pass' || s.status === 'Cleared').length;
-  const failedCnt = fEX.reduce((a, e) => a + Object.values(e.results || {}).filter(r => r.result === 'fail').length, 0);
-  const passRate = A_pct(passedCnt, passedCnt + failedCnt);
+  // ── True exam outcomes ──────────────────────────────────────────────────────
+  // Tally every recorded pass/fail from the exam records — the same data the
+  // student lesson-record writes to scheduleExams[].results. Students with only
+  // a profile-level result and no scheduled-exam entry are counted once as a
+  // fallback so nothing recorded is ever missed.
+  const stuPF = {};
+  const addPF = (sid, res) => { const o = stuPF[sid] || (stuPF[sid] = { p: 0, f: 0 }); if (res === 'pass') o.p++; else if (res === 'fail') o.f++; };
+  fEX.forEach(e => Object.entries(e.results || {}).forEach(([sid, r]) => { if (sIds.has(sid) && (r.result === 'pass' || r.result === 'fail')) addPF(sid, r.result); }));
+  S.forEach(s => { if (!stuPF[s.id]) { if (s.exam_result === 'pass' || s.status === 'Cleared') addPF(s.id, 'pass'); else if (s.exam_result === 'fail') addPF(s.id, 'fail'); } });
+  const pfOf = ids => { let p = 0, f = 0; ids.forEach(id => { const o = stuPF[id]; if (o) { p += o.p; f += o.f; } }); return { p, f }; };
+  const passAttempts = Object.values(stuPF).reduce((a, o) => a + o.p, 0);
+  const failAttempts = Object.values(stuPF).reduce((a, o) => a + o.f, 0);
+  const examinedStuCnt = Object.keys(stuPF).length;              // unique students who sat an exam
+  const passedStuCnt = Object.values(stuPF).filter(o => o.p > 0).length;
+  const passedCnt = passAttempts;   // total recorded "pass" results
+  const failedCnt = failAttempts;   // total recorded "fail" results
+  const passRate = A_pct(passAttempts, passAttempts + failAttempts);
   const activeStu = S.filter(s => !isGraduated(s) && s.status !== 'Cleared').length;
   const doneHoursTotal = doneL.reduce((a, l) => a + (l.len || 1), 0);
   const ratedAll = doneL.filter(l => l.rating > 0);
@@ -364,8 +378,8 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
     { icon: 'users', label: tr('សិស្ស​សរុប', 'Total Students'), value: S.length, prev: cumEnroll[cumEnroll.length - 2] || S.length, spark: cumEnroll, color: '#2A5DB0' },
     { icon: 'plus', label: tr('សិស្ស​ថ្មី​ខែ​នេះ', 'New This Month'), value: last(enrollSeries), prev: prev(enrollSeries), spark: enrollSeries, color: '#12A302' },
     { icon: 'star', label: tr('សិស្ស​សកម្ម', 'Active Students'), value: activeStu, prev: activeStu, spark: cumEnroll, color: '#0E9AA7' },
-    { icon: 'check', label: tr('ប្រឡង​ជាប់', 'Students Passed'), value: passedCnt, prev: Math.max(0, passedCnt - last(examPassSeries)), spark: examPassSeries, color: '#12A302' },
-    { icon: 'flag', label: tr('ប្រឡង​ធ្លាក់', 'Students Failed'), value: failedCnt, prev: Math.max(0, failedCnt - last(examFailSeries)), spark: examFailSeries, color: '#B0413E' },
+    { icon: 'check', label: tr('ប្រឡង​ជាប់', 'Exams Passed'), value: passedCnt, prev: Math.max(0, passedCnt - last(examPassSeries)), spark: examPassSeries, color: '#12A302' },
+    { icon: 'flag', label: tr('ប្រឡង​ធ្លាក់', 'Exams Failed'), value: failedCnt, prev: Math.max(0, failedCnt - last(examFailSeries)), spark: examFailSeries, color: '#B0413E' },
     { icon: 'chart', label: tr('អត្រា​ជាប់', 'Pass Rate'), value: passRate, prev: passRate, fmt: v => v + '%', spark: examPassSeries.map((p, i) => A_pct(p, p + examFailSeries[i])), color: '#7A3B9E' },
     { icon: 'users', label: tr('គ្រូ​សកម្ម', 'Active Instructors'), value: I.length, prev: I.length, spark: I.map((_, i) => i + 1), color: '#CA8A04' },
     { icon: 'car', label: tr('យានយន្ត​ទំនេរ', 'Available Vehicles'), value: availVeh, prev: availVeh, spark: [availVeh, availVeh, availVeh], color: '#3B7A57' },
@@ -395,7 +409,7 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
 
   // Training
   const totalLessons = fL.length, cancelledL = fL.filter(l => l.status === 'cancelled').length;
-  const passedStudents = S.filter(s => s.exam_result === 'pass' || s.status === 'Cleared');
+  const passedStudents = S.filter(s => (stuPF[s.id] || {}).p > 0);
   const avgLessonsBeforePass = passedStudents.length ? A_num(passedStudents.reduce((a, s) => a + L.filter(l => l.studentId === s.id && l.status === 'done').length, 0) / passedStudents.length) : 0;
   const avgPractice = S.length ? A_num(doneHoursTotal / S.length) : 0;
   const hoursPerStudent = S.map(s => ({ label: (lang === 'km' ? s.name : (s.en || s.name) || s.id).split(' ')[0], value: L.filter(l => l.studentId === s.id && l.status === 'done').reduce((a, l) => a + (l.len || 1), 0), target: s.target || 0 }))
@@ -410,29 +424,26 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
   }).filter(x => x.n > 0).sort((a, b) => b.value - a.value);
   const passByBranch = byBranch().map((b, i) => {
     const bs = S.filter(s => branchName(s.branch) === b.label);
-    const p = bs.filter(s => s.exam_result === 'pass' || s.status === 'Cleared').length;
-    const f = bs.filter(s => s.exam_result === 'fail').length;
+    const { p, f } = pfOf(bs.map(s => s.id));
     return { label: b.label, value: A_pct(p, p + f || 1), color: A_PAL[i % A_PAL.length] };
   });
   // attempts: students with >1 exam record = resit
   const examByStu = {}; fEX.forEach(e => (e.studentIds || []).forEach(id => { (examByStu[id] = examByStu[id] || []).push(e); }));
   const firstPass = Object.values(examByStu).filter(list => { const s = [...list].sort((a, b) => (a.date || '').localeCompare(b.date || '')); const r = s[0].results || {}; return Object.values(r).some(x => x.result === 'pass'); }).length;
   const firstAttemptRate = A_pct(firstPass, Object.keys(examByStu).length || 1);
-  const avgScore = (() => { const sc = []; fEX.forEach(e => Object.values(e.results || {}).forEach(r => { if (r.score != null) sc.push(+r.score); })); return sc.length ? A_num(sc.reduce((a, b) => a + b, 0) / sc.length) : passRate; })();
+  // Average number of exam attempts each examined student needed (real records).
+  const avgAttempts = examinedStuCnt ? A_num((passAttempts + failAttempts) / examinedStuCnt) : 0;
 
-  // Failure analysis
-  const FAIL_KEYS = [['observation', tr('សង្កេត', 'Observation')], ['parking', tr('ចត', 'Parking')], ['reverse', tr('ថយ​ចត', 'Reverse Parking')], ['s-curve', tr('ផ្លូវ​កោង S', 'S-Curve')], ['hill', tr('ចាប់​ផ្ដើម​ជម្រាល', 'Hill Start')], ['speed', tr('ល្បឿន', 'Speed Control')], ['mirror', tr('កញ្ចក់', 'Mirror Check')], ['blind', tr('ចំណុច​ងងឹត', 'Blind Spot')], ['lane', tr('គោលការណ៍​ផ្លូវ', 'Lane Discipline')], ['signal', tr('សញ្ញា', 'Signal Usage')], ['emergency', tr('ហ្វ្រាំង​បន្ទាន់', 'Emergency Stop')]];
-  const failTexts = []; fEX.forEach(e => Object.values(e.results || {}).forEach(r => { if (r.result === 'fail') failTexts.push(((r.failReason || '') + ' ' + (r.failLocation || '')).toLowerCase()); }));
-  let failReasons = FAIL_KEYS.map(([k, l], i) => ({ label: l, value: failTexts.filter(t => t.includes(k)).length, color: A_PAL[i % A_PAL.length] }));
-  const otherFail = Math.max(0, failedCnt - failReasons.reduce((a, d) => a + d.value, 0));
-  // If nothing matched keywords, distribute deterministically so the chart is meaningful.
-  if (failReasons.every(d => d.value === 0) && failedCnt > 0) {
-    const seed = [0.22, 0.18, 0.14, 0.1, 0.09, 0.08, 0.06, 0.05, 0.04, 0.02, 0.02];
-    failReasons = FAIL_KEYS.map(([k, l], i) => ({ label: l, value: Math.round(failedCnt * seed[i]), color: A_PAL[i % A_PAL.length] }));
-  } else if (otherFail > 0) {
-    failReasons.push({ label: tr('ផ្សេងៗ', 'Other'), value: otherFail, color: '#4A5568' });
-  }
-  failReasons = failReasons.filter(d => d.value).sort((a, b) => b.value - a.value);
+  // Failure analysis — grouped straight from the reason/location text actually
+  // entered on each recorded fail (no fabricated distribution).
+  const frMap = {};
+  fEX.forEach(e => Object.values(e.results || {}).forEach(r => {
+    if (r.result !== 'fail') return;
+    const t = (r.failReason || '').trim() || (r.failLocation || '').trim() || tr('មិន​បាន​បញ្ជាក់', 'Unspecified');
+    frMap[t] = (frMap[t] || 0) + 1;
+  }));
+  let failReasons = Object.entries(frMap).map(([label, value], i) => ({ label, value, color: A_PAL[i % A_PAL.length] }))
+    .sort((a, b) => b.value - a.value).slice(0, 12);
   // Heatmap: fail count by month × weekday
   const WD = lang === 'km' ? ['ច', 'អ', 'ព', 'ព្រ', 'សុ', 'ស', 'អា'] : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const heatMonths = MO.slice(-6);
@@ -475,7 +486,7 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
   const payMethods = ss.payments || {};
   const revByMethod = Object.keys(payMethods).filter(k => payMethods[k]).map((k, i) => ({ label: k.toUpperCase(), value: 0, color: A_PAL[i % A_PAL.length] }));
   S.forEach(s => (s.payment_log || []).forEach(p => { const m = revByMethod.find(x => x.label.toLowerCase() === String(p.method || '').toLowerCase()); if (m) m.value += p.amount || 0; }));
-  const revMethodShown = revByMethod.filter(d => d.value).length ? revByMethod.filter(d => d.value) : revByMethod.map((d, i) => ({ ...d, value: Math.round(collected * [0.4, 0.25, 0.2, 0.1, 0.05][i % 5] || 0) })).filter(d => d.value);
+  const revMethodShown = revByMethod.filter(d => d.value);   // only real recorded payments
 
   // Satisfaction
   const ratingDist = [5, 4, 3, 2, 1].map(n => ({ label: '★'.repeat(n), value: ratedAll.filter(l => l.rating === n).length, color: n >= 4 ? '#12A302' : n === 3 ? '#CA8A04' : '#B0413E' }));
@@ -486,8 +497,7 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
   const branchRank = byBranch().map(b => {
     const bs = S.filter(s => branchName(s.branch) === b.label);
     const rev = Math.round(bs.reduce((a, s) => a + (s.paid || 0) * studentPrice(s), 0));
-    const p = bs.filter(s => s.exam_result === 'pass' || s.status === 'Cleared').length;
-    const f = bs.filter(s => s.exam_result === 'fail').length;
+    const { p, f } = pfOf(bs.map(s => s.id));
     return { branch: b.label, students: bs.length, revenue: rev, pass: A_pct(p, p + f || 1) };
   }).sort((a, b) => b.revenue - a.revenue);
 
@@ -611,10 +621,10 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
         </ChartCard>
         <ChartCard title={tr('អត្រា​ជាប់​តាម​គ្រូ', 'Pass Rate by Instructor')}>{passByInst.length ? <BarsH data={passByInst.map(x => ({ label: x.label, value: x.value, color: '#7A3B9E' }))} fmt={v => v + '%'} max={100} /> : <Empty tr={tr} />}</ChartCard>
         <ChartCard title={tr('អត្រា​ជាប់​តាម​សាខា', 'Pass Rate by Branch')}>{passByBranch.length ? <BarsH data={passByBranch} fmt={v => v + '%'} max={100} /> : <Empty tr={tr} />}</ChartCard>
-        <ChartCard title={tr('ជាប់​លើក​ទី​១ · ពិន្ទុ​មធ្យម', 'First-Attempt · Avg Score')}>
+        <ChartCard title={tr('ជាប់​លើក​ទី​១ · ប្រឡង​មធ្យម', 'First-Attempt · Avg Attempts')}>
           <div style={{ display: 'flex', gap: 16, justifyContent: 'space-around' }}>
             <Gauge value={firstAttemptRate} color="#2A5DB0" label={tr('ជាប់​លើក​ទី​១', 'first attempt')} />
-            <Gauge value={avgScore} color="#CA8A04" unit="" max={100} label={tr('ពិន្ទុ​មធ្យម', 'avg score')} />
+            <Gauge value={avgAttempts} color="#CA8A04" unit="" max={5} label={tr('ប្រឡង/សិស្ស', 'attempts / student')} />
           </div>
         </ChartCard>
       </div>
