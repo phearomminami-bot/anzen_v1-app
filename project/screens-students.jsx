@@ -1035,15 +1035,25 @@ const StudentsScreenV2 = () => {
             {lang==='km' ? s.name : (s.en || s.name)}
           </div>
 
-          {/* Graduation toggle — hides the student from active lists when on */}
-          <button onClick={()=>toggleGraduate(s)} style={{
-            display:'flex',alignItems:'center',justifyContent:'center',gap:8,width:'100%',marginBottom:12,
-            padding:'10px',borderRadius:9,cursor:'pointer',fontSize:13,fontWeight:600,fontFamily:'inherit',
-            border:'1.5px solid '+(grad?'var(--good)':'var(--border-strong)'),
-            background:grad?'var(--good)':'var(--surface)', color:grad?'#fff':'var(--ink-2)',
+          {/* Graduation toggle — compact green checkbox chip */}
+          <button onClick={()=>toggleGraduate(s)}
+            title={grad ? tr('បាន​បញ្ចប់​ការសិក្សា — ចុច​ដើម្បី​យក​មក​វិញ','Graduated — tap to restore')
+                        : tr('សម្គាល់​ថា​បាន​បញ្ចប់​ការសិក្សា','Mark as graduated')}
+            style={{
+              display:'inline-flex',alignItems:'center',gap:8,alignSelf:'flex-start',marginBottom:12,
+              padding:'7px 12px',borderRadius:8,cursor:'pointer',fontSize:12.5,fontWeight:600,fontFamily:'inherit',
+              border:'1.5px solid var(--good)',
+              background:grad?'var(--good)':'color-mix(in srgb,var(--good) 12%,transparent)',
+              color:grad?'#fff':'var(--good)',
           }}>
-            <Icon name={grad?'check':'star'} size={15} stroke={2.2}/>
-            {grad ? tr('បាន​បញ្ចប់​ការសិក្សា — ចុច​ដើម្បី​យក​មក​វិញ','Graduated — tap to restore')
+            {/* green checkbox square */}
+            <span style={{width:18,height:18,borderRadius:4,flexShrink:0,
+              display:'flex',alignItems:'center',justifyContent:'center',
+              border:'1.5px solid '+(grad?'#fff':'var(--good)'),
+              background:grad?'transparent':'#fff', color:grad?'#fff':'var(--good)'}}>
+              <Icon name="check" size={12} stroke={2.8}/>
+            </span>
+            {grad ? tr('បាន​បញ្ចប់​ការសិក្សា','Graduated')
                   : tr('សម្គាល់​ថា​បាន​បញ្ចប់​ការសិក្សា','Mark as graduated')}
           </button>
 
@@ -1107,45 +1117,6 @@ const StudentsScreenV2 = () => {
                 ))}
               </div>
             )}
-            </>)}
-          </CvSection>
-
-          {/* Section 3: Study history */}
-          <CvSection label={tr('ប្រវត្តសិក្សា','Study History')} isOpen={openSections.study} onToggle={()=>toggleSection('study')} action={editAction('study')}>
-            {mobileEdit==='study'
-              ? <StudyEditForm s={s} tr={tr} onSave={(u)=>{ saveStudent(u); setMobileEdit(null); }}/>
-              : (<>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px 14px',marginBottom:12}}>
-              <InfoPair label={tr('ចាប់ផ្ដើម','Start')} val={s.study_start || s.regDate}/>
-              <InfoPair label={tr('បញ្ចប់','Completion')} val={s.study_end}/>
-              <InfoPair label={tr('ម៉ោង','Hours')} val={`${learnedHours}/${s.target||0}h`}/>
-            </div>
-            <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:4,display:'flex',justifyContent:'space-between'}}>
-              <span>{tr('ម៉ោងបានរៀន','Hours completed')}</span>
-              <span style={{fontWeight:600}}>{pct}%</span>
-            </div>
-            <div style={{height:6,background:'var(--surface-muted)',borderRadius:999,overflow:'hidden',marginBottom:12}}>
-              <div style={{width:`${pct}%`,height:'100%',background:'var(--accent)',borderRadius:999}}/>
-            </div>
-            {/* Exam history — first exam + resits, each with result and fail details */}
-            {(() => {
-              const attempts = examAttemptsOf(s);
-              if (attempts.length === 0) return <div style={{fontSize:12,color:'var(--ink-3)'}}>{tr('មិន​ទាន់​មាន​ការ​ប្រឡង','No exams yet')}</div>;
-              return attempts.map((a,i) => (
-                <div key={i} style={{padding:'8px 0',borderTop:i?'1px dashed var(--border)':'1px solid var(--border)'}}>
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
-                    <span style={{fontSize:12,fontWeight:600,color:'var(--ink-2)'}}>{i===0?tr('ប្រឡង​លើក​ដំបូង','First exam'):tr('ប្រឡង​សង លើកទី '+i,'Resit #'+i)}</span>
-                    {a.result && <Badge tone={a.result==='pass'?'good':'danger'}>{a.result==='pass'?tr('ជាប់','Pass'):tr('ធ្លាក់','Fail')}</Badge>}
-                  </div>
-                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'4px 14px'}}>
-                    {a.apply && <InfoPair label={tr('ដាក់​ពាក្យ','Apply')} val={a.apply}/>}
-                    {a.date && <InfoPair label={tr('ថ្ងៃ​ប្រឡង','Exam date')} val={a.date}/>}
-                    {a.result==='fail' && a.failLocation && <InfoPair label={tr('កន្លែង​ធ្លាក់','Failed at')} val={a.failLocation}/>}
-                    {a.result==='fail' && a.failReason && <InfoPair label={tr('មូលហេតុ','Reason')} val={a.failReason}/>}
-                  </div>
-                </div>
-              ));
-            })()}
             </>)}
           </CvSection>
 
