@@ -126,8 +126,26 @@ const UploadPhoto = ({ id, photo, w, h, r = 6, onUpload, maxW = 800, maxH = 500,
   );
 };
 
-const Card = ({ children, style, pad = 16, label, action }) => {
+const Card = ({ children, style, pad = 16, label, action, bar }) => {
   const isKhmer = typeof label === 'string' && /[ក-៿]/.test(label);
+  // `bar` variant: a full-width navy header bar with white text (like the
+  // record-book section bars), for a cleaner, more structured section title.
+  if (bar && label) {
+    return (
+      <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:'var(--radius)', overflow:'hidden', ...style }}>
+        <div style={{
+          display:'flex', alignItems:'center', justifyContent:'space-between', gap:10,
+          background:'var(--accent)', color:'#fff', padding:'10px 14px',
+          fontSize:14, fontWeight:700, fontFamily:'var(--font-km), sans-serif', letterSpacing:'.01em',
+          WebkitPrintColorAdjust:'exact', printColorAdjust:'exact',
+        }}>
+          <span style={{minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{label}</span>
+          {action}
+        </div>
+        <div style={{ padding:pad }}>{children}</div>
+      </div>
+    );
+  }
   return (
   <div style={{
     background:'var(--surface)',

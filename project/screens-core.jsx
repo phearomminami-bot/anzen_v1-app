@@ -267,7 +267,7 @@ const DashboardAdmin = () => {
             return (
               <div style={{display:'flex',flexDirection:'column',gap:8}}>
                 {todayExams.length > 0 && (
-                  <Card label={tr('ប្រឡង / ដាក់ពាក្យ ថ្ងៃ​នេះ','TODAY\'S EXAMS / APPLICATIONS')}>
+                  <Card bar label={tr('ប្រឡង / ដាក់ពាក្យ ថ្ងៃ​នេះ','TODAY\'S EXAMS / APPLICATIONS')}>
                     {todayExams.map((e,i) => {
                       const stu = (e.studentIds||[]).map(id=>{const s=studentById(id);return s?(s.en||s.name):null;}).filter(Boolean);
                       const ins = (e.instIds||[]).map(id=>{const it=instById(id);return it?(it.en||it.name):null;}).filter(Boolean);
@@ -284,7 +284,7 @@ const DashboardAdmin = () => {
                     })}
                   </Card>
                 )}
-                <Card label={tr('មេរៀន​ថ្ងៃ​នេះ','TODAY\'S LESSONS')}>
+                <Card bar label={tr('មេរៀន​ថ្ងៃ​នេះ','TODAY\'S LESSONS')}>
                   {sorted.length === 0 ? (
                     <div style={{padding:'24px 0',textAlign:'center',color:'var(--ink-3)'}}>
                       <div style={{fontSize:13}}>{tr('គ្មាន​មេរៀន​ថ្ងៃ​នេះ','No lessons scheduled today')}</div>
@@ -313,7 +313,7 @@ const DashboardAdmin = () => {
             const half = Math.ceil(sorted.length / 2);
             return (
               <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                <Card label={tr('មេរៀន​ថ្ងៃ​ស្អែក','TOMORROW\'S LESSONS')}>
+                <Card bar label={tr('មេរៀន​ថ្ងៃ​ស្អែក','TOMORROW\'S LESSONS')}>
                   {sorted.length === 0 ? (
                     <div style={{padding:'24px 0',textAlign:'center',color:'var(--ink-3)'}}>
                       <div style={{fontSize:13}}>{tr('គ្មាន​មេរៀន​ថ្ងៃ​ស្អែក','No lessons scheduled tomorrow')}</div>
@@ -336,7 +336,7 @@ const DashboardAdmin = () => {
           })()}
 
           {/* Column 3 — Alerts */}
-          <Card label={tr('ការ​ជូន​ដំណឹង','ALERTS')}>
+          <Card bar label={tr('ការ​ជូន​ដំណឹង','ALERTS')}>
             {alerts.length === 0 ? (
               <div style={{padding:'24px 0',textAlign:'center',color:'var(--ink-3)',fontSize:13}}>
                 {tr('គ្មាន​ការ​ជូន​ដំណឹង','No alerts — everything looks good')}
@@ -442,7 +442,7 @@ const DashboardInstructor = () => {
       </div>
 
       <div style={{display:'grid',gridTemplateColumns:'1.5fr 1fr',gap:12}}>
-        <Card label={tr('កាលវិភាគ​ថ្ងៃ​នេះ','YOUR DAY')}>
+        <Card bar label={tr('កាលវិភាគ​ថ្ងៃ​នេះ','YOUR DAY')}>
           {LESSONS.filter(l => l.date === todayStr() && l.instId === 'I-01' && l.status !== 'cancelled').sort((a,b)=>a.h-b.h).map((l,i) => {
             const s = studentById(l.studentId);
             const v = vehById(l.veh);
@@ -470,7 +470,7 @@ const DashboardInstructor = () => {
           </div>
         </Card>
 
-        <Card label={tr('សិស្ស​​​​​​ត្រូវ​យក​ចិត្ត​ទុក​ដាក់','NEEDS YOUR ATTENTION')}>
+        <Card bar label={tr('សិស្ស​​​​​​ត្រូវ​យក​ចិត្ត​ទុក​ដាក់','NEEDS YOUR ATTENTION')}>
           {STUDENTS.length === 0 && <div style={{fontSize:13,color:'var(--ink-3)',padding:'12px 0'}}>{tr('មិន​ទាន់​មាន​សិស្ស','No students yet')}</div>}
           {STUDENTS.slice(0,3).filter(Boolean).map((s,i)=>(
             <div key={i} style={{display:'flex',gap:10,padding:'12px 0',borderTop:i?'1px solid var(--border)':'none',alignItems:'center'}}>
@@ -555,7 +555,7 @@ const DashboardStudent = ({ studentId }) => {
           )}
         </Card>
 
-        <Card label={tr('វឌ្ឍនភាព​​​នៃ​វគ្គ','COURSE PROGRESS')}>
+        <Card bar label={tr('វឌ្ឍនភាព​​​នៃ​វគ្គ','COURSE PROGRESS')}>
           <div style={{display:'flex',alignItems:'baseline',gap:8}}>
             <div style={{fontSize:42,fontWeight:600,fontFamily:'var(--font-display)',letterSpacing:'-.02em'}}>{hours}</div>
             <div style={{fontSize:14,color:'var(--ink-3)'}}>/ {target} {tr('ម៉ោង','hours')}</div>
@@ -589,7 +589,7 @@ const DashboardStudent = ({ studentId }) => {
       </div>
 
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12}}>
-        <Card label={tr('ការ​ទូទាត់','PAYMENTS')}>
+        <Card bar label={tr('ការ​ទូទាត់','PAYMENTS')}>
           <Stat label="" value={`${Math.round(paidPct*100)}%`} sub={tr('បាន​បង់','paid')}/>
           <div style={{height:8,background:'var(--surface-muted)',borderRadius:999,marginTop:10,overflow:'hidden'}}>
             <div style={{width:`${paidPct*100}%`,height:'100%',background:'var(--good)'}}/>
@@ -600,7 +600,7 @@ const DashboardStudent = ({ studentId }) => {
             </div>
           )}
         </Card>
-        <Card label={tr('ប្រឡង​សាកល្បង','MOCK TESTS')}>
+        <Card bar label={tr('ប្រឡង​សាកល្បង','MOCK TESTS')}>
           <div style={{display:'flex',alignItems:'baseline',gap:8}}>
             <div style={{fontSize:42,fontWeight:600,fontFamily:'var(--font-display)'}}>—</div>
             <div style={{fontSize:14,color:'var(--ink-3)'}}>{tr('/100','/ 100')}</div>
@@ -609,7 +609,7 @@ const DashboardStudent = ({ studentId }) => {
             {tr('មិន​ទាន់​មាន​ការ​ប្រឡង​សាកល្បង','No mock tests taken yet')}
           </div>
         </Card>
-        <Card label={tr('ព័ត៌មាន​គណនី','ACCOUNT INFO')}>
+        <Card bar label={tr('ព័ត៌មាន​គណនី','ACCOUNT INFO')}>
           <div style={{display:'flex',flexDirection:'column',gap:8}}>
             <div><div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',textTransform:'uppercase',marginBottom:2}}>ID</div>
               <div style={{fontFamily:'"JetBrains Mono",monospace',fontWeight:600,fontSize:15}}>{me?.id || '—'}</div></div>

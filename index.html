@@ -3207,9 +3207,48 @@ var Card = ({
   style,
   pad = 16,
   label,
-  action
+  action,
+  bar
 }) => {
   var isKhmer = typeof label === 'string' && /[ក-៿]/.test(label);
+  if (bar && label) {
+    return React.createElement("div", {
+      style: {
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius)',
+        overflow: 'hidden',
+        ...style
+      }
+    }, React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 10,
+        background: 'var(--accent)',
+        color: '#fff',
+        padding: '10px 14px',
+        fontSize: 14,
+        fontWeight: 700,
+        fontFamily: 'var(--font-km), sans-serif',
+        letterSpacing: '.01em',
+        WebkitPrintColorAdjust: 'exact',
+        printColorAdjust: 'exact'
+      }
+    }, React.createElement("span", {
+      style: {
+        minWidth: 0,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap'
+      }
+    }, label), action), React.createElement("div", {
+      style: {
+        padding: pad
+      }
+    }, children));
+  }
   return React.createElement("div", {
     style: {
       background: 'var(--surface)',
@@ -15399,6 +15438,7 @@ var DashboardAdmin = () => {
           gap: 8
         }
       }, todayExams.length > 0 && React.createElement(Card, {
+        bar: true,
         label: tr('ប្រឡង / ដាក់ពាក្យ ថ្ងៃ​នេះ', 'TODAY\'S EXAMS / APPLICATIONS')
       }, todayExams.map((e, i) => {
         var stu = (e.studentIds || []).map(id => {
@@ -15453,6 +15493,7 @@ var DashboardAdmin = () => {
           }
         }, "\uD83D\uDC68\u200D\uD83C\uDFEB ", ins.join(' · '))));
       })), React.createElement(Card, {
+        bar: true,
         label: tr('មេរៀន​ថ្ងៃ​នេះ', 'TODAY\'S LESSONS')
       }, sorted.length === 0 ? React.createElement("div", {
         style: {
@@ -15516,6 +15557,7 @@ var DashboardAdmin = () => {
           gap: 8
         }
       }, React.createElement(Card, {
+        bar: true,
         label: tr('មេរៀន​ថ្ងៃ​ស្អែក', 'TOMORROW\'S LESSONS')
       }, sorted.length === 0 ? React.createElement("div", {
         style: {
@@ -15569,6 +15611,7 @@ var DashboardAdmin = () => {
         studIds: tmrwStudIds
       }));
     })(), React.createElement(Card, {
+      bar: true,
       label: tr('ការ​ជូន​ដំណឹង', 'ALERTS')
     }, alerts.length === 0 ? React.createElement("div", {
       style: {
@@ -15776,6 +15819,7 @@ var DashboardInstructor = () => {
       gap: 12
     }
   }, React.createElement(Card, {
+    bar: true,
     label: tr('កាលវិភាគ​ថ្ងៃ​នេះ', 'YOUR DAY')
   }, LESSONS.filter(l => l.date === todayStr() && l.instId === 'I-01' && l.status !== 'cancelled').sort((a, b) => a.h - b.h).map((l, i) => {
     var s = studentById(l.studentId);
@@ -15836,6 +15880,7 @@ var DashboardInstructor = () => {
     size: "sm",
     onClick: () => navigate('schedule')
   }, tr('មើល​សប្ដាហ៍​ទាំង​មូល', 'View full week')))), React.createElement(Card, {
+    bar: true,
     label: tr('សិស្ស​​​​​​ត្រូវ​យក​ចិត្ត​ទុក​ដាក់', 'NEEDS YOUR ATTENTION')
   }, STUDENTS.length === 0 && React.createElement("div", {
     style: {
@@ -16033,6 +16078,7 @@ var DashboardStudent = ({
       color: '#fff'
     }
   }, tr('កក់​ឥឡូវ', 'Book now'))))), React.createElement(Card, {
+    bar: true,
     label: tr('វឌ្ឍនភាព​​​នៃ​វគ្គ', 'COURSE PROGRESS')
   }, React.createElement("div", {
     style: {
@@ -16129,6 +16175,7 @@ var DashboardStudent = ({
       gap: 12
     }
   }, React.createElement(Card, {
+    bar: true,
     label: tr('ការ​ទូទាត់', 'PAYMENTS')
   }, React.createElement(Stat, {
     label: "",
@@ -16155,6 +16202,7 @@ var DashboardStudent = ({
       color: 'var(--ink-2)'
     }
   }, tr('ទំនាក់​ទំនង​ការិយាល័យ​ដើម្បី​ជ្រាប​​ព័ត៌មាន', 'Contact office for payment details'))), React.createElement(Card, {
+    bar: true,
     label: tr('ប្រឡង​សាកល្បង', 'MOCK TESTS')
   }, React.createElement("div", {
     style: {
@@ -16180,6 +16228,7 @@ var DashboardStudent = ({
       color: 'var(--ink-3)'
     }
   }, tr('មិន​ទាន់​មាន​ការ​ប្រឡង​សាកល្បង', 'No mock tests taken yet'))), React.createElement(Card, {
+    bar: true,
     label: tr('ព័ត៌មាន​គណនី', 'ACCOUNT INFO')
   }, React.createElement("div", {
     style: {
