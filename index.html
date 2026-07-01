@@ -40758,41 +40758,48 @@ var StudentsScreenV2 = () => {
           display: 'flex',
           flexDirection: 'column'
         }
-      }, React.createElement("div", {
-        style: {
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          marginBottom: 14
-        }
       }, React.createElement("button", {
         onClick: () => setMobileProfileId(null),
+        title: tr('ត្រឡប់', 'Back'),
+        "aria-label": tr('ត្រឡប់', 'Back'),
         style: {
+          position: 'fixed',
+          right: 16,
+          bottom: 'calc(18px + env(safe-area-inset-bottom,0px))',
+          zIndex: 120,
+          width: 52,
+          height: 52,
+          borderRadius: '50%',
+          cursor: 'pointer',
+          border: 'none',
+          padding: 0,
+          background: 'var(--accent)',
+          color: '#fff',
+          boxShadow: '0 4px 16px rgba(0,0,0,.3)',
           display: 'flex',
           alignItems: 'center',
-          gap: 5,
-          padding: '7px 12px',
-          borderRadius: 8,
-          border: '1px solid var(--border)',
-          background: 'var(--surface)',
-          cursor: 'pointer',
-          fontSize: 13,
-          fontWeight: 500,
-          color: 'var(--ink-2)',
-          flexShrink: 0
+          justifyContent: 'center'
         }
-      }, "\u2190 ", tr('ត្រឡប់', 'Back')), React.createElement("div", {
+      }, React.createElement("span", {
         style: {
-          flex: 1,
-          minWidth: 0,
-          fontSize: 14,
+          display: 'flex',
+          transform: 'scaleX(-1)'
+        }
+      }, React.createElement(Icon, {
+        name: "arrow",
+        size: 22,
+        stroke: 2.4
+      }))), React.createElement("div", {
+        style: {
+          fontSize: 15,
           fontWeight: 700,
           fontFamily: 'var(--font-km)',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap'
+          whiteSpace: 'nowrap',
+          marginBottom: 14
         }
-      }, lang === 'km' ? s.name : s.en || s.name)), React.createElement("button", {
+      }, lang === 'km' ? s.name : s.en || s.name), React.createElement("button", {
         onClick: () => toggleGraduate(s),
         style: {
           display: 'flex',

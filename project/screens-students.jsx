@@ -1021,17 +1021,18 @@ const StudentsScreenV2 = () => {
 
       return (
         <div style={{display:'flex',flexDirection:'column'}}>
-          {/* Back header */}
-          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
-            <button onClick={()=>setMobileProfileId(null)} style={{
-              display:'flex',alignItems:'center',gap:5,padding:'7px 12px',
-              borderRadius:8,border:'1px solid var(--border)',background:'var(--surface)',
-              cursor:'pointer',fontSize:13,fontWeight:500,color:'var(--ink-2)',flexShrink:0,
-            }}>← {tr('ត្រឡប់','Back')}</button>
-            <div style={{flex:1,minWidth:0,fontSize:14,fontWeight:700,fontFamily:'var(--font-km)',
-              overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-              {lang==='km' ? s.name : (s.en || s.name)}
-            </div>
+          {/* Floating Back button — icon only, bottom-right corner */}
+          <button onClick={()=>setMobileProfileId(null)} title={tr('ត្រឡប់','Back')} aria-label={tr('ត្រឡប់','Back')}
+            style={{position:'fixed',right:16,bottom:'calc(18px + env(safe-area-inset-bottom,0px))',zIndex:120,
+              width:52,height:52,borderRadius:'50%',cursor:'pointer',border:'none',padding:0,
+              background:'var(--accent)',color:'#fff',boxShadow:'0 4px 16px rgba(0,0,0,.3)',
+              display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <span style={{display:'flex',transform:'scaleX(-1)'}}><Icon name="arrow" size={22} stroke={2.4}/></span>
+          </button>
+          {/* Profile title */}
+          <div style={{fontSize:15,fontWeight:700,fontFamily:'var(--font-km)',
+            overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginBottom:14}}>
+            {lang==='km' ? s.name : (s.en || s.name)}
           </div>
 
           {/* Graduation toggle — hides the student from active lists when on */}
