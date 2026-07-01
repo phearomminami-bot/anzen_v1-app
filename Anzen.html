@@ -39316,10 +39316,32 @@ var translateFeedbackTexts = async (texts, target) => {
 var printStudentLessonsPDF = (s, lessons, exams, lang) => {
   if (!s) return;
   lang = lang === 'en' ? 'en' : 'km';
-  var win = window.open('', '_blank', 'width=900,height=1100');
-  if (!win) return;
+  var HOST_ID = '__anzenStuPdfHost';
+  document.getElementById(HOST_ID)?.remove();
+  var host = document.createElement('div');
+  host.id = HOST_ID;
+  host.style.cssText = 'position:fixed;inset:0;z-index:100000;background:#e8e8e8;display:flex;flex-direction:column;-webkit-overflow-scrolling:touch';
+  var titleTxt = String(s.name || s.en || '').replace(/[&<>]/g, '');
+  var bar = document.createElement('div');
+  bar.style.cssText = 'display:flex;gap:8px;align-items:center;justify-content:space-between;flex-shrink:0;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;background:#1a1a19;color:#fff;box-shadow:0 1px 8px rgba(0,0,0,.3)';
+  bar.innerHTML = '<button id="__stuBack" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;border:none;background:rgba(255,255,255,.18);color:#fff;font-size:15px;font-weight:600;padding:10px 16px;border-radius:9px;cursor:pointer">⬅ ' + (lang === 'en' ? 'Back' : 'ត្រឡប់') + '</button>' + '<span style="flex:1;min-width:0;text-align:center;font-size:12px;font-weight:600;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + titleTxt + '</span>' + '<button id="__stuPrint" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;border:none;background:#2a5db0;color:#fff;font-size:15px;font-weight:700;padding:10px 16px;border-radius:9px;cursor:pointer">🖨 ' + (lang === 'en' ? 'Print / PDF' : 'បោះពុម្ព') + '</button>';
+  var iframe = document.createElement('iframe');
+  iframe.style.cssText = 'flex:1;width:100%;border:none;background:#e8e8e8';
+  host.appendChild(bar);
+  host.appendChild(iframe);
+  document.body.appendChild(host);
+  bar.querySelector('#__stuBack').onclick = () => host.remove();
+  bar.querySelector('#__stuPrint').onclick = () => {
+    try {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    } catch (e) {}
+  };
   try {
-    win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>PDF</title></head><body style="font-family:system-ui,sans-serif;padding:40px;color:#555;font-size:15px">' + (lang === 'en' ? 'Preparing the document…' : 'កំពុង​រៀបចំ​ឯកសារ…') + '</body></html>');
+    var ld = iframe.contentWindow.document;
+    ld.open();
+    ld.write('<!DOCTYPE html><body style="font-family:system-ui,sans-serif;padding:40px;color:#555;font-size:15px">' + (lang === 'en' ? 'Preparing the document…' : 'កំពុង​រៀបចំ​ឯកសារ…') + '</body>');
+    ld.close();
   } catch (e) {}
   (async () => {
     var L = (km, en) => lang === 'en' ? en : km;
@@ -39520,9 +39542,9 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
   .lt{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;}
   .lt th{background:${NV};color:#fff;text-align:left;padding:7px 8px;border:1px solid ${NV};font-size:11px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .lt td{padding:7px 8px;border:1px solid #d7dde6;vertical-align:top;line-height:1.5;}
-  @media print{ body{background:#fff;} .bar{display:none;} .sheet{margin:0;box-shadow:none;width:auto;min-height:auto;padding:0;} }
+  @media print{ body{background:#fff;zoom:1 !important;} .bar{display:none;} .sheet{margin:0;box-shadow:none;width:auto;min-height:auto;padding:0;} }
 </style></head><body>
-<div class="bar"><span class="t">${L('សៀវភៅប្រវត្តិសិក្សាបើកបរ', 'Driving Lesson Record Book')} · ${esc(s.name || s.en || '')}</span><button onclick="window.print()">🖨 ${L('បោះពុម្ព / រក្សាជា PDF', 'Print / Save as PDF')}</button></div>
+<!-- toolbar (Back / Print) is provided by the in-app overlay, not inside the sheet -->
 <div class="sheet">
   <div class="head">
     ${logoHtml}
@@ -39576,10 +39598,25 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
 </div>
 </body></html>`;
     try {
-      win.document.open();
-      win.document.write(doc);
-      win.document.close();
+      var idoc = iframe.contentWindow.document;
+      idoc.open();
+      idoc.write(doc);
+      idoc.close();
     } catch (e) {}
+    var fitStu = () => {
+      if (!document.getElementById(HOST_ID)) {
+        window.removeEventListener('resize', fitStu);
+        return;
+      }
+      try {
+        var w = iframe.clientWidth || window.innerWidth || 390;
+        var b = iframe.contentWindow.document.body;
+        if (b) b.style.zoom = Math.min(1, (w - 2) / 800).toFixed(3);
+      } catch (e) {}
+    };
+    fitStu();
+    setTimeout(fitStu, 80);
+    window.addEventListener('resize', fitStu);
   })();
 };
 var ExamFeedbackRow = ({
