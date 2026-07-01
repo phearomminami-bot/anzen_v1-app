@@ -789,15 +789,15 @@ const TabPermissionsEditor = ({ onDirty }) => {
       </div>
 
       <div style={{border:'1px solid var(--border)',borderRadius:8,overflowX:'auto',WebkitOverflowScrolling:'touch'}}>
-        {/* Header */}
-        <div style={{display:'grid',gridTemplateColumns:'130px 148px 148px',background:'var(--surface-muted)',padding:'10px 14px',gap:8,borderBottom:'1px solid var(--border)'}}>
-          <div style={{fontSize:11,fontWeight:600,color:'var(--ink-3)',textTransform:'uppercase',letterSpacing:'.07em'}}>
+        {/* Header — vertical dividers between Tab / Instructor / Student */}
+        <div style={{display:'grid',gridTemplateColumns:'130px 148px 148px',background:'var(--surface-muted)',borderBottom:'1px solid var(--border)'}}>
+          <div style={{padding:'10px 14px',fontSize:11,fontWeight:600,color:'var(--ink-3)',textTransform:'uppercase',letterSpacing:'.07em'}}>
             {tr('ផ្ទាំង','Tab')}
           </div>
-          <div style={{textAlign:'center',fontWeight:600,fontSize:12,color:'var(--accent)'}}>
+          <div style={{padding:'10px 14px',borderLeft:'1px solid var(--border)',textAlign:'center',fontWeight:600,fontSize:12,color:'var(--accent)'}}>
             {tr('គ្រូបង្រៀន','Instructor')}
           </div>
-          <div style={{textAlign:'center',fontWeight:600,fontSize:12,color:'#3B7A57'}}>
+          <div style={{padding:'10px 14px',borderLeft:'1px solid var(--border)',textAlign:'center',fontWeight:600,fontSize:12,color:'#3B7A57'}}>
             {tr('សិស្ស','Student')}
           </div>
         </div>
@@ -805,17 +805,18 @@ const TabPermissionsEditor = ({ onDirty }) => {
         {allTabs.map((tab, idx) => (
           <div key={tab.id} style={{
             display:'grid', gridTemplateColumns:'130px 148px 148px',
-            padding:'10px 14px', gap:8, alignItems:'center',
             borderTop: idx > 0 ? '1px solid var(--border)' : 'none',
           }}>
-            <div style={{display:'flex',alignItems:'center',gap:8}}>
+            <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px'}}>
               <Icon name={tab.icon} size={13} color="var(--ink-3)"/>
-              <div>
-                <div style={{fontSize:12,fontWeight:500}}>{lang==='km' ? tab.km : tab.en}</div>
-              </div>
+              <div style={{fontSize:12,fontWeight:500}}>{lang==='km' ? tab.km : tab.en}</div>
             </div>
-            <PermBtn roleKey="instructor" tabId={tab.id}/>
-            <PermBtn roleKey="student"    tabId={tab.id}/>
+            <div style={{borderLeft:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'center',padding:'10px 6px'}}>
+              <PermBtn roleKey="instructor" tabId={tab.id}/>
+            </div>
+            <div style={{borderLeft:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'center',padding:'10px 6px'}}>
+              <PermBtn roleKey="student" tabId={tab.id}/>
+            </div>
           </div>
         ))}
       </div>

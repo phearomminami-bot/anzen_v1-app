@@ -53581,12 +53581,11 @@ var TabPermissionsEditor = ({
       display: 'grid',
       gridTemplateColumns: '130px 148px 148px',
       background: 'var(--surface-muted)',
-      padding: '10px 14px',
-      gap: 8,
       borderBottom: '1px solid var(--border)'
     }
   }, React.createElement("div", {
     style: {
+      padding: '10px 14px',
       fontSize: 11,
       fontWeight: 600,
       color: 'var(--ink-3)',
@@ -53595,6 +53594,8 @@ var TabPermissionsEditor = ({
     }
   }, tr('ផ្ទាំង', 'Tab')), React.createElement("div", {
     style: {
+      padding: '10px 14px',
+      borderLeft: '1px solid var(--border)',
       textAlign: 'center',
       fontWeight: 600,
       fontSize: 12,
@@ -53602,6 +53603,8 @@ var TabPermissionsEditor = ({
     }
   }, tr('គ្រូបង្រៀន', 'Instructor')), React.createElement("div", {
     style: {
+      padding: '10px 14px',
+      borderLeft: '1px solid var(--border)',
       textAlign: 'center',
       fontWeight: 600,
       fontSize: 12,
@@ -53612,33 +53615,47 @@ var TabPermissionsEditor = ({
     style: {
       display: 'grid',
       gridTemplateColumns: '130px 148px 148px',
-      padding: '10px 14px',
-      gap: 8,
-      alignItems: 'center',
       borderTop: idx > 0 ? '1px solid var(--border)' : 'none'
     }
   }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
-      gap: 8
+      gap: 8,
+      padding: '10px 14px'
     }
   }, React.createElement(Icon, {
     name: tab.icon,
     size: 13,
     color: "var(--ink-3)"
-  }), React.createElement("div", null, React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       fontSize: 12,
       fontWeight: 500
     }
-  }, lang === 'km' ? tab.km : tab.en))), React.createElement(PermBtn, {
+  }, lang === 'km' ? tab.km : tab.en)), React.createElement("div", {
+    style: {
+      borderLeft: '1px solid var(--border)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '10px 6px'
+    }
+  }, React.createElement(PermBtn, {
     roleKey: "instructor",
     tabId: tab.id
-  }), React.createElement(PermBtn, {
+  })), React.createElement("div", {
+    style: {
+      borderLeft: '1px solid var(--border)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '10px 6px'
+    }
+  }, React.createElement(PermBtn, {
     roleKey: "student",
     tabId: tab.id
-  })))), React.createElement("div", {
+  }))))), React.createElement("div", {
     style: {
       marginTop: 10,
       padding: '8px 12px',
