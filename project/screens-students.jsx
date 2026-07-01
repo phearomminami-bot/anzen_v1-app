@@ -108,26 +108,24 @@ const CvLessonRow = ({ l, offset = 0, h, total = 1, cumNo, tr, onSave }) => {
   const [note, setNote]           = React.useState(fb0.note);
   const [done, setDone]           = React.useState(fb0.status === 'done');
   const [lessonIds, setLessonIds] = React.useState([...fb0.lessonIds]);
-  const [editing, setEditing]     = React.useState(false);
   const groups = lessonLibGroups();
   const allLib = [...groups.theory, ...groups.practical];
-  const hasFeedback = !!(fb0.rating || String(fb0.didWell||'').trim() || String(fb0.toImprove||'').trim() || String(fb0.note||'').trim());
   const fieldStyle = { width:'100%', padding:'8px 10px', border:'1px solid var(--border)', borderRadius:8, fontSize:13, fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)', boxSizing:'border-box', resize:'vertical' };
   const lbl = { fontSize:11, color:'var(--ink-3)', fontWeight:600, margin:'10px 0 4px' };
   const resetFields = () => { setRating(fb0.rating); setDidWell(fb0.didWell); setToImprove(fb0.toImprove); setNote(fb0.note); setDone(fb0.status==='done'); setLessonIds([...fb0.lessonIds]); };
-  const toggleOpen = () => { if (open) { setEditing(false); resetFields(); } setOpen(o => !o); };
-  // Save then drop back to the read-only view (keep the row open).
+  // The evaluation form opens in a separate popup (Modal), not inline.
+  const openEval  = () => { resetFields(); setOpen(true); };
+  const closeEval = () => { resetFields(); setOpen(false); };
   const save = () => {
     const selObjs  = allLib.filter(u => lessonIds.includes(u.id));
     const lessonNo = selObjs.map(u => u.no).filter(Boolean).join(', ');   // short code for the calendar
     onSave(l, { rating, didWell: didWell.trim(), toImprove: toImprove.trim(), note: note.trim(), status: done ? 'done' : 'pending', lessonIds: [...lessonIds], lessonNo }, offset);
-    setEditing(false);
+    setOpen(false);
   };
-  const showForm = editing || !hasFeedback;   // first time (no feedback) → form; otherwise read-only
   const stars = (n) => <span style={{color:'var(--gold)',letterSpacing:1}}>{'★'.repeat(n)}<span style={{color:'var(--border-strong)'}}>{'★'.repeat(5-n)}</span></span>;
   return (
     <div style={{borderBottom:'1px solid var(--border)', opacity: cancelled ? .55 : 1}}>
-      <button onClick={toggleOpen} style={{
+      <button onClick={openEval} style={{
         width:'100%', textAlign:'left', background:'transparent', border:'none', cursor:'pointer',
         padding:'10px 0', display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:10,
       }}>
@@ -149,102 +147,96 @@ const CvLessonRow = ({ l, offset = 0, h, total = 1, cumNo, tr, onSave }) => {
             </div>
           )}
           {(fb0.rating > 0) && <div style={{fontSize:12,color:'var(--gold)',marginTop:1,letterSpacing:1}}>{'★'.repeat(fb0.rating)}<span style={{color:'var(--border-strong)'}}>{'★'.repeat(5-fb0.rating)}</span></div>}
-          {fb0.note && !open && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2,fontStyle:'italic',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{fb0.note}</div>}
+          {fb0.note && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2,fontStyle:'italic',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{fb0.note}</div>}
         </div>
-        <span style={{fontSize:11,color:cancelled?'var(--warn)':done?'var(--good)':'var(--ink-3)',fontWeight:500,flexShrink:0,display:'flex',alignItems:'center',gap:4}}>
-          {cancelled?tr('បានប្ដូរថ្ងៃ','Changed'):done?tr('រួចរាល់','Done'):tr('កំពុង','Pending')}
-          <span style={{transition:'transform .2s',transform:open?'rotate(180deg)':'none',color:'var(--ink-3)'}}>▾</span>
+        <span style={{fontSize:11,color:cancelled?'var(--warn)':fb0.status==='done'?'var(--good)':'var(--ink-3)',fontWeight:500,flexShrink:0,display:'flex',alignItems:'center',gap:5}}>
+          {cancelled?tr('បានប្ដូរថ្ងៃ','Changed'):fb0.status==='done'?tr('រួចរាល់','Done'):tr('កំពុង','Pending')}
+          <Icon name="edit" size={13} stroke={2}/>
         </span>
       </button>
-      {open && showForm && (
-        <div style={{padding:'4px 0 14px'}}>
-          <div style={lbl}>{tr('មេរៀន (ពី Tab Lessons)','Lessons (from Tab Lessons)')}</div>
-          {lessonIds.length > 0 && (
-            <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:8}}>
-              {allLib.filter(u=>lessonIds.includes(u.id)).map(u=>(
-                <div key={u.id} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'4px 9px',
-                  background:'var(--accent-soft)',border:'1px solid var(--accent)',borderRadius:6,
-                  fontSize:12,fontWeight:500,color:'var(--accent)'}}>
-                  {u.no ? lessonNumOf(u.no)+' · ' : ''}{tr(u.km,u.en)}
-                  <button onClick={()=>setLessonIds(prev=>prev.filter(x=>x!==u.id))} style={{
-                    border:'none',background:'none',cursor:'pointer',color:'var(--accent)',
-                    fontSize:14,lineHeight:1,padding:0,display:'flex',alignItems:'center'}}>×</button>
-                </div>
+      {open && (
+        <Modal open onClose={closeEval} width={460}>
+          <div style={{padding:20,maxHeight:'86vh',overflowY:'auto'}}>
+            <div style={{fontSize:15,fontWeight:700}}>{tr('វាយ​តម្លៃ​មេរៀន','Lesson evaluation')}</div>
+            <div style={{fontSize:12,color:'var(--ink-3)',margin:'2px 0 4px'}}>
+              {l.date} · <span style={{fontFamily:'monospace',fontWeight:600}}>{timeLabel}</span>{cumNo!=null?` · (${cumNo})`:''} · {lessonTypeKm(l)}
+            </div>
+
+            <div style={lbl}>{tr('មេរៀន (ពី Tab Lessons)','Lessons (from Tab Lessons)')}</div>
+            {lessonIds.length > 0 && (
+              <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:8}}>
+                {allLib.filter(u=>lessonIds.includes(u.id)).map(u=>(
+                  <div key={u.id} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'4px 9px',
+                    background:'var(--accent-soft)',border:'1px solid var(--accent)',borderRadius:6,
+                    fontSize:12,fontWeight:500,color:'var(--accent)'}}>
+                    {u.no ? lessonNumOf(u.no)+' · ' : ''}{tr(u.km,u.en)}
+                    <button onClick={()=>setLessonIds(prev=>prev.filter(x=>x!==u.id))} style={{
+                      border:'none',background:'none',cursor:'pointer',color:'var(--accent)',
+                      fontSize:14,lineHeight:1,padding:0,display:'flex',alignItems:'center'}}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {allLib.length === 0 ? (
+              <div style={{fontSize:12,color:'var(--ink-3)'}}>{tr('មិនទាន់មានមេរៀននៅ Tab Lessons','No lessons defined in Tab Lessons')}</div>
+            ) : (
+              <select value="" onChange={e=>{ const id=e.target.value; if(id && !lessonIds.includes(id)) setLessonIds(prev=>[...prev,id]); }} style={fieldStyle}>
+                <option value="">+ {tr('បន្ថែម​មេរៀន','Add lesson')}</option>
+                {groups.theory.length>0 && (
+                  <optgroup label={tr('ទ្រឹស្ដី','Theory · 学科')}>
+                    {groups.theory.filter(u=>!lessonIds.includes(u.id)).map(u=>(
+                      <option key={u.id} value={u.id}>{u.no?lessonNumOf(u.no)+' · ':''}{tr(u.km,u.en)}</option>
+                    ))}
+                  </optgroup>
+                )}
+                {groups.practical.length>0 && (
+                  <optgroup label={tr('អនុវត្តន៍','Practical · 技能')}>
+                    {groups.practical.filter(u=>!lessonIds.includes(u.id)).map(u=>(
+                      <option key={u.id} value={u.id}>{u.no?lessonNumOf(u.no)+' · ':''}{tr(u.km,u.en)}</option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
+            )}
+
+            <div style={lbl}>{tr('ស្ថានភាព','Status')}</div>
+            <div style={{display:'flex',gap:6}}>
+              {[[false,tr('កំពុង','Pending')],[true,tr('រួចរាល់','Done')]].map(([v,t])=>(
+                <button key={String(v)} onClick={()=>setDone(v)} style={{
+                  flex:1,padding:'7px 0',borderRadius:7,cursor:'pointer',fontSize:12,fontWeight:600,fontFamily:'inherit',
+                  border:`1.5px solid ${done===v?'var(--accent)':'var(--border)'}`,
+                  background:done===v?'var(--accent-soft)':'var(--surface)',color:done===v?'var(--accent)':'var(--ink-2)',
+                }}>{t}</button>
               ))}
             </div>
-          )}
-          {allLib.length === 0 ? (
-            <div style={{fontSize:12,color:'var(--ink-3)'}}>{tr('មិនទាន់មានមេរៀននៅ Tab Lessons','No lessons defined in Tab Lessons')}</div>
-          ) : (
-            <select value="" onChange={e=>{ const id=e.target.value; if(id && !lessonIds.includes(id)) setLessonIds(prev=>[...prev,id]); }} style={fieldStyle}>
-              <option value="">+ {tr('បន្ថែម​មេរៀន','Add lesson')}</option>
-              {groups.theory.length>0 && (
-                <optgroup label={tr('ទ្រឹស្ដី','Theory · 学科')}>
-                  {groups.theory.filter(u=>!lessonIds.includes(u.id)).map(u=>(
-                    <option key={u.id} value={u.id}>{u.no?lessonNumOf(u.no)+' · ':''}{tr(u.km,u.en)}</option>
-                  ))}
-                </optgroup>
-              )}
-              {groups.practical.length>0 && (
-                <optgroup label={tr('អនុវត្តន៍','Practical · 技能')}>
-                  {groups.practical.filter(u=>!lessonIds.includes(u.id)).map(u=>(
-                    <option key={u.id} value={u.id}>{u.no?lessonNumOf(u.no)+' · ':''}{tr(u.km,u.en)}</option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
-          )}
 
-          <div style={lbl}>{tr('ស្ថានភាព','Status')}</div>
-          <div style={{display:'flex',gap:6}}>
-            {[[false,tr('កំពុង','Pending')],[true,tr('រួចរាល់','Done')]].map(([v,t])=>(
-              <button key={String(v)} onClick={()=>setDone(v)} style={{
-                flex:1,padding:'7px 0',borderRadius:7,cursor:'pointer',fontSize:12,fontWeight:600,fontFamily:'inherit',
-                border:`1.5px solid ${done===v?'var(--accent)':'var(--border)'}`,
-                background:done===v?'var(--accent-soft)':'var(--surface)',color:done===v?'var(--accent)':'var(--ink-2)',
-              }}>{t}</button>
-            ))}
+            <div style={lbl}>{tr('វាយតម្លៃ','Rating')}</div>
+            <div style={{display:'flex',gap:6}}>
+              {[1,2,3,4,5].map(n=>(
+                <button key={n} onClick={()=>setRating(n===rating?0:n)} style={{
+                  background:'none',border:'none',cursor:'pointer',padding:0,fontSize:28,lineHeight:1,
+                  color: n<=rating ? 'var(--gold)' : 'var(--border-strong)',
+                }}>★</button>
+              ))}
+            </div>
+
+            <div style={lbl}>{tr('ធ្វើ​បាន​ល្អ','Did well')}</div>
+            <input value={didWell} onChange={e=>setDidWell(e.target.value)} placeholder={tr('ឧ. បញ្ជា​ចង្កូត​បាន​ល្អ','e.g. good steering control')} style={fieldStyle}/>
+
+            <div style={lbl}>{tr('ខ្វះខាត​ត្រូវ​កែ','Needs work')}</div>
+            <input value={toImprove} onChange={e=>setToImprove(e.target.value)} placeholder={tr('ឧ. ត្រូវ​ហ្វឹកហាត់​ចតរថយន្ត','e.g. practise parking')} style={fieldStyle}/>
+
+            <div style={lbl}>{tr('មតិ​បន្ថែម','Comment')}</div>
+            <textarea value={note} onChange={e=>setNote(e.target.value)} rows={3} placeholder={tr('💬 មតិ​គ្រូ​លើ​មេរៀន​នេះ...','💬 Instructor comment...')} style={fieldStyle}/>
+
+            <div style={{display:'flex',gap:8,marginTop:16}}>
+              <button onClick={closeEval} style={{flex:1,padding:'11px',borderRadius:8,border:'1px solid var(--border-strong)',
+                background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,fontFamily:'inherit'}}>{tr('បោះបង់','Cancel')}</button>
+              <button onClick={save} style={{flex:2,padding:'11px',borderRadius:8,border:'none',
+                background:'var(--accent)',color:'#fff',cursor:'pointer',fontSize:13,fontWeight:700,fontFamily:'inherit'}}>{tr('រក្សា​ទុក','Save')}</button>
+            </div>
           </div>
-
-          <div style={lbl}>{tr('វាយតម្លៃ','Rating')}</div>
-          <div style={{display:'flex',gap:6}}>
-            {[1,2,3,4,5].map(n=>(
-              <button key={n} onClick={()=>setRating(n===rating?0:n)} style={{
-                background:'none',border:'none',cursor:'pointer',padding:0,fontSize:26,lineHeight:1,
-                color: n<=rating ? 'var(--gold)' : 'var(--border-strong)',
-              }}>★</button>
-            ))}
-          </div>
-
-          <div style={lbl}>{tr('ធ្វើ​បាន​ល្អ','Did well')}</div>
-          <input value={didWell} onChange={e=>setDidWell(e.target.value)} placeholder={tr('ឧ. បញ្ជា​ចង្កូត​បាន​ល្អ','e.g. good steering control')} style={fieldStyle}/>
-
-          <div style={lbl}>{tr('ខ្វះខាត​ត្រូវ​កែ','Needs work')}</div>
-          <input value={toImprove} onChange={e=>setToImprove(e.target.value)} placeholder={tr('ឧ. ត្រូវ​ហ្វឹកហាត់​ចតរថយន្ត','e.g. practise parking')} style={fieldStyle}/>
-
-          <div style={lbl}>{tr('មតិ​បន្ថែម','Comment')}</div>
-          <textarea value={note} onChange={e=>setNote(e.target.value)} rows={2} placeholder={tr('💬 មតិ​គ្រូ​លើ​មេរៀន​នេះ...','💬 Instructor comment...')} style={fieldStyle}/>
-
-          <button onClick={save} style={{
-            width:'100%',marginTop:12,padding:'10px',borderRadius:8,border:'none',
-            background:'var(--accent)',color:'#fff',cursor:'pointer',fontSize:13,fontWeight:600,
-          }}>{tr('រក្សា​ទុក​មតិ','Save feedback')}</button>
-        </div>
-      )}
-      {open && !showForm && (
-        <div style={{padding:'4px 0 14px'}}>
-          <div style={{display:'flex',flexDirection:'column',gap:8}}>
-            {/* Status + rating omitted here — already shown in the row header. */}
-            {String(didWell).trim() && <div><div style={lbl}>{tr('ធ្វើ​បាន​ល្អ','Did well')}</div><div style={{fontSize:13,color:'var(--ink)'}}>{didWell}</div></div>}
-            {String(toImprove).trim() && <div><div style={lbl}>{tr('ខ្វះខាត​ត្រូវ​កែ','Needs work')}</div><div style={{fontSize:13,color:'var(--ink)'}}>{toImprove}</div></div>}
-            {String(note).trim() && <div><div style={lbl}>{tr('មតិ​បន្ថែម','Comment')}</div><div style={{fontSize:13,color:'var(--ink)',whiteSpace:'pre-wrap'}}>{note}</div></div>}
-          </div>
-          <button onClick={()=>setEditing(true)} style={{
-            display:'flex',alignItems:'center',justifyContent:'center',gap:5,
-            marginTop:12,padding:'8px 14px',borderRadius:8,border:'1px solid var(--border-strong)',
-            background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,fontFamily:'inherit',
-          }}><Icon name="users" size={13}/>{tr('កែ​មតិ','Edit')}</button>
-        </div>
+        </Modal>
       )}
     </div>
   );

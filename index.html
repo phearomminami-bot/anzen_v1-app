@@ -937,6 +937,7 @@ window.__trRegistry = {
   "Toggle vehicles visible in Vehicle management": "ធ្វើ​ឲ្យ​យានយន្ត​មើលឃើញ​នៅ​ Vehicle management",
   "Hr": "ម៉ោងទី",
   "Changed": "បានប្ដូរថ្ងៃ",
+  "Lesson evaluation": "វាយ​តម្លៃ​មេរៀន",
   "Lessons (from Tab Lessons)": "មេរៀន (ពី Tab Lessons)",
   "Theory · 学科": "ទ្រឹស្ដី",
   "Practical · 技能": "អនុវត្តន៍",
@@ -947,7 +948,6 @@ window.__trRegistry = {
   "e.g. practise parking": "ឧ. ត្រូវ​ហ្វឹកហាត់​ចតរថយន្ត",
   "Comment": "មតិ​បន្ថែម",
   "💬 Instructor comment...": "💬 មតិ​គ្រូ​លើ​មេរៀន​នេះ...",
-  "Save feedback": "រក្សា​ទុក​មតិ",
   "Pass": "ជាប់",
   "Fail": "ធ្លាក់",
   "Set result": "កំណត់​លទ្ធផល",
@@ -1620,6 +1620,7 @@ window.__trGroups = {
   "សិស្ស · Students": {
     "Hr": "ម៉ោងទី",
     "Changed": "បានប្ដូរថ្ងៃ",
+    "Lesson evaluation": "វាយ​តម្លៃ​មេរៀន",
     "Lessons (from Tab Lessons)": "មេរៀន (ពី Tab Lessons)",
     "Theory · 学科": "ទ្រឹស្ដី",
     "Practical · 技能": "អនុវត្តន៍",
@@ -1630,7 +1631,6 @@ window.__trGroups = {
     "e.g. practise parking": "ឧ. ត្រូវ​ហ្វឹកហាត់​ចតរថយន្ត",
     "Comment": "មតិ​បន្ថែម",
     "💬 Instructor comment...": "💬 មតិ​គ្រូ​លើ​មេរៀន​នេះ...",
-    "Save feedback": "រក្សា​ទុក​មតិ",
     "Pass": "ជាប់",
     "Fail": "ធ្លាក់",
     "Set result": "កំណត់​លទ្ធផល",
@@ -38927,10 +38927,8 @@ var CvLessonRow = ({
   var [note, setNote] = React.useState(fb0.note);
   var [done, setDone] = React.useState(fb0.status === 'done');
   var [lessonIds, setLessonIds] = React.useState([...fb0.lessonIds]);
-  var [editing, setEditing] = React.useState(false);
   var groups = lessonLibGroups();
   var allLib = [...groups.theory, ...groups.practical];
-  var hasFeedback = !!(fb0.rating || String(fb0.didWell || '').trim() || String(fb0.toImprove || '').trim() || String(fb0.note || '').trim());
   var fieldStyle = {
     width: '100%',
     padding: '8px 10px',
@@ -38957,12 +38955,13 @@ var CvLessonRow = ({
     setDone(fb0.status === 'done');
     setLessonIds([...fb0.lessonIds]);
   };
-  var toggleOpen = () => {
-    if (open) {
-      setEditing(false);
-      resetFields();
-    }
-    setOpen(o => !o);
+  var openEval = () => {
+    resetFields();
+    setOpen(true);
+  };
+  var closeEval = () => {
+    resetFields();
+    setOpen(false);
   };
   var save = () => {
     var selObjs = allLib.filter(u => lessonIds.includes(u.id));
@@ -38976,9 +38975,8 @@ var CvLessonRow = ({
       lessonIds: [...lessonIds],
       lessonNo
     }, offset);
-    setEditing(false);
+    setOpen(false);
   };
-  var showForm = editing || !hasFeedback;
   var stars = n => React.createElement("span", {
     style: {
       color: 'var(--gold)',
@@ -38995,7 +38993,7 @@ var CvLessonRow = ({
       opacity: cancelled ? .55 : 1
     }
   }, React.createElement("button", {
-    onClick: toggleOpen,
+    onClick: openEval,
     style: {
       width: '100%',
       textAlign: 'left',
@@ -39074,7 +39072,7 @@ var CvLessonRow = ({
     style: {
       color: 'var(--border-strong)'
     }
-  }, '★'.repeat(5 - fb0.rating))), fb0.note && !open && React.createElement("div", {
+  }, '★'.repeat(5 - fb0.rating))), fb0.note && React.createElement("div", {
     style: {
       fontSize: 11,
       color: 'var(--ink-3)',
@@ -39087,24 +39085,44 @@ var CvLessonRow = ({
   }, fb0.note)), React.createElement("span", {
     style: {
       fontSize: 11,
-      color: cancelled ? 'var(--warn)' : done ? 'var(--good)' : 'var(--ink-3)',
+      color: cancelled ? 'var(--warn)' : fb0.status === 'done' ? 'var(--good)' : 'var(--ink-3)',
       fontWeight: 500,
       flexShrink: 0,
       display: 'flex',
       alignItems: 'center',
-      gap: 4
+      gap: 5
     }
-  }, cancelled ? tr('បានប្ដូរថ្ងៃ', 'Changed') : done ? tr('រួចរាល់', 'Done') : tr('កំពុង', 'Pending'), React.createElement("span", {
+  }, cancelled ? tr('បានប្ដូរថ្ងៃ', 'Changed') : fb0.status === 'done' ? tr('រួចរាល់', 'Done') : tr('កំពុង', 'Pending'), React.createElement(Icon, {
+    name: "edit",
+    size: 13,
+    stroke: 2
+  }))), open && React.createElement(Modal, {
+    open: true,
+    onClose: closeEval,
+    width: 460
+  }, React.createElement("div", {
     style: {
-      transition: 'transform .2s',
-      transform: open ? 'rotate(180deg)' : 'none',
-      color: 'var(--ink-3)'
-    }
-  }, "\u25BE"))), open && showForm && React.createElement("div", {
-    style: {
-      padding: '4px 0 14px'
+      padding: 20,
+      maxHeight: '86vh',
+      overflowY: 'auto'
     }
   }, React.createElement("div", {
+    style: {
+      fontSize: 15,
+      fontWeight: 700
+    }
+  }, tr('វាយ​តម្លៃ​មេរៀន', 'Lesson evaluation')), React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'var(--ink-3)',
+      margin: '2px 0 4px'
+    }
+  }, l.date, " \xB7 ", React.createElement("span", {
+    style: {
+      fontFamily: 'monospace',
+      fontWeight: 600
+    }
+  }, timeLabel), cumNo != null ? ` · (${cumNo})` : '', " \xB7 ", lessonTypeKm(l)), React.createElement("div", {
     style: lbl
   }, tr('មេរៀន (ពី Tab Lessons)', 'Lessons (from Tab Lessons)')), lessonIds.length > 0 && React.createElement("div", {
     style: {
@@ -39201,7 +39219,7 @@ var CvLessonRow = ({
       border: 'none',
       cursor: 'pointer',
       padding: 0,
-      fontSize: 26,
+      fontSize: 28,
       lineHeight: 1,
       color: n <= rating ? 'var(--gold)' : 'var(--border-strong)'
     }
@@ -39224,64 +39242,20 @@ var CvLessonRow = ({
   }, tr('មតិ​បន្ថែម', 'Comment')), React.createElement("textarea", {
     value: note,
     onChange: e => setNote(e.target.value),
-    rows: 2,
+    rows: 3,
     placeholder: tr('💬 មតិ​គ្រូ​លើ​មេរៀន​នេះ...', '💬 Instructor comment...'),
     style: fieldStyle
-  }), React.createElement("button", {
-    onClick: save,
-    style: {
-      width: '100%',
-      marginTop: 12,
-      padding: '10px',
-      borderRadius: 8,
-      border: 'none',
-      background: 'var(--accent)',
-      color: '#fff',
-      cursor: 'pointer',
-      fontSize: 13,
-      fontWeight: 600
-    }
-  }, tr('រក្សា​ទុក​មតិ', 'Save feedback'))), open && !showForm && React.createElement("div", {
-    style: {
-      padding: '4px 0 14px'
-    }
-  }, React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       display: 'flex',
-      flexDirection: 'column',
-      gap: 8
+      gap: 8,
+      marginTop: 16
     }
-  }, String(didWell).trim() && React.createElement("div", null, React.createElement("div", {
-    style: lbl
-  }, tr('ធ្វើ​បាន​ល្អ', 'Did well')), React.createElement("div", {
+  }, React.createElement("button", {
+    onClick: closeEval,
     style: {
-      fontSize: 13,
-      color: 'var(--ink)'
-    }
-  }, didWell)), String(toImprove).trim() && React.createElement("div", null, React.createElement("div", {
-    style: lbl
-  }, tr('ខ្វះខាត​ត្រូវ​កែ', 'Needs work')), React.createElement("div", {
-    style: {
-      fontSize: 13,
-      color: 'var(--ink)'
-    }
-  }, toImprove)), String(note).trim() && React.createElement("div", null, React.createElement("div", {
-    style: lbl
-  }, tr('មតិ​បន្ថែម', 'Comment')), React.createElement("div", {
-    style: {
-      fontSize: 13,
-      color: 'var(--ink)',
-      whiteSpace: 'pre-wrap'
-    }
-  }, note))), React.createElement("button", {
-    onClick: () => setEditing(true),
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 5,
-      marginTop: 12,
-      padding: '8px 14px',
+      flex: 1,
+      padding: '11px',
       borderRadius: 8,
       border: '1px solid var(--border-strong)',
       background: 'var(--surface)',
@@ -39291,10 +39265,21 @@ var CvLessonRow = ({
       fontWeight: 600,
       fontFamily: 'inherit'
     }
-  }, React.createElement(Icon, {
-    name: "users",
-    size: 13
-  }), tr('កែ​មតិ', 'Edit'))));
+  }, tr('បោះបង់', 'Cancel')), React.createElement("button", {
+    onClick: save,
+    style: {
+      flex: 2,
+      padding: '11px',
+      borderRadius: 8,
+      border: 'none',
+      background: 'var(--accent)',
+      color: '#fff',
+      cursor: 'pointer',
+      fontSize: 13,
+      fontWeight: 700,
+      fontFamily: 'inherit'
+    }
+  }, tr('រក្សា​ទុក', 'Save'))))));
 };
 var EYE_COND_OPTS = [{
   v: 'ធម្មតា',
