@@ -715,11 +715,13 @@ const EditableRolesCard = ({ titleKm, titleEn, settingsKey, placeholderKm, place
 };
 
 // ── Tab-level permissions editor ──────────────────────────────────────────
+// Compact, colour-coded permission levels shown as icon-only buttons (a legend
+// above the table explains each icon), so the row doesn't fill up with text.
 const PERM_LEVELS = [
-  { v:'full',   km:'អនុញ្ញាតឱ្យគ្រប់គ្រង', en:'Full manage', icon:'check',  bg:'var(--good)',          color:'#fff' },
-  { v:'view',   km:'អនុញ្ញាតឱ្យមើល',        en:'View only',   icon:'eye',    bg:'var(--accent-soft)',   color:'var(--accent)' },
-  { v:'add',    km:'អនុញ្ញាតឱ្យបញ្ចូល',     en:'Add only',    icon:'plus',   bg:'#FFF3CD',              color:'#856404' },
-  { v:'hidden', km:'លាក់',                   en:'Hidden',      icon:'x',      bg:'var(--surface-muted)', color:'var(--ink-3)' },
+  { v:'full',   km:'គ្រប់គ្រង', en:'Manage', icon:'edit', c:'#12A302' },
+  { v:'view',   km:'មើល',       en:'View',   icon:'eye',  c:'#2A5DB0' },
+  { v:'add',    km:'បញ្ចូល',    en:'Add',    icon:'plus', c:'#CA8A04' },
+  { v:'hidden', km:'លាក់',      en:'Hidden', icon:'x',    c:'#8A8F98' },
 ];
 
 const TabPermissionsEditor = ({ onDirty }) => {
@@ -744,23 +746,23 @@ const TabPermissionsEditor = ({ onDirty }) => {
   const getLevel = (roleKey, tabId) => perms[roleKey]?.[tabId] || 'full';
 
   const PermBtn = ({ roleKey, tabId }) => (
-    <div style={{display:'flex',gap:3,justifyContent:'center',flexWrap:'wrap'}}>
+    <div style={{display:'flex',gap:5,justifyContent:'center'}}>
       {PERM_LEVELS.map(p => {
         const active = getLevel(roleKey, tabId) === p.v;
         return (
           <button key={p.v}
             title={lang==='km' ? p.km : p.en}
+            aria-label={lang==='km' ? p.km : p.en}
             onClick={() => setLevel(roleKey, tabId, p.v)}
             style={{
-              padding:'3px 8px', borderRadius:6, fontSize:10, fontWeight:600,
-              border: active ? '2px solid '+p.bg : '1px solid var(--border)',
-              background: active ? p.bg : 'transparent',
-              color: active ? p.color : 'var(--ink-3)',
-              cursor:'pointer', display:'flex', alignItems:'center', gap:4,
-              whiteSpace:'nowrap', transition:'all .12s',
+              width:32, height:32, borderRadius:8, cursor:'pointer', padding:0, flexShrink:0,
+              display:'flex', alignItems:'center', justifyContent:'center',
+              border: active ? '1.5px solid '+p.c : '1px solid var(--border)',
+              background: active ? p.c : 'transparent',
+              color: active ? '#fff' : 'var(--ink-3)',
+              transition:'all .12s',
             }}>
-            <Icon name={p.icon} size={10} stroke={2.5}/>
-            {lang==='km' ? p.km : p.en}
+            <Icon name={p.icon} size={15} stroke={2.2}/>
           </button>
         );
       })}
@@ -774,9 +776,21 @@ const TabPermissionsEditor = ({ onDirty }) => {
             'Admin configures which tabs are visible and accessible per role. Default: all tabs are shown.')}
       </div>
 
-      <div style={{border:'1px solid var(--border)',borderRadius:8,overflow:'hidden'}}>
+      {/* Icon legend — explains the compact per-row buttons */}
+      <div style={{display:'flex',gap:'8px 16px',flexWrap:'wrap',marginBottom:14}}>
+        {PERM_LEVELS.map(p => (
+          <span key={p.v} style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:12,color:'var(--ink-2)'}}>
+            <span style={{width:22,height:22,borderRadius:6,background:p.c,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              <Icon name={p.icon} size={13} stroke={2.3}/>
+            </span>
+            {lang==='km' ? p.km : p.en}
+          </span>
+        ))}
+      </div>
+
+      <div style={{border:'1px solid var(--border)',borderRadius:8,overflowX:'auto',WebkitOverflowScrolling:'touch'}}>
         {/* Header */}
-        <div style={{display:'grid',gridTemplateColumns:'160px 1fr 1fr',background:'var(--surface-muted)',padding:'10px 14px',gap:8,borderBottom:'1px solid var(--border)'}}>
+        <div style={{display:'grid',gridTemplateColumns:'130px 148px 148px',background:'var(--surface-muted)',padding:'10px 14px',gap:8,borderBottom:'1px solid var(--border)'}}>
           <div style={{fontSize:11,fontWeight:600,color:'var(--ink-3)',textTransform:'uppercase',letterSpacing:'.07em'}}>
             {tr('ផ្ទាំង','Tab')}
           </div>
@@ -790,7 +804,7 @@ const TabPermissionsEditor = ({ onDirty }) => {
 
         {allTabs.map((tab, idx) => (
           <div key={tab.id} style={{
-            display:'grid', gridTemplateColumns:'160px 1fr 1fr',
+            display:'grid', gridTemplateColumns:'130px 148px 148px',
             padding:'10px 14px', gap:8, alignItems:'center',
             borderTop: idx > 0 ? '1px solid var(--border)' : 'none',
           }}>

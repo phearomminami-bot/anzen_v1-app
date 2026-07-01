@@ -257,6 +257,9 @@ const Icon = ({ name, size = 16, stroke = 1.6 }) => {
     file:'M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V8zM14 3l6 5h-6z',
     mail:'M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zM2 6l10 7 10-7',
     globe:'M12 3a9 9 0 100 18A9 9 0 0012 3zM3 12h18M12 3a12 12 0 010 18M12 3a12 12 0 000 18',
+    eye:'M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z M15 12a3 3 0 11-6 0 3 3 0 016 0z',
+    x:'M6 6l12 12M6 18L18 6',
+    edit:'M12 20h9 M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z',
   };
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
