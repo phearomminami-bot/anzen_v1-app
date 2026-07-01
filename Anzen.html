@@ -240,7 +240,7 @@ window.__trRegistry = {
   "Required": "ទាមទារ",
   "Gender *": "ភេទ *",
   "Date of birth *": "ថ្ងៃខែឆ្នាំកំណើត *",
-  "National ID": "អត្តសញ្ញាណប័ណ្ណលេខ",
+  "National ID": "លេខ​អត្តសញ្ញាណប័ណ្ណ",
   "Current address": "អាសយដ្ឋានបច្ចុប្បន្ន",
   "e.g. House:15, Village..., Commune..., District..., Province...": "ឧ. ផ្ទះ:១៥ ភូមិក្បាលស្ពាន ឃុំ... ស្រុក... ខេត្ត...",
   "2": "២",
@@ -1010,6 +1010,8 @@ window.__trRegistry = {
   "PERSONAL INFO": "ព័ត៌មាន​",
   "♂ Male": "♂ ប្រុស",
   "♀ Female": "♀ ស្រី",
+  "National ID No.": "លេខ​អត្តសញ្ញាណប័ណ្ណ",
+  "e.g. 010203045": "ឧ. 010203045",
   "BIOGRAPHY": "ប្រវត្តិ",
   "Nationality": "ជនជាតិ",
   "Eye condition": "ស្ថានភាពភ្នែក",
@@ -1691,6 +1693,8 @@ window.__trGroups = {
     "PERSONAL INFO": "ព័ត៌មាន​",
     "♂ Male": "♂ ប្រុស",
     "♀ Female": "♀ ស្រី",
+    "National ID No.": "លេខ​អត្តសញ្ញាណប័ណ្ណ",
+    "e.g. 010203045": "ឧ. 010203045",
     "BIOGRAPHY": "ប្រវត្តិ",
     "Nationality": "ជនជាតិ",
     "Eye condition": "ស្ថានភាពភ្នែក",
@@ -40765,6 +40769,9 @@ var StudentsScreenV2 = () => {
         label: tr('លេខ​បណ្ណ​បើកបរ', 'License No.'),
         val: s.license_no
       }), React.createElement(InfoPair, {
+        label: tr('លេខ​អត្តសញ្ញាណប័ណ្ណ', 'National ID'),
+        val: s.natId
+      }), React.createElement(InfoPair, {
         label: tr('ទីតាំង​ប្រឡង', 'Exam location'),
         val: s.exam_location
       })))), React.createElement(CvSection, {
@@ -42048,6 +42055,7 @@ var BiographyCard = ({
   var [phone, setPhone] = React.useState(s.phone || '');
   var [telegram, setTelegram] = React.useState(s.telegram || '');
   var [licenseNo, setLicenseNo] = React.useState(s.license_no || '');
+  var [natId, setNatId] = React.useState(s.natId || '');
   var [examLoc, setExamLoc] = React.useState(s.exam_location || '');
   var [eyeLeft, setEyeLeft] = React.useState(s.eye_left || '');
   var [eyeRight, setEyeRight] = React.useState(s.eye_right || '');
@@ -42072,6 +42080,7 @@ var BiographyCard = ({
     setPhone(s.phone || '');
     setTelegram(s.telegram || '');
     setLicenseNo(s.license_no || '');
+    setNatId(s.natId || '');
     setExamLoc(s.exam_location || '');
     setEyeLeft(s.eye_left || '');
     setEyeRight(s.eye_right || '');
@@ -42097,6 +42106,7 @@ var BiographyCard = ({
     setPhone(s.phone || '');
     setTelegram(s.telegram || '');
     setLicenseNo(s.license_no || '');
+    setNatId(s.natId || '');
     setExamLoc(s.exam_location || '');
     setEyeLeft(s.eye_left || '');
     setEyeRight(s.eye_right || '');
@@ -42122,6 +42132,7 @@ var BiographyCard = ({
       phone: phone.trim(),
       telegram: telegram.trim(),
       license_no: licenseNo.trim(),
+      natId: natId.trim(),
       exam_location: examLoc.trim(),
       eye_left: eyeLeft,
       eye_right: eyeRight,
@@ -42268,6 +42279,10 @@ var BiographyCard = ({
     value: licenseNo,
     onChange: e => setLicenseNo(e.target.value),
     placeholder: "01234567"
+  }))), React.createElement("div", null, React.createElement(Lbl, null, "\u179B\u17C1\u1781\u200B\u17A2\u178F\u17D2\u178F\u179F\u1789\u17D2\u1789\u17B6\u178E\u1794\u17D0\u178E\u17D2\u178E \xB7 National ID"), React.createElement("input", _extends({}, inp, {
+    value: natId,
+    onChange: e => setNatId(e.target.value),
+    placeholder: "010203045"
   }))), React.createElement("div", null, React.createElement(Lbl, null, "\u1791\u17B8\u178F\u17B6\u17C6\u1784\u200B\u1794\u17D2\u179A\u17A1\u1784 \xB7 Exam location"), React.createElement("input", _extends({}, inp, {
     value: examLoc,
     onChange: e => setExamLoc(e.target.value),
@@ -42385,6 +42400,9 @@ var BiographyCard = ({
   }, {
     l: 'លេខ​បណ្ណ​បើកបរ',
     v: s.license_no || '—'
+  }, {
+    l: 'លេខ​អត្តសញ្ញាណប័ណ្ណ',
+    v: s.natId || '—'
   }, {
     l: 'ទីតាំង​ប្រឡង',
     v: s.exam_location || '—'
@@ -43278,6 +43296,7 @@ var StudentEditPanel = ({
   var [telegram, setTelegram] = React.useState(s.telegram || '');
   var [email, setEmail] = React.useState(s.email || '');
   var [licenseNo, setLicenseNo] = React.useState(s.license_no || '');
+  var [natId, setNatId] = React.useState(s.natId || '');
   var [examLoc, setExamLoc] = React.useState(s.exam_location || '');
   var [nationality, setNationality] = React.useState(s.nationality || 'ខ្មែរ');
   var [eyeLeft, setEyeLeft] = React.useState(s.eye_left || '');
@@ -43347,6 +43366,7 @@ var StudentEditPanel = ({
       telegram: telegram.trim(),
       email: email.trim(),
       license_no: licenseNo.trim(),
+      natId: natId.trim(),
       exam_location: examLoc.trim(),
       nationality: nationality.trim(),
       eye_left: eyeLeft,
@@ -43554,6 +43574,12 @@ var StudentEditPanel = ({
     value: licenseNo,
     onChange: e => setLicenseNo(e.target.value),
     placeholder: tr('ឧ. 01234567', 'e.g. 01234567')
+  }))), React.createElement(SEField, {
+    label: tr('លេខ​អត្តសញ្ញាណប័ណ្ណ', 'National ID No.')
+  }, React.createElement("input", _extends({}, inp, {
+    value: natId,
+    onChange: e => setNatId(e.target.value),
+    placeholder: tr('ឧ. 010203045', 'e.g. 010203045')
   }))), React.createElement(SEField, {
     label: tr('ទីតាំង​ប្រឡង', 'Exam location')
   }, React.createElement("input", _extends({}, inp, {

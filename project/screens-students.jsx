@@ -1087,6 +1087,7 @@ const StudentsScreenV2 = () => {
               <InfoPair label={tr('ប្រអប់លេខ','Trans.')} val={s.trans}/>
               <InfoPair label={tr('ស្ថានភាព','Status')} val={s.status}/>
               <InfoPair label={tr('លេខ​បណ្ណ​បើកបរ','License No.')} val={s.license_no}/>
+              <InfoPair label={tr('លេខ​អត្តសញ្ញាណប័ណ្ណ','National ID')} val={s.natId}/>
               <InfoPair label={tr('ទីតាំង​ប្រឡង','Exam location')} val={s.exam_location}/>
             </div>
             </>)}
@@ -1637,6 +1638,7 @@ const BiographyCard = ({ s, onSave }) => {
   const [phone,       setPhone]       = React.useState(s.phone         || '');
   const [telegram,    setTelegram]    = React.useState(s.telegram      || '');
   const [licenseNo,   setLicenseNo]   = React.useState(s.license_no    || '');
+  const [natId,       setNatId]       = React.useState(s.natId         || '');
   const [examLoc,     setExamLoc]     = React.useState(s.exam_location || '');
   const [eyeLeft,     setEyeLeft]     = React.useState(s.eye_left      || '');
   const [eyeRight,    setEyeRight]    = React.useState(s.eye_right     || '');
@@ -1657,7 +1659,7 @@ const BiographyCard = ({ s, onSave }) => {
     if (editing) return;
     setName(s.name || ''); setEn(s.en || ''); setGender(s.gender || 'M');
     setAge(String(s.age || '')); setNationality(s.nationality || 'ខ្មែរ');
-    setPhone(s.phone || ''); setTelegram(s.telegram || ''); setLicenseNo(s.license_no || ''); setExamLoc(s.exam_location || ''); setEyeLeft(s.eye_left || ''); setEyeRight(s.eye_right || ''); setEyeBoth(s.eye_both || ''); setGlasses(normEye(s.glasses));
+    setPhone(s.phone || ''); setTelegram(s.telegram || ''); setLicenseNo(s.license_no || ''); setNatId(s.natId || ''); setExamLoc(s.exam_location || ''); setEyeLeft(s.eye_left || ''); setEyeRight(s.eye_right || ''); setEyeBoth(s.eye_both || ''); setGlasses(normEye(s.glasses));
     setAddrHouse(s.addr_house || ''); setAddrStreet(s.addr_street || '');
     setAddrVillage(s.addr_village || ''); setAddrCommune(s.addr_commune || '');
     setAddrDist(s.addr_district || s.district || ''); setAddrProv(s.addr_province || '');
@@ -1668,7 +1670,7 @@ const BiographyCard = ({ s, onSave }) => {
     setEditing(false);
     setName(s.name || ''); setEn(s.en || ''); setGender(s.gender || 'M');
     setAge(String(s.age || '')); setNationality(s.nationality || 'ខ្មែរ');
-    setPhone(s.phone || ''); setTelegram(s.telegram || ''); setLicenseNo(s.license_no || ''); setExamLoc(s.exam_location || ''); setEyeLeft(s.eye_left || ''); setEyeRight(s.eye_right || ''); setEyeBoth(s.eye_both || ''); setGlasses(normEye(s.glasses));
+    setPhone(s.phone || ''); setTelegram(s.telegram || ''); setLicenseNo(s.license_no || ''); setNatId(s.natId || ''); setExamLoc(s.exam_location || ''); setEyeLeft(s.eye_left || ''); setEyeRight(s.eye_right || ''); setEyeBoth(s.eye_both || ''); setGlasses(normEye(s.glasses));
     setAddrHouse(s.addr_house || ''); setAddrStreet(s.addr_street || '');
     setAddrVillage(s.addr_village || ''); setAddrCommune(s.addr_commune || '');
     setAddrDist(s.addr_district || s.district || ''); setAddrProv(s.addr_province || '');
@@ -1679,7 +1681,7 @@ const BiographyCard = ({ s, onSave }) => {
     onSave(s.id, {
       name: name.trim() || s.name, en: en.trim(), gender,
       age: parseInt(age) || s.age || 24, nationality: nationality.trim(),
-      phone: phone.trim(), telegram: telegram.trim(), license_no: licenseNo.trim(), exam_location: examLoc.trim(), eye_left: eyeLeft, eye_right: eyeRight, eye_both: eyeBoth, glasses,
+      phone: phone.trim(), telegram: telegram.trim(), license_no: licenseNo.trim(), natId: natId.trim(), exam_location: examLoc.trim(), eye_left: eyeLeft, eye_right: eyeRight, eye_both: eyeBoth, glasses,
       addr_house: addrHouse.trim(), addr_street: addrStreet.trim(),
       addr_village: addrVillage.trim(), addr_commune: addrCommune.trim(),
       addr_district: addrDist.trim(), addr_province: addrProv.trim(),
@@ -1730,6 +1732,7 @@ const BiographyCard = ({ s, onSave }) => {
           <div><Lbl>លេខ​ទូរស័ព្ទ · Phone</Lbl><input {...inp} value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+855 12 000 000"/></div>
           <div><Lbl>Telegram Chat ID</Lbl><input {...inp} value={telegram} onChange={e=>setTelegram(e.target.value)} placeholder="123456789"/></div>
           <div><Lbl>លេខ​បណ្ណ​បើកបរ · License No.</Lbl><input {...inp} value={licenseNo} onChange={e=>setLicenseNo(e.target.value)} placeholder="01234567"/></div>
+          <div><Lbl>លេខ​អត្តសញ្ញាណប័ណ្ណ · National ID</Lbl><input {...inp} value={natId} onChange={e=>setNatId(e.target.value)} placeholder="010203045"/></div>
           <div><Lbl>ទីតាំង​ប្រឡង · Exam location</Lbl><input {...inp} value={examLoc} onChange={e=>setExamLoc(e.target.value)} placeholder="ភ្នំពេញ"/></div>
         </div>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:8}}>
@@ -1804,6 +1807,7 @@ const BiographyCard = ({ s, onSave }) => {
     {l:'លេខ​ទូរស័ព្ទ',    v: s.phone                                   || '—'},
     {l:'Telegram',       v: s.telegram                                || '—'},
     {l:'លេខ​បណ្ណ​បើកបរ',  v: s.license_no                              || '—'},
+    {l:'លេខ​អត្តសញ្ញាណប័ណ្ណ', v: s.natId                                || '—'},
     {l:'ទីតាំង​ប្រឡង',    v: s.exam_location                           || '—'},
     {l:'ភ្នែកឆ្វេង',     v: s.eye_left                                || '—'},
     {l:'ភ្នែកស្ដាំ',      v: s.eye_right                               || '—'},
@@ -2158,6 +2162,7 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
   const [telegram,setTelegram]= React.useState(s.telegram|| '');
   const [email,   setEmail]   = React.useState(s.email   || '');
   const [licenseNo, setLicenseNo] = React.useState(s.license_no || '');
+  const [natId,     setNatId]     = React.useState(s.natId || '');
   const [examLoc,   setExamLoc]   = React.useState(s.exam_location || '');
 
   const [nationality,   setNationality]   = React.useState(s.nationality   || 'ខ្មែរ');
@@ -2237,6 +2242,7 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
       telegram: telegram.trim(),
       email:    email.trim(),
       license_no:    licenseNo.trim(),
+      natId:         natId.trim(),
       exam_location: examLoc.trim(),
       nationality:   nationality.trim(),
       eye_left:      eyeLeft,
@@ -2327,6 +2333,7 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
           </select>
         </SEField>
         <SEField label={tr('លេខ​បណ្ណ​បើកបរ','Driver license No.')}><input {...inp} value={licenseNo} onChange={e=>setLicenseNo(e.target.value)} placeholder={tr('ឧ. 01234567','e.g. 01234567')}/></SEField>
+        <SEField label={tr('លេខ​អត្តសញ្ញាណប័ណ្ណ','National ID No.')}><input {...inp} value={natId} onChange={e=>setNatId(e.target.value)} placeholder={tr('ឧ. 010203045','e.g. 010203045')}/></SEField>
         <SEField label={tr('ទីតាំង​ប្រឡង','Exam location')}><input {...inp} value={examLoc} onChange={e=>setExamLoc(e.target.value)} placeholder={tr('ឧ. ភ្នំពេញ','e.g. Phnom Penh')}/></SEField>
       </div>
 
