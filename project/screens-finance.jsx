@@ -459,39 +459,6 @@ const FRevenueTab = ({ lang, tr, forceUpdate }) => {
         })}
       </Card>
 
-      {/* Student payment summary */}
-      <Card label={tr('ការទូទាត់សិស្ស','STUDENT PAYMENT OVERVIEW')}>
-        {STUDENTS.length===0 ? (
-          <div style={{padding:'16px 0',textAlign:'center',color:'var(--ink-3)',fontSize:13}}>{tr('មិនទាន់មានសិស្ស','No students')}</div>
-        ) : STUDENTS.slice().sort((a,b)=>(b.paid||0)-(a.paid||0)).slice(0,10).map((s,i)=>{
-          const ss = window.__schoolSettings;
-          const cls = (s.cls||'B')[0];
-          const base = ss?.pricing?.base||0;
-          const course = (ss?.pricing?.courses||[]).find(c=>c.cls===cls);
-          const price = base+(course?.price||0)+((s.addons||[]).reduce((x,id)=>{ const ao=(ss?.pricing?.addons||[]).find(a=>a.id===id); return x+(ao?.price||0); },0));
-          const paidAmt = Math.round((s.paid||0)*price);
-          const pct = price>0?Math.round((s.paid||0)*100):0;
-          return (
-            <div key={s.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderTop:i?'1px solid var(--border)':'none'}}>
-              <Avatar tag={s.photo} size={30}/>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{fontSize:12,fontWeight:500,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.name}</div>
-                <div style={{fontSize:10,color:'var(--ink-3)'}}>Class {s.cls}</div>
-              </div>
-              <div style={{width:70,textAlign:'right'}}>
-                <div style={{fontWeight:600,fontSize:12}}>${paidAmt.toLocaleString()}</div>
-                <div style={{fontSize:9,color:'var(--ink-3)'}}>of ${price.toLocaleString()}</div>
-              </div>
-              <div style={{width:50}}>
-                <div style={{height:5,background:'var(--surface-muted)',borderRadius:99,overflow:'hidden'}}>
-                  <div style={{width:`${pct}%`,height:'100%',background:pct>=100?'var(--good)':'var(--accent)',borderRadius:99}}/>
-                </div>
-                <div style={{fontSize:9,color:'var(--ink-3)',textAlign:'right',marginTop:1}}>{pct}%</div>
-              </div>
-            </div>
-          );
-        })}
-      </Card>
     </div>
   );
 };
