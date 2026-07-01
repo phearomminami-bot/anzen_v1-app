@@ -942,14 +942,6 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
                 }}>{viewLabel(k)}</button>
               ))}
             </div>
-            {v==='week' && (
-              <div style={{display:'flex',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:8,padding:2}} title={tr('បង្ហាញ​ម៉ោង​ធ្វើ​ការ ឬ ២៤ ម៉ោង','Show working hours or the full 24h')}>
-                {[['work',tr('៧–៦ល្ងាច','7–18')],['all',tr('២៤ ម៉ោង','24h')]].map(([k,lbl])=>{
-                  const on=(k==='all')===allHours;
-                  return <button key={k} onClick={()=>setAllHours(k==='all')} style={{padding:'5px 10px',border:'none',background:on?'var(--ink)':'transparent',color:on?'var(--bg)':'var(--ink-2)',borderRadius:6,fontSize:12,fontWeight:500,cursor:'pointer',whiteSpace:'nowrap'}}>{lbl}</button>;
-                })}
-              </div>
-            )}
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(o=>o-1)}>{tr('◀ មុន','◀ Prev')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(0)}>{tr('ថ្ងៃ​នេះ','Today')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(o=>o+1)}>{tr('បន្ទាប់ ▶','Next ▶')}</Btn>
@@ -1109,15 +1101,25 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
         );
       })()}
 
-      {bp.mobile && (
-        <div style={{display:'flex',justifyContent:'flex-end'}}>
-          <div style={{display:'flex',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:8,padding:2}}>
-            {[['work',tr('ម៉ោង​ធ្វើ​ការ','Work hrs')],['all',tr('២៤ ម៉ោង','24h')]].map(([k,lbl])=>{
-              const on=(k==='all')===allHours;
-              return <button key={k} onClick={()=>setAllHours(k==='all')} style={{padding:'6px 12px',border:'none',background:on?'var(--ink)':'transparent',color:on?'var(--bg)':'var(--ink-2)',borderRadius:6,fontSize:12,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}}>{lbl}</button>;
-            })}
-          </div>
-        </div>
+      {/* Small floating clock toggle (bottom-right): working hours ⇄ full 24h. */}
+      {(bp.mobile || v==='week') && (
+        <button onClick={()=>setAllHours(a=>!a)}
+          title={allHours ? tr('បង្ហាញ​តែ​ម៉ោង​ធ្វើ​ការ (៧–៦ល្ងាច)','Show working hours (7–18)') : tr('បង្ហាញ​ទាំង ២៤ ម៉ោង','Show all 24 hours')}
+          aria-label={allHours ? '24 hours' : 'working hours'}
+          style={{
+            position:'fixed', right:16, bottom: bp.mobile ? 82 : 24, zIndex:60,
+            width:44, height:44, borderRadius:'50%', cursor:'pointer', padding:0,
+            border:'1px solid '+(allHours ? 'var(--accent)' : 'var(--border-strong)'),
+            background: allHours ? 'var(--accent)' : 'var(--surface)',
+            color: allHours ? '#fff' : 'var(--ink-2)',
+            boxShadow:'0 3px 12px rgba(0,0,0,.22)',
+            display:'flex', alignItems:'center', justifyContent:'center', lineHeight:1,
+          }}>
+          <span style={{fontSize:19}}>🕐</span>
+          {allHours && <span style={{position:'absolute',bottom:-3,right:-3,fontSize:8,fontWeight:800,
+            background:'#fff',color:'var(--accent)',borderRadius:7,padding:'1px 3px',lineHeight:1.1,
+            border:'1px solid var(--accent)'}}>24</span>}
+        </button>
       )}
 
       {bp.mobile

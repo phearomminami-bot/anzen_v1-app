@@ -573,9 +573,6 @@ window.__trRegistry = {
   "Pasted copy ✓": "បាន​ដាក់​ច្បាប់​ចម្លង ✓",
   "Moved ✓": "បាន​ផ្លាស់​ទី ✓",
   "tap an empty slot to place": "ចុច​ប្រអប់​ទំនេរ​ដើម្បី​ដាក់",
-  "Show working hours or the full 24h": "បង្ហាញ​ម៉ោង​ធ្វើ​ការ ឬ ២៤ ម៉ោង",
-  "7–18": "៧–៦ល្ងាច",
-  "24h": "២៤ ម៉ោង",
   "◀ Prev": "◀ មុន",
   "Next ▶": "បន្ទាប់ ▶",
   "PDF": "PDF",
@@ -587,7 +584,8 @@ window.__trRegistry = {
   "Clear": "សម្អាត",
   "Stop": "ឈប់",
   "Clear all highlights": "លុប​ highlight​ ទាំង​អស់",
-  "Work hrs": "ម៉ោង​ធ្វើ​ការ",
+  "Show working hours (7–18)": "បង្ហាញ​តែ​ម៉ោង​ធ្វើ​ការ (៧–៦ល្ងាច)",
+  "Show all 24 hours": "បង្ហាញ​ទាំង ២៤ ម៉ោង",
   "Download PDF (month)": "ទាញ​យក PDF (ប្រចាំ​ខែ)",
   "Student colours": "ពណ៌សិស្ស",
   "Graduated": "បានបញ្ចប់",
@@ -1701,9 +1699,6 @@ window.__trGroups = {
     "Pasted copy ✓": "បាន​ដាក់​ច្បាប់​ចម្លង ✓",
     "Moved ✓": "បាន​ផ្លាស់​ទី ✓",
     "tap an empty slot to place": "ចុច​ប្រអប់​ទំនេរ​ដើម្បី​ដាក់",
-    "Show working hours or the full 24h": "បង្ហាញ​ម៉ោង​ធ្វើ​ការ ឬ ២៤ ម៉ោង",
-    "7–18": "៧–៦ល្ងាច",
-    "24h": "២៤ ម៉ោង",
     "◀ Prev": "◀ មុន",
     "Next ▶": "បន្ទាប់ ▶",
     "PDF": "PDF",
@@ -1715,7 +1710,8 @@ window.__trGroups = {
     "Clear": "ដោះ​ស្រាយ",
     "Stop": "ឈប់",
     "Clear all highlights": "លុប​ highlight​ ទាំង​អស់",
-    "Work hrs": "ម៉ោង​ធ្វើ​ការ",
+    "Show working hours (7–18)": "បង្ហាញ​តែ​ម៉ោង​ធ្វើ​ការ (៧–៦ល្ងាច)",
+    "Show all 24 hours": "បង្ហាញ​ទាំង ២៤ ម៉ោង",
     "Download PDF (month)": "ទាញ​យក PDF (ប្រចាំ​ខែ)",
     "Student colours": "ពណ៌សិស្ស",
     "Graduated": "បានបញ្ចប់",
@@ -18910,33 +18906,7 @@ var ScheduleScreen = ({
         fontWeight: 500,
         cursor: 'pointer'
       }
-    }, viewLabel(k)))), v === 'week' && React.createElement("div", {
-      style: {
-        display: 'flex',
-        background: 'var(--surface)',
-        border: '1px solid var(--border)',
-        borderRadius: 8,
-        padding: 2
-      },
-      title: tr('បង្ហាញ​ម៉ោង​ធ្វើ​ការ ឬ ២៤ ម៉ោង', 'Show working hours or the full 24h')
-    }, [['work', tr('៧–៦ល្ងាច', '7–18')], ['all', tr('២៤ ម៉ោង', '24h')]].map(([k, lbl]) => {
-      var on = k === 'all' === allHours;
-      return React.createElement("button", {
-        key: k,
-        onClick: () => setAllHours(k === 'all'),
-        style: {
-          padding: '5px 10px',
-          border: 'none',
-          background: on ? 'var(--ink)' : 'transparent',
-          color: on ? 'var(--bg)' : 'var(--ink-2)',
-          borderRadius: 6,
-          fontSize: 12,
-          fontWeight: 500,
-          cursor: 'pointer',
-          whiteSpace: 'nowrap'
-        }
-      }, lbl);
-    })), React.createElement(Btn, {
+    }, viewLabel(k)))), React.createElement(Btn, {
       kind: "ghost",
       size: "md",
       onClick: () => setWeekOffset(o => o - 1)
@@ -19379,37 +19349,48 @@ var ScheduleScreen = ({
         flexShrink: 0
       }
     }, "\xD7")))));
-  })(), bp.mobile && React.createElement("div", {
+  })(), (bp.mobile || v === 'week') && React.createElement("button", {
+    onClick: () => setAllHours(a => !a),
+    title: allHours ? tr('បង្ហាញ​តែ​ម៉ោង​ធ្វើ​ការ (៧–៦ល្ងាច)', 'Show working hours (7–18)') : tr('បង្ហាញ​ទាំង ២៤ ម៉ោង', 'Show all 24 hours'),
+    "aria-label": allHours ? '24 hours' : 'working hours',
     style: {
+      position: 'fixed',
+      right: 16,
+      bottom: bp.mobile ? 82 : 24,
+      zIndex: 60,
+      width: 44,
+      height: 44,
+      borderRadius: '50%',
+      cursor: 'pointer',
+      padding: 0,
+      border: '1px solid ' + (allHours ? 'var(--accent)' : 'var(--border-strong)'),
+      background: allHours ? 'var(--accent)' : 'var(--surface)',
+      color: allHours ? '#fff' : 'var(--ink-2)',
+      boxShadow: '0 3px 12px rgba(0,0,0,.22)',
       display: 'flex',
-      justifyContent: 'flex-end'
+      alignItems: 'center',
+      justifyContent: 'center',
+      lineHeight: 1
     }
-  }, React.createElement("div", {
+  }, React.createElement("span", {
     style: {
-      display: 'flex',
-      background: 'var(--surface)',
-      border: '1px solid var(--border)',
-      borderRadius: 8,
-      padding: 2
+      fontSize: 19
     }
-  }, [['work', tr('ម៉ោង​ធ្វើ​ការ', 'Work hrs')], ['all', tr('២៤ ម៉ោង', '24h')]].map(([k, lbl]) => {
-    var on = k === 'all' === allHours;
-    return React.createElement("button", {
-      key: k,
-      onClick: () => setAllHours(k === 'all'),
-      style: {
-        padding: '6px 12px',
-        border: 'none',
-        background: on ? 'var(--ink)' : 'transparent',
-        color: on ? 'var(--bg)' : 'var(--ink-2)',
-        borderRadius: 6,
-        fontSize: 12,
-        fontWeight: 600,
-        cursor: 'pointer',
-        whiteSpace: 'nowrap'
-      }
-    }, lbl);
-  }))), bp.mobile ? React.createElement(ScheduleWeek, _extends({}, viewProps, {
+  }, "\uD83D\uDD50"), allHours && React.createElement("span", {
+    style: {
+      position: 'absolute',
+      bottom: -3,
+      right: -3,
+      fontSize: 8,
+      fontWeight: 800,
+      background: '#fff',
+      color: 'var(--accent)',
+      borderRadius: 7,
+      padding: '1px 3px',
+      lineHeight: 1.1,
+      border: '1px solid var(--accent)'
+    }
+  }, "24")), bp.mobile ? React.createElement(ScheduleWeek, _extends({}, viewProps, {
     dayNav: {
       onPrev: () => setDayOffset(o => o - 1),
       onNext: () => setDayOffset(o => o + 1),
