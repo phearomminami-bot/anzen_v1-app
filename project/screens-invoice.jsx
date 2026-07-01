@@ -1,16 +1,26 @@
 // screens-invoice.jsx — Create-invoice screen with live preview
 
-// Derive live plans from settings; falls back to hard defaults if settings not loaded yet
+// Derive live plans from settings; falls back to hard defaults if settings not loaded yet.
+// The Base Tuition (AT / MT) set in Settings is surfaced here as the first two
+// selectable plans, so it shows up — and is billable — in the invoice screen.
+const getBaseTuitionPlans = () => {
+  const ss = window.__schoolSettings || {};
+  const out = [];
+  if (ss.price_AT != null) out.push({ id:'base-AT', cls:'B', km:'ថ្លៃ​សិក្សា​មូលដ្ឋាន · AT (លេខ​អូតូ)', hrs:null, price:Number(ss.price_AT)||0, isExtra:false, isBase:true });
+  if (ss.price_MT != null) out.push({ id:'base-MT', cls:'B', km:'ថ្លៃ​សិក្សា​មូលដ្ឋាន · MT (លេខ​ដៃ)', hrs:null, price:Number(ss.price_MT)||0, isExtra:false, isBase:true });
+  return out;
+};
 const getPlans = () => {
   const pricing = window.__schoolSettings?.pricing;
-  if (!pricing || !pricing.length) return [
+  const base = getBaseTuitionPlans();
+  if (!pricing || !pricing.length) return [...base,
     {id:'plan-1', cls:'B', km:'ស្តង់ដារ', hrs:30, price:180, isExtra:false},
     {id:'plan-2', cls:'B', km:'បន្ថែម',  hrs:40, price:240, isExtra:false},
     {id:'plan-3', cls:'A', km:'ស្តង់ដារ ម៉ូតូ',      hrs:18, price:110, isExtra:false},
     {id:'plan-4', cls:'C', km:'ស្តង់ដារ ឡានដឹក',   hrs:40, price:320, isExtra:false},
     {id:'plan-5', cls:'+', km:'ម៉ោងបន្ថែម', hrs:null, price:20, isExtra:true},
   ];
-  return pricing.map(p => ({
+  return [...base, ...pricing.map(p => ({
     id: `plan-${p.id}`,
     cls: p.cls,
     km: p.km,
@@ -18,7 +28,7 @@ const getPlans = () => {
     price: p.price,
     isExtra: p.cls === '+',
     inc: p.inc,
-  }));
+  }))];
 };
 
 const ALL_PAYMENT_METHODS = [
@@ -99,7 +109,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
 
   const planLine = isExtraInvoice
     ? { id:'extra', km:'ម៉ោងបន្ថែម', sub:`${extraHours} × $${EXTRA_HOUR_PRICE} / ម៉ោង`, qty: extraHours, price: EXTRA_HOUR_PRICE }
-    : { id: plan.id, km: `ថ្នាក់ ${clsKm(plan.cls)} · ${plan.km}`, sub: `${plan.hrs} ម៉ោងបង្រៀន`, qty: 1, price: plan.price };
+    : { id: plan.id, km: `ថ្នាក់ ${clsKm(plan.cls)} · ${plan.km}`, sub: plan.hrs ? `${plan.hrs} ម៉ោងបង្រៀន` : (plan.isBase ? 'ថ្លៃ​សិក្សា​មូលដ្ឋាន' : ''), qty: 1, price: plan.price };
   const lines = [planLine, ...addons.filter(a => a.qty > 0)];
   const subtotal    = lines.reduce((s, l) => s + l.qty * l.price, 0);
   const discountAmt = Math.round(subtotal * discountPct / 100);
@@ -280,7 +290,7 @@ const NewInvoiceScreen = ({ studentId: initStudentId }) => {
                         <Badge tone={sel?'accent':'neutral'}>{p.isExtra ? '+ ម៉ោង' : `ថ្នាក់ ${clsKm(p.cls)}`}</Badge>
                         <span style={{fontSize:12,fontWeight:500,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{p.km}</span>
                       </div>
-                      <div style={{fontSize:10,color:'var(--ink-3)',marginTop:2}}>{p.isExtra ? 'តាម​ម៉ោង' : `${p.hrs} ម៉ោង`}</div>
+                      <div style={{fontSize:10,color:'var(--ink-3)',marginTop:2}}>{p.isExtra ? 'តាម​ម៉ោង' : p.hrs ? `${p.hrs} ម៉ោង` : (p.isBase ? 'ថ្លៃ​សិក្សា​មូលដ្ឋាន' : '—')}</div>
                     </div>
                     <span style={{fontSize:16,fontWeight:700,fontFamily:'var(--font-display)',whiteSpace:'nowrap',flexShrink:0}}>
                       ${p.price}{p.isExtra && <span style={{fontSize:10,color:'var(--ink-3)',fontWeight:400}}>/ម៉ោង</span>}

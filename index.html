@@ -47114,9 +47114,33 @@ Object.assign(window, {
 </script>
 
 <script>
+var getBaseTuitionPlans = () => {
+  var ss = window.__schoolSettings || {};
+  var out = [];
+  if (ss.price_AT != null) out.push({
+    id: 'base-AT',
+    cls: 'B',
+    km: 'ថ្លៃ​សិក្សា​មូលដ្ឋាន · AT (លេខ​អូតូ)',
+    hrs: null,
+    price: Number(ss.price_AT) || 0,
+    isExtra: false,
+    isBase: true
+  });
+  if (ss.price_MT != null) out.push({
+    id: 'base-MT',
+    cls: 'B',
+    km: 'ថ្លៃ​សិក្សា​មូលដ្ឋាន · MT (លេខ​ដៃ)',
+    hrs: null,
+    price: Number(ss.price_MT) || 0,
+    isExtra: false,
+    isBase: true
+  });
+  return out;
+};
 var getPlans = () => {
   var pricing = window.__schoolSettings?.pricing;
-  if (!pricing || !pricing.length) return [{
+  var base = getBaseTuitionPlans();
+  if (!pricing || !pricing.length) return [...base, {
     id: 'plan-1',
     cls: 'B',
     km: 'ស្តង់ដារ',
@@ -47152,7 +47176,7 @@ var getPlans = () => {
     price: 20,
     isExtra: true
   }];
-  return pricing.map(p => ({
+  return [...base, ...pricing.map(p => ({
     id: `plan-${p.id}`,
     cls: p.cls,
     km: p.km,
@@ -47160,7 +47184,7 @@ var getPlans = () => {
     price: p.price,
     isExtra: p.cls === '+',
     inc: p.inc
-  }));
+  }))];
 };
 var ALL_PAYMENT_METHODS = [{
   id: 'ABA',
@@ -47284,7 +47308,7 @@ var NewInvoiceScreen = ({
   } : {
     id: plan.id,
     km: `ថ្នាក់ ${clsKm(plan.cls)} · ${plan.km}`,
-    sub: `${plan.hrs} ម៉ោងបង្រៀន`,
+    sub: plan.hrs ? `${plan.hrs} ម៉ោងបង្រៀន` : plan.isBase ? 'ថ្លៃ​សិក្សា​មូលដ្ឋាន' : '',
     qty: 1,
     price: plan.price
   };
@@ -47607,7 +47631,7 @@ var NewInvoiceScreen = ({
         color: 'var(--ink-3)',
         marginTop: 2
       }
-    }, p.isExtra ? 'តាម​ម៉ោង' : `${p.hrs} ម៉ោង`)), React.createElement("span", {
+    }, p.isExtra ? 'តាម​ម៉ោង' : p.hrs ? `${p.hrs} ម៉ោង` : p.isBase ? 'ថ្លៃ​សិក្សា​មូលដ្ឋាន' : '—')), React.createElement("span", {
       style: {
         fontSize: 16,
         fontWeight: 700,
@@ -53834,6 +53858,11 @@ var PricingSettings = ({
     tr
   } = useAppActions();
   var ss = window.__schoolSettings;
+  var persist = () => {
+    onDirty();
+    if (window.saveAllData) window.saveAllData();
+    if (window.__notifySettingsChanged) window.__notifySettingsChanged();
+  };
   var [rows, setRows] = React.useState((ss.pricing || []).map(p => ({
     ...p
   })));
@@ -53855,7 +53884,7 @@ var PricingSettings = ({
   var commit = next => {
     setRows(next);
     ss.pricing = next;
-    onDirty();
+    persist();
   };
   var [addonRows, setAddonRows] = React.useState((ss.addons || []).map(a => ({
     ...a
@@ -53871,7 +53900,7 @@ var PricingSettings = ({
   var commitAddons = next => {
     setAddonRows(next);
     ss.addons = next;
-    onDirty();
+    persist();
   };
   var startEditAddon = row => {
     setAddonEditId(row.id);
@@ -53962,12 +53991,12 @@ var PricingSettings = ({
     };
     setPayments(next);
     ss.payments = next;
-    onDirty();
+    persist();
   };
   var upVat = v => {
     setVat(v);
     ss.vat = v;
-    onDirty();
+    persist();
   };
   var payMethods = [{
     k: 'aba',
@@ -53993,6 +54022,7 @@ var PricingSettings = ({
   var saveTuition = (field, val) => {
     ss[field] = val;
     onDirty();
+    if (window.__notifySettingsChanged) window.__notifySettingsChanged();
   };
   return React.createElement(React.Fragment, null, React.createElement(Card, {
     label: tr('ថ្លៃ​សិក្សា​មូលដ្ឋាន', 'BASE TUITION')

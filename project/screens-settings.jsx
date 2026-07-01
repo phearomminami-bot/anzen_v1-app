@@ -919,6 +919,14 @@ const PermCell = ({ v }) => {
 const PricingSettings = ({ onDirty }) => {
   const { toast, tr } = useAppActions();
   const ss = window.__schoolSettings;
+  // Pricing edits are discrete (per row) — persist them fully (incl. cloud) and
+  // notify open screens so Billing reflects the change immediately and it never
+  // reverts to the old value after a cloud reload.
+  const persist = () => {
+    onDirty();
+    if (window.saveAllData) window.saveAllData();
+    if (window.__notifySettingsChanged) window.__notifySettingsChanged();
+  };
   const [rows, setRows]     = React.useState((ss.pricing||[]).map(p=>({...p})));
   const [editId, setEditId] = React.useState(null);
   const [draft, setDraft]   = React.useState({});
@@ -927,7 +935,7 @@ const PricingSettings = ({ onDirty }) => {
   const [payments, setPayments] = React.useState({...(ss.payments||{})});
   const [vat, setVat]       = React.useState(ss.vat);
 
-  const commit = (next) => { setRows(next); ss.pricing = next; onDirty(); };
+  const commit = (next) => { setRows(next); ss.pricing = next; persist(); };
 
   const [addonRows, setAddonRows]         = React.useState((ss.addons||[]).map(a=>({...a})));
   const [addonEditId, setAddonEditId]     = React.useState(null);
@@ -935,7 +943,7 @@ const PricingSettings = ({ onDirty }) => {
   const [addonAdding, setAddonAdding]     = React.useState(false);
   const [addonNewDraft, setAddonNewDraft] = React.useState({km:'',en:'',price:0});
 
-  const commitAddons = (next) => { setAddonRows(next); ss.addons = next; onDirty(); };
+  const commitAddons = (next) => { setAddonRows(next); ss.addons = next; persist(); };
   const startEditAddon  = (row) => { setAddonEditId(row.id); setAddonDraft({...row}); };
   const cancelEditAddon = ()    => { setAddonEditId(null); setAddonDraft({}); };
   const saveEditAddon   = ()    => {
@@ -979,10 +987,10 @@ const PricingSettings = ({ onDirty }) => {
     const next = {...payments, [key]: !payments[key]};
     setPayments(next);
     ss.payments = next;
-    onDirty();
+    persist();
   };
 
-  const upVat = v => { setVat(v); ss.vat = v; onDirty(); };
+  const upVat = v => { setVat(v); ss.vat = v; persist(); };
 
   const payMethods = [
     {k:'aba',   l:'ABA Mobile'},
@@ -997,7 +1005,8 @@ const PricingSettings = ({ onDirty }) => {
   const [priceMT, setPriceMT] = React.useState(ss.price_MT ?? 230);
   const saveTuition = (field, val) => {
     ss[field] = val;
-    onDirty();
+    onDirty();   // local debounce (cloud-synced when leaving Settings)
+    if (window.__notifySettingsChanged) window.__notifySettingsChanged();   // Billing reflects the base tuition live
   };
 
   return (
