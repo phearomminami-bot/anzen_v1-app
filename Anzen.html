@@ -45948,7 +45948,8 @@ var printLicenseAbroadRequest = s => {
   var bDay = dob ? toKh(dob.slice(8, 10)) : '';
   var bMonth = dob ? KMM[+dob.slice(5, 7) - 1] || toKh(dob.slice(5, 7)) : '';
   var bYear = dob ? toKh(dob.slice(0, 4)) : '';
-  var addr = [s.addr_house && 'ផ្ទះលេខ ' + s.addr_house, s.addr_street && 'ផ្លូវ ' + s.addr_street, s.addr_village && 'ភូមិ' + s.addr_village, s.addr_commune && 'ឃុំ/សង្កាត់ ' + s.addr_commune, (s.addr_district || s.district) && 'ស្រុក/ខណ្ឌ ' + (s.addr_district || s.district), s.addr_province && 'ខេត្ត/រាជធានី ' + s.addr_province].filter(Boolean).join(' ');
+  var addrParts = [s.addr_house && 'ផ្ទះលេខ ' + s.addr_house, s.addr_street && 'ផ្លូវ ' + s.addr_street, s.addr_village && 'ភូមិ' + s.addr_village, s.addr_commune && 'ឃុំ/សង្កាត់ ' + s.addr_commune, (s.addr_district || s.district) && 'ស្រុក/ខណ្ឌ ' + (s.addr_district || s.district), s.addr_province && 'ខេត្ត/រាជធានី ' + s.addr_province].filter(Boolean).join(' ');
+  var addr = s.address && s.address.trim() && s.address.trim() !== '—' ? s.address.trim() : addrParts;
   var name = s.name || s.en || '';
   var w = window.open('', '_blank', 'width=900,height=1100');
   if (!w) return;

@@ -3362,7 +3362,9 @@ const printLicenseAbroadRequest = (s) => {
   const bDay = dob ? toKh(dob.slice(8,10)) : '';
   const bMonth = dob ? (KMM[+dob.slice(5,7)-1] || toKh(dob.slice(5,7))) : '';
   const bYear = dob ? toKh(dob.slice(0,4)) : '';
-  const addr = [
+  // Prefer the single saved address (what the profile form writes today);
+  // fall back to composing from any legacy split fields so old data still shows.
+  const addrParts = [
     s.addr_house   && 'ផ្ទះលេខ ' + s.addr_house,
     s.addr_street  && 'ផ្លូវ ' + s.addr_street,
     s.addr_village && 'ភូមិ' + s.addr_village,
@@ -3370,6 +3372,7 @@ const printLicenseAbroadRequest = (s) => {
     (s.addr_district || s.district) && 'ស្រុក/ខណ្ឌ ' + (s.addr_district || s.district),
     s.addr_province && 'ខេត្ត/រាជធានី ' + s.addr_province,
   ].filter(Boolean).join(' ');
+  const addr = (s.address && s.address.trim() && s.address.trim() !== '—') ? s.address.trim() : addrParts;
   const name = s.name || s.en || '';
   const w = window.open('', '_blank', 'width=900,height=1100');
   if (!w) return;
