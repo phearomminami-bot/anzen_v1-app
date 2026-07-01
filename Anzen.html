@@ -573,6 +573,9 @@ window.__trRegistry = {
   "Pasted copy ✓": "បាន​ដាក់​ច្បាប់​ចម្លង ✓",
   "Moved ✓": "បាន​ផ្លាស់​ទី ✓",
   "tap an empty slot to place": "ចុច​ប្រអប់​ទំនេរ​ដើម្បី​ដាក់",
+  "Show working hours or the full 24h": "បង្ហាញ​ម៉ោង​ធ្វើ​ការ ឬ ២៤ ម៉ោង",
+  "7–18": "៧–៦ល្ងាច",
+  "24h": "២៤ ម៉ោង",
   "◀ Prev": "◀ មុន",
   "Next ▶": "បន្ទាប់ ▶",
   "PDF": "PDF",
@@ -584,6 +587,7 @@ window.__trRegistry = {
   "Clear": "សម្អាត",
   "Stop": "ឈប់",
   "Clear all highlights": "លុប​ highlight​ ទាំង​អស់",
+  "Work hrs": "ម៉ោង​ធ្វើ​ការ",
   "Download PDF (month)": "ទាញ​យក PDF (ប្រចាំ​ខែ)",
   "Student colours": "ពណ៌សិស្ស",
   "Graduated": "បានបញ្ចប់",
@@ -1697,6 +1701,9 @@ window.__trGroups = {
     "Pasted copy ✓": "បាន​ដាក់​ច្បាប់​ចម្លង ✓",
     "Moved ✓": "បាន​ផ្លាស់​ទី ✓",
     "tap an empty slot to place": "ចុច​ប្រអប់​ទំនេរ​ដើម្បី​ដាក់",
+    "Show working hours or the full 24h": "បង្ហាញ​ម៉ោង​ធ្វើ​ការ ឬ ២៤ ម៉ោង",
+    "7–18": "៧–៦ល្ងាច",
+    "24h": "២៤ ម៉ោង",
     "◀ Prev": "◀ មុន",
     "Next ▶": "បន្ទាប់ ▶",
     "PDF": "PDF",
@@ -1708,6 +1715,7 @@ window.__trGroups = {
     "Clear": "ដោះ​ស្រាយ",
     "Stop": "ឈប់",
     "Clear all highlights": "លុប​ highlight​ ទាំង​អស់",
+    "Work hrs": "ម៉ោង​ធ្វើ​ការ",
     "Download PDF (month)": "ទាញ​យក PDF (ប្រចាំ​ខែ)",
     "Student colours": "ពណ៌សិស្ស",
     "Graduated": "បានបញ្ចប់",
@@ -17307,7 +17315,8 @@ var ScheduleWeek = ({
   onPlace,
   onMoveLesson,
   exams = [],
-  onExamClick
+  onExamClick,
+  allHours = false
 }) => {
   var {
     openDetail,
@@ -17315,9 +17324,11 @@ var ScheduleWeek = ({
     tr
   } = useAppActions();
   var dateInputRef = React.useRef(null);
+  var startHour = allHours ? 0 : 7;
+  var endHour = allHours ? 24 : 19;
   var hours = Array.from({
-    length: 12
-  }, (_, i) => i + 7);
+    length: endHour - startHour
+  }, (_, i) => i + startHour);
   var today = todayStr();
   var isPaint = !!hlColor;
   var onSlot = (date, h) => {
@@ -17539,7 +17550,7 @@ var ScheduleWeek = ({
         len: 1,
         _note: true
       };
-    }).filter(n => n.h >= 7 && n.h < 19);
+    }).filter(n => n.h >= startHour && n.h < endHour);
     var dayExams = exams.filter(e => e.date === date && e.time).map(e => {
       var [hh, mm] = String(e.time).split(':').map(Number);
       return {
@@ -17548,7 +17559,7 @@ var ScheduleWeek = ({
         len: e.len || 2,
         _exam: true
       };
-    }).filter(e => e.h >= 7 && e.h < 19);
+    }).filter(e => e.h >= startHour && e.h < endHour);
     var layout = computeLayout([...dayLessons, ...dayNotes, ...dayExams]);
     var isSun = isSunday(date);
     return React.createElement("div", {
@@ -17563,8 +17574,8 @@ var ScheduleWeek = ({
         var lesson = LESSONS.find(x => x.id === id);
         if (!lesson) return;
         var rect = e.currentTarget.getBoundingClientRect();
-        var nh = 7 + Math.floor((e.clientY - rect.top) / 48);
-        nh = Math.max(7, Math.min(18, nh));
+        var nh = startHour + Math.floor((e.clientY - rect.top) / 48);
+        nh = Math.max(startHour, Math.min(endHour - 1, nh));
         onMoveLesson(lesson, date, nh);
       } : undefined,
       style: {
@@ -17645,7 +17656,7 @@ var ScheduleWeek = ({
         }
       }, "\u1791\u17C6\u1793\u17C1\u179A")));
     }), dayLessons.map((l, i) => {
-      var top = (l.h - 7) * 48 + 2;
+      var top = (l.h - startHour) * 48 + 2;
       var height = l.len * 48 - 4;
       var isCancelled = l.status === 'cancelled';
       var c = isCancelled ? {
@@ -17843,7 +17854,7 @@ var ScheduleWeek = ({
         }
       }, v.plate)));
     }), dayNotes.map(n => {
-      var top = (n.h - 7) * 48 + 1;
+      var top = (n.h - startHour) * 48 + 1;
       var {
         col,
         total
@@ -17913,7 +17924,7 @@ var ScheduleWeek = ({
         }
       }, "\uD83D\uDC65 ", invitedNames.join(' · ')));
     }), dayExams.map(e => {
-      var top = (e.h - 7) * 48 + 2;
+      var top = (e.h - startHour) * 48 + 2;
       var height = (e.len || 2) * 48 - 4;
       var {
         col,
@@ -18370,6 +18381,7 @@ var ScheduleScreen = ({
   var me = (role === 'instructor' ? window.__loggedInInstructorData || LOGIN_USERS.instructor : LOGIN_USERS[role] || LOGIN_USERS.admin) || {};
   var meName = (lang === 'km' ? me.km : me.en) || me.en || me.km || tr('នាយក', 'Admin');
   var [v, setV] = React.useState(view || 'week');
+  var [allHours, setAllHours] = React.useState(false);
   var [weekOffset, setWeekOffset] = React.useState(0);
   var [dayOffset, setDayOffset] = React.useState(0);
   var [ver, setVer] = React.useState(0);
@@ -18719,7 +18731,8 @@ var ScheduleScreen = ({
     onPlace: studentMode ? null : placeLesson,
     onMoveLesson: studentMode ? null : moveLesson,
     exams: visExams,
-    onExamClick: studentMode ? null : e => openDetail('exam', e)
+    onExamClick: studentMode ? null : e => openDetail('exam', e),
+    allHours
   };
   var selStyle = {
     padding: '6px 10px',
@@ -18897,7 +18910,33 @@ var ScheduleScreen = ({
         fontWeight: 500,
         cursor: 'pointer'
       }
-    }, viewLabel(k)))), React.createElement(Btn, {
+    }, viewLabel(k)))), v === 'week' && React.createElement("div", {
+      style: {
+        display: 'flex',
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 8,
+        padding: 2
+      },
+      title: tr('បង្ហាញ​ម៉ោង​ធ្វើ​ការ ឬ ២៤ ម៉ោង', 'Show working hours or the full 24h')
+    }, [['work', tr('៧–៦ល្ងាច', '7–18')], ['all', tr('២៤ ម៉ោង', '24h')]].map(([k, lbl]) => {
+      var on = k === 'all' === allHours;
+      return React.createElement("button", {
+        key: k,
+        onClick: () => setAllHours(k === 'all'),
+        style: {
+          padding: '5px 10px',
+          border: 'none',
+          background: on ? 'var(--ink)' : 'transparent',
+          color: on ? 'var(--bg)' : 'var(--ink-2)',
+          borderRadius: 6,
+          fontSize: 12,
+          fontWeight: 500,
+          cursor: 'pointer',
+          whiteSpace: 'nowrap'
+        }
+      }, lbl);
+    })), React.createElement(Btn, {
       kind: "ghost",
       size: "md",
       onClick: () => setWeekOffset(o => o - 1)
@@ -19340,7 +19379,37 @@ var ScheduleScreen = ({
         flexShrink: 0
       }
     }, "\xD7")))));
-  })(), bp.mobile ? React.createElement(ScheduleWeek, _extends({}, viewProps, {
+  })(), bp.mobile && React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'flex-end'
+    }
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      background: 'var(--surface)',
+      border: '1px solid var(--border)',
+      borderRadius: 8,
+      padding: 2
+    }
+  }, [['work', tr('ម៉ោង​ធ្វើ​ការ', 'Work hrs')], ['all', tr('២៤ ម៉ោង', '24h')]].map(([k, lbl]) => {
+    var on = k === 'all' === allHours;
+    return React.createElement("button", {
+      key: k,
+      onClick: () => setAllHours(k === 'all'),
+      style: {
+        padding: '6px 12px',
+        border: 'none',
+        background: on ? 'var(--ink)' : 'transparent',
+        color: on ? 'var(--bg)' : 'var(--ink-2)',
+        borderRadius: 6,
+        fontSize: 12,
+        fontWeight: 600,
+        cursor: 'pointer',
+        whiteSpace: 'nowrap'
+      }
+    }, lbl);
+  }))), bp.mobile ? React.createElement(ScheduleWeek, _extends({}, viewProps, {
     dayNav: {
       onPrev: () => setDayOffset(o => o - 1),
       onNext: () => setDayOffset(o => o + 1),

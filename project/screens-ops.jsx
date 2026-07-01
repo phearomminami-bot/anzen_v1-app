@@ -153,10 +153,13 @@ window.__SCHED_KIND = (kind) => ({
 }[kind === 'apply' ? 'apply' : 'exam']);
 
 // ── Week view ──
-const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], highlights = {}, onHighlight, hlColor = '', notes = [], onSlotClick, onNoteClick, dayNav = null, clip = null, onStartCopy, onStartMove, onPlace, onMoveLesson, exams = [], onExamClick }) => {
+const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], highlights = {}, onHighlight, hlColor = '', notes = [], onSlotClick, onNoteClick, dayNav = null, clip = null, onStartCopy, onStartMove, onPlace, onMoveLesson, exams = [], onExamClick, allHours = false }) => {
   const { openDetail, openForm, tr } = useAppActions();
   const dateInputRef = React.useRef(null);
-  const hours = Array.from({length:12}, (_,i)=> i+7); // 7..18
+  // Working hours 7..18 by default; the 24h toggle expands to the full day 0..23.
+  const startHour = allHours ? 0 : 7;
+  const endHour   = allHours ? 24 : 19;   // exclusive upper bound
+  const hours = Array.from({length: endHour - startHour}, (_,i)=> i + startHour);
   const today = todayStr();
   const isPaint = !!hlColor;
   // Slot click: use the chooser (lesson/note) if provided, else open lesson form.
@@ -238,12 +241,12 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
           const dayNotes = notes.filter(n => n.date === date && n.time).map(n => {
             const [hh,mm] = n.time.split(':').map(Number);
             return { ...n, h: hh + (mm||0)/60, len: 1, _note: true };
-          }).filter(n => n.h >= 7 && n.h < 19);
+          }).filter(n => n.h >= startHour && n.h < endHour);
           // Exams: separate from lessons, render green; join the overlap layout.
           const dayExams = exams.filter(e => e.date === date && e.time).map(e => {
             const [hh,mm] = String(e.time).split(':').map(Number);
             return { ...e, h: hh + (mm||0)/60, len: e.len || 2, _exam: true };
-          }).filter(e => e.h >= 7 && e.h < 19);
+          }).filter(e => e.h >= startHour && e.h < endHour);
           const layout = computeLayout([...dayLessons, ...dayNotes, ...dayExams]);
           const isSun = isSunday(date);
           return (
@@ -255,8 +258,8 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                 const lesson = LESSONS.find(x => x.id === id);
                 if (!lesson) return;
                 const rect = e.currentTarget.getBoundingClientRect();
-                let nh = 7 + Math.floor((e.clientY - rect.top) / 48);
-                nh = Math.max(7, Math.min(18, nh));
+                let nh = startHour + Math.floor((e.clientY - rect.top) / 48);
+                nh = Math.max(startHour, Math.min(endHour - 1, nh));
                 onMoveLesson(lesson, date, nh);
               } : undefined}
               style={{position:'relative',borderLeft:'1px solid var(--border)',background:date===today?'rgba(42,93,176,.02)':isSun?'rgba(176,65,62,.04)':'transparent'}}>
@@ -299,7 +302,7 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
               })}
               {/* Lesson blocks — Google Calendar-style columns for overlaps */}
               {dayLessons.map((l,i)=>{
-                const top = (l.h - 7) * 48 + 2;
+                const top = (l.h - startHour) * 48 + 2;
                 const height = l.len * 48 - 4;
                 const isCancelled = l.status === 'cancelled';
                 const c = isCancelled
@@ -364,7 +367,7 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
               {/* Note blocks — share the grid's column layout so they never
                   cover a lesson at the same time */}
               {dayNotes.map(n => {
-                const top = (n.h - 7) * 48 + 1;
+                const top = (n.h - startHour) * 48 + 1;
                 const { col, total } = layout.get(n) || { col:0, total:1 };
                 const pct = 100 / total;
                 const invitedNames = (n.invited||[]).map(id=>{ const i=INSTRUCTORS.find(x=>x.id===id); return i?(i.en||i.name):null; }).filter(Boolean);
@@ -394,7 +397,7 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
               })}
               {/* Exam blocks — always green, regardless of which students. */}
               {dayExams.map(e => {
-                const top = (e.h - 7) * 48 + 2;
+                const top = (e.h - startHour) * 48 + 2;
                 const height = (e.len || 2) * 48 - 4;
                 const { col, total } = layout.get(e) || { col:0, total:1 };
                 const pct = 100 / total;
@@ -620,6 +623,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   const me = (role === 'instructor' ? (window.__loggedInInstructorData || LOGIN_USERS.instructor) : (LOGIN_USERS[role] || LOGIN_USERS.admin)) || {};
   const meName = (lang === 'km' ? me.km : me.en) || me.en || me.km || tr('នាយក','Admin');
   const [v, setV] = React.useState(view || 'week');
+  const [allHours, setAllHours] = React.useState(false);   // false = working hours 7–18; true = full 24h
   const [weekOffset, setWeekOffset] = React.useState(0);
   const [dayOffset,  setDayOffset]  = React.useState(0);
   const [ver, setVer] = React.useState(0);
@@ -876,7 +880,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
     notes:visNotes, onSlotClick: studentMode ? null : openSlot, onNoteClick: (n)=>openDetail('note', n),
     clip: studentMode ? null : clip, onStartCopy: studentMode ? null : startCopy, onStartMove: studentMode ? null : startMove,
     onPlace: studentMode ? null : placeLesson, onMoveLesson: studentMode ? null : moveLesson,
-    exams: visExams, onExamClick: studentMode ? null : (e)=>openDetail('exam', e) };
+    exams: visExams, onExamClick: studentMode ? null : (e)=>openDetail('exam', e), allHours };
 
   const selStyle = {
     padding:'6px 10px',border:'1px solid var(--border)',borderRadius:7,
@@ -938,6 +942,14 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
                 }}>{viewLabel(k)}</button>
               ))}
             </div>
+            {v==='week' && (
+              <div style={{display:'flex',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:8,padding:2}} title={tr('បង្ហាញ​ម៉ោង​ធ្វើ​ការ ឬ ២៤ ម៉ោង','Show working hours or the full 24h')}>
+                {[['work',tr('៧–៦ល្ងាច','7–18')],['all',tr('២៤ ម៉ោង','24h')]].map(([k,lbl])=>{
+                  const on=(k==='all')===allHours;
+                  return <button key={k} onClick={()=>setAllHours(k==='all')} style={{padding:'5px 10px',border:'none',background:on?'var(--ink)':'transparent',color:on?'var(--bg)':'var(--ink-2)',borderRadius:6,fontSize:12,fontWeight:500,cursor:'pointer',whiteSpace:'nowrap'}}>{lbl}</button>;
+                })}
+              </div>
+            )}
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(o=>o-1)}>{tr('◀ មុន','◀ Prev')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(0)}>{tr('ថ្ងៃ​នេះ','Today')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(o=>o+1)}>{tr('បន្ទាប់ ▶','Next ▶')}</Btn>
@@ -1096,6 +1108,17 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
           </div>
         );
       })()}
+
+      {bp.mobile && (
+        <div style={{display:'flex',justifyContent:'flex-end'}}>
+          <div style={{display:'flex',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:8,padding:2}}>
+            {[['work',tr('ម៉ោង​ធ្វើ​ការ','Work hrs')],['all',tr('២៤ ម៉ោង','24h')]].map(([k,lbl])=>{
+              const on=(k==='all')===allHours;
+              return <button key={k} onClick={()=>setAllHours(k==='all')} style={{padding:'6px 12px',border:'none',background:on?'var(--ink)':'transparent',color:on?'var(--bg)':'var(--ink-2)',borderRadius:6,fontSize:12,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}}>{lbl}</button>;
+            })}
+          </div>
+        </div>
+      )}
 
       {bp.mobile
         ? <ScheduleWeek {...viewProps} dayNav={{
