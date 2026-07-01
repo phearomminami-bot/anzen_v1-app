@@ -240,7 +240,7 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
           // other. Give notes a 1-hour span for the overlap math.
           const dayNotes = notes.filter(n => n.date === date && n.time).map(n => {
             const [hh,mm] = n.time.split(':').map(Number);
-            return { ...n, h: hh + (mm||0)/60, len: 1, _note: true };
+            return { ...n, h: hh + (mm||0)/60, len: Math.max(1, Math.round(n.len||1)), _note: true };
           }).filter(n => n.h >= startHour && n.h < endHour);
           // Exams: separate from lessons, render green; join the overlap layout.
           const dayExams = exams.filter(e => e.date === date && e.time).map(e => {
@@ -368,6 +368,7 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                   cover a lesson at the same time */}
               {dayNotes.map(n => {
                 const top = (n.h - startHour) * 48 + 1;
+                const noteH = (n.len || 1) * 48 - 3;
                 const { col, total } = layout.get(n) || { col:0, total:1 };
                 const pct = 100 / total;
                 const invitedNames = (n.invited||[]).map(id=>{ const i=INSTRUCTORS.find(x=>x.id===id); return i?(i.en||i.name):null; }).filter(Boolean);
@@ -378,7 +379,7 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                       position:'absolute', top,
                       left:`calc(${col * pct}% + 4px)`,
                       width:`calc(${pct}% - 8px)`,
-                      minHeight:22,
+                      height: noteH, minHeight:22,
                       background:'rgba(250,204,21,.22)', border:'1px solid rgba(202,138,4,.6)', borderLeft:'3px solid #ca8a04',
                       borderRadius:6, padding:'3px 6px', overflow:'hidden', zIndex:3,
                       fontSize:10.5, textAlign:'left', cursor:'pointer', font:'inherit', color:'var(--ink)', boxSizing:'border-box',
@@ -675,10 +676,11 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
     if (!title && !description) { setNoteModal(null); return; }
     const time = noteModal.time || '';
     const invited = noteModal.invited || [];
+    const len = Math.max(1, parseInt(noteModal.len) || 1);
     // keep `text` mirrored to the title so any older consumer / cloud reader still works
     const text = title || description;
-    if (noteModal.id) saveNotes(notes.map(n => n.id === noteModal.id ? { ...n, date: noteModal.date, time, title, description, text, invited } : n));
-    else              saveNotes([...notes, { id: 'N' + Date.now(), date: noteModal.date, time, title, description, text, author: noteModal.author || meName, invited }]);
+    if (noteModal.id) saveNotes(notes.map(n => n.id === noteModal.id ? { ...n, date: noteModal.date, time, len, title, description, text, invited } : n));
+    else              saveNotes([...notes, { id: 'N' + Date.now(), date: noteModal.date, time, len, title, description, text, author: noteModal.author || meName, invited }]);
     if (window.__logActivity) window.__logActivity(noteModal.id ? 'edit' : 'create', 'note', (title || description || '').slice(0,60));
     setNoteModal(null);
   };
@@ -824,7 +826,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   // Click a time slot → open the create modal defaulting to the lesson tab,
   // pre-filled with that slot's date+hour (switchable to a note).
   const openSlot = (date, hour) => setNoteModal({ mode:'lesson', date, hour, time:String(hour).padStart(2,'0')+':00', title:'', description:'', author:meName, invited:[] });
-  const editNote = (n) => setNoteModal({ id:n.id, date:n.date, time:n.time||'', title:n.title||n.text||'', description:n.description||'', author:n.author, invited:n.invited||[] });
+  const editNote = (n) => setNoteModal({ id:n.id, date:n.date, time:n.time||'', len:n.len||1, title:n.title||n.text||'', description:n.description||'', author:n.author, invited:n.invited||[] });
   // Clicking a note opens a read-only detail (like the lesson detail); its
   // Edit/Delete buttons call back into these handlers.
   React.useEffect(() => {
@@ -1224,7 +1226,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
               );
             })() : (
             <>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 130px',gap:10}}>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 96px 104px',gap:10}}>
               <div>
                 <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5}}>{tr('កាល​បរិច្ឆេទ','Date')}</label>
                 <input type="date" value={noteModal.date} onChange={e=>setNoteModal(m=>({...m,date:e.target.value}))}
@@ -1234,6 +1236,13 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
                 <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5}}>{tr('ម៉ោង','Time')}</label>
                 <input type="time" value={noteModal.time || ''} onChange={e=>setNoteModal(m=>({...m,time:e.target.value}))}
                   style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',colorScheme:'light dark',fontFamily:'"JetBrains Mono",monospace'}}/>
+              </div>
+              <div>
+                <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5}}>{tr('ចំនួន​ម៉ោង','Hours')}</label>
+                <select value={noteModal.len||1} onChange={e=>setNoteModal(m=>({...m,len:parseInt(e.target.value)||1}))}
+                  style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',colorScheme:'light dark'}}>
+                  {[1,2,3,4,5,6,7,8].map(n=><option key={n} value={n}>{n} {tr('ម៉ោង','h')}</option>)}
+                </select>
               </div>
             </div>
             <div>
@@ -1322,13 +1331,15 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
             </div>
             <div style={{fontSize:11,color:'var(--ink-3)',marginTop:-6}}>{tr('មិន​រាប់​បញ្ចូល​ជា​មេរៀន','Not counted as a lesson')}</div>
 
-            <div style={{display:'grid',gridTemplateColumns:'1fr 110px 90px',gap:10}}>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 96px 104px',gap:10}}>
               <div><label style={lblSt}>{tr('កាល​បរិច្ឆេទ','Date')}</label>
                 <input type="date" value={examModal.date} onChange={e=>setExamModal(m=>({...m,date:e.target.value}))} style={inp}/></div>
               <div><label style={lblSt}>{tr('ម៉ោង','Time')}</label>
                 <input type="time" value={examModal.time||''} onChange={e=>setExamModal(m=>({...m,time:e.target.value}))} style={{...inp,fontFamily:'"JetBrains Mono",monospace'}}/></div>
-              <div><label style={lblSt}>{tr('រយៈ(ម៉ោង)','Hrs')}</label>
-                <input type="number" min="1" max="8" value={examModal.len} onChange={e=>setExamModal(m=>({...m,len:e.target.value}))} style={inp}/></div>
+              <div><label style={lblSt}>{tr('ចំនួន​ម៉ោង','Hours')}</label>
+                <select value={examModal.len} onChange={e=>setExamModal(m=>({...m,len:parseInt(e.target.value)||1}))} style={inp}>
+                  {[1,2,3,4,5,6,7,8].map(n=><option key={n} value={n}>{n} {tr('ម៉ោង','h')}</option>)}
+                </select></div>
             </div>
 
             {/* Students (multi) */}

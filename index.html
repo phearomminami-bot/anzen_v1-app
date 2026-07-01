@@ -594,6 +594,7 @@ window.__trRegistry = {
   "New note": "ចំណាំ​ថ្មី",
   "Book new lesson": "ណាត់​មេរៀន​ថ្មី",
   "Time": "ម៉ោង",
+  "Hours": "ម៉ោង",
   "e.g. Teacher meeting": "ឧ. ប្រជុំគ្រូ",
   "e.g. All-instructor meeting in the conference room at 2pm": "ឧ. ប្រជុំគ្រូទាំងអស់ នៅបន្ទប់ប្រជុំ ម៉ោង ២ រសៀល",
   "Invite instructors": "អញ្ជើញ​គ្រូ",
@@ -602,7 +603,6 @@ window.__trRegistry = {
   "No instructors": "មិន​មាន​គ្រូ",
   "New '+window.__SCHED_KIND(examModal.kind).en.toLowerCase())}\n            </div>\n            <div style={{fontSize:11,color:'var(--ink-3)": "កែ '+window.__SCHED_KIND(examModal.kind).km, 'Edit '+window.__SCHED_KIND(examModal.kind).en.toLowerCase()) : tr(window.__SCHED_KIND(examModal.kind).km+' ថ្មី",
   "Not counted as a lesson": "មិន​រាប់​បញ្ចូល​ជា​មេរៀន",
-  "Hrs": "រយៈ(ម៉ោង)",
   "Students (multiple)": "សិស្ស (ច្រើន​នាក់)",
   "+ Add student": "+ ជ្រើស​សិស្ស",
   "Instructors (multiple)": "គ្រូ (ច្រើន​នាក់)",
@@ -987,7 +987,6 @@ window.__trRegistry = {
   "Payment progress": "ការបង់ប្រាក់",
   "Payment log": "ប្រវត្តិ​បង់",
   "Study History": "ប្រវត្តសិក្សា",
-  "Hours": "ម៉ោង",
   "No exams yet": "មិន​ទាន់​មាន​ការ​ប្រឡង",
   "Apply": "ដាក់​ពាក្យ",
   "Tap to toggle status": "ចុច​ដើម្បី​ប្ដូរ​ស្ថានភាព",
@@ -1578,7 +1577,6 @@ window.__trGroups = {
     "Payment progress": "ការបង់ប្រាក់",
     "Payment log": "ប្រវត្តិ​បង់",
     "Study History": "ប្រវត្តសិក្សា",
-    "Hours": "ម៉ោង",
     "No exams yet": "មិន​ទាន់​មាន​ការ​ប្រឡង",
     "Apply": "ដាក់​ពាក្យ",
     "Tap to toggle status": "ចុច​ដើម្បី​ប្ដូរ​ស្ថានភាព",
@@ -1720,6 +1718,7 @@ window.__trGroups = {
     "New note": "ចំណាំ​ថ្មី",
     "Book new lesson": "កក់​មេរៀន​ថ្មី",
     "Time": "ម៉ោង",
+    "Hours": "ចំនួន​ម៉ោង",
     "e.g. Teacher meeting": "ឧ. ប្រជុំគ្រូ",
     "e.g. All-instructor meeting in the conference room at 2pm": "ឧ. ប្រជុំគ្រូទាំងអស់ នៅបន្ទប់ប្រជុំ ម៉ោង ២ រសៀល",
     "Invite instructors": "អញ្ជើញ​គ្រូ",
@@ -1728,7 +1727,6 @@ window.__trGroups = {
     "No instructors": "មិន​មាន​គ្រូ",
     "New '+window.__SCHED_KIND(examModal.kind).en.toLowerCase())}\n            </div>\n            <div style={{fontSize:11,color:'var(--ink-3)": "កែ '+window.__SCHED_KIND(examModal.kind).km, 'Edit '+window.__SCHED_KIND(examModal.kind).en.toLowerCase()) : tr(window.__SCHED_KIND(examModal.kind).km+' ថ្មី",
     "Not counted as a lesson": "មិន​រាប់​បញ្ចូល​ជា​មេរៀន",
-    "Hrs": "រយៈ(ម៉ោង)",
     "Students (multiple)": "សិស្ស (ច្រើន​នាក់)",
     "+ Add student": "+ ជ្រើស​សិស្ស",
     "Instructors (multiple)": "គ្រូ (ច្រើន​នាក់)",
@@ -17543,7 +17541,7 @@ var ScheduleWeek = ({
       return {
         ...n,
         h: hh + (mm || 0) / 60,
-        len: 1,
+        len: Math.max(1, Math.round(n.len || 1)),
         _note: true
       };
     }).filter(n => n.h >= startHour && n.h < endHour);
@@ -17851,6 +17849,7 @@ var ScheduleWeek = ({
       }, v.plate)));
     }), dayNotes.map(n => {
       var top = (n.h - startHour) * 48 + 1;
+      var noteH = (n.len || 1) * 48 - 3;
       var {
         col,
         total
@@ -17875,6 +17874,7 @@ var ScheduleWeek = ({
           top,
           left: `calc(${col * pct}% + 4px)`,
           width: `calc(${pct}% - 8px)`,
+          height: noteH,
           minHeight: 22,
           background: 'rgba(250,204,21,.22)',
           border: '1px solid rgba(202,138,4,.6)',
@@ -18437,11 +18437,13 @@ var ScheduleScreen = ({
     }
     var time = noteModal.time || '';
     var invited = noteModal.invited || [];
+    var len = Math.max(1, parseInt(noteModal.len) || 1);
     var text = title || description;
     if (noteModal.id) saveNotes(notes.map(n => n.id === noteModal.id ? {
       ...n,
       date: noteModal.date,
       time,
+      len,
       title,
       description,
       text,
@@ -18450,6 +18452,7 @@ var ScheduleScreen = ({
       id: 'N' + Date.now(),
       date: noteModal.date,
       time,
+      len,
       title,
       description,
       text,
@@ -18631,6 +18634,7 @@ var ScheduleScreen = ({
     id: n.id,
     date: n.date,
     time: n.time || '',
+    len: n.len || 1,
     title: n.title || n.text || '',
     description: n.description || '',
     author: n.author,
@@ -19675,7 +19679,7 @@ var ScheduleScreen = ({
   })() : React.createElement(React.Fragment, null, React.createElement("div", {
     style: {
       display: 'grid',
-      gridTemplateColumns: '1fr 130px',
+      gridTemplateColumns: '1fr 96px 104px',
       gap: 10
     }
   }, React.createElement("div", null, React.createElement("label", {
@@ -19733,7 +19737,36 @@ var ScheduleScreen = ({
       colorScheme: 'light dark',
       fontFamily: '"JetBrains Mono",monospace'
     }
-  }))), React.createElement("div", null, React.createElement("label", {
+  })), React.createElement("div", null, React.createElement("label", {
+    style: {
+      fontSize: 11,
+      fontWeight: 600,
+      color: 'var(--ink-2)',
+      display: 'block',
+      marginBottom: 5
+    }
+  }, tr('ចំនួន​ម៉ោង', 'Hours')), React.createElement("select", {
+    value: noteModal.len || 1,
+    onChange: e => setNoteModal(m => ({
+      ...m,
+      len: parseInt(e.target.value) || 1
+    })),
+    style: {
+      width: '100%',
+      padding: '9px 12px',
+      border: '1.5px solid var(--border)',
+      borderRadius: 8,
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      font: 'inherit',
+      fontSize: 13,
+      boxSizing: 'border-box',
+      colorScheme: 'light dark'
+    }
+  }, [1, 2, 3, 4, 5, 6, 7, 8].map(n => React.createElement("option", {
+    key: n,
+    value: n
+  }, n, " ", tr('ម៉ោង', 'h')))))), React.createElement("div", null, React.createElement("label", {
     style: {
       fontSize: 11,
       fontWeight: 600,
@@ -19995,7 +20028,7 @@ var ScheduleScreen = ({
     }, tr('មិន​រាប់​បញ្ចូល​ជា​មេរៀន', 'Not counted as a lesson')), React.createElement("div", {
       style: {
         display: 'grid',
-        gridTemplateColumns: '1fr 110px 90px',
+        gridTemplateColumns: '1fr 96px 104px',
         gap: 10
       }
     }, React.createElement("div", null, React.createElement("label", {
@@ -20023,17 +20056,17 @@ var ScheduleScreen = ({
       }
     })), React.createElement("div", null, React.createElement("label", {
       style: lblSt
-    }, tr('រយៈ(ម៉ោង)', 'Hrs')), React.createElement("input", {
-      type: "number",
-      min: "1",
-      max: "8",
+    }, tr('ចំនួន​ម៉ោង', 'Hours')), React.createElement("select", {
       value: examModal.len,
       onChange: e => setExamModal(m => ({
         ...m,
-        len: e.target.value
+        len: parseInt(e.target.value) || 1
       })),
       style: inp
-    }))), React.createElement("div", null, React.createElement("label", {
+    }, [1, 2, 3, 4, 5, 6, 7, 8].map(n => React.createElement("option", {
+      key: n,
+      value: n
+    }, n, " ", tr('ម៉ោង', 'h')))))), React.createElement("div", null, React.createElement("label", {
       style: lblSt
     }, tr('សិស្ស (ច្រើន​នាក់)', 'Students (multiple)'), " ", selStu.length > 0 && React.createElement("span", {
       style: {
