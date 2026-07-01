@@ -20710,6 +20710,7 @@ var generateSchedulePDF = ({
       body > *:not(#${HOST_ID}){display:none !important}
       #${HOST_ID}{position:static !important;overflow:visible !important}
       #${HOST_ID} .pdf-toolbar{display:none !important}
+      #${HOST_ID} .pdf-paper{zoom:1 !important;width:auto !important}
       @page{size:A4 landscape;margin:12mm}
     }`;
   document.head.appendChild(style);
@@ -20738,7 +20739,21 @@ var generateSchedulePDF = ({
     </div>
     <div class="pdf-paper">${bodyContent}</div>`;
   document.body.appendChild(host);
+  var SHEET_W = 840;
+  var fitToScreen = () => {
+    var paper = host.querySelector('.pdf-paper');
+    if (!paper || viewType !== 'month') return;
+    var avail = host.clientWidth || window.innerWidth || SHEET_W;
+    if (avail && avail < SHEET_W) {
+      paper.style.width = SHEET_W + 'px';
+      paper.style.zoom = (avail / SHEET_W).toFixed(3);
+    } else {
+      paper.style.width = '';
+      paper.style.zoom = '';
+    }
+  };
   var cleanup = () => {
+    window.removeEventListener('resize', fitToScreen);
     host.remove();
     style.remove();
   };
@@ -20748,6 +20763,8 @@ var generateSchedulePDF = ({
       window.print();
     } catch (e) {}
   };
+  fitToScreen();
+  window.addEventListener('resize', fitToScreen);
   var reinvokeLang = newLang => {
     if (newLang === curLang) return;
     var nextMonth = monthAnchor;
@@ -20775,6 +20792,7 @@ var generateSchedulePDF = ({
         M = monthAnchorDate.getMonth();
       host.querySelector('.pdf-paper').innerHTML = assemble(buildMonthGrid(monthAnchorDate), fmtMonthLabel(Y, M), monthHours(Y, M));
       monthInput.value = `${Y}-${pad2(M + 1)}`;
+      fitToScreen();
     };
     monthInput.onchange = () => {
       var [yy, mm] = monthInput.value.split('-').map(Number);

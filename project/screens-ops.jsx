@@ -1705,6 +1705,7 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
       body > *:not(#${HOST_ID}){display:none !important}
       #${HOST_ID}{position:static !important;overflow:visible !important}
       #${HOST_ID} .pdf-toolbar{display:none !important}
+      #${HOST_ID} .pdf-paper{zoom:1 !important;width:auto !important}
       @page{size:A4 landscape;margin:12mm}
     }`;
   document.head.appendChild(style);
@@ -1739,9 +1740,22 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
     <div class="pdf-paper">${bodyContent}</div>`;
   document.body.appendChild(host);
 
-  const cleanup = () => { host.remove(); style.remove(); };
+  // On a narrow phone the 7-column month grid gets squished and stacks tall.
+  // Render it at a comfortable fixed width (tablet-like) and zoom-to-fit, so the
+  // whole month stays tidy — just at a smaller font, matching the tablet layout.
+  const SHEET_W = 840;
+  const fitToScreen = () => {
+    const paper = host.querySelector('.pdf-paper');
+    if (!paper || viewType !== 'month') return;
+    const avail = host.clientWidth || window.innerWidth || SHEET_W;
+    if (avail && avail < SHEET_W) { paper.style.width = SHEET_W + 'px'; paper.style.zoom = (avail / SHEET_W).toFixed(3); }
+    else { paper.style.width = ''; paper.style.zoom = ''; }
+  };
+  const cleanup = () => { window.removeEventListener('resize', fitToScreen); host.remove(); style.remove(); };
   host.querySelector('#__pdfBack').onclick  = cleanup;
   host.querySelector('#__pdfPrint').onclick = () => { try { window.print(); } catch(e) {} };
+  fitToScreen();
+  window.addEventListener('resize', fitToScreen);
 
   // Switch language → re-render the whole PDF in the chosen language, keeping
   // the same view and (for month view) the currently-selected month.
@@ -1763,6 +1777,7 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
       const Y = monthAnchorDate.getFullYear(), M = monthAnchorDate.getMonth();
       host.querySelector('.pdf-paper').innerHTML = assemble(buildMonthGrid(monthAnchorDate), fmtMonthLabel(Y, M), monthHours(Y, M));
       monthInput.value = `${Y}-${pad2(M+1)}`;
+      fitToScreen();
     };
     monthInput.onchange = () => {
       const [yy, mm] = monthInput.value.split('-').map(Number);
