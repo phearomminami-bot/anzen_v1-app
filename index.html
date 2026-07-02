@@ -28329,6 +28329,10 @@ var SfEditPanel = ({
     pad: 0
   }, React.createElement("div", {
     style: {
+      position: 'sticky',
+      top: 0,
+      zIndex: 6,
+      background: 'var(--surface)',
       padding: '14px 18px',
       borderBottom: '1px solid var(--border)',
       display: 'flex',
@@ -28348,32 +28352,14 @@ var SfEditPanel = ({
       fontSize: 14,
       fontWeight: 600
     }
-  }, tr('កែ​សម្រួល', 'Edit'), " \u2014 ", s.id), React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 8,
-      flexWrap: 'wrap'
-    }
-  }, React.createElement(Btn, {
+  }, tr('កែ​សម្រួល', 'Edit'), " \u2014 ", s.id), React.createElement(Btn, {
     kind: "ghost",
     size: "sm",
     style: {
       color: 'var(--danger)'
     },
     onClick: () => setConfirm(true)
-  }, "\u179B\u17BB\u1794"), React.createElement(Btn, {
-    kind: "ghost",
-    size: "sm",
-    onClick: onCancel
-  }, "\u1794\u17C4\u17C7\u200B\u1794\u1784\u17CB"), React.createElement(Btn, {
-    kind: "primary",
-    size: "sm",
-    icon: React.createElement(Icon, {
-      name: "check",
-      size: 13
-    }),
-    onClick: save
-  }, "\u179A\u1780\u17D2\u179F\u17B6\u200B\u1791\u17BB\u1780"))), confirm && React.createElement("div", {
+  }, "\u179B\u17BB\u1794")), confirm && React.createElement("div", {
     style: {
       padding: 14,
       background: '#FDF2F2',
@@ -28866,7 +28852,33 @@ var SfEditPanel = ({
       ...p,
       accidentHistory: e.target.value
     }))
-  })))));
+  })))), React.createElement("div", {
+    style: {
+      position: 'sticky',
+      bottom: 0,
+      zIndex: 6,
+      background: 'var(--surface)',
+      borderTop: '1px solid var(--border)',
+      padding: '12px 18px',
+      display: 'flex',
+      justifyContent: 'flex-end',
+      gap: 8,
+      flexWrap: 'wrap',
+      boxShadow: '0 -2px 8px rgba(0,0,0,.05)'
+    }
+  }, React.createElement(Btn, {
+    kind: "ghost",
+    size: "md",
+    onClick: onCancel
+  }, tr('បោះ​បង់', 'Cancel')), React.createElement(Btn, {
+    kind: "primary",
+    size: "md",
+    icon: React.createElement(Icon, {
+      name: "check",
+      size: 14
+    }),
+    onClick: save
+  }, tr('រក្សា​ទុក', 'Save'))));
 };
 var SfRow = ({
   k,

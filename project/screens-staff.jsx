@@ -698,15 +698,12 @@ const SfEditPanel = ({ s, onSave, onCancel, onDelete, onSavePhoto }) => {
 
   return (
     <Card pad={0}>
-      <div style={{padding:'14px 18px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+      {/* Sticky header — stays visible while the form scrolls */}
+      <div style={{position:'sticky',top:0,zIndex:6,background:'var(--surface)',padding:'14px 18px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
         <UploadAvatar id={s.id} photo={s.photo} size={48} onUpload={onSavePhoto}/>
         <div style={{flex:'1 1 120px',minWidth:0,fontSize:14,fontWeight:600}}>{tr('កែ​សម្រួល','Edit')} — {s.id}</div>
-        <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-          <Btn kind="ghost" size="sm" style={{color:'var(--danger)'}}
-            onClick={()=>setConfirm(true)}>លុប</Btn>
-          <Btn kind="ghost" size="sm" onClick={onCancel}>បោះ​បង់</Btn>
-          <Btn kind="primary" size="sm" icon={<Icon name="check" size={13}/>} onClick={save}>រក្សា​ទុក</Btn>
-        </div>
+        <Btn kind="ghost" size="sm" style={{color:'var(--danger)'}}
+          onClick={()=>setConfirm(true)}>លុប</Btn>
       </div>
 
       {confirm && (
@@ -846,6 +843,12 @@ const SfEditPanel = ({ s, onSave, onCancel, onDelete, onSavePhoto }) => {
             <Field label={tr('ប្រវត្តិ​គ្រោះ','Accidents')}><Input value={ext.accidentHistory} onChange={e=>setExt(p=>({...p,accidentHistory:e.target.value}))}/></Field>
           </div>
         )}
+      </div>
+
+      {/* Sticky footer — Cancel / Save stay visible while scrolling */}
+      <div style={{position:'sticky',bottom:0,zIndex:6,background:'var(--surface)',borderTop:'1px solid var(--border)',padding:'12px 18px',display:'flex',justifyContent:'flex-end',gap:8,flexWrap:'wrap',boxShadow:'0 -2px 8px rgba(0,0,0,.05)'}}>
+        <Btn kind="ghost" size="md" onClick={onCancel}>{tr('បោះ​បង់','Cancel')}</Btn>
+        <Btn kind="primary" size="md" icon={<Icon name="check" size={14}/>} onClick={save}>{tr('រក្សា​ទុក','Save')}</Btn>
       </div>
     </Card>
   );
