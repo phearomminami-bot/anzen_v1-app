@@ -3430,13 +3430,17 @@ const printLicenseAbroadRequest = (s) => {
 
   <div class="attach">សូមជូនភ្ជាប់មកជាមួយនូវ ៖
     <div style="display:flex;align-items:baseline;margin-top:4px">
-      <span style="white-space:nowrap">- ច្បាប់ចម្លងបណ្ណបើកបរ&nbsp;</span>
-      <span class="blank" style="width:70px;margin:0 8px"></span>
+      <span style="flex:0 0 330px;display:inline-flex;align-items:baseline">
+        <span style="white-space:nowrap">- ច្បាប់ចម្លងបណ្ណបើកបរ&nbsp;</span>
+        <span class="blank" style="flex:1;margin:0 8px"></span>
+      </span>
       <span style="white-space:nowrap">១ច្បាប់</span>
     </div>
     <div style="display:flex;align-items:baseline">
-      <span style="white-space:nowrap">- ច្បាប់ចម្លងអត្តសញ្ញាណប័ណ្ណ&nbsp;</span>
-      <span class="blank" style="width:70px;margin:0 8px"></span>
+      <span style="flex:0 0 330px;display:inline-flex;align-items:baseline">
+        <span style="white-space:nowrap">- ច្បាប់ចម្លងអត្តសញ្ញាណប័ណ្ណ&nbsp;</span>
+        <span class="blank" style="flex:1;margin:0 8px"></span>
+      </span>
       <span style="white-space:nowrap">១ច្បាប់</span>
     </div>
   </div>
