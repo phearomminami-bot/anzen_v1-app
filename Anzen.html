@@ -27323,7 +27323,11 @@ var StaffScreen = () => {
     selectedId: selectedId,
     onSelect: selectStaff
   }))), tab === 'schedule' && React.createElement(SfSchedule, {
-    staff: staff
+    staff: activeStaff.slice().sort((a, b) => {
+      var A = a.since || '9999-99',
+        B = b.since || '9999-99';
+      return A < B ? -1 : A > B ? 1 : 0;
+    })
   }), tab === 'leave' && React.createElement(SfLeave, {
     staff: staff,
     leaves: leaves,

@@ -315,7 +315,7 @@ const StaffScreen = () => {
           )
         )}
 
-        {tab==='schedule' && <SfSchedule staff={staff}/>}
+        {tab==='schedule' && <SfSchedule staff={activeStaff.slice().sort((a,b)=>{ const A=a.since||'9999-99', B=b.since||'9999-99'; return A<B?-1:A>B?1:0; })}/>}
         {tab==='leave'    && <SfLeave    staff={staff} leaves={leaves} pending={pending} upcoming={upcoming} addLeave={addLeave} setAddLeave={setAddLeave} onApprove={approveLeave} onDeny={denyLeave} onDelete={deleteLeave} onEditDays={editLeaveDays}/>}
         {tab==='payroll'  && <SfPayroll  staff={staff}/>}
         {tab==='docs'     && <SfDocs     staff={staff} forceUpdate={forceUpdate}/>}
