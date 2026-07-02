@@ -18,7 +18,7 @@ const StaffScreen = () => {
   const { openForm, toast, tr, confirm } = useAppActions();
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   const [tab, setTab]         = React.useState('directory');
-  const [view, setView]       = React.useState('cards');
+  const [view, setView]       = React.useState('table');
   const [dept, setDept]       = React.useState('all');
   const [selectedId, setSelId] = React.useState(null);
   const [detailOpen, setDetailOpen] = React.useState(false);   // staff detail shows as a popup, not inline
