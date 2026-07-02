@@ -805,7 +805,7 @@ const SfEditPanel = ({ s, onSave, onCancel, onDelete, onSavePhoto }) => {
             <Field label={tr('អត្ត​សញ្ញាណ','ID/Passport')}><Input value={ext.idNum} onChange={e=>setExt(p=>({...p,idNum:e.target.value}))}/></Field>
             <div style={{gridColumn:'1/-1'}}><Field label={tr('អាសយដ្ឋាន','Address')}><Input value={ext.address} onChange={e=>setExt(p=>({...p,address:e.target.value}))}/></Field></div>
 
-            <div style={{gridColumn:'1/-1',font:'600 10px/1 "JetBrains Mono",monospace',letterSpacing:'.07em',color:'var(--ink-3)',paddingTop:6}}>{tr('ទំ​នាក់​ទំ​នង​អន្ត​រាយ','EMERGENCY CONTACT')}</div>
+            <div style={{gridColumn:'1/-1',font:'600 10px/1 "JetBrains Mono",monospace',letterSpacing:'.07em',color:'var(--ink-3)',paddingTop:6}}>{tr('ទំនាក់ទំនងបន្ទាន់','EMERGENCY CONTACT')}</div>
             <Field label={tr('ឈ្មោះ','Name')}><Input value={ext.emergencyName} onChange={e=>setExt(p=>({...p,emergencyName:e.target.value}))}/></Field>
             <Field label={tr('ទំ​នាក់','Relation')}><Dd value={ext.emergencyRel} onChange={e=>setExt(p=>({...p,emergencyRel:e.target.value}))} options={relOpts}/></Field>
             <Field label={tr('ទូរស័ព្ទ','Phone')}><Input value={ext.emergencyPhone} onChange={e=>setExt(p=>({...p,emergencyPhone:e.target.value}))}/></Field>
@@ -2125,12 +2125,20 @@ const SfExtendedInfo = ({ s }) => {
   const hasData = Object.values(ext).some(v => v && v !== 0 && v !== '');
   if (!hasData) return null;
 
+  // Stack label above value so the value gets the full column width — this
+  // stops dates/IDs from wrapping in the middle of a word on narrow screens.
   const XRow = ({k, v}) => v ? (
-    <div style={{display:'flex',gap:6,fontSize:12}}>
-      <span style={{color:'var(--ink-3)',flexShrink:0,minWidth:110}}>{k}</span>
-      <span style={{fontWeight:500}}>{v}</span>
+    <div style={{fontSize:12,minWidth:0}}>
+      <div style={{color:'var(--ink-3)',fontSize:10.5,marginBottom:1,whiteSpace:'nowrap'}}>{k}</div>
+      <div style={{fontWeight:500,overflowWrap:'break-word'}}>{v}</div>
     </div>
   ) : null;
+  const Sec = ({title, children}) => (
+    <div style={{minWidth:0}}>
+      <div style={{fontSize:11.5,fontWeight:700,color:'var(--ink-2)',marginBottom:8}}>{title}</div>
+      <div style={{display:'flex',flexDirection:'column',gap:8}}>{children}</div>
+    </div>
+  );
 
   const MARITAL = {single:'នៅ​លីវ', married:'រៀបការ', divorced:'លែង​លះ'};
   const EDU = {primary:'បឋម​សិក្សា', secondary:'មធ្យម​សិក្សា', high:'វិទ្យាល័យ', bachelor:'បរិញ្ញាបត្រ', master:'អនុ​បណ្ឌិត'};
@@ -2143,53 +2151,53 @@ const SfExtendedInfo = ({ s }) => {
         display:'flex',alignItems:'center',gap:8,color:'var(--ink-2)',fontSize:12,textAlign:'left',
       }}>
         <span style={{fontSize:10}}>{open?'▲':'▼'}</span>
-        ព័ត៌មានលម្អិតបន្ថែម · Extended profile
+        ព័ត៌មានលម្អិតបន្ថែម
         {!open && <span style={{fontSize:11,color:'var(--ink-3)',marginLeft:'auto'}}>ចុចដើម្បីបើក</span>}
       </button>
       {open && (
-        <div style={{padding:'0 18px 18px',display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:16}}>
-          <div>
-            <div style={{font:'500 10px/1 "JetBrains Mono",monospace',letterSpacing:'.08em',textTransform:'uppercase',color:'var(--ink-3)',marginBottom:8}}>ផ្ទាល់ខ្លួន · PERSONAL</div>
-            <div style={{display:'flex',flexDirection:'column',gap:6}}>
+        <div style={{padding:'0 18px 18px',display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(155px,1fr))',gap:16}}>
+          {(ext.gender||ext.dob||ext.marital||ext.idNum||ext.address) && (
+            <Sec title="ផ្ទាល់ខ្លួន">
               <XRow k="ភេទ" v={GENDER[ext.gender]||ext.gender}/>
-              <XRow k="ថ្ងៃ​ខែ" v={ext.dob}/>
+              <XRow k="ថ្ងៃខែកំណើត" v={ext.dob}/>
               <XRow k="ស្ថានភាព" v={MARITAL[ext.marital]||ext.marital}/>
-              <XRow k="អត្ត​សញ្ញាណ" v={ext.idNum}/>
+              <XRow k="អត្តសញ្ញាណ" v={ext.idNum}/>
               <XRow k="អាសយដ្ឋាន" v={ext.address}/>
-            </div>
-          </div>
-          <div>
-            <div style={{font:'500 10px/1 "JetBrains Mono",monospace',letterSpacing:'.08em',textTransform:'uppercase',color:'var(--ink-3)',marginBottom:8}}>អន្ត​រាយ · EMERGENCY</div>
-            <div style={{display:'flex',flexDirection:'column',gap:6}}>
+            </Sec>
+          )}
+          {(ext.emergencyName||ext.emergencyRel||ext.emergencyPhone) && (
+            <Sec title="ទំនាក់ទំនងបន្ទាន់">
               <XRow k="ឈ្មោះ" v={ext.emergencyName}/>
-              <XRow k="ទំ​នាក់" v={ext.emergencyRel}/>
+              <XRow k="ទំនាក់ទំនង" v={ext.emergencyRel}/>
               <XRow k="ទូរស័ព្ទ" v={ext.emergencyPhone}/>
-              <XRow k="ប្រភេទ" v={ext.empType}/>
-              <XRow k="អ្នក​គ្រប់​គ្រង" v={ext.manager}/>
-              {(ext.allowance||0) > 0 && <XRow k="ឧបត្ថម្ភ" v={`$${ext.allowance}`}/>}
-              <XRow k="គណនី" v={ext.bankAccount}/>
-            </div>
-          </div>
-          <div>
-            <div style={{font:'500 10px/1 "JetBrains Mono",monospace',letterSpacing:'.08em',textTransform:'uppercase',color:'var(--ink-3)',marginBottom:8}}>ការ​សិក្សា · EDUCATION</div>
-            <div style={{display:'flex',flexDirection:'column',gap:6}}>
+            </Sec>
+          )}
+          {(ext.empType||ext.manager||(ext.allowance>0)||ext.bankAccount) && (
+            <Sec title="ការងារ">
+              <XRow k="ប្រភេទការងារ" v={ext.empType}/>
+              <XRow k="អ្នកគ្រប់គ្រង" v={ext.manager}/>
+              {(ext.allowance||0) > 0 && <XRow k="ប្រាក់ឧបត្ថម្ភ" v={`$${ext.allowance}`}/>}
+              <XRow k="គណនីធនាគារ" v={ext.bankAccount}/>
+            </Sec>
+          )}
+          {(ext.eduLevel||ext.school||ext.languages||ext.skills) && (
+            <Sec title="ការសិក្សា">
               <XRow k="កម្រិត" v={EDU[ext.eduLevel]||ext.eduLevel}/>
               <XRow k="វិទ្យាស្ថាន" v={ext.school}/>
               <XRow k="ភាសា" v={ext.languages}/>
               <XRow k="ជំនាញ" v={ext.skills}/>
-            </div>
-          </div>
-          <div>
-            <div style={{font:'500 10px/1 "JetBrains Mono",monospace',letterSpacing:'.08em',textTransform:'uppercase',color:'var(--ink-3)',marginBottom:8}}>បើក​បរ · DRIVING</div>
-            <div style={{display:'flex',flexDirection:'column',gap:6}}>
-              <XRow k="ប្រភេទ​ប័ណ្ណ" v={ext.licenseType}/>
-              <XRow k="ផុត​" v={ext.licenseExpiry}/>
-              {(ext.drivingExp||0) > 0 && <XRow k="បទ​ពិសោធន៍" v={`${ext.drivingExp} ឆ្នាំ`}/>}
-              <XRow k="ថ្នាក់​គ្រូ" v={ext.instLevel}/>
+            </Sec>
+          )}
+          {(ext.licenseType||ext.licenseExpiry||(ext.drivingExp>0)||ext.instLevel||ext.assignedVehicle||ext.accidentHistory) && (
+            <Sec title="ការបើកបរ">
+              <XRow k="ប្រភេទប័ណ្ណ" v={ext.licenseType}/>
+              <XRow k="ថ្ងៃផុតកំណត់" v={ext.licenseExpiry}/>
+              {(ext.drivingExp||0) > 0 && <XRow k="បទពិសោធន៍" v={`${ext.drivingExp} ឆ្នាំ`}/>}
+              <XRow k="ថ្នាក់គ្រូ" v={ext.instLevel}/>
               <XRow k="យានយន្ត" v={ext.assignedVehicle}/>
-              <XRow k="ប្រវត្តិ​គ្រោះ" v={ext.accidentHistory}/>
-            </div>
-          </div>
+              <XRow k="ប្រវត្តិគ្រោះថ្នាក់" v={ext.accidentHistory}/>
+            </Sec>
+          )}
         </div>
       )}
     </div>

@@ -800,7 +800,7 @@ window.__trRegistry = {
   "Marital status": "ស្ថានភាព",
   "ID/Passport": "អត្ត​សញ្ញាណ",
   "Address": "អាសយដ្ឋាន",
-  "EMERGENCY CONTACT": "ទំ​នាក់​ទំ​នង​អន្ត​រាយ",
+  "EMERGENCY CONTACT": "ទំនាក់ទំនងបន្ទាន់",
   "Name": "ឈ្មោះ",
   "Relation": "ទំ​នាក់",
   "Manager": "អ្នក​គ្រប់​គ្រង",
@@ -2122,7 +2122,7 @@ window.__trGroups = {
     "Marital status": "ស្ថានភាព",
     "ID/Passport": "អត្ត​សញ្ញាណ",
     "Address": "អាសយដ្ឋាន",
-    "EMERGENCY CONTACT": "ទំ​នាក់​ទំ​នង​អន្ត​រាយ",
+    "EMERGENCY CONTACT": "ទំនាក់ទំនងបន្ទាន់",
     "Name": "ឈ្មោះ",
     "Relation": "ទំ​នាក់",
     "Manager": "អ្នក​គ្រប់​គ្រង",
@@ -28680,7 +28680,7 @@ var SfEditPanel = ({
       color: 'var(--ink-3)',
       paddingTop: 6
     }
-  }, tr('ទំ​នាក់​ទំ​នង​អន្ត​រាយ', 'EMERGENCY CONTACT')), React.createElement(Field, {
+  }, tr('ទំនាក់ទំនងបន្ទាន់', 'EMERGENCY CONTACT')), React.createElement(Field, {
     label: tr('ឈ្មោះ', 'Name')
   }, React.createElement(Input, {
     value: ext.emergencyName,
@@ -31402,21 +31402,43 @@ var SfExtendedInfo = ({
     v
   }) => v ? React.createElement("div", {
     style: {
-      display: 'flex',
-      gap: 6,
-      fontSize: 12
+      fontSize: 12,
+      minWidth: 0
     }
-  }, React.createElement("span", {
+  }, React.createElement("div", {
     style: {
       color: 'var(--ink-3)',
-      flexShrink: 0,
-      minWidth: 110
+      fontSize: 10.5,
+      marginBottom: 1,
+      whiteSpace: 'nowrap'
     }
-  }, k), React.createElement("span", {
+  }, k), React.createElement("div", {
     style: {
-      fontWeight: 500
+      fontWeight: 500,
+      overflowWrap: 'break-word'
     }
   }, v)) : null;
+  var Sec = ({
+    title,
+    children
+  }) => React.createElement("div", {
+    style: {
+      minWidth: 0
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 11.5,
+      fontWeight: 700,
+      color: 'var(--ink-2)',
+      marginBottom: 8
+    }
+  }, title), React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 8
+    }
+  }, children));
   var MARITAL = {
     single: 'នៅ​លីវ',
     married: 'រៀបការ',
@@ -31456,7 +31478,7 @@ var SfExtendedInfo = ({
     style: {
       fontSize: 10
     }
-  }, open ? '▲' : '▼'), "\u1796\u17D0\u178F\u17CC\u1798\u17B6\u1793\u179B\u1798\u17D2\u17A2\u17B7\u178F\u1794\u1793\u17D2\u1790\u17C2\u1798 \xB7 Extended profile", !open && React.createElement("span", {
+  }, open ? '▲' : '▼'), "\u1796\u17D0\u178F\u17CC\u1798\u17B6\u1793\u179B\u1798\u17D2\u17A2\u17B7\u178F\u1794\u1793\u17D2\u1790\u17C2\u1798", !open && React.createElement("span", {
     style: {
       fontSize: 11,
       color: 'var(--ink-3)',
@@ -31466,87 +31488,53 @@ var SfExtendedInfo = ({
     style: {
       padding: '0 18px 18px',
       display: 'grid',
-      gridTemplateColumns: '1fr 1fr 1fr 1fr',
+      gridTemplateColumns: 'repeat(auto-fit,minmax(155px,1fr))',
       gap: 16
     }
-  }, React.createElement("div", null, React.createElement("div", {
-    style: {
-      font: '500 10px/1 "JetBrains Mono",monospace',
-      letterSpacing: '.08em',
-      textTransform: 'uppercase',
-      color: 'var(--ink-3)',
-      marginBottom: 8
-    }
-  }, "\u1795\u17D2\u1791\u17B6\u179B\u17CB\u1781\u17D2\u179B\u17BD\u1793 \xB7 PERSONAL"), React.createElement("div", {
-    style: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 6
-    }
+  }, (ext.gender || ext.dob || ext.marital || ext.idNum || ext.address) && React.createElement(Sec, {
+    title: "\u1795\u17D2\u1791\u17B6\u179B\u17CB\u1781\u17D2\u179B\u17BD\u1793"
   }, React.createElement(XRow, {
     k: "\u1797\u17C1\u1791",
     v: GENDER[ext.gender] || ext.gender
   }), React.createElement(XRow, {
-    k: "\u1790\u17D2\u1784\u17C3\u200B\u1781\u17C2",
+    k: "\u1790\u17D2\u1784\u17C3\u1781\u17C2\u1780\u17C6\u178E\u17BE\u178F",
     v: ext.dob
   }), React.createElement(XRow, {
     k: "\u179F\u17D2\u1790\u17B6\u1793\u1797\u17B6\u1796",
     v: MARITAL[ext.marital] || ext.marital
   }), React.createElement(XRow, {
-    k: "\u17A2\u178F\u17D2\u178F\u200B\u179F\u1789\u17D2\u1789\u17B6\u178E",
+    k: "\u17A2\u178F\u17D2\u178F\u179F\u1789\u17D2\u1789\u17B6\u178E",
     v: ext.idNum
   }), React.createElement(XRow, {
     k: "\u17A2\u17B6\u179F\u1799\u178A\u17D2\u178B\u17B6\u1793",
     v: ext.address
-  }))), React.createElement("div", null, React.createElement("div", {
-    style: {
-      font: '500 10px/1 "JetBrains Mono",monospace',
-      letterSpacing: '.08em',
-      textTransform: 'uppercase',
-      color: 'var(--ink-3)',
-      marginBottom: 8
-    }
-  }, "\u17A2\u1793\u17D2\u178F\u200B\u179A\u17B6\u1799 \xB7 EMERGENCY"), React.createElement("div", {
-    style: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 6
-    }
+  })), (ext.emergencyName || ext.emergencyRel || ext.emergencyPhone) && React.createElement(Sec, {
+    title: "\u1791\u17C6\u1793\u17B6\u1780\u17CB\u1791\u17C6\u1793\u1784\u1794\u1793\u17D2\u1791\u17B6\u1793\u17CB"
   }, React.createElement(XRow, {
     k: "\u1788\u17D2\u1798\u17C4\u17C7",
     v: ext.emergencyName
   }), React.createElement(XRow, {
-    k: "\u1791\u17C6\u200B\u1793\u17B6\u1780\u17CB",
+    k: "\u1791\u17C6\u1793\u17B6\u1780\u17CB\u1791\u17C6\u1793\u1784",
     v: ext.emergencyRel
   }), React.createElement(XRow, {
     k: "\u1791\u17BC\u179A\u179F\u17D0\u1796\u17D2\u1791",
     v: ext.emergencyPhone
-  }), React.createElement(XRow, {
-    k: "\u1794\u17D2\u179A\u1797\u17C1\u1791",
+  })), (ext.empType || ext.manager || ext.allowance > 0 || ext.bankAccount) && React.createElement(Sec, {
+    title: "\u1780\u17B6\u179A\u1784\u17B6\u179A"
+  }, React.createElement(XRow, {
+    k: "\u1794\u17D2\u179A\u1797\u17C1\u1791\u1780\u17B6\u179A\u1784\u17B6\u179A",
     v: ext.empType
   }), React.createElement(XRow, {
-    k: "\u17A2\u17D2\u1793\u1780\u200B\u1782\u17D2\u179A\u1794\u17CB\u200B\u1782\u17D2\u179A\u1784",
+    k: "\u17A2\u17D2\u1793\u1780\u1782\u17D2\u179A\u1794\u17CB\u1782\u17D2\u179A\u1784",
     v: ext.manager
   }), (ext.allowance || 0) > 0 && React.createElement(XRow, {
-    k: "\u17A7\u1794\u178F\u17D2\u1790\u1798\u17D2\u1797",
+    k: "\u1794\u17D2\u179A\u17B6\u1780\u17CB\u17A7\u1794\u178F\u17D2\u1790\u1798\u17D2\u1797",
     v: `$${ext.allowance}`
   }), React.createElement(XRow, {
-    k: "\u1782\u178E\u1793\u17B8",
+    k: "\u1782\u178E\u1793\u17B8\u1792\u1793\u17B6\u1782\u17B6\u179A",
     v: ext.bankAccount
-  }))), React.createElement("div", null, React.createElement("div", {
-    style: {
-      font: '500 10px/1 "JetBrains Mono",monospace',
-      letterSpacing: '.08em',
-      textTransform: 'uppercase',
-      color: 'var(--ink-3)',
-      marginBottom: 8
-    }
-  }, "\u1780\u17B6\u179A\u200B\u179F\u17B7\u1780\u17D2\u179F\u17B6 \xB7 EDUCATION"), React.createElement("div", {
-    style: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 6
-    }
+  })), (ext.eduLevel || ext.school || ext.languages || ext.skills) && React.createElement(Sec, {
+    title: "\u1780\u17B6\u179A\u179F\u17B7\u1780\u17D2\u179F\u17B6"
   }, React.createElement(XRow, {
     k: "\u1780\u1798\u17D2\u179A\u17B7\u178F",
     v: EDU[ext.eduLevel] || ext.eduLevel
@@ -31559,39 +31547,27 @@ var SfExtendedInfo = ({
   }), React.createElement(XRow, {
     k: "\u1787\u17C6\u1793\u17B6\u1789",
     v: ext.skills
-  }))), React.createElement("div", null, React.createElement("div", {
-    style: {
-      font: '500 10px/1 "JetBrains Mono",monospace',
-      letterSpacing: '.08em',
-      textTransform: 'uppercase',
-      color: 'var(--ink-3)',
-      marginBottom: 8
-    }
-  }, "\u1794\u17BE\u1780\u200B\u1794\u179A \xB7 DRIVING"), React.createElement("div", {
-    style: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 6
-    }
+  })), (ext.licenseType || ext.licenseExpiry || ext.drivingExp > 0 || ext.instLevel || ext.assignedVehicle || ext.accidentHistory) && React.createElement(Sec, {
+    title: "\u1780\u17B6\u179A\u1794\u17BE\u1780\u1794\u179A"
   }, React.createElement(XRow, {
-    k: "\u1794\u17D2\u179A\u1797\u17C1\u1791\u200B\u1794\u17D0\u178E\u17D2\u178E",
+    k: "\u1794\u17D2\u179A\u1797\u17C1\u1791\u1794\u17D0\u178E\u17D2\u178E",
     v: ext.licenseType
   }), React.createElement(XRow, {
-    k: "\u1795\u17BB\u178F\u200B",
+    k: "\u1790\u17D2\u1784\u17C3\u1795\u17BB\u178F\u1780\u17C6\u178E\u178F\u17CB",
     v: ext.licenseExpiry
   }), (ext.drivingExp || 0) > 0 && React.createElement(XRow, {
-    k: "\u1794\u1791\u200B\u1796\u17B7\u179F\u17C4\u1792\u1793\u17CD",
+    k: "\u1794\u1791\u1796\u17B7\u179F\u17C4\u1792\u1793\u17CD",
     v: `${ext.drivingExp} ឆ្នាំ`
   }), React.createElement(XRow, {
-    k: "\u1790\u17D2\u1793\u17B6\u1780\u17CB\u200B\u1782\u17D2\u179A\u17BC",
+    k: "\u1790\u17D2\u1793\u17B6\u1780\u17CB\u1782\u17D2\u179A\u17BC",
     v: ext.instLevel
   }), React.createElement(XRow, {
     k: "\u1799\u17B6\u1793\u1799\u1793\u17D2\u178F",
     v: ext.assignedVehicle
   }), React.createElement(XRow, {
-    k: "\u1794\u17D2\u179A\u179C\u178F\u17D2\u178F\u17B7\u200B\u1782\u17D2\u179A\u17C4\u17C7",
+    k: "\u1794\u17D2\u179A\u179C\u178F\u17D2\u178F\u17B7\u1782\u17D2\u179A\u17C4\u17C7\u1790\u17D2\u1793\u17B6\u1780\u17CB",
     v: ext.accidentHistory
-  })))));
+  }))));
 };
 Object.assign(window, {
   StaffScreen
