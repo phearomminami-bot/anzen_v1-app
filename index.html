@@ -27091,7 +27091,11 @@ var StaffScreen = () => {
     acc[d] = activeStaff.filter(s => s.dept === d).length;
     return acc;
   }, {});
-  var filtered = dept === 'former' ? formerStaff : activeStaff.filter(s => dept === 'all' || s.dept === dept);
+  var filtered = (dept === 'former' ? formerStaff : activeStaff.filter(s => dept === 'all' || s.dept === dept)).slice().sort((a, b) => {
+    var A = a.since || '9999-99',
+      B = b.since || '9999-99';
+    return A < B ? -1 : A > B ? 1 : 0;
+  });
   var pending = leaves.filter(l => l.status === 'Pending');
   var upcoming = leaves.filter(l => l.status === 'Approved');
   var total$ = staff.reduce((a, s) => a + (s.salary || 0), 0);
@@ -27236,9 +27240,7 @@ var StaffScreen = () => {
       size: 13
     }),
     onClick: () => setAddLeave(true)
-  }, tr('ស្នើច្បាប់', 'Request leave')), React.createElement(SfPrintMenu, {
-    staff: staff
-  })), tab === 'directory' && (staff.length === 0 ? React.createElement("div", {
+  }, tr('ស្នើច្បាប់', 'Request leave'))), tab === 'directory' && (staff.length === 0 ? React.createElement("div", {
     style: {
       padding: 48,
       textAlign: 'center',
@@ -27363,50 +27365,216 @@ var StaffScreen = () => {
     onRestore: restoreStaff
   })));
 };
+var tenureYM = since => {
+  var m = String(since || '').match(/^(\d{4})-(\d{2})/);
+  if (!m) return null;
+  var now = new Date(todayStr() + 'T00:00:00');
+  var months = (now.getFullYear() - +m[1]) * 12 + (now.getMonth() + 1 - +m[2]);
+  if (months < 0) months = 0;
+  return {
+    y: Math.floor(months / 12),
+    m: months % 12
+  };
+};
+var tenureLabel = (since, lang) => {
+  var t = tenureYM(since);
+  if (!t) return '';
+  return lang === 'km' ? (t.y ? `${t.y}ឆ្នាំ ` : '') + `${t.m}ខែ` : (t.y ? `${t.y}y ` : '') + `${t.m}m`;
+};
 var SfCards = ({
   staff,
   selectedId,
   onSelect
-}) => React.createElement("div", {
-  style: {
-    padding: 14,
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))',
-    gap: 12
-  }
-}, staff.map(s => {
-  var docs = s.docs || {};
-  var docOk = Object.values(docs).every(v => v);
-  var docCount = Object.values(docs).filter(v => v).length;
-  var docTotal = Object.keys(docs).length;
+}) => {
+  var {
+    lang
+  } = useAppActions();
   return React.createElement("div", {
+    style: {
+      padding: 14,
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))',
+      gap: 12
+    }
+  }, staff.map(s => {
+    var docs = s.docs || {};
+    var docOk = Object.values(docs).every(v => v);
+    var docCount = Object.values(docs).filter(v => v).length;
+    var docTotal = Object.keys(docs).length;
+    return React.createElement("div", {
+      key: s.id,
+      onClick: () => onSelect(s.id),
+      style: {
+        padding: 14,
+        background: selectedId === s.id ? 'var(--surface-muted)' : 'var(--surface)',
+        border: '1px solid ' + (selectedId === s.id ? 'var(--border-strong)' : 'var(--border)'),
+        borderRadius: 10,
+        cursor: 'default'
+      }
+    }, React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 12,
+        alignItems: 'flex-start'
+      }
+    }, React.createElement(Avatar, {
+      tag: s.photo,
+      size: 44
+    }), React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, React.createElement("div", {
+      style: {
+        fontSize: 13,
+        fontWeight: 600,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      }
+    }, s.name), React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: 'var(--ink-3)',
+        marginTop: 2
+      }
+    }, s.en, " \xB7 ", s.id), React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: 'var(--ink-2)',
+        marginTop: 6
+      }
+    }, s.role)), React.createElement(SfStatusDot, {
+      status: s.status
+    })), React.createElement("div", {
+      style: {
+        marginTop: 12,
+        padding: '10px 0 0',
+        borderTop: '1px dashed var(--border)',
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 8,
+        fontSize: 11
+      }
+    }, React.createElement("div", null, React.createElement("div", {
+      style: {
+        color: 'var(--ink-3)',
+        fontSize: 10,
+        textTransform: 'uppercase',
+        letterSpacing: '.05em'
+      }
+    }, "Dept"), React.createElement("div", {
+      style: {
+        marginTop: 2,
+        fontWeight: 500
+      }
+    }, s.dept || '—')), React.createElement("div", null, React.createElement("div", {
+      style: {
+        color: 'var(--ink-3)',
+        fontSize: 10,
+        textTransform: 'uppercase',
+        letterSpacing: '.05em'
+      }
+    }, "Since"), React.createElement("div", {
+      style: {
+        marginTop: 2,
+        fontWeight: 500
+      }
+    }, s.since || '—'), tenureLabel(s.since, lang) && React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: 'var(--accent)',
+        marginTop: 1
+      }
+    }, tenureLabel(s.since, lang))), React.createElement("div", null, React.createElement("div", {
+      style: {
+        color: 'var(--ink-3)',
+        fontSize: 10,
+        textTransform: 'uppercase',
+        letterSpacing: '.05em'
+      }
+    }, "Leave bal."), React.createElement("div", {
+      style: {
+        marginTop: 2,
+        fontWeight: 500
+      }
+    }, s.leave ?? '—', " \u1790\u17D2\u1784\u17C3")), React.createElement("div", null, React.createElement("div", {
+      style: {
+        color: 'var(--ink-3)',
+        fontSize: 10,
+        textTransform: 'uppercase',
+        letterSpacing: '.05em'
+      }
+    }, "Docs"), React.createElement("div", {
+      style: {
+        marginTop: 2,
+        fontWeight: 500,
+        color: docOk ? 'var(--good)' : 'var(--warn)'
+      }
+    }, docTotal > 0 ? `${docCount}/${docTotal}` : '—'))));
+  }));
+};
+var SfTable = ({
+  staff,
+  selectedId,
+  onSelect
+}) => {
+  var {
+    lang
+  } = useAppActions();
+  return React.createElement("div", {
+    style: {
+      overflowX: 'auto'
+    }
+  }, React.createElement("div", {
+    style: {
+      minWidth: 480
+    }
+  }, React.createElement("div", {
+    style: {
+      padding: '10px 16px',
+      display: 'grid',
+      gridTemplateColumns: '2fr 1.2fr 1fr 0.8fr 0.8fr',
+      gap: 14,
+      fontSize: 10,
+      letterSpacing: '.08em',
+      color: 'var(--ink-3)',
+      fontFamily: '"JetBrains Mono",monospace',
+      textTransform: 'uppercase',
+      borderBottom: '1px solid var(--border)'
+    }
+  }, React.createElement("div", null, "Employee"), React.createElement("div", null, "Role \xB7 Dept"), React.createElement("div", null, "Status"), React.createElement("div", null, "Since"), React.createElement("div", null, "Leave bal.")), staff.map((s, i) => React.createElement("div", {
     key: s.id,
     onClick: () => onSelect(s.id),
     style: {
-      padding: 14,
-      background: selectedId === s.id ? 'var(--surface-muted)' : 'var(--surface)',
-      border: '1px solid ' + (selectedId === s.id ? 'var(--border-strong)' : 'var(--border)'),
-      borderRadius: 10,
+      padding: '12px 16px',
+      display: 'grid',
+      gridTemplateColumns: '2fr 1.2fr 1fr 0.8fr 0.8fr',
+      gap: 14,
+      alignItems: 'center',
+      borderBottom: i < staff.length - 1 ? '1px solid var(--border)' : 'none',
+      background: selectedId === s.id ? 'var(--surface-muted)' : 'transparent',
       cursor: 'default'
     }
   }, React.createElement("div", {
     style: {
       display: 'flex',
-      gap: 12,
-      alignItems: 'flex-start'
+      alignItems: 'center',
+      gap: 10,
+      minWidth: 0
     }
   }, React.createElement(Avatar, {
     tag: s.photo,
-    size: 44
+    size: 32
   }), React.createElement("div", {
     style: {
-      flex: 1,
       minWidth: 0
     }
   }, React.createElement("div", {
     style: {
       fontSize: 13,
-      fontWeight: 600,
+      fontWeight: 500,
       whiteSpace: 'nowrap',
       overflow: 'hidden',
       textOverflow: 'ellipsis'
@@ -27414,177 +27582,49 @@ var SfCards = ({
   }, s.name), React.createElement("div", {
     style: {
       fontSize: 11,
+      color: 'var(--ink-3)'
+    }
+  }, s.id, " \xB7 ", s.en))), React.createElement("div", null, React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'var(--ink-2)'
+    }
+  }, s.role), React.createElement("div", {
+    style: {
+      fontSize: 11,
       color: 'var(--ink-3)',
       marginTop: 2
     }
-  }, s.en, " \xB7 ", s.id), React.createElement("div", {
+  }, s.dept)), React.createElement("div", {
     style: {
-      fontSize: 11,
-      color: 'var(--ink-2)',
-      marginTop: 6
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6
     }
-  }, s.role)), React.createElement(SfStatusDot, {
+  }, React.createElement(SfStatusDot, {
     status: s.status
-  })), React.createElement("div", {
+  }), React.createElement("span", {
     style: {
-      marginTop: 12,
-      padding: '10px 0 0',
-      borderTop: '1px dashed var(--border)',
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: 8,
-      fontSize: 11
+      fontSize: 12,
+      color: 'var(--ink-2)'
     }
-  }, React.createElement("div", null, React.createElement("div", {
+  }, s.status)), React.createElement("div", {
     style: {
-      color: 'var(--ink-3)',
+      fontSize: 12,
+      color: 'var(--ink-2)'
+    }
+  }, s.since || '—', tenureLabel(s.since, lang) && React.createElement("div", {
+    style: {
       fontSize: 10,
-      textTransform: 'uppercase',
-      letterSpacing: '.05em'
+      color: 'var(--accent)',
+      marginTop: 1
     }
-  }, "Dept"), React.createElement("div", {
+  }, tenureLabel(s.since, lang))), React.createElement("div", {
     style: {
-      marginTop: 2,
-      fontWeight: 500
+      fontSize: 12
     }
-  }, s.dept || '—')), React.createElement("div", null, React.createElement("div", {
-    style: {
-      color: 'var(--ink-3)',
-      fontSize: 10,
-      textTransform: 'uppercase',
-      letterSpacing: '.05em'
-    }
-  }, "Since"), React.createElement("div", {
-    style: {
-      marginTop: 2,
-      fontWeight: 500
-    }
-  }, s.since || '—')), React.createElement("div", null, React.createElement("div", {
-    style: {
-      color: 'var(--ink-3)',
-      fontSize: 10,
-      textTransform: 'uppercase',
-      letterSpacing: '.05em'
-    }
-  }, "Leave bal."), React.createElement("div", {
-    style: {
-      marginTop: 2,
-      fontWeight: 500
-    }
-  }, s.leave ?? '—', " \u1790\u17D2\u1784\u17C3")), React.createElement("div", null, React.createElement("div", {
-    style: {
-      color: 'var(--ink-3)',
-      fontSize: 10,
-      textTransform: 'uppercase',
-      letterSpacing: '.05em'
-    }
-  }, "Docs"), React.createElement("div", {
-    style: {
-      marginTop: 2,
-      fontWeight: 500,
-      color: docOk ? 'var(--good)' : 'var(--warn)'
-    }
-  }, docTotal > 0 ? `${docCount}/${docTotal}` : '—'))));
-}));
-var SfTable = ({
-  staff,
-  selectedId,
-  onSelect
-}) => React.createElement("div", {
-  style: {
-    overflowX: 'auto'
-  }
-}, React.createElement("div", {
-  style: {
-    minWidth: 480
-  }
-}, React.createElement("div", {
-  style: {
-    padding: '10px 16px',
-    display: 'grid',
-    gridTemplateColumns: '2fr 1.2fr 1fr 0.8fr 0.8fr',
-    gap: 14,
-    fontSize: 10,
-    letterSpacing: '.08em',
-    color: 'var(--ink-3)',
-    fontFamily: '"JetBrains Mono",monospace',
-    textTransform: 'uppercase',
-    borderBottom: '1px solid var(--border)'
-  }
-}, React.createElement("div", null, "Employee"), React.createElement("div", null, "Role \xB7 Dept"), React.createElement("div", null, "Status"), React.createElement("div", null, "Since"), React.createElement("div", null, "Leave bal.")), staff.map((s, i) => React.createElement("div", {
-  key: s.id,
-  onClick: () => onSelect(s.id),
-  style: {
-    padding: '12px 16px',
-    display: 'grid',
-    gridTemplateColumns: '2fr 1.2fr 1fr 0.8fr 0.8fr',
-    gap: 14,
-    alignItems: 'center',
-    borderBottom: i < staff.length - 1 ? '1px solid var(--border)' : 'none',
-    background: selectedId === s.id ? 'var(--surface-muted)' : 'transparent',
-    cursor: 'default'
-  }
-}, React.createElement("div", {
-  style: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    minWidth: 0
-  }
-}, React.createElement(Avatar, {
-  tag: s.photo,
-  size: 32
-}), React.createElement("div", {
-  style: {
-    minWidth: 0
-  }
-}, React.createElement("div", {
-  style: {
-    fontSize: 13,
-    fontWeight: 500,
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis'
-  }
-}, s.name), React.createElement("div", {
-  style: {
-    fontSize: 11,
-    color: 'var(--ink-3)'
-  }
-}, s.id, " \xB7 ", s.en))), React.createElement("div", null, React.createElement("div", {
-  style: {
-    fontSize: 12,
-    color: 'var(--ink-2)'
-  }
-}, s.role), React.createElement("div", {
-  style: {
-    fontSize: 11,
-    color: 'var(--ink-3)',
-    marginTop: 2
-  }
-}, s.dept)), React.createElement("div", {
-  style: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 6
-  }
-}, React.createElement(SfStatusDot, {
-  status: s.status
-}), React.createElement("span", {
-  style: {
-    fontSize: 12,
-    color: 'var(--ink-2)'
-  }
-}, s.status)), React.createElement("div", {
-  style: {
-    fontSize: 12,
-    color: 'var(--ink-2)'
-  }
-}, s.since || '—'), React.createElement("div", {
-  style: {
-    fontSize: 12
-  }
-}, s.leave ?? '—', " d")))));
+  }, s.leave ?? '—', " d")))));
+};
 var SfStatusDot = ({
   status
 }) => {

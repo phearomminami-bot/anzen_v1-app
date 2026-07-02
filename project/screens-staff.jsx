@@ -196,9 +196,14 @@ const StaffScreen = () => {
     acc[d] = activeStaff.filter(s => s.dept === d).length;
     return acc;
   }, {});
-  const filtered  = dept === 'former'
+  const filtered  = (dept === 'former'
     ? formerStaff
-    : activeStaff.filter(s => dept === 'all' || s.dept === dept);
+    : activeStaff.filter(s => dept === 'all' || s.dept === dept))
+    .slice()
+    .sort((a, b) => {                       // earliest joiner at the top
+      const A = a.since || '9999-99', B = b.since || '9999-99';
+      return A < B ? -1 : A > B ? 1 : 0;
+    });
   const pending   = leaves.filter(l => l.status === 'Pending');
   const upcoming  = leaves.filter(l => l.status === 'Approved');
   const total$    = staff.reduce((a, s) => a + (s.salary || 0), 0);
@@ -267,7 +272,6 @@ const StaffScreen = () => {
             <Btn kind="primary" size="sm" icon={<Icon name="plus" size={13}/>}
               onClick={()=>setAddLeave(true)}>{tr('ស្នើច្បាប់','Request leave')}</Btn>
           )}
-          <SfPrintMenu staff={staff}/>
         </div>
 
         {/* Directory tab */}
@@ -329,8 +333,27 @@ const StaffScreen = () => {
   );
 };
 
+// Tenure from a join date (YYYY-MM or YYYY-MM-DD) to today.
+const tenureYM = (since) => {
+  const m = String(since || '').match(/^(\d{4})-(\d{2})/);
+  if (!m) return null;
+  const now = new Date(todayStr() + 'T00:00:00');
+  let months = (now.getFullYear() - +m[1]) * 12 + (now.getMonth() + 1 - +m[2]);
+  if (months < 0) months = 0;
+  return { y: Math.floor(months / 12), m: months % 12 };
+};
+const tenureLabel = (since, lang) => {
+  const t = tenureYM(since);
+  if (!t) return '';
+  return lang === 'km'
+    ? (t.y ? `${t.y}ឆ្នាំ ` : '') + `${t.m}ខែ`
+    : (t.y ? `${t.y}y ` : '') + `${t.m}m`;
+};
+
 // ── Cards grid ──
-const SfCards = ({ staff, selectedId, onSelect }) => (
+const SfCards = ({ staff, selectedId, onSelect }) => {
+  const { lang } = useAppActions();
+  return (
   <div style={{padding:14,display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))',gap:12}}>
     {staff.map(s => {
       const docs = s.docs || {};
@@ -361,6 +384,7 @@ const SfCards = ({ staff, selectedId, onSelect }) => (
             <div>
               <div style={{color:'var(--ink-3)',fontSize:10,textTransform:'uppercase',letterSpacing:'.05em'}}>Since</div>
               <div style={{marginTop:2,fontWeight:500}}>{s.since || '—'}</div>
+              {tenureLabel(s.since, lang) && <div style={{fontSize:10,color:'var(--accent)',marginTop:1}}>{tenureLabel(s.since, lang)}</div>}
             </div>
             <div>
               <div style={{color:'var(--ink-3)',fontSize:10,textTransform:'uppercase',letterSpacing:'.05em'}}>Leave bal.</div>
@@ -377,10 +401,13 @@ const SfCards = ({ staff, selectedId, onSelect }) => (
       );
     })}
   </div>
-);
+  );
+};
 
 // ── Table view ──
-const SfTable = ({ staff, selectedId, onSelect }) => (
+const SfTable = ({ staff, selectedId, onSelect }) => {
+  const { lang } = useAppActions();
+  return (
   <div style={{overflowX:'auto'}}>
   <div style={{minWidth:480}}>
     <div style={{padding:'10px 16px',display:'grid',gridTemplateColumns:'2fr 1.2fr 1fr 0.8fr 0.8fr',gap:14,fontSize:10,letterSpacing:'.08em',color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',textTransform:'uppercase',borderBottom:'1px solid var(--border)'}}>
@@ -407,13 +434,17 @@ const SfTable = ({ staff, selectedId, onSelect }) => (
           <SfStatusDot status={s.status}/>
           <span style={{fontSize:12,color:'var(--ink-2)'}}>{s.status}</span>
         </div>
-        <div style={{fontSize:12,color:'var(--ink-2)'}}>{s.since || '—'}</div>
+        <div style={{fontSize:12,color:'var(--ink-2)'}}>
+          {s.since || '—'}
+          {tenureLabel(s.since, lang) && <div style={{fontSize:10,color:'var(--accent)',marginTop:1}}>{tenureLabel(s.since, lang)}</div>}
+        </div>
         <div style={{fontSize:12}}>{s.leave ?? '—'} d</div>
       </div>
     ))}
   </div>
   </div>
-);
+  );
+};
 
 const SfStatusDot = ({ status }) => {
   const c = {'On lesson':'var(--accent)','Available':'var(--good)','Training':'var(--accent)','At desk':'var(--good)','Remote':'var(--ink-3)','Off-site':'var(--ink-3)','In shop':'var(--accent)','On route':'var(--accent)'}[status]||'var(--ink-3)';
