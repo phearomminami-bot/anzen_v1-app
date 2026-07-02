@@ -820,11 +820,24 @@ window.__trRegistry = {
   "Exp (yr)": "បទ​ពិសោធន៍",
   "Inst. Level": "ថ្នាក់​គ្រូ",
   "Accidents": "ប្រវត្តិ​គ្រោះ",
-  "Week": "សប្ដាហ៍",
   "Present": "មាន",
   "Late": "យឺត",
-  "Half": "កន្លះ",
+  "Half-day": "កន្លះថ្ងៃ",
   "Absent": "អវត្ត",
+  "')}{dowKm} · {date}</div>\n        </div>\n        <div style={{padding:18}}>\n          <div style={lbl}>{tr('ស្ថានភាព": "ថ្ងៃ",
+  "Clock in": "ម៉ោង​ចូល",
+  "Clock out": "ម៉ោង​ចេញ",
+  "Break (h)": "សម្រាក (ម៉ោង)",
+  "Overtime": "ម៉ោង​បន្ថែម (OT)",
+  "No clock times for this status": "គ្មាន​ម៉ោង​សម្រាប់​ស្ថានភាព​នេះ",
+  "Monthly attendance": "វត្តមាន​ប្រចាំ​ខែ",
+  "Monthly summary": "សរុប​ប្រចាំ​ខែ",
+  "Overtime h": "ម៉ោង​បន្ថែម",
+  "Worked days": "ថ្ងៃ​ធ្វើ​ការ",
+  "Week": "សប្ដាហ៍",
+  "Half": "កន្លះ",
+  "View monthly attendance": "មើល​វត្តមាន​ប្រចាំ​ខែ",
+  "Edit times / status": "កែ​ម៉ោង / ស្ថានភាព",
   "Policy": "គោល​នយោបាយ",
   "Pending": "កំពុង",
   "Deny": "បដិសេធ",
@@ -2142,11 +2155,24 @@ window.__trGroups = {
     "Exp (yr)": "បទ​ពិសោធន៍",
     "Inst. Level": "ថ្នាក់​គ្រូ",
     "Accidents": "ប្រវត្តិ​គ្រោះ",
-    "Week": "សប្ដាហ៍",
     "Present": "មាន",
     "Late": "យឺត",
+    "Half-day": "កន្លះថ្ងៃ",
+    "Absent": "អវត្តមាន",
+    "')}{dowKm} · {date}</div>\n        </div>\n        <div style={{padding:18}}>\n          <div style={lbl}>{tr('ស្ថានភាព": "ថ្ងៃ",
+    "Clock in": "ម៉ោង​ចូល",
+    "Clock out": "ម៉ោង​ចេញ",
+    "Break (h)": "សម្រាក (ម៉ោង)",
+    "Overtime": "ម៉ោង​បន្ថែម (OT)",
+    "No clock times for this status": "គ្មាន​ម៉ោង​សម្រាប់​ស្ថានភាព​នេះ",
+    "Monthly attendance": "វត្តមាន​ប្រចាំ​ខែ",
+    "Monthly summary": "សរុប​ប្រចាំ​ខែ",
+    "Overtime h": "ម៉ោង​បន្ថែម",
+    "Worked days": "ថ្ងៃ​ធ្វើ​ការ",
+    "Week": "សប្ដាហ៍",
     "Half": "កន្លះ",
-    "Absent": "អវត្ត",
+    "View monthly attendance": "មើល​វត្តមាន​ប្រចាំ​ខែ",
+    "Edit times / status": "កែ​ម៉ោង / ស្ថានភាព",
     "Policy": "គោល​នយោបាយ",
     "Pending": "រង់ចាំ​ការ​អនុម័ត",
     "Deny": "បដិសេធ",
@@ -28996,6 +29022,446 @@ var AttCell = ({
     }
   }, val || '·');
 };
+var AttBadge = ({
+  val,
+  size = 28
+}) => React.createElement("div", {
+  style: {
+    margin: '0 auto',
+    width: size,
+    height: size,
+    borderRadius: 6,
+    background: ATT_BG[val],
+    border: `1.5px solid ${ATT_COLOR[val]}`,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: Math.round(size * 0.4),
+    fontWeight: 700,
+    color: ATT_COLOR[val]
+  }
+}, val || '·');
+var DayAttModal = ({
+  s,
+  date,
+  onClose,
+  onSaved
+}) => {
+  var {
+    tr
+  } = useAppActions();
+  var [, f] = React.useReducer(x => x + 1, 0);
+  var val = attGet(date, s.id);
+  var times = timeGet(date, s.id);
+  var ot = calcOT(times.in, times.out, times.break ?? 1);
+  var showTime = val === 'P' || val === 'L';
+  var setStatus = v => {
+    attSet(date, s.id, v);
+    onSaved();
+    f();
+  };
+  var setT = (prop, value) => {
+    timeSet(date, s.id, {
+      ...timeGet(date, s.id),
+      [prop]: value
+    });
+    onSaved();
+    f();
+  };
+  var d = new Date(date + 'T00:00:00');
+  var dowKm = ['អាទិត្យ', 'ចន្ទ', 'អង្គារ', 'ពុធ', 'ព្រហស្បតិ៍', 'សុក្រ', 'សៅរ៍'][d.getDay()];
+  var STATUSES = [['P', 'var(--good)', tr('មាន', 'Present')], ['L', 'var(--warn)', tr('យឺត', 'Late')], ['H', 'var(--accent)', tr('កន្លះថ្ងៃ', 'Half-day')], ['A', 'var(--danger)', tr('អវត្តមាន', 'Absent')]];
+  var tInp = prop => ({
+    type: prop === 'break' ? 'number' : 'time',
+    value: times[prop] ?? (prop === 'break' ? 1 : ''),
+    min: prop === 'break' ? 0 : undefined,
+    max: prop === 'break' ? 8 : undefined,
+    step: prop === 'break' ? 0.5 : undefined,
+    onChange: e => setT(prop, prop === 'break' ? parseFloat(e.target.value) || 0 : e.target.value),
+    style: {
+      padding: '8px 10px',
+      border: '1px solid var(--border)',
+      borderRadius: 8,
+      fontSize: 14,
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      fontFamily: 'monospace',
+      width: '100%',
+      boxSizing: 'border-box'
+    }
+  });
+  var lbl = {
+    fontSize: 11,
+    color: 'var(--ink-3)',
+    fontWeight: 600,
+    margin: '0 0 4px'
+  };
+  return React.createElement(Modal, {
+    open: true,
+    onClose: onClose,
+    width: 420
+  }, React.createElement("div", {
+    style: {
+      maxHeight: '86vh',
+      overflowY: 'auto'
+    }
+  }, React.createElement("div", {
+    style: {
+      background: 'var(--accent)',
+      color: '#fff',
+      padding: '12px 18px'
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 15,
+      fontWeight: 700
+    }
+  }, s.name || s.en), React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'rgba(255,255,255,.82)',
+      marginTop: 2
+    }
+  }, tr('ថ្ងៃ', ''), dowKm, " \xB7 ", date)), React.createElement("div", {
+    style: {
+      padding: 18
+    }
+  }, React.createElement("div", {
+    style: lbl
+  }, tr('ស្ថានភាព', 'Status')), React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(4,1fr)',
+      gap: 6
+    }
+  }, STATUSES.map(([k, c, l]) => React.createElement("button", {
+    key: k,
+    onClick: () => setStatus(k),
+    style: {
+      padding: '8px 0',
+      borderRadius: 8,
+      cursor: 'pointer',
+      fontSize: 12,
+      fontWeight: 700,
+      fontFamily: 'inherit',
+      border: `1.5px solid ${val === k ? c : 'var(--border)'}`,
+      background: val === k ? c : 'var(--surface)',
+      color: val === k ? '#fff' : 'var(--ink-2)'
+    }
+  }, l))), React.createElement("button", {
+    onClick: () => setStatus(''),
+    style: {
+      background: 'none',
+      border: 'none',
+      color: 'var(--ink-3)',
+      fontSize: 11,
+      cursor: 'pointer',
+      fontFamily: 'inherit',
+      padding: '6px 0 0'
+    }
+  }, tr('សម្អាត', 'Clear')), showTime ? React.createElement("div", {
+    style: {
+      marginTop: 12,
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 12
+    }
+  }, React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('ម៉ោង​ចូល', 'Clock in')), React.createElement("input", tInp('in'))), React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('ម៉ោង​ចេញ', 'Clock out')), React.createElement("input", tInp('out'))), React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('សម្រាក (ម៉ោង)', 'Break (h)')), React.createElement("input", tInp('break'))), React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('ម៉ោង​បន្ថែម (OT)', 'Overtime')), React.createElement("div", {
+    style: {
+      padding: '8px 10px',
+      borderRadius: 8,
+      background: ot > 0 ? '#FEF3E8' : 'var(--surface-muted)',
+      border: `1px solid ${ot > 0 ? 'var(--warn)' : 'var(--border)'}`,
+      fontSize: 14,
+      fontWeight: 700,
+      color: ot > 0 ? 'var(--warn)' : 'var(--ink-3)'
+    }
+  }, ot, " ", tr('ម៉ោង', 'h')))) : React.createElement("div", {
+    style: {
+      marginTop: 12,
+      fontSize: 12,
+      color: 'var(--ink-3)'
+    }
+  }, tr('គ្មាន​ម៉ោង​សម្រាប់​ស្ថានភាព​នេះ', 'No clock times for this status')), React.createElement("button", {
+    onClick: onClose,
+    style: {
+      width: '100%',
+      marginTop: 18,
+      padding: '11px',
+      borderRadius: 9,
+      border: 'none',
+      background: 'var(--accent)',
+      color: '#fff',
+      cursor: 'pointer',
+      fontSize: 14,
+      fontWeight: 600,
+      fontFamily: 'inherit'
+    }
+  }, tr('រួចរាល់', 'Done')))));
+};
+var MonthAttModal = ({
+  s,
+  onClose
+}) => {
+  var {
+    tr,
+    lang
+  } = useAppActions();
+  var [off, setOff] = React.useState(0);
+  var base = new Date(todayStr() + 'T00:00:00');
+  var first = new Date(base.getFullYear(), base.getMonth() + off, 1);
+  var year = first.getFullYear(),
+    mon = first.getMonth();
+  var pad2 = n => String(n).padStart(2, '0');
+  var daysInMonth = new Date(year, mon + 1, 0).getDate();
+  var startDow = (first.getDay() + 6) % 7;
+  var mk = d => `${year}-${pad2(mon + 1)}-${pad2(d)}`;
+  var today = todayStr();
+  var KMO = typeof KM_MONTHS !== 'undefined' && KM_MONTHS || [];
+  var EMO = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  var monLbl = (lang === 'km' ? KMO[mon] : EMO[mon]) || EMO[mon];
+  var stats = {
+    P: 0,
+    L: 0,
+    H: 0,
+    A: 0
+  };
+  var otTotal = 0;
+  for (var d = 1; d <= daysInMonth; d++) {
+    var ds = mk(d);
+    var v = attGet(ds, s.id);
+    if (stats[v] !== undefined) stats[v]++;
+    if (v === 'P' || v === 'L') {
+      var t = timeGet(ds, s.id);
+      otTotal += calcOT(t.in, t.out, t.break ?? 1);
+    }
+  }
+  otTotal = Math.round(otTotal * 10) / 10;
+  var cells = [];
+  for (var i = 0; i < startDow; i++) cells.push(null);
+  for (var _d = 1; _d <= daysInMonth; _d++) cells.push(_d);
+  while (cells.length % 7) cells.push(null);
+  var WD = lang === 'km' ? ['ច', 'អ', 'ព', 'ព្រ', 'សុ', 'ស', 'អា'] : ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+  var SUM = [['P', 'var(--good)', tr('មាន', 'Present'), stats.P], ['L', 'var(--warn)', tr('យឺត', 'Late'), stats.L], ['H', 'var(--accent)', tr('កន្លះថ្ងៃ', 'Half-day'), stats.H], ['A', 'var(--danger)', tr('អវត្តមាន', 'Absent'), stats.A]];
+  return React.createElement(Modal, {
+    open: true,
+    onClose: onClose,
+    width: 480
+  }, React.createElement("div", {
+    style: {
+      maxHeight: '88vh',
+      overflowY: 'auto'
+    }
+  }, React.createElement("div", {
+    style: {
+      background: 'var(--accent)',
+      color: '#fff',
+      padding: '12px 18px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10
+    }
+  }, React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 15,
+      fontWeight: 700,
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis'
+    }
+  }, s.name || s.en), React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'rgba(255,255,255,.82)',
+      marginTop: 2
+    }
+  }, tr('វត្តមាន​ប្រចាំ​ខែ', 'Monthly attendance'))), React.createElement("button", {
+    onClick: () => setOff(o => o - 1),
+    style: {
+      background: 'rgba(255,255,255,.18)',
+      border: 'none',
+      color: '#fff',
+      width: 28,
+      height: 28,
+      borderRadius: 6,
+      cursor: 'pointer',
+      fontSize: 14
+    }
+  }, "\u25C0"), React.createElement("div", {
+    style: {
+      fontSize: 13,
+      fontWeight: 700,
+      minWidth: 96,
+      textAlign: 'center'
+    }
+  }, monLbl, " ", year), React.createElement("button", {
+    onClick: () => setOff(o => o + 1),
+    style: {
+      background: 'rgba(255,255,255,.18)',
+      border: 'none',
+      color: '#fff',
+      width: 28,
+      height: 28,
+      borderRadius: 6,
+      cursor: 'pointer',
+      fontSize: 14
+    }
+  }, "\u25B6")), React.createElement("div", {
+    style: {
+      padding: 16
+    }
+  }, React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(7,1fr)',
+      gap: 4,
+      marginBottom: 4
+    }
+  }, WD.map((w, i) => React.createElement("div", {
+    key: i,
+    style: {
+      textAlign: 'center',
+      fontSize: 10,
+      color: 'var(--ink-3)',
+      fontWeight: 600
+    }
+  }, w))), React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(7,1fr)',
+      gap: 4
+    }
+  }, cells.map((d, i) => {
+    if (d == null) return React.createElement("div", {
+      key: i
+    });
+    var ds = mk(d);
+    var v = attGet(ds, s.id);
+    var isToday = ds === today;
+    return React.createElement("div", {
+      key: i,
+      style: {
+        border: `1px solid ${isToday ? 'var(--accent)' : 'var(--border)'}`,
+        borderRadius: 8,
+        padding: '4px 2px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 2,
+        minHeight: 46,
+        background: isToday ? 'rgba(42,93,176,.05)' : 'transparent'
+      }
+    }, React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: 'var(--ink-3)',
+        fontWeight: isToday ? 700 : 400
+      }
+    }, d), React.createElement(AttBadge, {
+      val: v,
+      size: 22
+    }));
+  })), React.createElement("div", {
+    style: {
+      marginTop: 14,
+      borderTop: '1px solid var(--border)',
+      paddingTop: 12
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--ink-3)',
+      fontWeight: 700,
+      marginBottom: 8
+    }
+  }, tr('សរុប​ប្រចាំ​ខែ', 'Monthly summary')), React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit,minmax(84px,1fr))',
+      gap: 8
+    }
+  }, SUM.map(([k, c, l, n]) => React.createElement("div", {
+    key: k,
+    style: {
+      padding: '8px 10px',
+      borderRadius: 8,
+      border: `1px solid ${c}33`,
+      background: `${c}11`
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 20,
+      fontWeight: 800,
+      color: c,
+      fontFamily: 'var(--font-display)',
+      lineHeight: 1
+    }
+  }, n), React.createElement("div", {
+    style: {
+      fontSize: 10.5,
+      color: c,
+      fontWeight: 600,
+      marginTop: 2
+    }
+  }, l))), React.createElement("div", {
+    style: {
+      padding: '8px 10px',
+      borderRadius: 8,
+      border: '1px solid var(--warn)33',
+      background: 'var(--warn)11'
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 20,
+      fontWeight: 800,
+      color: 'var(--warn)',
+      fontFamily: 'var(--font-display)',
+      lineHeight: 1
+    }
+  }, otTotal), React.createElement("div", {
+    style: {
+      fontSize: 10.5,
+      color: 'var(--warn)',
+      fontWeight: 600,
+      marginTop: 2
+    }
+  }, tr('ម៉ោង​បន្ថែម', 'Overtime h'))), React.createElement("div", {
+    style: {
+      padding: '8px 10px',
+      borderRadius: 8,
+      border: '1px solid var(--border)',
+      background: 'var(--surface-muted)'
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 20,
+      fontWeight: 800,
+      color: 'var(--ink)',
+      fontFamily: 'var(--font-display)',
+      lineHeight: 1
+    }
+  }, stats.P + stats.L + stats.H), React.createElement("div", {
+    style: {
+      fontSize: 10.5,
+      color: 'var(--ink-3)',
+      fontWeight: 600,
+      marginTop: 2
+    }
+  }, tr('ថ្ងៃ​ធ្វើ​ការ', 'Worked days'))))))));
+};
 var SfSchedule = ({
   staff
 }) => {
@@ -29005,6 +29471,8 @@ var SfSchedule = ({
   var [weekOffset, setWeekOffset] = React.useState(0);
   var [, forceUp] = React.useReducer(x => x + 1, 0);
   var [view, setView] = React.useState('week');
+  var [dayModal, setDayModal] = React.useState(null);
+  var [monthStaff, setMonthStaff] = React.useState(null);
   var weekDates = typeof getWeekDates === 'function' ? getWeekDates(weekOffset) : [];
   var today = todayStr();
   React.useEffect(() => {
@@ -29224,11 +29692,14 @@ var SfSchedule = ({
         borderTop: i ? '1px solid var(--border)' : 'none'
       }
     }, React.createElement("div", {
+      onClick: () => setMonthStaff(s),
+      title: tr('មើល​វត្តមាន​ប្រចាំ​ខែ', 'View monthly attendance'),
       style: {
         display: 'flex',
         gap: 10,
         alignItems: 'center',
-        minWidth: 0
+        minWidth: 0,
+        cursor: 'pointer'
       }
     }, React.createElement(Avatar, {
       tag: s.photo,
@@ -29243,7 +29714,8 @@ var SfSchedule = ({
         fontWeight: 500,
         whiteSpace: 'nowrap',
         overflow: 'hidden',
-        textOverflow: 'ellipsis'
+        textOverflow: 'ellipsis',
+        color: 'var(--accent)'
       }
     }, s.name), React.createElement("div", {
       style: {
@@ -29381,11 +29853,14 @@ var SfSchedule = ({
         borderTop: '1px solid var(--border)'
       }
     }, React.createElement("div", {
+      onClick: () => setMonthStaff(s),
+      title: tr('មើល​វត្តមាន​ប្រចាំ​ខែ', 'View monthly attendance'),
       style: {
         padding: '8px 12px',
         display: 'flex',
         alignItems: 'center',
-        gap: 8
+        gap: 8,
+        cursor: 'pointer'
       }
     }, React.createElement(Avatar, {
       tag: s.photo,
@@ -29400,7 +29875,8 @@ var SfSchedule = ({
         fontWeight: 500,
         whiteSpace: 'nowrap',
         overflow: 'hidden',
-        textOverflow: 'ellipsis'
+        textOverflow: 'ellipsis',
+        color: 'var(--accent)'
       }
     }, s.en), React.createElement("div", {
       style: {
@@ -29412,17 +29888,22 @@ var SfSchedule = ({
       var isWeekend = di >= 5;
       return React.createElement("div", {
         key: di,
+        onClick: () => setDayModal({
+          s,
+          date
+        }),
+        title: tr('កែ​ម៉ោង / ស្ថានភាព', 'Edit times / status'),
         style: {
           borderLeft: '1px solid var(--border)',
           background: isToday ? 'rgba(42,93,176,.04)' : isWeekend ? 'var(--surface-muted)' : 'transparent',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          cursor: 'pointer',
+          padding: '4px 0'
         }
-      }, React.createElement(AttCell, {
-        date: date,
-        empId: s.id,
-        onUpdate: forceUp
+      }, React.createElement(AttBadge, {
+        val: attGet(date, s.id)
       }));
     }), React.createElement("div", {
       style: {
@@ -29487,7 +29968,18 @@ var SfSchedule = ({
       fontWeight: 700,
       color: c
     }
-  }, k), l))));
+  }, k), l))), dayModal && React.createElement(DayAttModal, {
+    s: dayModal.s,
+    date: dayModal.date,
+    onClose: () => {
+      setDayModal(null);
+      forceUp();
+    },
+    onSaved: forceUp
+  }), monthStaff && React.createElement(MonthAttModal, {
+    s: monthStaff,
+    onClose: () => setMonthStaff(null)
+  }));
 };
 var SfPolicyCard = () => {
   var {

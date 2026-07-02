@@ -913,12 +913,167 @@ const AttCell = ({ date, empId, onUpdate }) => {
   );
 };
 
+// Presentational attendance badge (no cycling) — used where a tap opens a modal.
+const AttBadge = ({ val, size = 28 }) => (
+  <div style={{margin:'0 auto',width:size,height:size,borderRadius:6,
+    background:ATT_BG[val], border:`1.5px solid ${ATT_COLOR[val]}`,
+    display:'flex',alignItems:'center',justifyContent:'center',
+    fontSize:Math.round(size*0.4),fontWeight:700,color:ATT_COLOR[val]}}>{val||'·'}</div>
+);
+
+// Popup: view/edit one person's attendance for a single day (status + times + OT).
+const DayAttModal = ({ s, date, onClose, onSaved }) => {
+  const { tr } = useAppActions();
+  const [, f] = React.useReducer(x => x + 1, 0);
+  const val = attGet(date, s.id);
+  const times = timeGet(date, s.id);
+  const ot = calcOT(times.in, times.out, times.break ?? 1);
+  const showTime = val === 'P' || val === 'L';
+  const setStatus = v => { attSet(date, s.id, v); onSaved(); f(); };
+  const setT = (prop, value) => { timeSet(date, s.id, { ...timeGet(date, s.id), [prop]: value }); onSaved(); f(); };
+  const d = new Date(date + 'T00:00:00');
+  const dowKm = ['អាទិត្យ','ចន្ទ','អង្គារ','ពុធ','ព្រហស្បតិ៍','សុក្រ','សៅរ៍'][d.getDay()];
+  const STATUSES = [['P','var(--good)',tr('មាន','Present')],['L','var(--warn)',tr('យឺត','Late')],['H','var(--accent)',tr('កន្លះថ្ងៃ','Half-day')],['A','var(--danger)',tr('អវត្តមាន','Absent')]];
+  const tInp = (prop) => ({
+    type: prop === 'break' ? 'number' : 'time',
+    value: times[prop] ?? (prop === 'break' ? 1 : ''),
+    min: prop==='break'?0:undefined, max: prop==='break'?8:undefined, step: prop==='break'?0.5:undefined,
+    onChange: e => setT(prop, prop==='break' ? (parseFloat(e.target.value)||0) : e.target.value),
+    style: {padding:'8px 10px',border:'1px solid var(--border)',borderRadius:8,fontSize:14,background:'var(--surface)',color:'var(--ink)',fontFamily:'monospace',width:'100%',boxSizing:'border-box'},
+  });
+  const lbl = {fontSize:11,color:'var(--ink-3)',fontWeight:600,margin:'0 0 4px'};
+  return (
+    <Modal open onClose={onClose} width={420}>
+      <div style={{maxHeight:'86vh',overflowY:'auto'}}>
+        <div style={{background:'var(--accent)',color:'#fff',padding:'12px 18px'}}>
+          <div style={{fontSize:15,fontWeight:700}}>{s.name || s.en}</div>
+          <div style={{fontSize:12,color:'rgba(255,255,255,.82)',marginTop:2}}>{tr('ថ្ងៃ','')}{dowKm} · {date}</div>
+        </div>
+        <div style={{padding:18}}>
+          <div style={lbl}>{tr('ស្ថានភាព','Status')}</div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6}}>
+            {STATUSES.map(([k,c,l]) => (
+              <button key={k} onClick={()=>setStatus(k)} style={{padding:'8px 0',borderRadius:8,cursor:'pointer',fontSize:12,fontWeight:700,fontFamily:'inherit',
+                border:`1.5px solid ${val===k?c:'var(--border)'}`, background: val===k?c:'var(--surface)', color: val===k?'#fff':'var(--ink-2)'}}>{l}</button>
+            ))}
+          </div>
+          <button onClick={()=>setStatus('')} style={{background:'none',border:'none',color:'var(--ink-3)',fontSize:11,cursor:'pointer',fontFamily:'inherit',padding:'6px 0 0'}}>{tr('សម្អាត','Clear')}</button>
+
+          {showTime ? (
+            <div style={{marginTop:12,display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+              <div><div style={lbl}>{tr('ម៉ោង​ចូល','Clock in')}</div><input {...tInp('in')}/></div>
+              <div><div style={lbl}>{tr('ម៉ោង​ចេញ','Clock out')}</div><input {...tInp('out')}/></div>
+              <div><div style={lbl}>{tr('សម្រាក (ម៉ោង)','Break (h)')}</div><input {...tInp('break')}/></div>
+              <div><div style={lbl}>{tr('ម៉ោង​បន្ថែម (OT)','Overtime')}</div>
+                <div style={{padding:'8px 10px',borderRadius:8,background:ot>0?'#FEF3E8':'var(--surface-muted)',border:`1px solid ${ot>0?'var(--warn)':'var(--border)'}`,fontSize:14,fontWeight:700,color:ot>0?'var(--warn)':'var(--ink-3)'}}>{ot} {tr('ម៉ោង','h')}</div>
+              </div>
+            </div>
+          ) : (
+            <div style={{marginTop:12,fontSize:12,color:'var(--ink-3)'}}>{tr('គ្មាន​ម៉ោង​សម្រាប់​ស្ថានភាព​នេះ','No clock times for this status')}</div>
+          )}
+
+          <button onClick={onClose} style={{width:'100%',marginTop:18,padding:'11px',borderRadius:9,border:'none',background:'var(--accent)',color:'#fff',cursor:'pointer',fontSize:14,fontWeight:600,fontFamily:'inherit'}}>{tr('រួចរាល់','Done')}</button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
+// Popup: one person's whole-month attendance as a calendar, with a summary total.
+const MonthAttModal = ({ s, onClose }) => {
+  const { tr, lang } = useAppActions();
+  const [off, setOff] = React.useState(0);
+  const base = new Date(todayStr() + 'T00:00:00');
+  const first = new Date(base.getFullYear(), base.getMonth() + off, 1);
+  const year = first.getFullYear(), mon = first.getMonth();
+  const pad2 = n => String(n).padStart(2, '0');
+  const daysInMonth = new Date(year, mon + 1, 0).getDate();
+  const startDow = (first.getDay() + 6) % 7;   // Mon=0
+  const mk = d => `${year}-${pad2(mon + 1)}-${pad2(d)}`;
+  const today = todayStr();
+  const KMO = (typeof KM_MONTHS !== 'undefined' && KM_MONTHS) || [];
+  const EMO = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const monLbl = (lang === 'km' ? KMO[mon] : EMO[mon]) || EMO[mon];
+  const stats = { P:0, L:0, H:0, A:0 }; let otTotal = 0;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = mk(d); const v = attGet(ds, s.id);
+    if (stats[v] !== undefined) stats[v]++;
+    if (v === 'P' || v === 'L') { const t = timeGet(ds, s.id); otTotal += calcOT(t.in, t.out, t.break ?? 1); }
+  }
+  otTotal = Math.round(otTotal * 10) / 10;
+  const cells = [];
+  for (let i = 0; i < startDow; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  while (cells.length % 7) cells.push(null);
+  const WD = lang === 'km' ? ['ច','អ','ព','ព្រ','សុ','ស','អា'] : ['Mo','Tu','We','Th','Fr','Sa','Su'];
+  const SUM = [
+    ['P','var(--good)',tr('មាន','Present'),stats.P],
+    ['L','var(--warn)',tr('យឺត','Late'),stats.L],
+    ['H','var(--accent)',tr('កន្លះថ្ងៃ','Half-day'),stats.H],
+    ['A','var(--danger)',tr('អវត្តមាន','Absent'),stats.A],
+  ];
+  return (
+    <Modal open onClose={onClose} width={480}>
+      <div style={{maxHeight:'88vh',overflowY:'auto'}}>
+        <div style={{background:'var(--accent)',color:'#fff',padding:'12px 18px',display:'flex',alignItems:'center',gap:10}}>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:15,fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.name || s.en}</div>
+            <div style={{fontSize:12,color:'rgba(255,255,255,.82)',marginTop:2}}>{tr('វត្តមាន​ប្រចាំ​ខែ','Monthly attendance')}</div>
+          </div>
+          <button onClick={()=>setOff(o=>o-1)} style={{background:'rgba(255,255,255,.18)',border:'none',color:'#fff',width:28,height:28,borderRadius:6,cursor:'pointer',fontSize:14}}>◀</button>
+          <div style={{fontSize:13,fontWeight:700,minWidth:96,textAlign:'center'}}>{monLbl} {year}</div>
+          <button onClick={()=>setOff(o=>o+1)} style={{background:'rgba(255,255,255,.18)',border:'none',color:'#fff',width:28,height:28,borderRadius:6,cursor:'pointer',fontSize:14}}>▶</button>
+        </div>
+        <div style={{padding:16}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:4,marginBottom:4}}>
+            {WD.map((w,i)=><div key={i} style={{textAlign:'center',fontSize:10,color:'var(--ink-3)',fontWeight:600}}>{w}</div>)}
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:4}}>
+            {cells.map((d,i) => {
+              if (d == null) return <div key={i}/>;
+              const ds = mk(d); const v = attGet(ds, s.id); const isToday = ds === today;
+              return (
+                <div key={i} style={{border:`1px solid ${isToday?'var(--accent)':'var(--border)'}`,borderRadius:8,padding:'4px 2px',display:'flex',flexDirection:'column',alignItems:'center',gap:2,minHeight:46,background:isToday?'rgba(42,93,176,.05)':'transparent'}}>
+                  <div style={{fontSize:10,color:'var(--ink-3)',fontWeight:isToday?700:400}}>{d}</div>
+                  <AttBadge val={v} size={22}/>
+                </div>
+              );
+            })}
+          </div>
+          {/* Summary total */}
+          <div style={{marginTop:14,borderTop:'1px solid var(--border)',paddingTop:12}}>
+            <div style={{fontSize:11,color:'var(--ink-3)',fontWeight:700,marginBottom:8}}>{tr('សរុប​ប្រចាំ​ខែ','Monthly summary')}</div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(84px,1fr))',gap:8}}>
+              {SUM.map(([k,c,l,n]) => (
+                <div key={k} style={{padding:'8px 10px',borderRadius:8,border:`1px solid ${c}33`,background:`${c}11`}}>
+                  <div style={{fontSize:20,fontWeight:800,color:c,fontFamily:'var(--font-display)',lineHeight:1}}>{n}</div>
+                  <div style={{fontSize:10.5,color:c,fontWeight:600,marginTop:2}}>{l}</div>
+                </div>
+              ))}
+              <div style={{padding:'8px 10px',borderRadius:8,border:'1px solid var(--warn)33',background:'var(--warn)11'}}>
+                <div style={{fontSize:20,fontWeight:800,color:'var(--warn)',fontFamily:'var(--font-display)',lineHeight:1}}>{otTotal}</div>
+                <div style={{fontSize:10.5,color:'var(--warn)',fontWeight:600,marginTop:2}}>{tr('ម៉ោង​បន្ថែម','Overtime h')}</div>
+              </div>
+              <div style={{padding:'8px 10px',borderRadius:8,border:'1px solid var(--border)',background:'var(--surface-muted)'}}>
+                <div style={{fontSize:20,fontWeight:800,color:'var(--ink)',fontFamily:'var(--font-display)',lineHeight:1}}>{stats.P + stats.L + stats.H}</div>
+                <div style={{fontSize:10.5,color:'var(--ink-3)',fontWeight:600,marginTop:2}}>{tr('ថ្ងៃ​ធ្វើ​ការ','Worked days')}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
 // ── Attendance tab ──
 const SfSchedule = ({ staff }) => {
   const { tr } = useAppActions();
   const [weekOffset, setWeekOffset] = React.useState(0);
   const [, forceUp] = React.useReducer(x => x + 1, 0);
   const [view, setView] = React.useState('week'); // 'today' | 'week'
+  const [dayModal, setDayModal] = React.useState(null);   // {s, date} — day attendance editor
+  const [monthStaff, setMonthStaff] = React.useState(null); // staff — month calendar
   const weekDates = typeof getWeekDates === 'function' ? getWeekDates(weekOffset) : [];
   const today = todayStr();
 
@@ -1017,10 +1172,10 @@ const SfSchedule = ({ staff }) => {
             });
             return (
               <div key={s.id} style={{display:'grid',gridTemplateColumns:'2fr 1fr 2.8fr 1fr',gap:10,alignItems:'center',padding:'10px 16px',borderTop:i?'1px solid var(--border)':'none'}}>
-                <div style={{display:'flex',gap:10,alignItems:'center',minWidth:0}}>
+                <div onClick={()=>setMonthStaff(s)} title={tr('មើល​វត្តមាន​ប្រចាំ​ខែ','View monthly attendance')} style={{display:'flex',gap:10,alignItems:'center',minWidth:0,cursor:'pointer'}}>
                   <Avatar tag={s.photo} size={32}/>
                   <div style={{minWidth:0}}>
-                    <div style={{fontSize:13,fontWeight:500,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.name}</div>
+                    <div style={{fontSize:13,fontWeight:500,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',color:'var(--accent)'}}>{s.name}</div>
                     <div style={{fontSize:11,color:'var(--ink-3)'}}>{s.role} · {s.dept}</div>
                   </div>
                 </div>
@@ -1075,10 +1230,10 @@ const SfSchedule = ({ staff }) => {
             const ws = weekStats(s);
             return (
               <div key={s.id} style={{display:'grid',gridTemplateColumns:'160px repeat(7,1fr) 100px',borderTop:'1px solid var(--border)'}}>
-                <div style={{padding:'8px 12px',display:'flex',alignItems:'center',gap:8}}>
+                <div onClick={()=>setMonthStaff(s)} title={tr('មើល​វត្តមាន​ប្រចាំ​ខែ','View monthly attendance')} style={{padding:'8px 12px',display:'flex',alignItems:'center',gap:8,cursor:'pointer'}}>
                   <Avatar tag={s.photo} size={24}/>
                   <div style={{minWidth:0}}>
-                    <div style={{fontSize:12,fontWeight:500,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.en}</div>
+                    <div style={{fontSize:12,fontWeight:500,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',color:'var(--accent)'}}>{s.en}</div>
                     <div style={{fontSize:10,color:'var(--ink-3)'}}>{s.dept}</div>
                   </div>
                 </div>
@@ -1086,8 +1241,8 @@ const SfSchedule = ({ staff }) => {
                   const isToday = date === today;
                   const isWeekend = di >= 5;
                   return (
-                    <div key={di} style={{borderLeft:'1px solid var(--border)',background:isToday?'rgba(42,93,176,.04)':isWeekend?'var(--surface-muted)':'transparent',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                      <AttCell date={date} empId={s.id} onUpdate={forceUp}/>
+                    <div key={di} onClick={()=>setDayModal({s,date})} title={tr('កែ​ម៉ោង / ស្ថានភាព','Edit times / status')} style={{borderLeft:'1px solid var(--border)',background:isToday?'rgba(42,93,176,.04)':isWeekend?'var(--surface-muted)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',padding:'4px 0'}}>
+                      <AttBadge val={attGet(date, s.id)}/>
                     </div>
                   );
                 })}
@@ -1111,6 +1266,9 @@ const SfSchedule = ({ staff }) => {
           </span>
         ))}
       </div>
+
+      {dayModal && <DayAttModal s={dayModal.s} date={dayModal.date} onClose={()=>{ setDayModal(null); forceUp(); }} onSaved={forceUp}/>}
+      {monthStaff && <MonthAttModal s={monthStaff} onClose={()=>setMonthStaff(null)}/>}
     </div>
   );
 };
