@@ -713,7 +713,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   const submitExam = () => {
     const m = examModal; if (!m) return;
     if (!(m.studentIds||[]).length && !(m.instIds||[]).length && !(m.note||'').trim()) { setExamModal(null); return; }
-    const rec = { kind:(m.kind==='apply'?'apply':'exam'), date:m.date, time:m.time||'', len:Number(m.len)||2, studentIds:m.studentIds||[], instIds:m.instIds||[], note:(m.note||'').trim() };
+    const rec = { kind:(m.kind==='apply'?'apply':'exam'), date:m.date, time:m.time||'', len:Number(m.len)||2, studentIds:m.studentIds||[], instIds:m.instIds||[], note:(m.note||'').trim(), phase:(m.phase||'KH') };
     if (m.id) saveExams(exams.map(e => e.id===m.id ? {...e,...rec} : e));
     else      saveExams([...exams, { id:'E'+Date.now(), ...rec, author: meName }]);
     const km = window.__SCHED_KIND(rec.kind);
@@ -723,7 +723,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   const removeExam = (id) => { saveExams(exams.filter(e => e.id !== id)); };
   const toggleExamStudent = (sid) => setExamModal(m => { const c=m.studentIds||[]; return {...m, studentIds: c.includes(sid)?c.filter(x=>x!==sid):[...c,sid]}; });
   const toggleExamInst    = (iid) => setExamModal(m => { const c=m.instIds||[];    return {...m, instIds:    c.includes(iid)?c.filter(x=>x!==iid):[...c,iid]}; });
-  const openExamEdit = (e) => setExamModal({ id:e.id, kind:e.kind||'exam', date:e.date, time:e.time||'', len:e.len||2, studentIds:[...(e.studentIds||[])], instIds:[...(e.instIds||[])], note:e.note||'' });
+  const openExamEdit = (e) => setExamModal({ id:e.id, kind:e.kind||'exam', date:e.date, time:e.time||'', len:e.len||2, studentIds:[...(e.studentIds||[])], instIds:[...(e.instIds||[])], note:e.note||'', phase:e.phase||'KH' });
 
   React.useEffect(()=>{ if(view) setV(view); }, [view]);
   // When data reloads (cloud sync / realtime), refresh notes from the shared
@@ -949,8 +949,8 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(o=>o+1)}>{tr('បន្ទាប់ ▶','Next ▶')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>generateSchedulePDF({lessons:visibleLessons.filter(l=>l.status!=='cancelled'),weekDates:allWeekDates,viewType:v,labelEn,instFilter,vehFilter,studentFilter,lang})} icon={<Icon name="download" size={14}/>}>{tr('PDF','PDF')}</Btn>
             {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:allWeekDates[0]||today,time:'09:00',title:'',description:'',author:meName,invited:[]})} icon={<Icon name="bell" size={14}/>}>{tr('+ ចំណាំ','+ Note')}</Btn>}
-            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setExamModal({kind:'exam',date:allWeekDates[0]||today,time:'08:00',len:2,studentIds:[],instIds:[],note:''})} icon={<Icon name="star" size={14}/>} style={{color:'#12A302',borderColor:'#12A302'}}>{tr('+ ប្រឡង','+ Exam')}</Btn>}
-            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setExamModal({kind:'apply',date:allWeekDates[0]||today,time:'08:00',len:2,studentIds:[],instIds:[],note:''})} icon={<Icon name="book" size={14}/>} style={{color:'#CA8A04',borderColor:'#CA8A04'}}>{tr('+ ដាក់​ពាក្យ','+ Apply')}</Btn>}
+            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setExamModal({kind:'exam',date:allWeekDates[0]||today,time:'08:00',len:2,studentIds:[],instIds:[],note:'',phase:'KH'})} icon={<Icon name="star" size={14}/>} style={{color:'#12A302',borderColor:'#12A302'}}>{tr('+ ប្រឡង','+ Exam')}</Btn>}
+            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setExamModal({kind:'apply',date:allWeekDates[0]||today,time:'08:00',len:2,studentIds:[],instIds:[],note:'',phase:'KH'})} icon={<Icon name="book" size={14}/>} style={{color:'#CA8A04',borderColor:'#CA8A04'}}>{tr('+ ដាក់​ពាក្យ','+ Apply')}</Btn>}
             {can(role,'create','lesson') && <Btn kind="primary" size="md" onClick={()=>openForm('newLesson')} icon={<Icon name="plus" size={14}/>}>{tr('មេរៀន​ថ្មី','New lesson')}</Btn>}
           </div>
         )}
@@ -1340,6 +1340,22 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
                 <select value={examModal.len} onChange={e=>setExamModal(m=>({...m,len:parseInt(e.target.value)||1}))} style={inp}>
                   {[1,2,3,4,5,6,7,8].map(n=><option key={n} value={n}>{n} {tr('ម៉ោង','h')}</option>)}
                 </select></div>
+            </div>
+
+            {/* Tracking phase — KH / JP / AI */}
+            <div>
+              <label style={lblSt}>{tr('វគ្គ','Phase')}</label>
+              <div style={{display:'flex',gap:6}}>
+                {(window.STUDENT_PHASES||[]).map(p => {
+                  const active = (examModal.phase||'KH') === p.k;
+                  return (
+                    <button key={p.k} type="button" onClick={()=>setExamModal(m=>({...m,phase:p.k}))} style={{
+                      padding:'6px 16px',borderRadius:999,fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'inherit',
+                      border:'1.5px solid '+(active?p.color:'var(--border)'),
+                      background: active?p.color:'var(--surface)', color: active?'#fff':'var(--ink-2)'}}>{p.label}</button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Students (multi) */}

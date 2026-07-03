@@ -1016,7 +1016,6 @@ window.__trRegistry = {
   "Missing": "មិន​ទាន់",
   "Lessons & Comments": "បញ្ជីមេរៀន និង មតិគ្រូ",
   "hrs": "ម៉ោង",
-  "EXAMS": "ការ​ប្រឡង",
   "Download PDF — choose phase": "ទាញយក PDF — ជ្រើសវគ្គ",
   "Choose language": "ជ្រើសភាសា",
   "Khmer": "ខ្មែរ",
@@ -1684,7 +1683,6 @@ window.__trGroups = {
     "Missing": "មិន​ទាន់",
     "Lessons & Comments": "បញ្ជីមេរៀន និង មតិគ្រូ",
     "hrs": "ម៉ោង",
-    "EXAMS": "ការ​ប្រឡង",
     "Download PDF — choose phase": "ទាញយក PDF — ជ្រើសវគ្គ",
     "Choose language": "ជ្រើសភាសា",
     "Khmer": "ខ្មែរ",
@@ -2952,7 +2950,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v146";</script>
+<script>window.__ANZEN_VERSION="v147";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -18859,7 +18857,8 @@ var ScheduleScreen = ({
       len: Number(m.len) || 2,
       studentIds: m.studentIds || [],
       instIds: m.instIds || [],
-      note: (m.note || '').trim()
+      note: (m.note || '').trim(),
+      phase: m.phase || 'KH'
     };
     if (m.id) saveExams(exams.map(e => e.id === m.id ? {
       ...e,
@@ -18898,7 +18897,8 @@ var ScheduleScreen = ({
     len: e.len || 2,
     studentIds: [...(e.studentIds || [])],
     instIds: [...(e.instIds || [])],
-    note: e.note || ''
+    note: e.note || '',
+    phase: e.phase || 'KH'
   });
   React.useEffect(() => {
     if (view) setV(view);
@@ -19324,7 +19324,8 @@ var ScheduleScreen = ({
         len: 2,
         studentIds: [],
         instIds: [],
-        note: ''
+        note: '',
+        phase: 'KH'
       }),
       icon: React.createElement(Icon, {
         name: "star",
@@ -19344,7 +19345,8 @@ var ScheduleScreen = ({
         len: 2,
         studentIds: [],
         instIds: [],
-        note: ''
+        note: '',
+        phase: 'KH'
       }),
       icon: React.createElement(Icon, {
         name: "book",
@@ -20427,6 +20429,34 @@ var ScheduleScreen = ({
       key: n,
       value: n
     }, n, " ", tr('ម៉ោង', 'h')))))), React.createElement("div", null, React.createElement("label", {
+      style: lblSt
+    }, tr('វគ្គ', 'Phase')), React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 6
+      }
+    }, (window.STUDENT_PHASES || []).map(p => {
+      var active = (examModal.phase || 'KH') === p.k;
+      return React.createElement("button", {
+        key: p.k,
+        type: "button",
+        onClick: () => setExamModal(m => ({
+          ...m,
+          phase: p.k
+        })),
+        style: {
+          padding: '6px 16px',
+          borderRadius: 999,
+          fontSize: 12,
+          fontWeight: 700,
+          cursor: 'pointer',
+          fontFamily: 'inherit',
+          border: '1.5px solid ' + (active ? p.color : 'var(--border)'),
+          background: active ? p.color : 'var(--surface)',
+          color: active ? '#fff' : 'var(--ink-2)'
+        }
+      }, p.label);
+    }))), React.createElement("div", null, React.createElement("label", {
       style: lblSt
     }, tr('សិស្ស (ច្រើន​នាក់)', 'Students (multiple)'), " ", selStu.length > 0 && React.createElement("span", {
       style: {
@@ -40469,7 +40499,7 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
     var isTheoryL = l => l.color === 'c' || l.color === 'e';
     var phaseSections = PH_LIST.map(p => {
       var pl = lessons.filter(l => getPhase(l) === p.k);
-      var pExams = p.k === 'KH' ? exams : [];
+      var pExams = exams.filter(e => (e.phase || 'KH') === p.k);
       if (!pl.length && !pExams.length) return null;
       var phaseHourMap = buildHourNumbering(pl);
       var thHrs = 0,
@@ -40496,7 +40526,7 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
         body
       };
     }).filter(Boolean);
-    var totalRows = phaseSections.reduce((a, s) => a + s.thHrs + s.prHrs, 0) + (phaseSections.some(s => s.p.k === 'KH') ? exams.length : 0);
+    var totalRows = phaseSections.reduce((a, s) => a + s.thHrs + s.prHrs, 0) + exams.length;
     var NV = '#1e3a6e';
     var address = ss.address || '';
     var fmtDob = d => {
@@ -42010,14 +42040,26 @@ var StudentsScreenV2 = () => {
             padding: '12px 0'
           }
         }, tr('មិន​ទាន់​មាន​មេរៀន', 'No lessons yet'));
-        var groups = (window.STUDENT_PHASES || []).map(p => ({
-          p,
-          items: studentLessons.filter(l => lessonPhase(l) === p.k).flatMap(l => lessonHourSlices(l).map(sl => ({
+        var examPhase = e => e.phase || 'KH';
+        var groups = (window.STUDENT_PHASES || []).map(p => {
+          var lessonItems = studentLessons.filter(l => lessonPhase(l) === p.k).flatMap(l => lessonHourSlices(l).map(sl => ({
+            type: 'lesson',
             l,
             sl,
             k: (l.date || '') + ' ' + String(sl.h).padStart(2, '0')
-          }))).sort((a, b) => a.k < b.k ? -1 : a.k > b.k ? 1 : 0)
-        })).filter(g => g.items.length > 0);
+          })));
+          var examItems = studentExams.filter(e => examPhase(e) === p.k).map(e => ({
+            type: 'exam',
+            e,
+            k: (e.date || '') + ' ' + String(e.time || '').slice(0, 5)
+          }));
+          var items = [...lessonItems, ...examItems].sort((a, b) => a.k < b.k ? -1 : a.k > b.k ? 1 : 0);
+          return {
+            p,
+            items,
+            hours: lessonItems.length
+          };
+        }).filter(g => g.items.length > 0);
         var GroupHead = ({
           bg,
           label,
@@ -42056,8 +42098,14 @@ var StudentsScreenV2 = () => {
         }, React.createElement(GroupHead, {
           bg: g.p.color,
           label: g.p.label,
-          sub: `${g.items.length} ${tr('ម៉ោង', 'hrs')}`
-        }), g.items.map((it, i) => {
+          sub: `${g.hours} ${tr('ម៉ោង', 'hrs')}`
+        }), g.items.map((it, i) => it.type === 'exam' ? React.createElement(ExamFeedbackRow, {
+          key: it.e.id || 'ex' + i,
+          e: it.e,
+          sid: s.id,
+          tr: tr,
+          onSave: saveExamResult
+        }) : (() => {
           var cumNo = (hourNumMap[it.l.id] || [])[it.sl.offset];
           return React.createElement(CvLessonRow, {
             key: (it.l.id || 'ls' + i) + '-' + it.sl.offset,
@@ -42069,20 +42117,7 @@ var StudentsScreenV2 = () => {
             tr: tr,
             onSave: saveLessonFeedback
           });
-        }))), studentExams.length > 0 && React.createElement("div", null, React.createElement(GroupHead, {
-          bg: "var(--ink-2)",
-          label: tr('ការ​ប្រឡង', 'EXAMS')
-        }), [...studentExams].sort((a, b) => {
-          var ka = (a.date || '') + ' ' + (a.time || ''),
-            kb = (b.date || '') + ' ' + (b.time || '');
-          return ka < kb ? -1 : ka > kb ? 1 : 0;
-        }).map((e, i) => React.createElement(ExamFeedbackRow, {
-          key: e.id || 'ex' + i,
-          e: e,
-          sid: s.id,
-          tr: tr,
-          onSave: saveExamResult
-        }))));
+        })()))));
       })(), (() => {
         var pdfLessons = studentLessons.filter(l => pdfPhase === 'all' || lessonPhase(l) === pdfPhase);
         var PHASE_OPTS = [{

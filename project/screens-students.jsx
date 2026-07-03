@@ -388,7 +388,7 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
   const isTheoryL = (l) => l.color==='c' || l.color==='e';
   const phaseSections = PH_LIST.map(p => {
     const pl = lessons.filter(l => getPhase(l) === p.k);
-    const pExams = p.k === 'KH' ? exams : [];
+    const pExams = exams.filter(e => (e.phase || 'KH') === p.k);
     if (!pl.length && !pExams.length) return null;
     const phaseHourMap = buildHourNumbering(pl);   // restarts per phase, theory/practical separate
     let thHrs = 0, prHrs = 0;
@@ -400,7 +400,7 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
     const body = its.map(row => row.t==='exam' ? examRowHtml(row.e) : lessonRowHtml(row.l, row.sl.offset, phaseHourMap)).join('');
     return { p, thHrs, prHrs, body };
   }).filter(Boolean);
-  const totalRows = phaseSections.reduce((a,s)=>a+s.thHrs+s.prHrs,0) + (phaseSections.some(s=>s.p.k==='KH') ? exams.length : 0);
+  const totalRows = phaseSections.reduce((a,s)=>a+s.thHrs+s.prHrs,0) + exams.length;
 
   // ── Record-book header (Japanese driving-school style) ──────────────────────
   const NV = '#1e3a6e';
@@ -1209,19 +1209,21 @@ const StudentsScreenV2 = () => {
           {/* Section 5: Lessons & comments */}
           <CvSection label={tr('បញ្ជីមេរៀន និង មតិគ្រូ','Lessons & Comments')} isOpen={openSections.lessons} onToggle={()=>toggleSection('lessons')}>
             {(() => {
-              // Group lessons by tracking phase (KH / JP / AI) so each program's
-              // record is kept separately; exams get their own group below.
-              // Hours are still numbered (1),(2),… (theory & practical separately).
+              // Group by tracking phase (KH / JP / AI). Within each phase, exams &
+              // applications are mixed in with the lessons in date order.
               const hourNumMap = buildHourNumbering(studentLessons);
               if (studentLessons.length === 0 && studentExams.length === 0) return (
                 <div style={{fontSize:13,color:'var(--ink-3)',textAlign:'center',padding:'12px 0'}}>{tr('មិន​ទាន់​មាន​មេរៀន','No lessons yet')}</div>
               );
-              const groups = (window.STUDENT_PHASES || []).map(p => ({
-                p,
-                items: studentLessons.filter(l => lessonPhase(l) === p.k)
-                  .flatMap(l => lessonHourSlices(l).map(sl => ({ l, sl, k:(l.date||'')+' '+String(sl.h).padStart(2,'0') })))
-                  .sort((a,b)=> a.k<b.k ? -1 : a.k>b.k ? 1 : 0),
-              })).filter(g => g.items.length > 0);
+              const examPhase = (e) => e.phase || 'KH';
+              const groups = (window.STUDENT_PHASES || []).map(p => {
+                const lessonItems = studentLessons.filter(l => lessonPhase(l) === p.k)
+                  .flatMap(l => lessonHourSlices(l).map(sl => ({ type:'lesson', l, sl, k:(l.date||'')+' '+String(sl.h).padStart(2,'0') })));
+                const examItems = studentExams.filter(e => examPhase(e) === p.k)
+                  .map(e => ({ type:'exam', e, k:(e.date||'')+' '+String(e.time||'').slice(0,5) }));
+                const items = [...lessonItems, ...examItems].sort((a,b)=> a.k<b.k ? -1 : a.k>b.k ? 1 : 0);
+                return { p, items, hours: lessonItems.length };
+              }).filter(g => g.items.length > 0);
               const GroupHead = ({bg, label, sub}) => (
                 <div style={{display:'flex',alignItems:'center',gap:8,margin:'10px 0 8px'}}>
                   <span style={{background:bg,color:'#fff',fontSize:11,fontWeight:800,padding:'3px 10px',borderRadius:6,letterSpacing:'.03em'}}>{label}</span>
@@ -1232,21 +1234,14 @@ const StudentsScreenV2 = () => {
               return (<>
                 {groups.map(g => (
                   <div key={g.p.k}>
-                    <GroupHead bg={g.p.color} label={g.p.label} sub={`${g.items.length} ${tr('ម៉ោង','hrs')}`}/>
-                    {g.items.map((it,i) => {
-                      const cumNo = (hourNumMap[it.l.id] || [])[it.sl.offset];
-                      return <CvLessonRow key={(it.l.id||('ls'+i))+'-'+it.sl.offset} l={it.l} offset={it.sl.offset} h={it.sl.h} total={it.sl.total} cumNo={cumNo} tr={tr} onSave={saveLessonFeedback}/>;
-                    })}
+                    <GroupHead bg={g.p.color} label={g.p.label} sub={`${g.hours} ${tr('ម៉ោង','hrs')}`}/>
+                    {g.items.map((it,i) => it.type === 'exam'
+                      ? <ExamFeedbackRow key={it.e.id||('ex'+i)} e={it.e} sid={s.id} tr={tr} onSave={saveExamResult}/>
+                      : (() => { const cumNo = (hourNumMap[it.l.id] || [])[it.sl.offset];
+                          return <CvLessonRow key={(it.l.id||('ls'+i))+'-'+it.sl.offset} l={it.l} offset={it.sl.offset} h={it.sl.h} total={it.sl.total} cumNo={cumNo} tr={tr} onSave={saveLessonFeedback}/>; })()
+                    )}
                   </div>
                 ))}
-                {studentExams.length > 0 && (
-                  <div>
-                    <GroupHead bg="var(--ink-2)" label={tr('ការ​ប្រឡង','EXAMS')}/>
-                    {[...studentExams].sort((a,b)=>{ const ka=(a.date||'')+' '+(a.time||''), kb=(b.date||'')+' '+(b.time||''); return ka<kb?-1:ka>kb?1:0; }).map((e,i)=>(
-                      <ExamFeedbackRow key={e.id||('ex'+i)} e={e} sid={s.id} tr={tr} onSave={saveExamResult}/>
-                    ))}
-                  </div>
-                )}
               </>);
             })()}
             {/* PDF export — choose which phase(s) to include, then a language */}
