@@ -997,12 +997,14 @@ window.__trRegistry = {
   "Payment recorded": "បានចងចាំការបង់",
   "Marked as graduated ✓": "បាន​សម្គាល់​ថា​បញ្ចប់​ការសិក្សា ✓",
   "Restored to active": "បាន​យក​មក​សិក្សា​វិញ",
+  "Finished": "បញ្ចប់",
+  "Starting": "ចាប់​ផ្ដើម",
   "Feedback saved ✓": "បាន​រក្សា​ទុក​មតិ ✓",
   "Result saved ✓": "បាន​រក្សា​ទុក​លទ្ធផល ✓",
   "Student removed": "បានលុបសិស្ស",
   "Completed": "បាន​បញ្ចប់",
   "Back": "ត្រឡប់",
-  "Photo & Bio": "វគ្គ '+p.label,p.label+' phase')}\n                    style={{display:'inline-flex',alignItems:'center',gap:5,padding:'5px 10px',borderRadius:999,cursor:'pointer',\n                      fontSize:12,fontWeight:700,fontFamily:'inherit',\n                      border:'1.5px solid '+(done?p.color:'var(--border-strong)'),\n                      background: done?p.color:'var(--surface)', color: done?'#fff':'var(--ink-3)'}}>\n                    <span style={{width:15,height:15,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,\n                      border:'1.5px solid '+(done?'#fff':'var(--border-strong)'),\n                      background:done?'transparent':'#fff', color:done?'#fff':'transparent'}}>\n                      <Icon name=\"check\" size={10} stroke={3}/>\n                    </span>\n                    {p.label}\n                  </button>\n                );\n              })}\n            </div>\n          </div>\n\n          {/* Section 1: Photo & bio — edit toggle lives in the header */}\n          <CvSection label={tr('រូបថត និង ប្រវត្តិរូបសង្ខេប",
+  "Photo & Bio": "រូបថត និង ប្រវត្តិរូបសង្ខេប",
   "Age": "អាយុ",
   "y": "ឆ្នាំ",
   "Trans.": "ប្រអប់លេខ",
@@ -1664,12 +1666,14 @@ window.__trGroups = {
     "Payment recorded": "បានចងចាំការបង់",
     "Marked as graduated ✓": "បាន​សម្គាល់​ថា​បញ្ចប់​ការសិក្សា ✓",
     "Restored to active": "បាន​យក​មក​សិក្សា​វិញ",
+    "Finished": "បញ្ចប់",
+    "Starting": "ចាប់​ផ្ដើម",
     "Feedback saved ✓": "បាន​រក្សា​ទុក​មតិ ✓",
     "Result saved ✓": "បាន​រក្សា​ទុក​លទ្ធផល ✓",
     "Student removed": "បានលុបសិស្ស",
     "Completed": "បាន​បញ្ចប់",
     "Back": "ត្រឡប់",
-    "Photo & Bio": "វគ្គ '+p.label,p.label+' phase')}\n                    style={{display:'inline-flex',alignItems:'center',gap:5,padding:'5px 10px',borderRadius:999,cursor:'pointer',\n                      fontSize:12,fontWeight:700,fontFamily:'inherit',\n                      border:'1.5px solid '+(done?p.color:'var(--border-strong)'),\n                      background: done?p.color:'var(--surface)', color: done?'#fff':'var(--ink-3)'}}>\n                    <span style={{width:15,height:15,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,\n                      border:'1.5px solid '+(done?'#fff':'var(--border-strong)'),\n                      background:done?'transparent':'#fff', color:done?'#fff':'transparent'}}>\n                      <Icon name=\"check\" size={10} stroke={3}/>\n                    </span>\n                    {p.label}\n                  </button>\n                );\n              })}\n            </div>\n          </div>\n\n          {/* Section 1: Photo & bio — edit toggle lives in the header */}\n          <CvSection label={tr('រូបថត និង ប្រវត្តិរូបសង្ខេប",
+    "Photo & Bio": "រូបថត និង ប្រវត្តិរូបសង្ខេប",
     "Age": "អាយុ",
     "y": "ឆ្នាំ",
     "Trans.": "ប្រអប់លេខ",
@@ -2950,7 +2954,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v148";</script>
+<script>window.__ANZEN_VERSION="v149";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -41545,18 +41549,25 @@ var StudentsScreenV2 = () => {
     forceUpdate();
     toast(STUDENTS[i].graduated ? tr('បាន​សម្គាល់​ថា​បញ្ចប់​ការសិក្សា ✓', 'Marked as graduated ✓') : tr('បាន​យក​មក​សិក្សា​វិញ', 'Restored to active'), 'good');
   };
-  var togglePhase = (stu, ph) => {
+  var phaseStatusOf = (stu, ph) => stu.phaseStatus && stu.phaseStatus[ph] || (stu.phaseDone && stu.phaseDone[ph] ? 'finished' : '');
+  var setPhaseStatus = (stu, ph, status) => {
     var i = STUDENTS.findIndex(x => x.id === stu.id);
     if (i === -1) return;
+    var cur = phaseStatusOf(STUDENTS[i], ph);
+    var next = cur === status ? '' : status;
+    STUDENTS[i].phaseStatus = {
+      ...(STUDENTS[i].phaseStatus || {}),
+      [ph]: next
+    };
     var pd = {
       ...(STUDENTS[i].phaseDone || {})
     };
-    pd[ph] = !pd[ph];
+    pd[ph] = next === 'finished';
     STUDENTS[i].phaseDone = pd;
     STUDENTS[i].graduated = Object.values(pd).some(Boolean);
     if (window.saveAllData) window.saveAllData();
     forceUpdate();
-    toast(pd[ph] ? tr(`បាន​បញ្ចប់​វគ្គ ${ph} ✓`, `Completed ${ph} ✓`) : tr(`ដក​ការ​បញ្ចប់​វគ្គ ${ph}`, `Unmarked ${ph}`), 'good');
+    toast(`${ph} · ${next === 'finished' ? tr('បញ្ចប់', 'Finished') : next === 'starting' ? tr('ចាប់​ផ្ដើម', 'Starting') : tr('សម្អាត', 'Cleared')}`, 'good');
   };
   var saveLessonFeedback = (lesson, fields, offset = 0) => {
     var i = LESSONS.findIndex(l => l.id === lesson.id);
@@ -41737,66 +41748,66 @@ var StudentsScreenV2 = () => {
         stroke: 2.4
       }))), React.createElement("div", {
         style: {
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          marginBottom: 14,
-          flexWrap: 'wrap'
-        }
-      }, React.createElement("div", {
-        style: {
           fontSize: 15,
           fontWeight: 700,
           fontFamily: 'var(--font-km)',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
-          minWidth: 0
+          minWidth: 0,
+          marginBottom: 8
         }
       }, lang === 'km' ? s.name : s.en || s.name), React.createElement("div", {
         style: {
           display: 'flex',
-          gap: 6
+          flexWrap: 'wrap',
+          gap: 8,
+          marginBottom: 14
         }
       }, (window.STUDENT_PHASES || []).map(p => {
-        var done = !!(s.phaseDone && s.phaseDone[p.k]);
-        return React.createElement("button", {
+        var st = phaseStatusOf(s, p.k);
+        var seg = (val, label, activeColor) => {
+          var active = st === val;
+          return React.createElement("button", {
+            onClick: () => setPhaseStatus(s, p.k, val),
+            style: {
+              padding: '5px 11px',
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              border: 'none',
+              background: active ? activeColor : 'transparent',
+              color: active ? '#fff' : 'var(--ink-3)'
+            }
+          }, label);
+        };
+        return React.createElement("div", {
           key: p.k,
-          onClick: () => togglePhase(s, p.k),
-          title: tr('វគ្គ ' + p.label, p.label + ' phase'),
           style: {
             display: 'inline-flex',
-            alignItems: 'center',
-            gap: 5,
-            padding: '5px 10px',
-            borderRadius: 999,
-            cursor: 'pointer',
-            fontSize: 12,
-            fontWeight: 700,
-            fontFamily: 'inherit',
-            border: '1.5px solid ' + (done ? p.color : 'var(--border-strong)'),
-            background: done ? p.color : 'var(--surface)',
-            color: done ? '#fff' : 'var(--ink-3)'
+            alignItems: 'stretch',
+            borderRadius: 8,
+            overflow: 'hidden',
+            border: '1px solid var(--border)'
           }
         }, React.createElement("span", {
           style: {
-            width: 15,
-            height: 15,
-            borderRadius: 4,
-            display: 'flex',
+            display: 'inline-flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            border: '1.5px solid ' + (done ? '#fff' : 'var(--border-strong)'),
-            background: done ? 'transparent' : '#fff',
-            color: done ? '#fff' : 'transparent'
+            background: p.color,
+            color: '#fff',
+            fontSize: 11,
+            fontWeight: 800,
+            padding: '0 9px'
           }
-        }, React.createElement(Icon, {
-          name: "check",
-          size: 10,
-          stroke: 3
-        })), p.label);
-      }))), React.createElement(CvSection, {
+        }, p.label), seg('starting', tr('ចាប់​ផ្ដើម', 'Starting'), 'var(--warn)'), React.createElement("span", {
+          style: {
+            width: 1,
+            background: 'var(--border)'
+          }
+        }), seg('finished', tr('បញ្ចប់', 'Finished'), 'var(--good)'));
+      })), React.createElement(CvSection, {
         label: tr('រូបថត និង ប្រវត្តិរូបសង្ខេប', 'Photo & Bio'),
         isOpen: openSections.bio,
         onToggle: () => toggleSection('bio'),

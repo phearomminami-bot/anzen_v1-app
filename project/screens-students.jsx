@@ -945,19 +945,27 @@ const StudentsScreenV2 = () => {
       : tr('បាន​យក​មក​សិក្សា​វិញ', 'Restored to active'), 'good');
   };
 
-  // Toggle completion of a tracking phase (KH/JP/AI). Finishing ANY phase counts
-  // as success, so we keep the "graduated" flag in sync (= any phase complete).
-  const togglePhase = (stu, ph) => {
+  // Read a phase's status ('' | 'starting' | 'finished'), with backward-compat
+  // for the old boolean phaseDone (true → finished).
+  const phaseStatusOf = (stu, ph) =>
+    (stu.phaseStatus && stu.phaseStatus[ph]) || (stu.phaseDone && stu.phaseDone[ph] ? 'finished' : '');
+
+  // Set a tracking phase (KH/JP/AI) to Starting or Finished (tap again to clear).
+  // Finishing ANY phase counts as success, so we keep phaseDone + the graduated
+  // flag in sync (= any phase finished).
+  const setPhaseStatus = (stu, ph, status) => {
     const i = STUDENTS.findIndex(x => x.id === stu.id);
     if (i === -1) return;
+    const cur = phaseStatusOf(STUDENTS[i], ph);
+    const next = cur === status ? '' : status;
+    STUDENTS[i].phaseStatus = { ...(STUDENTS[i].phaseStatus || {}), [ph]: next };
     const pd = { ...(STUDENTS[i].phaseDone || {}) };
-    pd[ph] = !pd[ph];
+    pd[ph] = next === 'finished';
     STUDENTS[i].phaseDone = pd;
     STUDENTS[i].graduated = Object.values(pd).some(Boolean);
     if (window.saveAllData) window.saveAllData();
     forceUpdate();
-    toast(pd[ph] ? tr(`បាន​បញ្ចប់​វគ្គ ${ph} ✓`, `Completed ${ph} ✓`)
-                 : tr(`ដក​ការ​បញ្ចប់​វគ្គ ${ph}`, `Unmarked ${ph}`), 'good');
+    toast(`${ph} · ${next==='finished'?tr('បញ្ចប់','Finished'):next==='starting'?tr('ចាប់​ផ្ដើម','Starting'):tr('សម្អាត','Cleared')}`, 'good');
   };
 
   // Save an instructor evaluation/feedback back onto a lesson (rating, notes,
@@ -1090,32 +1098,33 @@ const StudentsScreenV2 = () => {
               display:'flex',alignItems:'center',justifyContent:'center'}}>
             <span style={{display:'flex',transform:'scaleX(-1)'}}><Icon name="arrow" size={22} stroke={2.4}/></span>
           </button>
-          {/* Profile title + phase tracking (KH / JP / AI — check to complete a
-              phase; finishing any one counts as success) */}
-          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14,flexWrap:'wrap'}}>
-            <div style={{fontSize:15,fontWeight:700,fontFamily:'var(--font-km)',
-              overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',minWidth:0}}>
-              {lang==='km' ? s.name : (s.en || s.name)}
-            </div>
-            <div style={{display:'flex',gap:6}}>
-              {(window.STUDENT_PHASES||[]).map(p => {
-                const done = !!(s.phaseDone && s.phaseDone[p.k]);
+          {/* Profile title */}
+          <div style={{fontSize:15,fontWeight:700,fontFamily:'var(--font-km)',
+            overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',minWidth:0,marginBottom:8}}>
+            {lang==='km' ? s.name : (s.en || s.name)}
+          </div>
+          {/* Phase tracking — Starting / Finished per phase (KH / JP / AI).
+              Finishing any one counts as success. */}
+          <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:14}}>
+            {(window.STUDENT_PHASES||[]).map(p => {
+              const st = phaseStatusOf(s, p.k);
+              const seg = (val, label, activeColor) => {
+                const active = st === val;
                 return (
-                  <button key={p.k} onClick={()=>togglePhase(s, p.k)} title={tr('វគ្គ '+p.label,p.label+' phase')}
-                    style={{display:'inline-flex',alignItems:'center',gap:5,padding:'5px 10px',borderRadius:999,cursor:'pointer',
-                      fontSize:12,fontWeight:700,fontFamily:'inherit',
-                      border:'1.5px solid '+(done?p.color:'var(--border-strong)'),
-                      background: done?p.color:'var(--surface)', color: done?'#fff':'var(--ink-3)'}}>
-                    <span style={{width:15,height:15,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,
-                      border:'1.5px solid '+(done?'#fff':'var(--border-strong)'),
-                      background:done?'transparent':'#fff', color:done?'#fff':'transparent'}}>
-                      <Icon name="check" size={10} stroke={3}/>
-                    </span>
-                    {p.label}
-                  </button>
+                  <button onClick={()=>setPhaseStatus(s, p.k, val)} style={{
+                    padding:'5px 11px',fontSize:11,fontWeight:700,cursor:'pointer',fontFamily:'inherit',border:'none',
+                    background: active?activeColor:'transparent', color: active?'#fff':'var(--ink-3)'}}>{label}</button>
                 );
-              })}
-            </div>
+              };
+              return (
+                <div key={p.k} style={{display:'inline-flex',alignItems:'stretch',borderRadius:8,overflow:'hidden',border:'1px solid var(--border)'}}>
+                  <span style={{display:'inline-flex',alignItems:'center',background:p.color,color:'#fff',fontSize:11,fontWeight:800,padding:'0 9px'}}>{p.label}</span>
+                  {seg('starting', tr('ចាប់​ផ្ដើម','Starting'), 'var(--warn)')}
+                  <span style={{width:1,background:'var(--border)'}}/>
+                  {seg('finished', tr('បញ្ចប់','Finished'), 'var(--good)')}
+                </div>
+              );
+            })}
           </div>
 
           {/* Section 1: Photo & bio — edit toggle lives in the header */}
