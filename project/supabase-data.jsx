@@ -26,6 +26,7 @@
 
   // ── ID snapshots for diff-based deletion ─────────────────────────────────
   let lastIds = null;
+  let _lastAuxPull = 0;   // throttle for heavy auxiliary tables (see __sbLoadAll)
   const snapshotIds = () => {
     lastIds = {
       vehicles: new Set((window.VEHICLES || []).map(v => v.id).filter(Boolean)),
@@ -128,29 +129,37 @@
     fill(window.STAFF,       stf, initial, 'staff');
     if (stf && stf.length) window.__staffData = stf.map(rowObj);
 
-    const insp = await pull('vehicle_inspections');
-    if (insp) window.__vehicleInspections = insp.map(rowObj);
+    // Heavy auxiliary tables (curriculum, inspections, attendance, and the
+    // settings blob — which can carry the base64 logo) rarely change. Re-pulling
+    // them on every 3-min poll / realtime burst wastes a lot of egress, so fetch
+    // them on the initial load and then at most once every ~2 minutes.
+    if (initial || (Date.now() - _lastAuxPull > 120000)) {
+      _lastAuxPull = Date.now();
 
-    const att = await pull('attendance');
-    if (att && att.length) {
-      const m = {};
-      att.forEach(r => { (m[r.date] = m[r.date] || {})[r.emp_id] = r.status; });
-      window.__attendanceData = m;
+      const insp = await pull('vehicle_inspections');
+      if (insp) window.__vehicleInspections = insp.map(rowObj);
+
+      const att = await pull('attendance');
+      if (att && att.length) {
+        const m = {};
+        att.forEach(r => { (m[r.date] = m[r.date] || {})[r.emp_id] = r.status; });
+        window.__attendanceData = m;
+      }
+
+      const lc = await pull('lesson_content');
+      if (lc && lc.length) rebuildLib(lc);
+
+      try {
+        const { data: ss } = await window.sb.from('school_settings').select('data').eq('id', 1).single();
+        if (ss && ss.data && Object.keys(ss.data).length)
+          window.__schoolSettings = Object.assign({}, window.__schoolSettings || {}, ss.data);
+      } catch (e) {}
+      // Cache the real logo/name so the loading splash can show it on next reload.
+      try {
+        const b = window.__schoolSettings || {};
+        if (b.logo || b.name) localStorage.setItem('anzen_brand', JSON.stringify({ logo: b.logo || null, name: b.name || null }));
+      } catch (e) {}
     }
-
-    const lc = await pull('lesson_content');
-    if (lc && lc.length) rebuildLib(lc);
-
-    try {
-      const { data: ss } = await window.sb.from('school_settings').select('data').eq('id', 1).single();
-      if (ss && ss.data && Object.keys(ss.data).length)
-        window.__schoolSettings = Object.assign({}, window.__schoolSettings || {}, ss.data);
-    } catch (e) {}
-    // Cache the real logo/name so the loading splash can show it on next reload.
-    try {
-      const b = window.__schoolSettings || {};
-      if (b.logo || b.name) localStorage.setItem('anzen_brand', JSON.stringify({ logo: b.logo || null, name: b.name || null }));
-    } catch (e) {}
 
     snapshotIds();
     // Only reset the whole baseline on the first load. On reloads, fill() advances

@@ -171,17 +171,22 @@ function App() {
   React.useEffect(() => { window.__curriculumDone = curriculumDone; }, [curriculumDone]);
   React.useEffect(() => { window.__curriculumFeedback = curriculumFeedback; }, [curriculumFeedback]);
 
-  // Auto-poll Supabase every 30s when logged in + configured → cross-device sync
+  // Fallback poll for when Realtime drops. Realtime already handles live
+  // cross-device sync, so this only needs to be a slow safety net — a full
+  // reload re-downloads every row (incl. photos), so running it every 30s (and
+  // even while the tab is hidden) is what burns egress. Poll every 3 min, and
+  // never while the tab is hidden (nobody's looking).
   React.useEffect(() => {
     if (!authed || !window.sb) return;
     const poll = () => {
       if (!window.__sbLoadAll) return;
+      if (typeof document !== 'undefined' && document.hidden) return;   // tab not visible
       // Skip while local changes are still being pushed, so the reload can't
       // clobber an un-synced create/edit/delete.
       if (window.__sbHasPendingSync) return;
       window.__sbLoadAll().catch(() => {});
     };
-    const id = setInterval(poll, 30000);
+    const id = setInterval(poll, 180000);   // 3 min (was 30s)
     return () => clearInterval(id);
   }, [authed]);
 

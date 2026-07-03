@@ -63575,6 +63575,7 @@ Object.assign(window, {
   window.__sbSyncEnabled = true;
   window.__sbHasPendingSync = false;
   var lastIds = null;
+  var _lastAuxPull = 0;
   var snapshotIds = () => {
     lastIds = {
       vehicles: new Set((window.VEHICLES || []).map(v => v.id).filter(Boolean)),
@@ -63666,31 +63667,34 @@ Object.assign(window, {
     fill(window.INVOICES, inv, initial, 'invoices');
     fill(window.STAFF, stf, initial, 'staff');
     if (stf && stf.length) window.__staffData = stf.map(rowObj);
-    var insp = await pull('vehicle_inspections');
-    if (insp) window.__vehicleInspections = insp.map(rowObj);
-    var att = await pull('attendance');
-    if (att && att.length) {
-      var m = {};
-      att.forEach(r => {
-        (m[r.date] = m[r.date] || {})[r.emp_id] = r.status;
-      });
-      window.__attendanceData = m;
+    if (initial || Date.now() - _lastAuxPull > 120000) {
+      _lastAuxPull = Date.now();
+      var insp = await pull('vehicle_inspections');
+      if (insp) window.__vehicleInspections = insp.map(rowObj);
+      var att = await pull('attendance');
+      if (att && att.length) {
+        var m = {};
+        att.forEach(r => {
+          (m[r.date] = m[r.date] || {})[r.emp_id] = r.status;
+        });
+        window.__attendanceData = m;
+      }
+      var lc = await pull('lesson_content');
+      if (lc && lc.length) rebuildLib(lc);
+      try {
+        var {
+          data: ss
+        } = await window.sb.from('school_settings').select('data').eq('id', 1).single();
+        if (ss && ss.data && Object.keys(ss.data).length) window.__schoolSettings = Object.assign({}, window.__schoolSettings || {}, ss.data);
+      } catch (e) {}
+      try {
+        var b = window.__schoolSettings || {};
+        if (b.logo || b.name) localStorage.setItem('anzen_brand', JSON.stringify({
+          logo: b.logo || null,
+          name: b.name || null
+        }));
+      } catch (e) {}
     }
-    var lc = await pull('lesson_content');
-    if (lc && lc.length) rebuildLib(lc);
-    try {
-      var {
-        data: ss
-      } = await window.sb.from('school_settings').select('data').eq('id', 1).single();
-      if (ss && ss.data && Object.keys(ss.data).length) window.__schoolSettings = Object.assign({}, window.__schoolSettings || {}, ss.data);
-    } catch (e) {}
-    try {
-      var b = window.__schoolSettings || {};
-      if (b.logo || b.name) localStorage.setItem('anzen_brand', JSON.stringify({
-        logo: b.logo || null,
-        name: b.name || null
-      }));
-    } catch (e) {}
     snapshotIds();
     if (initial) takeContentSnap();
     window.__sbReady = true;
@@ -64376,10 +64380,11 @@ function App() {
     if (!authed || !window.sb) return;
     var poll = () => {
       if (!window.__sbLoadAll) return;
+      if (typeof document !== 'undefined' && document.hidden) return;
       if (window.__sbHasPendingSync) return;
       window.__sbLoadAll().catch(() => {});
     };
-    var id = setInterval(poll, 30000);
+    var id = setInterval(poll, 180000);
     return () => clearInterval(id);
   }, [authed]);
   var [sideCollapsed, setSideCollapsed] = React.useState(() => {
