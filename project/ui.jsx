@@ -288,6 +288,23 @@ const Icon = ({ name, size = 16, stroke = 1.6 }) => {
   );
 };
 
+// Shared CSV download — opens cleanly in Google Sheets / Excel.
+// cols: [ [header, rowFn], … ]; rows: array of records. UTF-8 BOM keeps Khmer
+// readable; values are RFC-4180 quoted. Returns true on success.
+const exportCSV = (filename, cols, rows) => {
+  const esc = v => { const t = (v == null ? '' : String(v)); return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+  const lines = [cols.map(c => esc(c[0])).join(',')];
+  (rows || []).forEach(r => lines.push(cols.map(c => esc(c[1](r))).join(',')));
+  const csv = String.fromCharCode(0xFEFF) + lines.join('\r\n');
+  try {
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = filename; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    return true;
+  } catch (e) { return false; }
+};
+
 // pinwheel mark — original brand mark (windmill / road junction abstract)
 const Logo = ({ size = 28 }) => (
   <svg width={size} height={size} viewBox="0 0 32 32">

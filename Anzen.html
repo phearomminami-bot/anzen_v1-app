@@ -838,6 +838,7 @@ window.__trRegistry = {
   "Monthly summary": "សរុប​ប្រចាំ​ខែ",
   "Overtime h": "ម៉ោង​បន្ថែម",
   "Worked days": "ថ្ងៃ​ធ្វើ​ការ",
+  "CSV exported ✓": "បាន​នាំ​ចេញ CSV ✓",
   "Week": "សប្ដាហ៍",
   "Half": "កន្លះ",
   "View monthly attendance": "មើល​វត្តមាន​ប្រចាំ​ខែ",
@@ -859,7 +860,6 @@ window.__trRegistry = {
   "Vehicle removed": "បានលុបយានយន្ត",
   "Hidden from Vehicle tab": "លាក់​ចេញ​ពី Tab Vehicle",
   "Shown in Vehicle tab": "បង្ហាញ​នៅ Tab Vehicle",
-  "Exporting…": "នាំចេញ…",
   "Work order": "បញ្ជាការងារ",
   "MTD": "ចំណាយ",
   "Service due": "ថែទាំ",
@@ -963,6 +963,7 @@ window.__trRegistry = {
   "Sort": "តម្រៀប",
   "Sort:": "តម្រៀប៖",
   "Order": "លំដាប់",
+  "CSV": "CSV",
   "No vehicles to display": "មិន​ទាន់​មាន​យានយន្ត",
   "Toggle vehicles visible in Vehicle management": "ធ្វើ​ឲ្យ​យានយន្ត​មើលឃើញ​នៅ​ Vehicle management",
   "Hr": "ម៉ោងទី",
@@ -1428,7 +1429,6 @@ window.__trRegistry = {
   "Unspecified": "មិន​បាន​បញ្ជាក់",
   "Automatic": "អូតូ AT",
   "Training Hrs": "ម៉ោង​បណ្ដុះ",
-  "CSV exported ✓": "បាន​នាំ​ចេញ CSV ✓",
   "Last Mo": "ខែ​មុន",
   "Custom": "ជ្រើស",
   "Print / PDF": "បោះពុម្ព",
@@ -1960,7 +1960,6 @@ window.__trGroups = {
     "Vehicle removed": "បានលុបយានយន្ត",
     "Hidden from Vehicle tab": "លាក់​ចេញ​ពី Tab Vehicle",
     "Shown in Vehicle tab": "បង្ហាញ​នៅ Tab Vehicle",
-    "Exporting…": "នាំចេញ…",
     "Work order": "បញ្ជាការងារ",
     "MTD": "ចំណាយ",
     "Service due": "ថែទាំ",
@@ -2064,6 +2063,7 @@ window.__trGroups = {
     "Sort": "តម្រៀប",
     "Sort:": "តម្រៀប៖",
     "Order": "លំដាប់",
+    "CSV": "CSV",
     "No vehicles to display": "មិន​ទាន់​មាន​យានយន្ត",
     "Toggle vehicles visible in Vehicle management": "ធ្វើ​ឲ្យ​យានយន្ត​មើលឃើញ​នៅ​ Vehicle management"
   },
@@ -2176,6 +2176,7 @@ window.__trGroups = {
     "Monthly summary": "សរុប​ប្រចាំ​ខែ",
     "Overtime h": "ម៉ោង​បន្ថែម",
     "Worked days": "ថ្ងៃ​ធ្វើ​ការ",
+    "CSV exported ✓": "បាននាំចេញ CSV ✓",
     "Week": "សប្ដាហ៍",
     "Half": "កន្លះ",
     "View monthly attendance": "មើល​វត្តមាន​ប្រចាំ​ខែ",
@@ -2871,7 +2872,6 @@ window.__trGroups = {
     "Unspecified": "មិន​បាន​បញ្ជាក់",
     "Automatic": "អូតូ",
     "Training Hrs": "ម៉ោង​បណ្ដុះ",
-    "CSV exported ✓": "បាន​នាំ​ចេញ CSV ✓",
     "Last Mo": "ខែ​មុន",
     "Custom": "ជ្រើស",
     "Print / PDF": "បោះពុម្ព",
@@ -2940,7 +2940,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v138";</script>
+<script>window.__ANZEN_VERSION="v139";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -3513,6 +3513,28 @@ var Icon = ({
   }, React.createElement("path", {
     d: paths[name] || paths.chev
   }));
+};
+var exportCSV = (filename, cols, rows) => {
+  var esc = v => {
+    var t = v == null ? '' : String(v);
+    return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+  };
+  var lines = [cols.map(c => esc(c[0])).join(',')];
+  (rows || []).forEach(r => lines.push(cols.map(c => esc(c[1](r))).join(',')));
+  var csv = String.fromCharCode(0xFEFF) + lines.join('\r\n');
+  try {
+    var blob = new Blob([csv], {
+      type: 'text/csv;charset=utf-8'
+    });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    return true;
+  } catch (e) {
+    return false;
+  }
 };
 var Logo = ({
   size = 28
@@ -27185,7 +27207,7 @@ var StaffScreen = () => {
         display: 'flex',
         gap: 8
       }
-    }, React.createElement(Btn, {
+    }, tab === 'directory' && React.createElement(Btn, {
       kind: "ghost",
       size: "md",
       icon: React.createElement(Icon, {
@@ -29695,7 +29717,8 @@ var SfSchedule = ({
   staff
 }) => {
   var {
-    tr
+    tr,
+    toast
   } = useAppActions();
   var [weekOffset, setWeekOffset] = React.useState(0);
   var [, forceUp] = React.useReducer(x => x + 1, 0);
@@ -29704,6 +29727,30 @@ var SfSchedule = ({
   var [monthStaff, setMonthStaff] = React.useState(null);
   var weekDates = typeof getWeekDates === 'function' ? getWeekDates(weekOffset) : [];
   var today = todayStr();
+  var exportAttendanceCSV = () => {
+    var ad = window.__attendanceData || {};
+    var rows = [];
+    Object.keys(ad).sort().forEach(date => {
+      var day = ad[date] || {};
+      staff.forEach(s => {
+        var st = day[s.id];
+        if (!st) return;
+        var t = timeGet(date, s.id);
+        var show = st === 'P' || st === 'L';
+        rows.push({
+          date,
+          s,
+          st,
+          t,
+          show,
+          ot: show ? calcOT(t.in, t.out, t.break ?? 1) : 0
+        });
+      });
+    });
+    var cols = [['កាលបរិច្ឆេទ', r => r.date], ['ID', r => r.s.id], ['ឈ្មោះ', r => r.s.name || r.s.en], ['ស្ថានភាព', r => (ATT_LABELS[r.st] || ATT_LABELS['']).km], ['ម៉ោងចូល', r => r.show ? r.t.in : ''], ['ម៉ោងចេញ', r => r.show ? r.t.out : ''], ['សម្រាក(ម៉ោង)', r => r.show ? r.t.break ?? 1 : ''], ['ម៉ោងបន្ថែម(OT)', r => r.show ? r.ot : ''], ['កំណត់ចំណាំ', r => r.t.note || '']];
+    var ok = exportCSV(`anzen-attendance-${today}.csv`, cols, rows);
+    toast(ok ? tr('បាននាំចេញ CSV ✓', 'CSV exported ✓') : tr('នាំចេញបរាជ័យ', 'Export failed'), ok ? 'good' : 'danger');
+  };
   React.useEffect(() => {
     if (!staff.length || !weekDates.length) return;
     var changed = false;
@@ -29789,7 +29836,15 @@ var SfSchedule = ({
     style: {
       flex: 1
     }
-  }), view === 'week' && React.createElement(React.Fragment, null, React.createElement(Btn, {
+  }), React.createElement(Btn, {
+    kind: "ghost",
+    size: "sm",
+    icon: React.createElement(Icon, {
+      name: "download",
+      size: 13
+    }),
+    onClick: exportAttendanceCSV
+  }, tr('នាំចេញ CSV', 'Export CSV')), view === 'week' && React.createElement(React.Fragment, null, React.createElement(Btn, {
     kind: "ghost",
     size: "sm",
     onClick: () => setWeekOffset(o => o - 1)
@@ -30873,7 +30928,8 @@ var SfPayroll = ({
   staff
 }) => {
   var {
-    toast
+    toast,
+    tr
   } = useAppActions();
   var [, forceUp] = React.useReducer(x => x + 1, 0);
   var now = new Date();
@@ -30985,6 +31041,15 @@ var SfPayroll = ({
     ...e,
     paid: true
   })));
+  var exportPayrollCSV = () => {
+    var infoOf = id => staff.find(x => x.id === id) || {};
+    var cols = [['ID', e => e.empId], ['ឈ្មោះ', e => {
+      var s = infoOf(e.empId);
+      return s.name || s.en || e.empId;
+    }], ['តួនាទី', e => infoOf(e.empId).role || ''], ['វដ្តទូទាត់', () => pLabel], ['ប្រាក់ខែមូលដ្ឋាន', e => e.base], ['ម៉ោងបន្ថែម(OT)', e => e.otHours], ['ប្រាក់ OT', e => e.overtime], ['ប្រាក់រង្វាន់', e => e.bonus], ['NSSF', e => e.nssf], ['ពន្ធ', e => e.tax], ['ប្រាក់សុទ្ធ', e => e.net], ['បានបង់', e => e.paid ? 'បាទ' : '']];
+    var ok = exportCSV(`anzen-payroll-${period}.csv`, cols, entries);
+    toast(ok ? tr('បាននាំចេញ CSV ✓', 'CSV exported ✓') : tr('នាំចេញបរាជ័យ', 'Export failed'), ok ? 'good' : 'danger');
+  };
   var runStatus = existingRun?.status || 'Draft';
   var runHistLabel = r => {
     var ps = r.month.split('-');
@@ -31092,6 +31157,14 @@ var SfPayroll = ({
       flex: 1
     }
   }), view === 'run' && React.createElement(React.Fragment, null, React.createElement(Btn, {
+    kind: "ghost",
+    size: "sm",
+    icon: React.createElement(Icon, {
+      name: "download",
+      size: 13
+    }),
+    onClick: exportPayrollCSV
+  }, tr('នាំចេញ CSV', 'Export CSV')), React.createElement(Btn, {
     kind: "ghost",
     size: "sm",
     onClick: markAllPaid
@@ -32411,6 +32484,11 @@ var FleetScreenV2 = () => {
   var [viewDate, setViewDate] = React.useState(todayStr());
   var vehicles = VEHICLES;
   var serviceLog = window.__serviceLog;
+  var exportVehiclesCSV = () => {
+    var cols = [['ID', v => v.id], ['ស្លាកលេខ', v => v.plate], ['ម៉ាក', v => v.make], ['ម៉ូដែល', v => v.model], ['ប្រអប់លេខ', v => v.trans], ['ស្ថានភាព', v => v.status], ['ឆ្នាំ', v => v.year], ['ប្រេងឥន្ធនៈ', v => v.fuel]];
+    var ok = exportCSV(`anzen-vehicles-${typeof todayStr === 'function' ? todayStr() : 'export'}.csv`, cols, vehicles);
+    toast(ok ? tr('បាននាំចេញ CSV ✓', 'CSV exported ✓') : tr('នាំចេញបរាជ័យ', 'Export failed'), ok ? 'good' : 'danger');
+  };
   if (window.__schoolSettings) {
     if (!Array.isArray(window.__schoolSettings.accidents)) window.__schoolSettings.accidents = Array.isArray(window.__incidentData) ? window.__incidentData : [];
     window.__incidentData = window.__schoolSettings.accidents;
@@ -32541,8 +32619,12 @@ var FleetScreenV2 = () => {
     }, React.createElement(Btn, {
       kind: "ghost",
       size: "md",
-      onClick: () => toast(tr('នាំចេញ…', 'Exporting…'), 'neutral')
-    }, tr('នាំចេញ', 'Export')), React.createElement(Btn, {
+      icon: React.createElement(Icon, {
+        name: "download",
+        size: 14
+      }),
+      onClick: exportVehiclesCSV
+    }, tr('នាំចេញ CSV', 'Export CSV')), React.createElement(Btn, {
       kind: "ghost",
       size: "md",
       icon: React.createElement(Icon, {
@@ -39263,7 +39345,8 @@ var VehicleMobileDetail = ({
 var VehicleScreen = () => {
   var {
     tr,
-    openForm
+    openForm,
+    toast
   } = useAppActions();
   var bp = useBreakpoint();
   var [, forceUpdate] = React.useReducer(x => x + 1, 0);
@@ -39279,6 +39362,11 @@ var VehicleScreen = () => {
   }, []);
   var visible = VEHICLES.filter(v => v.visible !== false);
   var selected = visible.find(v => v.id === selectedId) || null;
+  var exportVehiclesCSV = () => {
+    var cols = [['ID', v => v.id], ['ស្លាកលេខ', v => v.plate], ['ម៉ាក', v => v.make], ['ម៉ូដែល', v => v.model], ['ប្រអប់លេខ', v => v.trans], ['ស្ថានភាព', v => v.status], ['ឆ្នាំ', v => v.year], ['ប្រេងឥន្ធនៈ', v => v.fuel]];
+    var ok = exportCSV(`anzen-vehicles-${typeof todayStr === 'function' ? todayStr() : 'export'}.csv`, cols, visible);
+    toast(ok ? tr('បាននាំចេញ CSV ✓', 'CSV exported ✓') : tr('នាំចេញបរាជ័យ', 'Export failed'), ok ? 'good' : 'danger');
+  };
   var STATUS_ORDER = {
     Active: 0,
     'Service due': 1,
@@ -39433,7 +39521,19 @@ var VehicleScreen = () => {
         fontSize: 15,
         flexShrink: 0
       }
-    }, sortAsc ? '↑' : '↓')), visible.length === 0 ? React.createElement("div", {
+    }, sortAsc ? '↑' : '↓'), React.createElement("div", {
+      style: {
+        flex: 1
+      }
+    }), React.createElement(Btn, {
+      kind: "ghost",
+      size: "sm",
+      icon: React.createElement(Icon, {
+        name: "download",
+        size: 13
+      }),
+      onClick: exportVehiclesCSV
+    }, tr('CSV', 'CSV'))), visible.length === 0 ? React.createElement("div", {
       style: {
         textAlign: 'center',
         padding: '48px 20px',
@@ -39551,6 +39651,14 @@ var VehicleScreen = () => {
       flexWrap: 'wrap'
     }
   }, React.createElement(SortBar, null), React.createElement(Btn, {
+    kind: "ghost",
+    size: "md",
+    icon: React.createElement(Icon, {
+      name: "download",
+      size: 14
+    }),
+    onClick: exportVehiclesCSV
+  }, tr('នាំចេញ CSV', 'Export CSV')), React.createElement(Btn, {
     kind: "primary",
     size: "md",
     icon: React.createElement(Icon, {
@@ -41242,6 +41350,19 @@ var StudentsScreenV2 = () => {
     numeric: true
   }));
   var selected = allStudents.find(s => s.id === selectedId) || allStudents[0];
+  var exportStudentsCSV = () => {
+    var G = {
+        M: 'ប្រុស',
+        F: 'ស្រី'
+      },
+      R = {
+        pass: 'ជាប់',
+        fail: 'ធ្លាក់'
+      };
+    var cols = [['ID', s => s.id], ['ឈ្មោះ (ខ្មែរ)', s => s.name], ['ឈ្មោះ (EN)', s => s.en], ['ស្ថានភាព', s => s.status], ['ថ្នាក់', s => s.cls], ['ប្រអប់លេខ', s => s.trans], ['ភេទ', s => G[s.gender] || s.gender], ['អាយុ', s => s.age], ['ទូរស័ព្ទ', s => s.phone], ['ថ្ងៃចុះឈ្មោះ', s => s.regDate], ['ម៉ោងរៀន', s => s.hours], ['គោលដៅម៉ោង', s => s.target], ['បានបង់ (%)', s => Math.round((s.paid || 0) * 100)], ['លទ្ធផលប្រឡង', s => R[s.exam_result] || ''], ['សាខា', s => s.branch], ['ប្រភព', s => s.source], ['លេខបណ្ណបើកបរ', s => s.license_no], ['អត្តសញ្ញាណប័ណ្ណ', s => s.natId]];
+    var ok = exportCSV(`anzen-students-${typeof todayStr === 'function' ? todayStr() : 'export'}.csv`, cols, allStudents);
+    toast(ok ? tr('បាននាំចេញ CSV ✓', 'CSV exported ✓') : tr('នាំចេញបរាជ័យ', 'Export failed'), ok ? 'good' : 'danger');
+  };
   var goToProfile = s => {
     setSelectedId(s.id);
     setTab('profile');
@@ -41999,8 +42120,12 @@ var StudentsScreenV2 = () => {
     }, tr('តម្រង', 'Filter')), React.createElement(Btn, {
       kind: "ghost",
       size: "md",
-      onClick: () => toast('Export មិន​ទាន់​មាន​', 'warn')
-    }, tr('នាំចេញ', 'Export')), React.createElement(Btn, {
+      icon: React.createElement(Icon, {
+        name: "download",
+        size: 14
+      }),
+      onClick: exportStudentsCSV
+    }, tr('នាំចេញ CSV', 'Export CSV')), React.createElement(Btn, {
       kind: "primary",
       size: "md",
       icon: React.createElement(Icon, {

@@ -262,7 +262,7 @@ const StaffScreen = () => {
         en={activeStaff.length ? `${activeStaff.length} employees · ${pending.length} pending leave` : 'No staff yet'}
         action={
           <div style={{display:'flex',gap:8}}>
-            <Btn kind="ghost" size="md" icon={<Icon name="download" size={14}/>} onClick={exportStaffCSV}>{tr('នាំចេញ CSV','Export CSV')}</Btn>
+            {tab==='directory' && <Btn kind="ghost" size="md" icon={<Icon name="download" size={14}/>} onClick={exportStaffCSV}>{tr('នាំចេញ CSV','Export CSV')}</Btn>}
             <Btn kind="primary" size="md" icon={<Icon name="plus" size={14}/>}
               onClick={()=>openForm('newStaff')}>
               {tr('បន្ថែមបុគ្គលិក','Add staff')}
@@ -1179,7 +1179,7 @@ const MonthAttModal = ({ s, onClose }) => {
 
 // ── Attendance tab ──
 const SfSchedule = ({ staff }) => {
-  const { tr } = useAppActions();
+  const { tr, toast } = useAppActions();
   const [weekOffset, setWeekOffset] = React.useState(0);
   const [, forceUp] = React.useReducer(x => x + 1, 0);
   const [view, setView] = React.useState('week'); // 'today' | 'week'
@@ -1187,6 +1187,33 @@ const SfSchedule = ({ staff }) => {
   const [monthStaff, setMonthStaff] = React.useState(null); // staff — month calendar
   const weekDates = typeof getWeekDates === 'function' ? getWeekDates(weekOffset) : [];
   const today = todayStr();
+
+  // Export every recorded attendance row (all dates) for the current staff.
+  const exportAttendanceCSV = () => {
+    const ad = window.__attendanceData || {};
+    const rows = [];
+    Object.keys(ad).sort().forEach(date => {
+      const day = ad[date] || {};
+      staff.forEach(s => {
+        const st = day[s.id]; if (!st) return;
+        const t = timeGet(date, s.id); const show = st === 'P' || st === 'L';
+        rows.push({ date, s, st, t, show, ot: show ? calcOT(t.in, t.out, t.break ?? 1) : 0 });
+      });
+    });
+    const cols = [
+      ['កាលបរិច្ឆេទ', r => r.date],
+      ['ID', r => r.s.id],
+      ['ឈ្មោះ', r => r.s.name || r.s.en],
+      ['ស្ថានភាព', r => (ATT_LABELS[r.st] || ATT_LABELS['']).km],
+      ['ម៉ោងចូល', r => r.show ? r.t.in : ''],
+      ['ម៉ោងចេញ', r => r.show ? r.t.out : ''],
+      ['សម្រាក(ម៉ោង)', r => r.show ? (r.t.break ?? 1) : ''],
+      ['ម៉ោងបន្ថែម(OT)', r => r.show ? r.ot : ''],
+      ['កំណត់ចំណាំ', r => r.t.note || ''],
+    ];
+    const ok = exportCSV(`anzen-attendance-${today}.csv`, cols, rows);
+    toast(ok ? tr('បាននាំចេញ CSV ✓', 'CSV exported ✓') : tr('នាំចេញបរាជ័យ', 'Export failed'), ok ? 'good' : 'danger');
+  };
 
   // Auto-fill 'P' for Mon–Fri past/today dates with no attendance record
   React.useEffect(() => {
@@ -1238,6 +1265,7 @@ const SfSchedule = ({ staff }) => {
           ))}
         </div>
         <div style={{flex:1}}/>
+        <Btn kind="ghost" size="sm" icon={<Icon name="download" size={13}/>} onClick={exportAttendanceCSV}>{tr('នាំចេញ CSV','Export CSV')}</Btn>
         {view==='week' && <>
           <Btn kind="ghost" size="sm" onClick={()=>setWeekOffset(o=>o-1)}>◀ មុន</Btn>
           <Btn kind="ghost" size="sm" onClick={()=>setWeekOffset(0)}>សប្ដាហ៍​នេះ</Btn>
@@ -1640,7 +1668,7 @@ const SfLeaveForm = ({ staff, onClose }) => {
 
 // ── Payroll tab ──
 const SfPayroll = ({ staff }) => {
-  const { toast } = useAppActions();
+  const { toast, tr } = useAppActions();
   const [, forceUp] = React.useReducer(x => x + 1, 0);
 
   // Semi-monthly: period = "YYYY-MM-1" (1-15) or "YYYY-MM-2" (16-end)
@@ -1741,6 +1769,27 @@ const SfPayroll = ({ staff }) => {
 
   const markAllPaid = () => setEntries(prev => prev.map(e => ({...e, paid: true})));
 
+  // Export this period's payroll run to CSV.
+  const exportPayrollCSV = () => {
+    const infoOf = id => staff.find(x => x.id === id) || {};
+    const cols = [
+      ['ID', e => e.empId],
+      ['ឈ្មោះ', e => { const s = infoOf(e.empId); return s.name || s.en || e.empId; }],
+      ['តួនាទី', e => infoOf(e.empId).role || ''],
+      ['វដ្តទូទាត់', () => pLabel],
+      ['ប្រាក់ខែមូលដ្ឋាន', e => e.base],
+      ['ម៉ោងបន្ថែម(OT)', e => e.otHours],
+      ['ប្រាក់ OT', e => e.overtime],
+      ['ប្រាក់រង្វាន់', e => e.bonus],
+      ['NSSF', e => e.nssf],
+      ['ពន្ធ', e => e.tax],
+      ['ប្រាក់សុទ្ធ', e => e.net],
+      ['បានបង់', e => e.paid ? 'បាទ' : ''],
+    ];
+    const ok = exportCSV(`anzen-payroll-${period}.csv`, cols, entries);
+    toast(ok ? tr('បាននាំចេញ CSV ✓', 'CSV exported ✓') : tr('នាំចេញបរាជ័យ', 'Export failed'), ok ? 'good' : 'danger');
+  };
+
   const runStatus = existingRun?.status || 'Draft';
 
   const runHistLabel = (r) => {
@@ -1784,6 +1833,7 @@ const SfPayroll = ({ staff }) => {
         {view==='run' && <Badge tone={runStatus==='Paid'?'good':runStatus==='Approved'?'accent':'warn'}>{runStatus}</Badge>}
         <div style={{flex:1}}/>
         {view==='run' && <>
+          <Btn kind="ghost" size="sm" icon={<Icon name="download" size={13}/>} onClick={exportPayrollCSV}>{tr('នាំចេញ CSV','Export CSV')}</Btn>
           <Btn kind="ghost" size="sm" onClick={markAllPaid}>✓ Mark all paid</Btn>
           <Btn kind="ghost" size="sm" onClick={()=>saveRun('Draft')}>Save draft</Btn>
           <Btn kind="primary" size="sm" icon={<Icon name="check" size={13}/>} onClick={()=>saveRun('Paid')}>

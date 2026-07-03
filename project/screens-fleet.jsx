@@ -74,6 +74,22 @@ const FleetScreenV2 = () => {
 
   const vehicles   = VEHICLES;
   const serviceLog = window.__serviceLog;
+
+  // Export all vehicles to a Google Sheets-friendly CSV.
+  const exportVehiclesCSV = () => {
+    const cols = [
+      ['ID', v=>v.id],
+      ['ស្លាកលេខ', v=>v.plate],
+      ['ម៉ាក', v=>v.make],
+      ['ម៉ូដែល', v=>v.model],
+      ['ប្រអប់លេខ', v=>v.trans],
+      ['ស្ថានភាព', v=>v.status],
+      ['ឆ្នាំ', v=>v.year],
+      ['ប្រេងឥន្ធនៈ', v=>v.fuel],
+    ];
+    const ok = exportCSV(`anzen-vehicles-${typeof todayStr==='function'?todayStr():'export'}.csv`, cols, vehicles);
+    toast(ok ? tr('បាននាំចេញ CSV ✓','CSV exported ✓') : tr('នាំចេញបរាជ័យ','Export failed'), ok?'good':'danger');
+  };
   // Accidents are stored in the synced settings blob (shared + persisted).
   // Keep window.__incidentData pointing at it; re-alias after a cloud reload
   // replaces __schoolSettings with a fresh object.
@@ -189,9 +205,9 @@ const FleetScreenV2 = () => {
           : 'No vehicles yet · Add your first vehicle'}
         action={
           <div style={{display:'flex',gap:8}}>
-            <Btn kind="ghost" size="md"
-              onClick={() => toast(tr('នាំចេញ…', 'Exporting…'), 'neutral')}>
-              {tr('នាំចេញ','Export')}
+            <Btn kind="ghost" size="md" icon={<Icon name="download" size={14}/>}
+              onClick={exportVehiclesCSV}>
+              {tr('នាំចេញ CSV','Export CSV')}
             </Btn>
             <Btn kind="ghost" size="md" icon={<Icon name="wrench" size={14}/>}
               onClick={() => { setTab('service'); setAddSvc(true); }}>
@@ -3149,7 +3165,7 @@ const VehicleMobileDetail = ({ v, onClose, tr, onSaved, onStatusChange, onParkin
 
 // ── Public vehicle card view ──────────────────────────────────────────────────
 const VehicleScreen = () => {
-  const { tr, openForm } = useAppActions();
+  const { tr, openForm, toast } = useAppActions();
   const bp = useBreakpoint();
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   const [selectedId, setSelectedId] = React.useState(null);
@@ -3163,6 +3179,21 @@ const VehicleScreen = () => {
 
   const visible = VEHICLES.filter(v => v.visible !== false);
   const selected = visible.find(v => v.id === selectedId) || null;
+
+  const exportVehiclesCSV = () => {
+    const cols = [
+      ['ID', v=>v.id],
+      ['ស្លាកលេខ', v=>v.plate],
+      ['ម៉ាក', v=>v.make],
+      ['ម៉ូដែល', v=>v.model],
+      ['ប្រអប់លេខ', v=>v.trans],
+      ['ស្ថានភាព', v=>v.status],
+      ['ឆ្នាំ', v=>v.year],
+      ['ប្រេងឥន្ធនៈ', v=>v.fuel],
+    ];
+    const ok = exportCSV(`anzen-vehicles-${typeof todayStr==='function'?todayStr():'export'}.csv`, cols, visible);
+    toast(ok ? tr('បាននាំចេញ CSV ✓','CSV exported ✓') : tr('នាំចេញបរាជ័យ','Export failed'), ok?'good':'danger');
+  };
 
   const STATUS_ORDER = { Active:0, 'Service due':1, Workshop:2, Idle:3 };
   const sorted = [...visible].sort((a, b) => {
@@ -3246,6 +3277,8 @@ const VehicleScreen = () => {
             <button onClick={()=>setSortAsc(x=>!x)} title={tr('លំដាប់','Order')} style={{
               width:40,height:38,borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)',
               color:'var(--ink-2)',cursor:'pointer',fontSize:15,flexShrink:0}}>{sortAsc?'↑':'↓'}</button>
+            <div style={{flex:1}}/>
+            <Btn kind="ghost" size="sm" icon={<Icon name="download" size={13}/>} onClick={exportVehiclesCSV}>{tr('CSV','CSV')}</Btn>
           </div>
           {visible.length === 0 ? (
             <div style={{textAlign:'center',padding:'48px 20px',color:'var(--ink-3)',fontSize:13}}>
@@ -3306,6 +3339,7 @@ const VehicleScreen = () => {
         />
         <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
           <SortBar/>
+          <Btn kind="ghost" size="md" icon={<Icon name="download" size={14}/>} onClick={exportVehiclesCSV}>{tr('នាំចេញ CSV','Export CSV')}</Btn>
           <Btn kind="primary" size="md" icon={<Icon name="plus" size={14}/>} onClick={() => openForm('newVehicle')}>
             {tr('បន្ថែមរថយន្ត','Add vehicle')}
           </Btn>

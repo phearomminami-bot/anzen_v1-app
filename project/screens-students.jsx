@@ -850,6 +850,33 @@ const StudentsScreenV2 = () => {
     .sort((a, b) => String(a.id||'').localeCompare(String(b.id||''), undefined, { numeric:true }));
   const selected    = allStudents.find(s => s.id === selectedId) || allStudents[0];
 
+  // Export all students to a Google Sheets-friendly CSV.
+  const exportStudentsCSV = () => {
+    const G = {M:'ប្រុស',F:'ស្រី'}, R = {pass:'ជាប់',fail:'ធ្លាក់'};
+    const cols = [
+      ['ID', s=>s.id],
+      ['ឈ្មោះ (ខ្មែរ)', s=>s.name],
+      ['ឈ្មោះ (EN)', s=>s.en],
+      ['ស្ថានភាព', s=>s.status],
+      ['ថ្នាក់', s=>s.cls],
+      ['ប្រអប់លេខ', s=>s.trans],
+      ['ភេទ', s=>G[s.gender]||s.gender],
+      ['អាយុ', s=>s.age],
+      ['ទូរស័ព្ទ', s=>s.phone],
+      ['ថ្ងៃចុះឈ្មោះ', s=>s.regDate],
+      ['ម៉ោងរៀន', s=>s.hours],
+      ['គោលដៅម៉ោង', s=>s.target],
+      ['បានបង់ (%)', s=>Math.round((s.paid||0)*100)],
+      ['លទ្ធផលប្រឡង', s=>R[s.exam_result]||''],
+      ['សាខា', s=>s.branch],
+      ['ប្រភព', s=>s.source],
+      ['លេខបណ្ណបើកបរ', s=>s.license_no],
+      ['អត្តសញ្ញាណប័ណ្ណ', s=>s.natId],
+    ];
+    const ok = exportCSV(`anzen-students-${typeof todayStr==='function'?todayStr():'export'}.csv`, cols, allStudents);
+    toast(ok ? tr('បាននាំចេញ CSV ✓','CSV exported ✓') : tr('នាំចេញបរាជ័យ','Export failed'), ok?'good':'danger');
+  };
+
   const goToProfile  = (s) => { setSelectedId(s.id); setTab('profile'); setEditing(false); };
   const goToEdit     = (s) => { setSelectedId(s.id); setTab('profile'); setEditing(true);  };
   const goToMessages = (s) => { setSelectedId(s.id); setTab('messages'); };
@@ -1241,7 +1268,7 @@ const StudentsScreenV2 = () => {
         action={
           <div style={{display:'flex',gap:8}}>
             <Btn kind="ghost" size="md" icon={<Icon name="search" size={14}/>}>{tr('តម្រង','Filter')}</Btn>
-            <Btn kind="ghost" size="md" onClick={() => toast('Export មិន​ទាន់​មាន​','warn')}>{tr('នាំចេញ','Export')}</Btn>
+            <Btn kind="ghost" size="md" icon={<Icon name="download" size={14}/>} onClick={exportStudentsCSV}>{tr('នាំចេញ CSV','Export CSV')}</Btn>
             <Btn kind="primary" size="md" icon={<Icon name="plus" size={14}/>} onClick={() => openForm('newStudent')}>{tr('ចុះឈ្មោះ​សិស្ស','Enroll')}</Btn>
           </div>
         }
