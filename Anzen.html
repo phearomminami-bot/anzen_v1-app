@@ -2934,6 +2934,8 @@ window.__trGroups = {
 };
 </script>
 
+<script>window.__ANZEN_VERSION="v135";</script>
+
 <script>
 function useTweaks(defaults) {
   var [values, setValues] = React.useState(defaults);
@@ -13726,7 +13728,14 @@ var UserPill = ({
           color: 'var(--ink-3)'
         }
       }, ll(r))))
-    }, menu), React.createElement("button", {
+    }, menu), window.__ANZEN_VERSION && React.createElement("span", {
+      style: {
+        flexShrink: 0,
+        fontSize: 10,
+        color: 'var(--ink-3)',
+        fontFamily: '"JetBrains Mono",monospace'
+      }
+    }, window.__ANZEN_VERSION), React.createElement("button", {
       onClick: handleLogout,
       title: tt('ចេញ', 'Sign out'),
       style: {

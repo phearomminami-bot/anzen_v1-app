@@ -137,6 +137,8 @@ const UserPill = ({ role, onLogout, compact = false }) => {
             </div>
           </button>
         }>{menu}</Dropdown>
+        {/* Build version — helps confirm which version is live on this device */}
+        {window.__ANZEN_VERSION && <span style={{flexShrink:0,fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{window.__ANZEN_VERSION}</span>}
         {/* Direct logout button — always visible */}
         <button onClick={handleLogout} title={tt('ចេញ','Sign out')} style={{
           flexShrink:0,width:30,height:30,borderRadius:8,

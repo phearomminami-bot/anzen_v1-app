@@ -388,7 +388,15 @@ def main():
         f'window.__trGroups = {json.dumps(groups, ensure_ascii=False, indent=2)};\n</script>\n'
     )
 
-    parts = [HEAD, registry_js]
+    # App version — sourced from sw.js CACHE so there is a single place to bump.
+    try:
+        m = re.search(r"anzen-shell-(v\d+)", (ROOT / "sw.js").read_text(encoding="utf-8"))
+        app_version = m.group(1) if m else ""
+    except Exception:
+        app_version = ""
+    version_js = f'\n<script>window.__ANZEN_VERSION={json.dumps(app_version)};</script>\n'
+
+    parts = [HEAD, registry_js, version_js]
     total = len(JSX_ORDER)
     for i, name in enumerate(JSX_ORDER, 1):
         jsx_path = PROJ / name
