@@ -2964,7 +2964,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v153";</script>
+<script>window.__ANZEN_VERSION="v154";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -53747,7 +53747,33 @@ var SchoolInfo = ({
   var [hours, setHours] = React.useState((ss.hours || []).map(h => ({
     ...h
   })));
+  var [editing, setEditing] = React.useState(false);
   var logoRef = React.useRef(null);
+  var Ro = ({
+    km,
+    en,
+    value,
+    mono
+  }) => React.createElement("div", {
+    style: {
+      minWidth: 0
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--ink-3)',
+      fontWeight: 600,
+      marginBottom: 3
+    }
+  }, tr(km, en)), React.createElement("div", {
+    style: {
+      fontSize: 14,
+      fontWeight: 500,
+      color: value ? 'var(--ink)' : 'var(--ink-3)',
+      fontFamily: mono ? '"JetBrains Mono",monospace' : 'inherit',
+      wordBreak: 'break-word'
+    }
+  }, value || '—'));
   var up = (setter, key) => val => {
     setter(val);
     ss[key] = val;
@@ -53789,7 +53815,153 @@ var SchoolInfo = ({
   var removeLogo = () => {
     up(setLogo, 'logo')(null);
   };
-  return React.createElement(React.Fragment, null, React.createElement(Card, {
+  return React.createElement(React.Fragment, null, React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'flex-end',
+      marginBottom: 12
+    }
+  }, editing ? React.createElement(Btn, {
+    kind: "primary",
+    size: "sm",
+    icon: React.createElement(Icon, {
+      name: "check",
+      size: 13
+    }),
+    onClick: () => setEditing(false)
+  }, tr('រួចរាល់', 'Done')) : React.createElement(Btn, {
+    kind: "ghost",
+    size: "sm",
+    icon: React.createElement(Icon, {
+      name: "edit",
+      size: 13
+    }),
+    onClick: () => setEditing(true)
+  }, tr('កែ', 'Edit'))), !editing && React.createElement(React.Fragment, null, React.createElement(Card, {
+    label: tr('អត្តសញ្ញាណ', 'IDENTITY')
+  }, React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '120px 1fr',
+      gap: 18,
+      alignItems: 'flex-start'
+    }
+  }, React.createElement("div", {
+    style: {
+      width: 120,
+      height: 120,
+      borderRadius: 14,
+      overflow: 'hidden',
+      background: 'var(--surface-muted)',
+      border: '1px solid var(--border)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }
+  }, logo ? React.createElement("img", {
+    src: logo,
+    style: {
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover'
+    },
+    alt: "logo"
+  }) : React.createElement(Logo, {
+    size: 48
+  })), React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 14
+    }
+  }, React.createElement(Ro, {
+    km: "\u1788\u17D2\u1798\u17C4\u17C7\u200B\u1781\u17D2\u1798\u17C2\u179A",
+    en: "Khmer name",
+    value: name
+  }), React.createElement(Ro, {
+    km: "\u1788\u17D2\u1798\u17C4\u17C7\u200B\u17A2\u1784\u17CB\u1782\u17D2\u179B\u17C1\u179F",
+    en: "English name",
+    value: nameEn
+  }), React.createElement(Ro, {
+    km: "\u179B\u17C1\u1781\u200B\u17A2\u17B6\u1787\u17D2\u1789\u17B6\u1794\u17D0\u178E\u17D2\u178E",
+    en: "License #",
+    value: lic,
+    mono: true
+  }), React.createElement(Ro, {
+    km: "\u179B\u17C1\u1781\u200B\u1796\u1793\u17D2\u1792",
+    en: "Tax ID",
+    value: tax,
+    mono: true
+  }), React.createElement(Ro, {
+    km: "\u1786\u17D2\u1793\u17B6\u17C6\u200B\u1794\u1784\u17D2\u1780\u17BE\u178F",
+    en: "Established",
+    value: est,
+    mono: true
+  }), React.createElement(Ro, {
+    km: "\u1794\u17D2\u179A\u1792\u17B6\u1793\u200B\u179F\u17B6\u179B\u17B6",
+    en: "Director",
+    value: dir
+  })))), React.createElement(Card, {
+    label: tr('ការ​ទាក់​ទង​សាធារណៈ', 'CONTACT')
+  }, React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 14
+    }
+  }, React.createElement(Ro, {
+    km: "\u1791\u17BC\u179A\u179F\u17D0\u1796\u17D2\u1791",
+    en: "Phone",
+    value: phone,
+    mono: true
+  }), React.createElement(Ro, {
+    km: "\u17A2\u17CA\u17B8\u1798\u17C2\u179B",
+    en: "Email",
+    value: email,
+    mono: true
+  }), React.createElement(Ro, {
+    km: "\u1782\u17C1\u17A0\u200B\u1791\u17C6\u1796\u17D0\u179A",
+    en: "Website",
+    value: web,
+    mono: true
+  }), React.createElement(Ro, {
+    km: "Facebook",
+    en: "Page",
+    value: fb,
+    mono: true
+  })), React.createElement(Divider, null), React.createElement("div", {
+    style: {
+      marginTop: 12
+    }
+  }, React.createElement(Ro, {
+    km: "\u17A2\u17B6\u179F\u1799\u178A\u17D2\u178B\u17B6\u1793",
+    en: "Office address",
+    value: addr
+  }))), React.createElement(Card, {
+    label: tr('ម៉ោង​ធ្វើ​ការ', 'BUSINESS HOURS')
+  }, DAYS_KM.map((d, i) => {
+    var h = hours[i];
+    return React.createElement("div", {
+      key: i,
+      style: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '9px 0',
+        borderTop: i ? '1px dashed var(--border)' : 'none',
+        fontSize: 13
+      }
+    }, React.createElement("span", {
+      style: {
+        fontWeight: 500
+      }
+    }, tr(d, DAYS_EN[i])), React.createElement("span", {
+      style: {
+        color: h.open ? 'var(--ink)' : 'var(--ink-3)',
+        fontFamily: '"JetBrains Mono",monospace'
+      }
+    }, h.open ? `${h.start} – ${h.end}` : tr('បិទ', 'Closed')));
+  }))), editing && React.createElement(React.Fragment, null, React.createElement(Card, {
     label: tr('អត្តសញ្ញាណ', 'IDENTITY')
   }, React.createElement("div", {
     style: {
@@ -54018,7 +54190,7 @@ var SchoolInfo = ({
         fontFamily: '"JetBrains Mono",monospace'
       }
     }, h.open ? calcHours(h.start, h.end) : '—'));
-  }))));
+  })))));
 };
 var AiSettings = ({
   onDirty

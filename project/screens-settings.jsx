@@ -312,8 +312,16 @@ const SchoolInfo = ({ onDirty }) => {
   const [fb,     setFb]     = React.useState(ss.facebook);
   const [addr,   setAddr]   = React.useState(ss.address);
   const [hours,  setHours]  = React.useState((ss.hours||[]).map(h=>({...h})));
+  const [editing, setEditing] = React.useState(false);   // detail view first; ✎ to edit
 
   const logoRef = React.useRef(null);
+  // Read-only field for the detail view.
+  const Ro = ({km, en, value, mono}) => (
+    <div style={{minWidth:0}}>
+      <div style={{fontSize:11,color:'var(--ink-3)',fontWeight:600,marginBottom:3}}>{tr(km,en)}</div>
+      <div style={{fontSize:14,fontWeight:500,color:value?'var(--ink)':'var(--ink-3)',fontFamily:mono?'"JetBrains Mono",monospace':'inherit',wordBreak:'break-word'}}>{value||'—'}</div>
+    </div>
+  );
 
   const up = (setter, key) => val => {
     setter(val);
@@ -350,6 +358,49 @@ const SchoolInfo = ({ onDirty }) => {
 
   return (
     <>
+      <div style={{display:'flex',justifyContent:'flex-end',marginBottom:12}}>
+        {editing
+          ? <Btn kind="primary" size="sm" icon={<Icon name="check" size={13}/>} onClick={()=>setEditing(false)}>{tr('រួចរាល់','Done')}</Btn>
+          : <Btn kind="ghost" size="sm" icon={<Icon name="edit" size={13}/>} onClick={()=>setEditing(true)}>{tr('កែ','Edit')}</Btn>}
+      </div>
+
+      {!editing && (<>
+        <Card label={tr('អត្តសញ្ញាណ','IDENTITY')}>
+          <div style={{display:'grid',gridTemplateColumns:'120px 1fr',gap:18,alignItems:'flex-start'}}>
+            <div style={{width:120,height:120,borderRadius:14,overflow:'hidden',background:'var(--surface-muted)',border:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              {logo ? <img src={logo} style={{width:'100%',height:'100%',objectFit:'cover'}} alt="logo"/> : <Logo size={48}/>}
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <Ro km="ឈ្មោះ​ខ្មែរ" en="Khmer name" value={name}/>
+              <Ro km="ឈ្មោះ​អង់គ្លេស" en="English name" value={nameEn}/>
+              <Ro km="លេខ​អាជ្ញាប័ណ្ណ" en="License #" value={lic} mono/>
+              <Ro km="លេខ​ពន្ធ" en="Tax ID" value={tax} mono/>
+              <Ro km="ឆ្នាំ​បង្កើត" en="Established" value={est} mono/>
+              <Ro km="ប្រធាន​សាលា" en="Director" value={dir}/>
+            </div>
+          </div>
+        </Card>
+        <Card label={tr('ការ​ទាក់​ទង​សាធារណៈ','CONTACT')}>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+            <Ro km="ទូរស័ព្ទ" en="Phone" value={phone} mono/>
+            <Ro km="អ៊ីមែល" en="Email" value={email} mono/>
+            <Ro km="គេហ​ទំព័រ" en="Website" value={web} mono/>
+            <Ro km="Facebook" en="Page" value={fb} mono/>
+          </div>
+          <Divider/>
+          <div style={{marginTop:12}}><Ro km="អាសយដ្ឋាន" en="Office address" value={addr}/></div>
+        </Card>
+        <Card label={tr('ម៉ោង​ធ្វើ​ការ','BUSINESS HOURS')}>
+          {DAYS_KM.map((d,i) => { const h = hours[i]; return (
+            <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'9px 0',borderTop:i?'1px dashed var(--border)':'none',fontSize:13}}>
+              <span style={{fontWeight:500}}>{tr(d, DAYS_EN[i])}</span>
+              <span style={{color:h.open?'var(--ink)':'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{h.open ? `${h.start} – ${h.end}` : tr('បិទ','Closed')}</span>
+            </div>
+          ); })}
+        </Card>
+      </>)}
+
+      {editing && (<>
       <Card label={tr('អត្តសញ្ញាណ','IDENTITY')}>
         <div style={{display:'grid',gridTemplateColumns:'140px 1fr',gap:18,alignItems:'flex-start'}}>
           {/* Logo uploader */}
@@ -440,6 +491,7 @@ const SchoolInfo = ({ onDirty }) => {
           })}
         </div>
       </Card>
+      </>)}
     </>
   );
 };
