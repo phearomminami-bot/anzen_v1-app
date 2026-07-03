@@ -1002,6 +1002,9 @@ window.__trRegistry = {
   "Feedback saved ✓": "បាន​រក្សា​ទុក​មតិ ✓",
   "Result saved ✓": "បាន​រក្សា​ទុក​លទ្ធផល ✓",
   "Student removed": "បានលុបសិស្ស",
+  "KH · active": "KH · កំពុង",
+  "JP · active": "JP · កំពុង",
+  "AI · active": "AI · កំពុង",
   "Completed": "បាន​បញ្ចប់",
   "Back": "ត្រឡប់",
   "Photo & Bio": "រូបថត និង ប្រវត្តិរូបសង្ខេប",
@@ -1671,6 +1674,9 @@ window.__trGroups = {
     "Feedback saved ✓": "បាន​រក្សា​ទុក​មតិ ✓",
     "Result saved ✓": "បាន​រក្សា​ទុក​លទ្ធផល ✓",
     "Student removed": "បានលុបសិស្ស",
+    "KH · active": "KH · កំពុង",
+    "JP · active": "JP · កំពុង",
+    "AI · active": "AI · កំពុង",
     "Completed": "បាន​បញ្ចប់",
     "Back": "ត្រឡប់",
     "Photo & Bio": "រូបថត និង ប្រវត្តិរូបសង្ខេប",
@@ -2954,7 +2960,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v150";</script>
+<script>window.__ANZEN_VERSION="v151";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -3510,7 +3516,8 @@ var Icon = ({
     globe: 'M12 3a9 9 0 100 18A9 9 0 0012 3zM3 12h18M12 3a12 12 0 010 18M12 3a12 12 0 000 18',
     eye: 'M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z M15 12a3 3 0 11-6 0 3 3 0 016 0z',
     x: 'M6 6l12 12M6 18L18 6',
-    edit: 'M12 20h9 M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z'
+    edit: 'M12 20h9 M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z',
+    filter: 'M4 6h16M7 12h10M10 18h4'
   };
   return React.createElement("svg", {
     width: size,
@@ -41448,6 +41455,7 @@ var StudentsScreenV2 = () => {
   var [tab, setTab] = React.useState('directory');
   var [view, setView] = React.useState('list');
   var [filter, setFilter] = React.useState('all');
+  var [filterMenuOpen, setFilterMenuOpen] = React.useState(false);
   var [selectedId, setSelectedId] = React.useState(STUDENTS[0]?.id);
   var [editing, setEditing] = React.useState(false);
   var [mobileProfileId, setMobileProfileId] = React.useState(null);
@@ -41657,13 +41665,22 @@ var StudentsScreenV2 = () => {
   var filtered = allStudents.filter(s => {
     if (filter === 'finished') return isGraduated(s);
     if (isGraduated(s)) return false;
-    return filter === 'all' || filter === 'new' && s.status === 'New' || filter === 'inprogress' && s.status === 'In progress' || filter === 'exam' && s.status === 'Road exam soon' || filter === 'cleared' && s.status === 'Cleared' || filter === 'graduated' && s.exam_result === 'pass' || filter === 'B' && clsLetter(s.cls) === 'B' || filter === 'A' && clsLetter(s.cls) === 'A' || filter === 'C' && clsLetter(s.cls) === 'C' || filter === 't_normal' && s.studentType === 'ធម្មតា' || filter === 't_special' && s.studentType === 'ពិសេស' || filter === 't_ssw' && s.studentType === 'SSW';
+    return filter === 'all' || filter === 'new' && s.status === 'New' || filter === 'inprogress' && s.status === 'In progress' || filter === 'exam' && s.status === 'Road exam soon' || filter === 'cleared' && s.status === 'Cleared' || filter === 'graduated' && s.exam_result === 'pass' || filter === 'B' && clsLetter(s.cls) === 'B' || filter === 'A' && clsLetter(s.cls) === 'A' || filter === 'C' && clsLetter(s.cls) === 'C' || filter === 't_normal' && s.studentType === 'ធម្មតា' || filter === 't_special' && s.studentType === 'ពិសេស' || filter === 't_ssw' && s.studentType === 'SSW' || filter === 'ph_KH' && (s.phaseStatus || {}).KH === 'starting' || filter === 'ph_JP' && (s.phaseStatus || {}).JP === 'starting' || filter === 'ph_AI' && (s.phaseStatus || {}).AI === 'starting';
   });
   var examReady = allStudents.filter(s => s.status === 'Road exam soon').length;
   if (bp.mobile) {
     var filterChips = [{
       id: 'all',
       l: tr('ទាំងអស់', 'All')
+    }, {
+      id: 'ph_KH',
+      l: tr('KH · កំពុង', 'KH · active')
+    }, {
+      id: 'ph_JP',
+      l: tr('JP · កំពុង', 'JP · active')
+    }, {
+      id: 'ph_AI',
+      l: tr('AI · កំពុង', 'AI · active')
     }, {
       id: 't_normal',
       l: tr('ធម្មតា', 'Regular')
@@ -42242,38 +42259,102 @@ var StudentsScreenV2 = () => {
         }
       }, tr('ណាត់​មេរៀន​ថ្មី', 'Book new lesson'))));
     }
+    var curChip = filterChips.find(c => c.id === filter);
     return React.createElement("div", {
       style: {
         display: 'flex',
         flexDirection: 'column',
         gap: 10
       }
-    }, React.createElement("div", {
-      style: {
-        display: 'flex',
-        justifyContent: 'flex-start'
-      }
-    }, React.createElement("select", {
-      value: filter,
-      onChange: e => setFilter(e.target.value),
-      style: {
-        padding: '9px 12px',
-        borderRadius: 9,
-        border: '1px solid var(--border)',
-        background: 'var(--surface)',
-        color: 'var(--ink)',
-        fontSize: 13,
-        fontFamily: 'inherit',
-        cursor: 'pointer',
-        minWidth: 170
-      }
-    }, filterChips.map(c => React.createElement("option", {
-      key: c.id,
-      value: c.id
-    }, c.l)))), React.createElement(MobileFab, {
+    }, React.createElement(MobileFab, {
       onClick: () => openForm('newStudent'),
       label: tr('ចុះឈ្មោះ​សិស្ស', 'Enroll student')
+    }), filterMenuOpen && React.createElement("div", {
+      onClick: () => setFilterMenuOpen(false),
+      style: {
+        position: 'fixed',
+        inset: 0,
+        zIndex: 90
+      }
     }), React.createElement("div", {
+      style: {
+        position: 'fixed',
+        right: 24,
+        bottom: 'calc(140px + env(safe-area-inset-bottom,0px))',
+        zIndex: 91
+      }
+    }, filterMenuOpen && React.createElement("div", {
+      style: {
+        position: 'absolute',
+        bottom: 'calc(100% + 8px)',
+        right: 0,
+        minWidth: 190,
+        maxHeight: '52vh',
+        overflowY: 'auto',
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 12,
+        boxShadow: '0 10px 30px rgba(0,0,0,.25)',
+        padding: 6
+      }
+    }, filterChips.map(c => {
+      var active = filter === c.id;
+      return React.createElement("button", {
+        key: c.id,
+        onClick: () => {
+          setFilter(c.id);
+          setFilterMenuOpen(false);
+        },
+        style: {
+          display: 'block',
+          width: '100%',
+          textAlign: 'left',
+          padding: '10px 12px',
+          border: 'none',
+          borderRadius: 8,
+          cursor: 'pointer',
+          fontSize: 13,
+          fontFamily: 'inherit',
+          fontWeight: active ? 700 : 500,
+          whiteSpace: 'nowrap',
+          background: active ? 'var(--accent-soft)' : 'transparent',
+          color: active ? 'var(--accent)' : 'var(--ink-2)'
+        }
+      }, c.l);
+    })), React.createElement("button", {
+      onClick: () => setFilterMenuOpen(o => !o),
+      "aria-label": tr('តម្រង', 'Filter'),
+      title: curChip ? curChip.l : tr('តម្រង', 'Filter'),
+      style: {
+        position: 'relative',
+        width: 46,
+        height: 46,
+        borderRadius: '50%',
+        cursor: 'pointer',
+        background: 'var(--surface)',
+        color: 'var(--ink-2)',
+        border: '1.5px solid var(--border-strong)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 4px 14px rgba(0,0,0,.2)'
+      }
+    }, React.createElement(Icon, {
+      name: "filter",
+      size: 20,
+      stroke: 2.2
+    }), filter !== 'all' && React.createElement("span", {
+      style: {
+        position: 'absolute',
+        top: -2,
+        right: -2,
+        width: 12,
+        height: 12,
+        borderRadius: '50%',
+        background: 'var(--accent)',
+        border: '2px solid var(--surface)'
+      }
+    }))), React.createElement("div", {
       style: {
         display: 'flex',
         flexDirection: 'column',

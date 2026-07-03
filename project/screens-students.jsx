@@ -839,6 +839,7 @@ const StudentsScreenV2 = () => {
   const [tab, setTab]         = React.useState('directory');
   const [view, setView]       = React.useState('list');
   const [filter, setFilter]   = React.useState('all');
+  const [filterMenuOpen, setFilterMenuOpen] = React.useState(false);
   const [selectedId, setSelectedId] = React.useState(STUDENTS[0]?.id);
   const [editing, setEditing] = React.useState(false);
   const [mobileProfileId, setMobileProfileId] = React.useState(null);
@@ -1046,7 +1047,10 @@ const StudentsScreenV2 = () => {
       (filter==='C'          && clsLetter(s.cls)==='C') ||
       (filter==='t_normal'   && s.studentType==='ធម្មតា') ||
       (filter==='t_special'  && s.studentType==='ពិសេស') ||
-      (filter==='t_ssw'      && s.studentType==='SSW')
+      (filter==='t_ssw'      && s.studentType==='SSW') ||
+      (filter==='ph_KH'      && (s.phaseStatus||{}).KH==='starting') ||
+      (filter==='ph_JP'      && (s.phaseStatus||{}).JP==='starting') ||
+      (filter==='ph_AI'      && (s.phaseStatus||{}).AI==='starting')
     );
   });
 
@@ -1056,6 +1060,9 @@ const StudentsScreenV2 = () => {
   if (bp.mobile) {
     const filterChips = [
       {id:'all',       l:tr('ទាំងអស់','All')},
+      {id:'ph_KH',     l:tr('KH · កំពុង','KH · active')},
+      {id:'ph_JP',     l:tr('JP · កំពុង','JP · active')},
+      {id:'ph_AI',     l:tr('AI · កំពុង','AI · active')},
       {id:'t_normal',  l:tr('ធម្មតា','Regular')},
       {id:'t_special', l:tr('ពិសេស','Special')},
       {id:'t_ssw',     l:'SSW'},
@@ -1310,16 +1317,35 @@ const StudentsScreenV2 = () => {
     }
 
     // ── List view ──────────────────────────────────────────────────────────
+    const curChip = filterChips.find(c => c.id === filter);
     return (
       <div style={{display:'flex',flexDirection:'column',gap:10}}>
-        <div style={{display:'flex',justifyContent:'flex-start'}}>
-          <select value={filter} onChange={e=>setFilter(e.target.value)} style={{
-            padding:'9px 12px',borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)',
-            color:'var(--ink)',fontSize:13,fontFamily:'inherit',cursor:'pointer',minWidth:170}}>
-            {filterChips.map(c => <option key={c.id} value={c.id}>{c.l}</option>)}
-          </select>
-        </div>
         <MobileFab onClick={()=>openForm('newStudent')} label={tr('ចុះឈ្មោះ​សិស្ស','Enroll student')}/>
+
+        {/* Filter — small icon button sitting just above the + FAB; taps open an
+            upward list. Shows a dot when a filter other than "All" is active. */}
+        {filterMenuOpen && <div onClick={()=>setFilterMenuOpen(false)} style={{position:'fixed',inset:0,zIndex:90}}/>}
+        <div style={{position:'fixed',right:24,bottom:'calc(140px + env(safe-area-inset-bottom,0px))',zIndex:91}}>
+          {filterMenuOpen && (
+            <div style={{position:'absolute',bottom:'calc(100% + 8px)',right:0,minWidth:190,maxHeight:'52vh',overflowY:'auto',
+              background:'var(--surface)',border:'1px solid var(--border)',borderRadius:12,boxShadow:'0 10px 30px rgba(0,0,0,.25)',padding:6}}>
+              {filterChips.map(c => {
+                const active = filter === c.id;
+                return <button key={c.id} onClick={()=>{ setFilter(c.id); setFilterMenuOpen(false); }} style={{
+                  display:'block',width:'100%',textAlign:'left',padding:'10px 12px',border:'none',borderRadius:8,cursor:'pointer',
+                  fontSize:13,fontFamily:'inherit',fontWeight:active?700:500,whiteSpace:'nowrap',
+                  background:active?'var(--accent-soft)':'transparent',color:active?'var(--accent)':'var(--ink-2)'}}>{c.l}</button>;
+              })}
+            </div>
+          )}
+          <button onClick={()=>setFilterMenuOpen(o=>!o)} aria-label={tr('តម្រង','Filter')} title={curChip?curChip.l:tr('តម្រង','Filter')} style={{
+            position:'relative',width:46,height:46,borderRadius:'50%',cursor:'pointer',
+            background:'var(--surface)',color:'var(--ink-2)',border:'1.5px solid var(--border-strong)',
+            display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 14px rgba(0,0,0,.2)'}}>
+            <Icon name="filter" size={20} stroke={2.2}/>
+            {filter!=='all' && <span style={{position:'absolute',top:-2,right:-2,width:12,height:12,borderRadius:'50%',background:'var(--accent)',border:'2px solid var(--surface)'}}/>}
+          </button>
+        </div>
         <div style={{display:'flex',flexDirection:'column',gap:6}}>
           {filtered.length === 0 && (
             <div style={{padding:'40px 16px',textAlign:'center',color:'var(--ink-3)',fontSize:13}}>

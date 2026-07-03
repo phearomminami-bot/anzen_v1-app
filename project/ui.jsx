@@ -278,6 +278,7 @@ const Icon = ({ name, size = 16, stroke = 1.6 }) => {
     eye:'M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z M15 12a3 3 0 11-6 0 3 3 0 016 0z',
     x:'M6 6l12 12M6 18L18 6',
     edit:'M12 20h9 M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z',
+    filter:'M4 6h16M7 12h10M10 18h4',
   };
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
