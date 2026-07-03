@@ -819,6 +819,7 @@ const StudentsScreenV2 = () => {
   const [mobileProfileId, setMobileProfileId] = React.useState(null);
   const [mobileEdit, setMobileEdit] = React.useState(null);  // holds the section id being edited, or null
   const [openSections, setOpenSections] = React.useState({bio:true});
+  const [pdfPhase, setPdfPhase] = React.useState('all');     // which phase(s) to include in the PDF export
 
   // Swipe from the left edge → go back (edit → profile → list)
   const mobileBack = React.useCallback(() => {
@@ -1226,26 +1227,46 @@ const StudentsScreenV2 = () => {
                 {studentExams.length > 0 && (
                   <div>
                     <GroupHead bg="var(--ink-2)" label={tr('ការ​ប្រឡង','EXAMS')}/>
-                    {[...studentExams].sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))).map((e,i)=>(
+                    {[...studentExams].sort((a,b)=>{ const ka=(a.date||'')+' '+(a.time||''), kb=(b.date||'')+' '+(b.time||''); return ka<kb?-1:ka>kb?1:0; }).map((e,i)=>(
                       <ExamFeedbackRow key={e.id||('ex'+i)} e={e} sid={s.id} tr={tr} onSave={saveExamResult}/>
                     ))}
                   </div>
                 )}
               </>);
             })()}
-            <div style={{fontSize:11,color:'var(--ink-3)',marginTop:12,marginBottom:4}}>⬇ {tr('ទាញយក PDF — ជ្រើសភាសា','Download PDF — choose language')}</div>
-            <div style={{display:'flex',gap:8}}>
-              <button onClick={()=>printStudentLessonsPDF(s, studentLessons, studentExams, 'km')} style={{
-                flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',
-                background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,
-                display:'flex',alignItems:'center',justifyContent:'center',gap:6,
-              }}>🇰🇭 {tr('ខ្មែរ','Khmer')}</button>
-              <button onClick={()=>printStudentLessonsPDF(s, studentLessons, studentExams, 'en')} style={{
-                flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',
-                background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,
-                display:'flex',alignItems:'center',justifyContent:'center',gap:6,
-              }}>🇬🇧 English</button>
-            </div>
+            {/* PDF export — choose which phase(s) to include, then a language */}
+            {(() => {
+              const pdfLessons = studentLessons.filter(l => pdfPhase === 'all' || lessonPhase(l) === pdfPhase);
+              const PHASE_OPTS = [{k:'all', label:tr('ទាំង៣','All')}, ...(window.STUDENT_PHASES||[]).map(p=>({k:p.k,label:p.label,color:p.color}))];
+              return (<>
+                <div style={{fontSize:11,color:'var(--ink-3)',marginTop:12,marginBottom:5}}>⬇ {tr('ទាញយក PDF — ជ្រើសវគ្គ','Download PDF — choose phase')}</div>
+                <div style={{display:'flex',gap:6,marginBottom:8,flexWrap:'wrap'}}>
+                  {PHASE_OPTS.map(o => {
+                    const active = pdfPhase === o.k;
+                    const c = o.color || 'var(--accent)';
+                    return (
+                      <button key={o.k} onClick={()=>setPdfPhase(o.k)} style={{
+                        padding:'5px 14px',borderRadius:999,fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'inherit',
+                        border:'1.5px solid '+(active?c:'var(--border)'),
+                        background: active?c:'var(--surface)', color: active?'#fff':'var(--ink-2)'}}>{o.label}</button>
+                    );
+                  })}
+                </div>
+                <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:4}}>{tr('ជ្រើសភាសា','Choose language')}</div>
+                <div style={{display:'flex',gap:8}}>
+                  <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, studentExams, 'km')} style={{
+                    flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',
+                    background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,
+                    display:'flex',alignItems:'center',justifyContent:'center',gap:6,
+                  }}>🇰🇭 {tr('ខ្មែរ','Khmer')}</button>
+                  <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, studentExams, 'en')} style={{
+                    flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',
+                    background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,
+                    display:'flex',alignItems:'center',justifyContent:'center',gap:6,
+                  }}>🇬🇧 English</button>
+                </div>
+              </>);
+            })()}
             <button onClick={()=>bookLesson(s)} style={{
               width:'100%',marginTop:8,padding:'10px',borderRadius:8,
               border:'none',background:'var(--accent)',color:'#fff',

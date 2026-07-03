@@ -1017,7 +1017,8 @@ window.__trRegistry = {
   "Lessons & Comments": "បញ្ជីមេរៀន និង មតិគ្រូ",
   "hrs": "ម៉ោង",
   "EXAMS": "ការ​ប្រឡង",
-  "Download PDF — choose language": "ទាញយក PDF — ជ្រើសភាសា",
+  "Download PDF — choose phase": "ទាញយក PDF — ជ្រើសវគ្គ",
+  "Choose language": "ជ្រើសភាសា",
   "Khmer": "ខ្មែរ",
   "Enroll student": "ចុះឈ្មោះ​សិស្ស",
   "Filter": "តម្រង",
@@ -1680,7 +1681,8 @@ window.__trGroups = {
     "Lessons & Comments": "បញ្ជីមេរៀន និង មតិគ្រូ",
     "hrs": "ម៉ោង",
     "EXAMS": "ការ​ប្រឡង",
-    "Download PDF — choose language": "ទាញយក PDF — ជ្រើសភាសា",
+    "Download PDF — choose phase": "ទាញយក PDF — ជ្រើសវគ្គ",
+    "Choose language": "ជ្រើសភាសា",
     "Khmer": "ខ្មែរ",
     "Enroll student": "ចុះឈ្មោះ​សិស្ស",
     "Filter": "តម្រង",
@@ -2942,7 +2944,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v142";</script>
+<script>window.__ANZEN_VERSION="v143";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -41378,6 +41380,7 @@ var StudentsScreenV2 = () => {
   var [openSections, setOpenSections] = React.useState({
     bio: true
   });
+  var [pdfPhase, setPdfPhase] = React.useState('all');
   var mobileBack = React.useCallback(() => {
     if (mobileEdit) setMobileEdit(null);else if (mobileProfileId) setMobileProfileId(null);
   }, [mobileEdit, mobileProfileId]);
@@ -42035,60 +42038,106 @@ var StudentsScreenV2 = () => {
         }))), studentExams.length > 0 && React.createElement("div", null, React.createElement(GroupHead, {
           bg: "var(--ink-2)",
           label: tr('ការ​ប្រឡង', 'EXAMS')
-        }), [...studentExams].sort((a, b) => String(a.date || '').localeCompare(String(b.date || ''))).map((e, i) => React.createElement(ExamFeedbackRow, {
+        }), [...studentExams].sort((a, b) => {
+          var ka = (a.date || '') + ' ' + (a.time || ''),
+            kb = (b.date || '') + ' ' + (b.time || '');
+          return ka < kb ? -1 : ka > kb ? 1 : 0;
+        }).map((e, i) => React.createElement(ExamFeedbackRow, {
           key: e.id || 'ex' + i,
           e: e,
           sid: s.id,
           tr: tr,
           onSave: saveExamResult
         }))));
-      })(), React.createElement("div", {
-        style: {
-          fontSize: 11,
-          color: 'var(--ink-3)',
-          marginTop: 12,
-          marginBottom: 4
-        }
-      }, "\u2B07 ", tr('ទាញយក PDF — ជ្រើសភាសា', 'Download PDF — choose language')), React.createElement("div", {
-        style: {
-          display: 'flex',
-          gap: 8
-        }
-      }, React.createElement("button", {
-        onClick: () => printStudentLessonsPDF(s, studentLessons, studentExams, 'km'),
-        style: {
-          flex: 1,
-          padding: '10px',
-          borderRadius: 8,
-          border: '1px solid var(--border-strong)',
-          background: 'var(--surface)',
-          color: 'var(--ink-2)',
-          cursor: 'pointer',
-          fontSize: 13,
-          fontWeight: 600,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 6
-        }
-      }, "\uD83C\uDDF0\uD83C\uDDED ", tr('ខ្មែរ', 'Khmer')), React.createElement("button", {
-        onClick: () => printStudentLessonsPDF(s, studentLessons, studentExams, 'en'),
-        style: {
-          flex: 1,
-          padding: '10px',
-          borderRadius: 8,
-          border: '1px solid var(--border-strong)',
-          background: 'var(--surface)',
-          color: 'var(--ink-2)',
-          cursor: 'pointer',
-          fontSize: 13,
-          fontWeight: 600,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 6
-        }
-      }, "\uD83C\uDDEC\uD83C\uDDE7 English")), React.createElement("button", {
+      })(), (() => {
+        var pdfLessons = studentLessons.filter(l => pdfPhase === 'all' || lessonPhase(l) === pdfPhase);
+        var PHASE_OPTS = [{
+          k: 'all',
+          label: tr('ទាំង៣', 'All')
+        }, ...(window.STUDENT_PHASES || []).map(p => ({
+          k: p.k,
+          label: p.label,
+          color: p.color
+        }))];
+        return React.createElement(React.Fragment, null, React.createElement("div", {
+          style: {
+            fontSize: 11,
+            color: 'var(--ink-3)',
+            marginTop: 12,
+            marginBottom: 5
+          }
+        }, "\u2B07 ", tr('ទាញយក PDF — ជ្រើសវគ្គ', 'Download PDF — choose phase')), React.createElement("div", {
+          style: {
+            display: 'flex',
+            gap: 6,
+            marginBottom: 8,
+            flexWrap: 'wrap'
+          }
+        }, PHASE_OPTS.map(o => {
+          var active = pdfPhase === o.k;
+          var c = o.color || 'var(--accent)';
+          return React.createElement("button", {
+            key: o.k,
+            onClick: () => setPdfPhase(o.k),
+            style: {
+              padding: '5px 14px',
+              borderRadius: 999,
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              border: '1.5px solid ' + (active ? c : 'var(--border)'),
+              background: active ? c : 'var(--surface)',
+              color: active ? '#fff' : 'var(--ink-2)'
+            }
+          }, o.label);
+        })), React.createElement("div", {
+          style: {
+            fontSize: 11,
+            color: 'var(--ink-3)',
+            marginBottom: 4
+          }
+        }, tr('ជ្រើសភាសា', 'Choose language')), React.createElement("div", {
+          style: {
+            display: 'flex',
+            gap: 8
+          }
+        }, React.createElement("button", {
+          onClick: () => printStudentLessonsPDF(s, pdfLessons, studentExams, 'km'),
+          style: {
+            flex: 1,
+            padding: '10px',
+            borderRadius: 8,
+            border: '1px solid var(--border-strong)',
+            background: 'var(--surface)',
+            color: 'var(--ink-2)',
+            cursor: 'pointer',
+            fontSize: 13,
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6
+          }
+        }, "\uD83C\uDDF0\uD83C\uDDED ", tr('ខ្មែរ', 'Khmer')), React.createElement("button", {
+          onClick: () => printStudentLessonsPDF(s, pdfLessons, studentExams, 'en'),
+          style: {
+            flex: 1,
+            padding: '10px',
+            borderRadius: 8,
+            border: '1px solid var(--border-strong)',
+            background: 'var(--surface)',
+            color: 'var(--ink-2)',
+            cursor: 'pointer',
+            fontSize: 13,
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6
+          }
+        }, "\uD83C\uDDEC\uD83C\uDDE7 English")));
+      })(), React.createElement("button", {
         onClick: () => bookLesson(s),
         style: {
           width: '100%',
