@@ -2954,7 +2954,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v149";</script>
+<script>window.__ANZEN_VERSION="v150";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -39832,7 +39832,14 @@ var ST_TYPE_EN = {
   'SSW': 'SSW'
 };
 var stTypeEn = t => ST_TYPE_EN[t] || 'Regular';
-var isGraduated = s => !!(s && s.graduated);
+var isGraduated = s => {
+  if (!s) return false;
+  var vals = Object.values(s.phaseStatus || {});
+  if (vals.includes('starting')) return false;
+  if (vals.includes('finished')) return true;
+  if (s.phaseDone && Object.values(s.phaseDone).some(Boolean) && !vals.length) return true;
+  return !!s.graduated;
+};
 if (typeof window !== 'undefined') window.__isGraduated = isGraduated;
 var lessonTypeKm = l => {
   if (!l) return 'មេរៀន';
@@ -41564,7 +41571,8 @@ var StudentsScreenV2 = () => {
     };
     pd[ph] = next === 'finished';
     STUDENTS[i].phaseDone = pd;
-    STUDENTS[i].graduated = Object.values(pd).some(Boolean);
+    var psVals = Object.values(STUDENTS[i].phaseStatus);
+    STUDENTS[i].graduated = psVals.includes('finished') && !psVals.includes('starting');
     if (window.saveAllData) window.saveAllData();
     forceUpdate();
     toast(`${ph} · ${next === 'finished' ? tr('បញ្ចប់', 'Finished') : next === 'starting' ? tr('ចាប់​ផ្ដើម', 'Starting') : tr('សម្អាត', 'Cleared')}`, 'good');

@@ -21,7 +21,17 @@ const stTypeEn = (t) => ST_TYPE_EN[t] || 'Regular';
 // A student is "graduated" once explicitly marked finished. Graduated students
 // are hidden from the active lists/pickers but kept under the "Completed" filter.
 // Reversible — clearing the flag restores them everywhere.
-const isGraduated = (s) => !!(s && s.graduated);
+// A student is archived ("graduated") only when they have FINISHED a phase and
+// have NO phase currently in progress. If any phase is "starting", they're still
+// active and must show up in the normal lists — even if another phase is done.
+const isGraduated = (s) => {
+  if (!s) return false;
+  const vals = Object.values(s.phaseStatus || {});
+  if (vals.includes('starting')) return false;            // actively pursuing a phase
+  if (vals.includes('finished')) return true;             // finished, nothing in progress
+  if (s.phaseDone && Object.values(s.phaseDone).some(Boolean) && !vals.length) return true; // legacy phaseDone
+  return !!s.graduated;                                    // legacy / manual graduation
+};
 if (typeof window !== 'undefined') window.__isGraduated = isGraduated;
 
 // Pure-Khmer lesson type label (no English/Japanese), derived from the colour
@@ -962,7 +972,9 @@ const StudentsScreenV2 = () => {
     const pd = { ...(STUDENTS[i].phaseDone || {}) };
     pd[ph] = next === 'finished';
     STUDENTS[i].phaseDone = pd;
-    STUDENTS[i].graduated = Object.values(pd).some(Boolean);
+    // Archived only when a phase is finished AND none is currently in progress.
+    const psVals = Object.values(STUDENTS[i].phaseStatus);
+    STUDENTS[i].graduated = psVals.includes('finished') && !psVals.includes('starting');
     if (window.saveAllData) window.saveAllData();
     forceUpdate();
     toast(`${ph} · ${next==='finished'?tr('បញ្ចប់','Finished'):next==='starting'?tr('ចាប់​ផ្ដើម','Starting'):tr('សម្អាត','Cleared')}`, 'good');
