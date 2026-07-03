@@ -2282,6 +2282,46 @@ const LicensePicker = ({ has, setHas, classes, setClasses, tr }) => {
   );
 };
 
+// Preferred study days + times (both multi-select).
+const PREF_DAYS = [['Mon','ចន្ទ'],['Tue','អង្គារ'],['Wed','ពុធ'],['Thu','ព្រហស្បតិ៍'],['Fri','សុក្រ'],['Sat','សៅរ៍'],['Sun','អាទិត្យ']];
+const PrefDayTimePicker = ({ days, setDays, times, setTimes, tr }) => {
+  const toggleDay = (d) => setDays(prev => prev.includes(d) ? prev.filter(x=>x!==d) : [...prev, d]);
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:10}}>
+      <div>
+        <div style={{fontSize:11,color:'var(--ink-3)',fontWeight:600,marginBottom:5}}>{tr('ថ្ងៃ​សិក្សា','Study days')}</div>
+        <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+          {PREF_DAYS.map(([v,km]) => {
+            const on = (days||[]).includes(v);
+            return <button key={v} type="button" onClick={()=>toggleDay(v)} style={{
+              padding:'6px 12px',borderRadius:8,cursor:'pointer',fontSize:12,fontWeight:700,fontFamily:'inherit',
+              border:'1.5px solid '+(on?'var(--accent)':'var(--border)'),
+              background:on?'var(--accent)':'var(--surface)',color:on?'#fff':'var(--ink-2)'}}>{km}</button>;
+          })}
+        </div>
+      </div>
+      <div>
+        <div style={{fontSize:11,color:'var(--ink-3)',fontWeight:600,marginBottom:5}}>{tr('ម៉ោង​សិក្សា','Study times')}</div>
+        {(times||[]).length > 0 && (
+          <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:8}}>
+            {times.map(h => (
+              <div key={h} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'5px 9px',background:'var(--accent-soft)',border:'1px solid var(--accent)',borderRadius:6,fontSize:12,fontWeight:600,color:'var(--accent)',fontFamily:'"JetBrains Mono",monospace'}}>
+                {String(h).padStart(2,'0')}:00
+                <button type="button" onClick={()=>setTimes(prev=>prev.filter(x=>x!==h))} style={{border:'none',background:'none',cursor:'pointer',color:'var(--accent)',fontSize:14,lineHeight:1,padding:0}}>×</button>
+              </div>
+            ))}
+          </div>
+        )}
+        <select value="" onChange={e=>{ const h=parseInt(e.target.value); if(!isNaN(h)&&!(times||[]).includes(h)) setTimes(prev=>[...(prev||[]),h].sort((a,b)=>a-b)); }}
+          style={{width:'100%',padding:'8px 10px',border:'1px solid var(--border)',borderRadius:8,fontSize:13,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)'}}>
+          <option value="">+ {tr('បន្ថែម​ម៉ោង','Add time')}</option>
+          {Array.from({length:12},(_,i)=>i+7).filter(h=>!(times||[]).includes(h)).map(h=><option key={h} value={h}>{String(h).padStart(2,'0')}:00</option>)}
+        </select>
+      </div>
+    </div>
+  );
+};
+
 // ── Edit panel ───────────────────────────────────────────────────────────────
 const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
   const { tr, toast } = useAppActions();
@@ -2299,6 +2339,8 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
   const [examLoc,   setExamLoc]   = React.useState(s.exam_location || '');
   const [licenseClasses, setLicenseClasses] = React.useState(Array.isArray(s.licenseClasses) ? s.licenseClasses : []);
   const [hasLicense, setHasLicense] = React.useState(!!(s.licenseClasses && s.licenseClasses.length) || !!s.hasLicense);
+  const [prefDays,  setPrefDays]  = React.useState(Array.isArray(s.prefDays)  ? s.prefDays  : []);
+  const [prefTimes, setPrefTimes] = React.useState(Array.isArray(s.prefTimes) ? s.prefTimes : []);
 
   const [nationality,   setNationality]   = React.useState(s.nationality   || 'ខ្មែរ');
   const [eyeLeft,       setEyeLeft]       = React.useState(s.eye_left      || '');
@@ -2381,6 +2423,8 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
       exam_location: examLoc.trim(),
       hasLicense:    hasLicense,
       licenseClasses: hasLicense ? licenseClasses : [],
+      prefDays,
+      prefTimes,
       nationality:   nationality.trim(),
       eye_left:      eyeLeft,
       eye_right:     eyeRight,
@@ -2557,6 +2601,9 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
 
       {secTitle(tr('បណ្ណ​បើកបរ​ដែល​មាន​ស្រាប់','EXISTING DRIVING LICENSE'))}
       <LicensePicker has={hasLicense} setHas={setHasLicense} classes={licenseClasses} setClasses={setLicenseClasses} tr={tr}/>
+
+      {secTitle(tr('ថ្ងៃ និង ម៉ោង​សិក្សា','STUDY DAYS & TIMES'))}
+      <PrefDayTimePicker days={prefDays} setDays={setPrefDays} times={prefTimes} setTimes={setPrefTimes} tr={tr}/>
 
       <div style={{display:'flex',gap:8,justifyContent:'flex-end',paddingTop:14,borderTop:'1px solid var(--border)'}}>
         <Btn kind="ghost" size="md" onClick={onCancel}>{tr('បោះ​បង់','Cancel')}</Btn>

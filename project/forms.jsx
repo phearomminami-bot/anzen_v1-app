@@ -1266,6 +1266,8 @@ const NewStudentForm = ({ onClose }) => {
   const [licenseNo, setLicenseNo] = React.useState('');
   const [hasLicense, setHasLicense] = React.useState(false);
   const [licenseClasses, setLicenseClasses] = React.useState([]);
+  const [prefDays,  setPrefDays]  = React.useState([]);
+  const [prefTimes, setPrefTimes] = React.useState([]);
   const [examLoc, setExamLoc] = React.useState('');
   const [eyeLeft,  setEyeLeft]  = React.useState('');
   const [eyeRight, setEyeRight] = React.useState('');
@@ -1516,6 +1518,8 @@ Use "" for any field that cannot be read clearly.`;
       license_no: licenseNo.trim(),
       hasLicense,
       licenseClasses: hasLicense ? licenseClasses : [],
+      prefDays,
+      prefTimes,
       exam_location: examLoc.trim(),
       eye_left: eyeLeft, eye_right: eyeRight, eye_both: eyeBoth,
       paid: 0,
@@ -1715,6 +1719,11 @@ Use "" for any field that cannot be read clearly.`;
         </Field>
       </Row>
       <Row>
+        <Field full label={tr('ថ្ងៃ និង ម៉ោង​សិក្សា','Study days & times')}>
+          <PrefDayTimePicker days={prefDays} setDays={setPrefDays} times={prefTimes} setTimes={setPrefTimes} tr={tr}/>
+        </Field>
+      </Row>
+      <Row>
         <Field label={tr('ភ្នែកឆ្វេង','Left Eye')}>
           <Select value={eyeLeft} onChange={e=>setEyeLeft(e.target.value)}>
             {EYE_OPTS.map(v=><option key={v||'none'} value={v}>{v||'—'}</option>)}
@@ -1824,7 +1833,8 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
   // ── When: multi-date ─────────────────────────────────────────────────────
   const [dates,    setDates]    = React.useState([defaultDate]);
   const [addingDate, setAddingDate] = React.useState('');
-  const [hour,     setHour]     = React.useState(editLesson ? editLesson.h : (ctx.hour || 9));
+  const [startHours, setStartHours] = React.useState(editLesson ? [editLesson.h] : [ctx.hour || 9]);   // multi start times
+  const hour = startHours[0] ?? 9;   // first time — used for conflict checks + edit mode
   const [len,      setLen]      = React.useState(editLesson ? editLesson.len : 2);
 
   const addDate = (d) => {
@@ -1880,6 +1890,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
     setTouched({instId:true});
     if (!instId)       { toast(tr('សូម​ជ្រើស​គ្រូ','Please select an instructor'), 'warn'); return; }
     if (!dates.length) { toast(tr('សូម​ជ្រើស​ថ្ងៃ','Please select at least one date'), 'warn'); return; }
+    if (!editLesson && !startHours.length) { toast(tr('សូម​ជ្រើស​ម៉ោង','Please select at least one time'), 'warn'); return; }
     if (hasConflict)   { toast(tr('គ្រូ​ រវល់​ម៉ោង​នេះ','Instructor has a conflict'), 'warn'); return; }
     if (vehConflict)   { toast(tr('ឡាន​ជាន់​ម៉ោង​គ្នា','Vehicle already booked'), 'warn'); return; }
 
@@ -1914,10 +1925,11 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
       return;
     }
 
-    dates.forEach(date => {
+    const hoursToBook = startHours.length ? startHours : [hour];
+    dates.forEach(date => hoursToBook.forEach(h => {
       LESSONS.push({
         id: nextLessonId(),
-        date, h: parseInt(hour), len: parseFloat(len),
+        date, h: parseInt(h), len: parseFloat(len),
         studentId: studentId || '—',
         instId,
         guests: guests.length > 0 ? [...guests] : undefined,
@@ -1934,7 +1946,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
         createdBy: window.__currentUserName || '',
         createdAt: new Date().toISOString(),
       });
-    });
+    }));
 
     if (window.__notifyLessonsChanged)  window.__notifyLessonsChanged();
     if (window.__notifyStudentsChanged) window.__notifyStudentsChanged();
@@ -2073,9 +2085,23 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
         </div>
         {/* Time + Duration */}
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-          <Field label={tr('ម៉ោង​ចាប់​ផ្ដើម *','Start time *')}>
-            <Select value={String(hour)} onChange={e=>setHour(parseInt(e.target.value))}>
-              {Array.from({length:12},(_,i)=>i+7).map(h=>(
+          <Field label={tr('ម៉ោង​ចាប់​ផ្ដើម *','Start time(s) *')}>
+            {startHours.length > 0 && (
+              <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:8}}>
+                {startHours.map(h => (
+                  <div key={h} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'5px 9px',
+                    background:'var(--accent-soft)',border:'1px solid var(--accent)',borderRadius:6,
+                    fontSize:12,fontWeight:600,color:'var(--accent)',fontFamily:'"JetBrains Mono",monospace'}}>
+                    {String(h).padStart(2,'0')}:00
+                    <button type="button" onClick={()=>setStartHours(prev=>prev.filter(x=>x!==h))} style={{
+                      border:'none',background:'none',cursor:'pointer',color:'var(--accent)',fontSize:14,lineHeight:1,padding:0,display:'flex',alignItems:'center'}}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <Select value="" onChange={e=>{ const h=parseInt(e.target.value); if(!isNaN(h) && !startHours.includes(h)) setStartHours(prev=>[...prev,h].sort((a,b)=>a-b)); }}>
+              <option value="">+ {tr('បន្ថែម​ម៉ោង','Add time')}</option>
+              {Array.from({length:12},(_,i)=>i+7).filter(h=>!startHours.includes(h)).map(h=>(
                 <option key={h} value={h}>{String(h).padStart(2,'0')}:00</option>
               ))}
             </Select>
@@ -2092,9 +2118,9 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
             </Select>
           </Field>
         </div>
-        {dates.length > 1 && (
+        {!editLesson && (dates.length * Math.max(1,startHours.length)) > 1 && (
           <div style={{marginTop:8,padding:'8px 12px',background:'var(--accent-soft)',borderRadius:7,fontSize:12,color:'var(--accent)',fontWeight:500}}>
-            ℹ {tr(`នឹង​បង្កើត​មេរៀន​ ${dates.length} ចំណែក`,`Will create ${dates.length} separate lessons`)}
+            ℹ {tr(`នឹង​បង្កើត​មេរៀន​ ${dates.length * Math.max(1,startHours.length)} ចំណែក`,`Will create ${dates.length * Math.max(1,startHours.length)} separate lessons`)}
           </div>
         )}
       </FormSection>
