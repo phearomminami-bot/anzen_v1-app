@@ -383,9 +383,11 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
     const hrLabel = cumNo != null ? ` <span style="color:#2a5db0;font-weight:700;font-size:10px;font-style:italic">(${cumNo})</span>` : '';
     const hh = (l.h||0) + o;
     const timeStr = `${String(hh).padStart(2,'0')}:00-${String(hh+1).padStart(2,'0')}:00`;
+    const ph = (typeof phaseMeta === 'function') ? phaseMeta(typeof lessonPhase==='function' ? lessonPhase(l) : (l.phase||'KH')) : {label:(l.phase||'KH'),color:'#2A5DB0'};
+    const phBadge = `<span style="display:inline-block;background:${ph.color};color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:middle;-webkit-print-color-adjust:exact;print-color-adjust:exact">${ph.label}</span>`;
     return `<tr>
       <td style="white-space:nowrap;font-family:monospace;color:#444;font-weight:700">${esc(l.date)}<br>${timeStr}${hrLabel}</td>
-      <td><b>${typeKm(l)}</b>${coveredHtml}<div style="color:#888;margin-top:2px">${inst}</div></td>
+      <td><b>${typeKm(l)}</b>${phBadge}${coveredHtml}<div style="color:#888;margin-top:2px">${inst}</div></td>
       <td>${status}${fb.length?'<div style="margin-top:3px;color:#333">'+fb.join('')+'</div>':''}</td>
     </tr>`;
   }).join('');
