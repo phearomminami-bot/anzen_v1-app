@@ -192,6 +192,44 @@ const StaffScreen = () => {
 
   const activeStaff = staff.filter(s => !s.offboarded);
   const formerStaff = staff.filter(s => s.offboarded);
+
+  // Export active staff to a CSV that opens cleanly in Google Sheets / Excel.
+  // A UTF-8 BOM keeps Khmer text readable; values are RFC-4180 quoted.
+  const exportStaffCSV = () => {
+    const G = {M:'ប្រុស',F:'ស្រី'};
+    const cols = [
+      ['ID', s=>s.id],
+      ['ឈ្មោះ (ខ្មែរ)', s=>s.name],
+      ['ឈ្មោះ (EN)', s=>s.en],
+      ['តួនាទី', s=>s.role],
+      ['នាយកដ្ឋាន', s=>s.dept],
+      ['ស្ថានភាព', s=>s.status],
+      ['ទូរស័ព្ទ', s=>s.phone],
+      ['អ៊ីមែល', s=>s.email],
+      ['ថ្ងៃចូលធ្វើការ', s=>s.since],
+      ['រយៈពេលធ្វើការ', s=>{ const t=tenureYM(s.since); return t ? (t.y?t.y+'ឆ្នាំ ':'')+t.m+'ខែ' : ''; }],
+      ['ប្រាក់ខែ', s=>s.salary],
+      ['ច្បាប់ឈប់ (ថ្ងៃ)', s=>s.leave],
+      ['ភេទ', s=>G[s.ext?.gender]||s.ext?.gender],
+      ['ថ្ងៃខែកំណើត', s=>s.ext?.dob],
+      ['អត្តសញ្ញាណប័ណ្ណ', s=>s.ext?.idNum],
+      ['អាសយដ្ឋាន', s=>s.ext?.address],
+      ['ទំនាក់ទំនងបន្ទាន់', s=>s.ext?.emergencyName],
+      ['ទូរស័ព្ទបន្ទាន់', s=>s.ext?.emergencyPhone],
+      ['ប្រភេទប័ណ្ណបើកបរ', s=>s.ext?.licenseType],
+    ];
+    const esc = v => { const t = (v==null?'':String(v)); return /[",\n\r]/.test(t) ? '"'+t.replace(/"/g,'""')+'"' : t; };
+    const lines = [cols.map(c=>esc(c[0])).join(',')];
+    activeStaff.forEach(s => lines.push(cols.map(c=>esc(c[1](s))).join(',')));
+    const csv = String.fromCharCode(0xFEFF) + lines.join('\r\n');   // BOM → Khmer shows correctly
+    try {
+      const blob = new Blob([csv], { type:'text/csv;charset=utf-8' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = `anzen-staff-${typeof todayStr==='function'?todayStr():'export'}.csv`; a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+      toast(tr('បាននាំចេញ CSV — បើកក្នុង Google Sheets បាន ✓','CSV exported — open in Google Sheets ✓'),'good');
+    } catch(e){ toast(tr('នាំចេញបរាជ័យ','Export failed'),'danger'); }
+  };
   const deptCounts = DEPT_OPTS.reduce((acc, d) => {
     acc[d] = activeStaff.filter(s => s.dept === d).length;
     return acc;
@@ -224,7 +262,7 @@ const StaffScreen = () => {
         en={activeStaff.length ? `${activeStaff.length} employees · ${pending.length} pending leave` : 'No staff yet'}
         action={
           <div style={{display:'flex',gap:8}}>
-            <Btn kind="ghost" size="md" onClick={()=>toast('Export CSV · coming soon','neutral')}>{tr('នាំចេញ','Export')}</Btn>
+            <Btn kind="ghost" size="md" icon={<Icon name="download" size={14}/>} onClick={exportStaffCSV}>{tr('នាំចេញ CSV','Export CSV')}</Btn>
             <Btn kind="primary" size="md" icon={<Icon name="plus" size={14}/>}
               onClick={()=>openForm('newStaff')}>
               {tr('បន្ថែមបុគ្គលិក','Add staff')}

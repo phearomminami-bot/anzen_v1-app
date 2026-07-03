@@ -735,6 +735,8 @@ window.__trRegistry = {
   "Offboard": "ឈប់​ពី​ការងារ",
   "Marked as former staff ✓": "បាន​សម្គាល់​ថា​ឈប់​ពី​ការងារ ✓",
   "Restored to active staff": "បាន​ជួល​ឡើង​វិញ​ជា​បុគ្គលិក​សកម្ម",
+  "CSV exported — open in Google Sheets ✓": "បាននាំចេញ CSV — បើកក្នុង Google Sheets បាន ✓",
+  "Export failed": "Export មានបញ្ហា",
   "Add staff": "បន្ថែមបុគ្គលិក",
   "Total": "សរុប",
   "On duty": "សកម្ម",
@@ -1279,7 +1281,6 @@ window.__trRegistry = {
   "Folder set ✓ — first backup saved": "បាន​កំណត់​ Folder ✓ — backup ដំបូង​បាន​ save",
   "Could not pick folder": "មិន​អាច​ជ្រើស​ Folder",
   "Auto-backup folder removed": "បាន​ដក​ Folder ចេញ",
-  "Export failed": "Export មានបញ្ហា",
   "Invalid translation file": "ឯកសារ​មិន​ត្រឹម​ត្រូវ",
   "Translation overrides cleared": "បាន​លុប​ការ​កែ​ប្រែ​ភាសា",
   "No data found": "គ្មាន​ទិន្នន័យ",
@@ -2072,6 +2073,8 @@ window.__trGroups = {
     "Offboard": "ឈប់​ពី​ការងារ",
     "Marked as former staff ✓": "បាន​សម្គាល់​ថា​ឈប់​ពី​ការងារ ✓",
     "Restored to active staff": "បាន​ជួល​ឡើង​វិញ​ជា​បុគ្គលិក​សកម្ម",
+    "CSV exported — open in Google Sheets ✓": "បាននាំចេញ CSV — បើកក្នុង Google Sheets បាន ✓",
+    "Export failed": "នាំចេញបរាជ័យ",
     "Add staff": "បន្ថែមបុគ្គលិក",
     "Total": "សរុប",
     "On duty": "សកម្ម",
@@ -2507,7 +2510,6 @@ window.__trGroups = {
     "Folder set ✓ — first backup saved": "បាន​កំណត់​ Folder ✓ — backup ដំបូង​បាន​ save",
     "Could not pick folder": "មិន​អាច​ជ្រើស​ Folder",
     "Auto-backup folder removed": "បាន​ដក​ Folder ចេញ",
-    "Export failed": "Export មានបញ្ហា",
     "Invalid translation file": "ឯកសារ​មិន​ត្រឹម​ត្រូវ",
     "Translation overrides cleared": "បាន​លុប​ការ​កែ​ប្រែ​ភាសា",
     "No data found": "គ្មាន​ទិន្នន័យ",
@@ -2938,7 +2940,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v137";</script>
+<script>window.__ANZEN_VERSION="v138";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -27100,6 +27102,36 @@ var StaffScreen = () => {
   };
   var activeStaff = staff.filter(s => !s.offboarded);
   var formerStaff = staff.filter(s => s.offboarded);
+  var exportStaffCSV = () => {
+    var G = {
+      M: 'ប្រុស',
+      F: 'ស្រី'
+    };
+    var cols = [['ID', s => s.id], ['ឈ្មោះ (ខ្មែរ)', s => s.name], ['ឈ្មោះ (EN)', s => s.en], ['តួនាទី', s => s.role], ['នាយកដ្ឋាន', s => s.dept], ['ស្ថានភាព', s => s.status], ['ទូរស័ព្ទ', s => s.phone], ['អ៊ីមែល', s => s.email], ['ថ្ងៃចូលធ្វើការ', s => s.since], ['រយៈពេលធ្វើការ', s => {
+      var t = tenureYM(s.since);
+      return t ? (t.y ? t.y + 'ឆ្នាំ ' : '') + t.m + 'ខែ' : '';
+    }], ['ប្រាក់ខែ', s => s.salary], ['ច្បាប់ឈប់ (ថ្ងៃ)', s => s.leave], ['ភេទ', s => G[s.ext?.gender] || s.ext?.gender], ['ថ្ងៃខែកំណើត', s => s.ext?.dob], ['អត្តសញ្ញាណប័ណ្ណ', s => s.ext?.idNum], ['អាសយដ្ឋាន', s => s.ext?.address], ['ទំនាក់ទំនងបន្ទាន់', s => s.ext?.emergencyName], ['ទូរស័ព្ទបន្ទាន់', s => s.ext?.emergencyPhone], ['ប្រភេទប័ណ្ណបើកបរ', s => s.ext?.licenseType]];
+    var esc = v => {
+      var t = v == null ? '' : String(v);
+      return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+    };
+    var lines = [cols.map(c => esc(c[0])).join(',')];
+    activeStaff.forEach(s => lines.push(cols.map(c => esc(c[1](s))).join(',')));
+    var csv = String.fromCharCode(0xFEFF) + lines.join('\r\n');
+    try {
+      var blob = new Blob([csv], {
+        type: 'text/csv;charset=utf-8'
+      });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `anzen-staff-${typeof todayStr === 'function' ? todayStr() : 'export'}.csv`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      toast(tr('បាននាំចេញ CSV — បើកក្នុង Google Sheets បាន ✓', 'CSV exported — open in Google Sheets ✓'), 'good');
+    } catch (e) {
+      toast(tr('នាំចេញបរាជ័យ', 'Export failed'), 'danger');
+    }
+  };
   var deptCounts = DEPT_OPTS.reduce((acc, d) => {
     acc[d] = activeStaff.filter(s => s.dept === d).length;
     return acc;
@@ -27156,8 +27188,12 @@ var StaffScreen = () => {
     }, React.createElement(Btn, {
       kind: "ghost",
       size: "md",
-      onClick: () => toast('Export CSV · coming soon', 'neutral')
-    }, tr('នាំចេញ', 'Export')), React.createElement(Btn, {
+      icon: React.createElement(Icon, {
+        name: "download",
+        size: 14
+      }),
+      onClick: exportStaffCSV
+    }, tr('នាំចេញ CSV', 'Export CSV')), React.createElement(Btn, {
       kind: "primary",
       size: "md",
       icon: React.createElement(Icon, {
