@@ -824,12 +824,14 @@ window.__trRegistry = {
   "Late": "យឺត",
   "Half-day": "កន្លះថ្ងៃ",
   "Absent": "អវត្ត",
-  "')}{dowKm} · {date}</div>\n        </div>\n        <div style={{padding:18}}>\n          <div style={lbl}>{tr('ស្ថានភាព": "ថ្ងៃ",
+  "Not set": "មិន​ទាន់​កំណត់",
+  "')}{dowKm} · {date}</div>\n        </div>\n        <div style={{padding:18}}>\n          {editing ? (<>\n            {/* ── EDIT ── */}\n            <div style={lbl}>{tr('ស្ថានភាព": "ថ្ងៃ",
   "Clock in": "ម៉ោង​ចូល",
   "Clock out": "ម៉ោង​ចេញ",
   "Break (h)": "សម្រាក (ម៉ោង)",
   "Overtime": "ម៉ោង​បន្ថែម (OT)",
-  "No clock times for this status": "គ្មាន​ម៉ោង​សម្រាប់​ស្ថានភាព​នេះ",
+  "e.g. left early, remote...": "ឧ. សុំច្បាប់ព្រឹក, ធ្វើការពីផ្ទះ...",
+  "Break": "សម្រាក",
   "Monthly attendance": "វត្តមាន​ប្រចាំ​ខែ",
   "Monthly summary": "សរុប​ប្រចាំ​ខែ",
   "Overtime h": "ម៉ោង​បន្ថែម",
@@ -2159,12 +2161,14 @@ window.__trGroups = {
     "Late": "យឺត",
     "Half-day": "កន្លះថ្ងៃ",
     "Absent": "អវត្តមាន",
-    "')}{dowKm} · {date}</div>\n        </div>\n        <div style={{padding:18}}>\n          <div style={lbl}>{tr('ស្ថានភាព": "ថ្ងៃ",
+    "Not set": "មិន​ទាន់​កំណត់",
+    "')}{dowKm} · {date}</div>\n        </div>\n        <div style={{padding:18}}>\n          {editing ? (<>\n            {/* ── EDIT ── */}\n            <div style={lbl}>{tr('ស្ថានភាព": "ថ្ងៃ",
     "Clock in": "ម៉ោង​ចូល",
     "Clock out": "ម៉ោង​ចេញ",
     "Break (h)": "សម្រាក (ម៉ោង)",
     "Overtime": "ម៉ោង​បន្ថែម (OT)",
-    "No clock times for this status": "គ្មាន​ម៉ោង​សម្រាប់​ស្ថានភាព​នេះ",
+    "e.g. left early, remote...": "ឧ. សុំច្បាប់ព្រឹក, ធ្វើការពីផ្ទះ...",
+    "Break": "សម្រាក",
     "Monthly attendance": "វត្តមាន​ប្រចាំ​ខែ",
     "Monthly summary": "សរុប​ប្រចាំ​ខែ",
     "Overtime h": "ម៉ោង​បន្ថែម",
@@ -2934,7 +2938,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v136";</script>
+<script>window.__ANZEN_VERSION="v137";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -29104,10 +29108,12 @@ var DayAttModal = ({
     tr
   } = useAppActions();
   var [, f] = React.useReducer(x => x + 1, 0);
+  var [editing, setEditing] = React.useState(false);
   var val = attGet(date, s.id);
   var times = timeGet(date, s.id);
   var ot = calcOT(times.in, times.out, times.break ?? 1);
   var showTime = val === 'P' || val === 'L';
+  var note = times.note || '';
   var setStatus = v => {
     attSet(date, s.id, v);
     onSaved();
@@ -29124,6 +29130,8 @@ var DayAttModal = ({
   var d = new Date(date + 'T00:00:00');
   var dowKm = ['អាទិត្យ', 'ចន្ទ', 'អង្គារ', 'ពុធ', 'ព្រហស្បតិ៍', 'សុក្រ', 'សៅរ៍'][d.getDay()];
   var STATUSES = [['P', 'var(--good)', tr('មាន', 'Present')], ['L', 'var(--warn)', tr('យឺត', 'Late')], ['H', 'var(--accent)', tr('កន្លះថ្ងៃ', 'Half-day')], ['A', 'var(--danger)', tr('អវត្តមាន', 'Absent')]];
+  var sLabel = ATT_LABELS[val] || ATT_LABELS[''];
+  var statusText = val ? tr(sLabel.km, sLabel.en) : tr('មិន​ទាន់​កំណត់', 'Not set');
   var tInp = prop => ({
     type: prop === 'break' ? 'number' : 'time',
     value: times[prop] ?? (prop === 'break' ? 1 : ''),
@@ -29148,6 +29156,15 @@ var DayAttModal = ({
     color: 'var(--ink-3)',
     fontWeight: 600,
     margin: '0 0 4px'
+  };
+  var box = {
+    padding: '8px 10px',
+    borderRadius: 8,
+    background: 'var(--surface-muted)',
+    border: '1px solid var(--border)',
+    fontSize: 14,
+    fontWeight: 600,
+    color: 'var(--ink)'
   };
   return React.createElement(Modal, {
     open: true,
@@ -29179,7 +29196,7 @@ var DayAttModal = ({
     style: {
       padding: 18
     }
-  }, React.createElement("div", {
+  }, editing ? React.createElement(React.Fragment, null, React.createElement("div", {
     style: lbl
   }, tr('ស្ថានភាព', 'Status')), React.createElement("div", {
     style: {
@@ -29212,7 +29229,7 @@ var DayAttModal = ({
       fontFamily: 'inherit',
       padding: '6px 0 0'
     }
-  }, tr('សម្អាត', 'Clear')), showTime ? React.createElement("div", {
+  }, tr('សម្អាត', 'Clear')), showTime && React.createElement("div", {
     style: {
       marginTop: 12,
       display: 'grid',
@@ -29229,25 +29246,40 @@ var DayAttModal = ({
     style: lbl
   }, tr('ម៉ោង​បន្ថែម (OT)', 'Overtime')), React.createElement("div", {
     style: {
-      padding: '8px 10px',
-      borderRadius: 8,
+      ...box,
       background: ot > 0 ? '#FEF3E8' : 'var(--surface-muted)',
       border: `1px solid ${ot > 0 ? 'var(--warn)' : 'var(--border)'}`,
-      fontSize: 14,
       fontWeight: 700,
       color: ot > 0 ? 'var(--warn)' : 'var(--ink-3)'
     }
-  }, ot, " ", tr('ម៉ោង', 'h')))) : React.createElement("div", {
+  }, ot, " ", tr('ម៉ោង', 'h')))), React.createElement("div", {
     style: {
-      marginTop: 12,
-      fontSize: 12,
-      color: 'var(--ink-3)'
+      marginTop: 12
     }
-  }, tr('គ្មាន​ម៉ោង​សម្រាប់​ស្ថានភាព​នេះ', 'No clock times for this status')), React.createElement("button", {
-    onClick: onClose,
+  }, React.createElement("div", {
+    style: lbl
+  }, tr('កំណត់​ចំណាំ', 'Note')), React.createElement("textarea", {
+    value: note,
+    onChange: e => setT('note', e.target.value),
+    rows: 2,
+    placeholder: tr('ឧ. សុំច្បាប់ព្រឹក, ធ្វើការពីផ្ទះ...', 'e.g. left early, remote...'),
+    style: {
+      padding: '8px 10px',
+      border: '1px solid var(--border)',
+      borderRadius: 8,
+      fontSize: 14,
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      fontFamily: 'inherit',
+      width: '100%',
+      boxSizing: 'border-box',
+      resize: 'vertical'
+    }
+  })), React.createElement("button", {
+    onClick: () => setEditing(false),
     style: {
       width: '100%',
-      marginTop: 18,
+      marginTop: 16,
       padding: '11px',
       borderRadius: 9,
       border: 'none',
@@ -29258,7 +29290,115 @@ var DayAttModal = ({
       fontWeight: 600,
       fontFamily: 'inherit'
     }
-  }, tr('រួចរាល់', 'Done')))));
+  }, "\u2713 ", tr('រួចរាល់', 'Done'))) : React.createElement(React.Fragment, null, React.createElement("div", {
+    style: lbl
+  }, tr('ស្ថានភាព', 'Status')), React.createElement("div", {
+    style: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 8,
+      padding: '7px 12px',
+      borderRadius: 8,
+      background: ATT_BG[val],
+      border: `1.5px solid ${ATT_COLOR[val]}`,
+      color: ATT_COLOR[val],
+      fontWeight: 700,
+      fontSize: 13.5
+    }
+  }, React.createElement("span", {
+    style: {
+      width: 22,
+      height: 22,
+      borderRadius: 5,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'var(--surface)',
+      border: `1.5px solid ${ATT_COLOR[val]}`,
+      fontSize: 11
+    }
+  }, val || '·'), statusText), showTime && React.createElement("div", {
+    style: {
+      marginTop: 14,
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 12
+    }
+  }, React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('ម៉ោង​ចូល', 'Clock in')), React.createElement("div", {
+    style: {
+      ...box,
+      fontFamily: 'monospace'
+    }
+  }, times.in || '—')), React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('ម៉ោង​ចេញ', 'Clock out')), React.createElement("div", {
+    style: {
+      ...box,
+      fontFamily: 'monospace'
+    }
+  }, times.out || '—')), React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('សម្រាក', 'Break')), React.createElement("div", {
+    style: box
+  }, times.break ?? 1, " ", tr('ម៉ោង', 'h'))), React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('ម៉ោង​បន្ថែម (OT)', 'Overtime')), React.createElement("div", {
+    style: {
+      ...box,
+      color: ot > 0 ? 'var(--warn)' : 'var(--ink-3)',
+      fontWeight: 700
+    }
+  }, ot, " ", tr('ម៉ោង', 'h')))), React.createElement("div", {
+    style: {
+      marginTop: 14
+    }
+  }, React.createElement("div", {
+    style: lbl
+  }, tr('កំណត់​ចំណាំ', 'Note')), React.createElement("div", {
+    style: {
+      ...box,
+      minHeight: 38,
+      whiteSpace: 'pre-wrap',
+      color: note ? 'var(--ink)' : 'var(--ink-3)',
+      fontWeight: note ? 500 : 400
+    }
+  }, note || '—')), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      marginTop: 18
+    }
+  }, React.createElement("button", {
+    onClick: () => setEditing(true),
+    style: {
+      flex: 1,
+      padding: '11px',
+      borderRadius: 9,
+      cursor: 'pointer',
+      fontSize: 14,
+      fontWeight: 600,
+      fontFamily: 'inherit',
+      border: '1.5px solid var(--border-strong)',
+      background: 'var(--surface)',
+      color: 'var(--ink-2)'
+    }
+  }, "\u270E ", tr('កែ', 'Edit')), React.createElement("button", {
+    onClick: onClose,
+    style: {
+      flex: 1,
+      padding: '11px',
+      borderRadius: 9,
+      border: 'none',
+      background: 'var(--accent)',
+      color: '#fff',
+      cursor: 'pointer',
+      fontSize: 14,
+      fontWeight: 600,
+      fontFamily: 'inherit'
+    }
+  }, tr('រួចរាល់', 'Done')))))));
 };
 var MonthAttModal = ({
   s,

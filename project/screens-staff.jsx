@@ -956,15 +956,19 @@ const AttBadge = ({ val, size = 28 }) => (
 const DayAttModal = ({ s, date, onClose, onSaved }) => {
   const { tr } = useAppActions();
   const [, f] = React.useReducer(x => x + 1, 0);
+  const [editing, setEditing] = React.useState(false);   // tap → detail view first; ✎ to edit
   const val = attGet(date, s.id);
   const times = timeGet(date, s.id);
   const ot = calcOT(times.in, times.out, times.break ?? 1);
   const showTime = val === 'P' || val === 'L';
+  const note = times.note || '';
   const setStatus = v => { attSet(date, s.id, v); onSaved(); f(); };
   const setT = (prop, value) => { timeSet(date, s.id, { ...timeGet(date, s.id), [prop]: value }); onSaved(); f(); };
   const d = new Date(date + 'T00:00:00');
   const dowKm = ['អាទិត្យ','ចន្ទ','អង្គារ','ពុធ','ព្រហស្បតិ៍','សុក្រ','សៅរ៍'][d.getDay()];
   const STATUSES = [['P','var(--good)',tr('មាន','Present')],['L','var(--warn)',tr('យឺត','Late')],['H','var(--accent)',tr('កន្លះថ្ងៃ','Half-day')],['A','var(--danger)',tr('អវត្តមាន','Absent')]];
+  const sLabel = ATT_LABELS[val] || ATT_LABELS[''];
+  const statusText = val ? tr(sLabel.km, sLabel.en) : tr('មិន​ទាន់​កំណត់','Not set');
   const tInp = (prop) => ({
     type: prop === 'break' ? 'number' : 'time',
     value: times[prop] ?? (prop === 'break' ? 1 : ''),
@@ -973,6 +977,7 @@ const DayAttModal = ({ s, date, onClose, onSaved }) => {
     style: {padding:'8px 10px',border:'1px solid var(--border)',borderRadius:8,fontSize:14,background:'var(--surface)',color:'var(--ink)',fontFamily:'monospace',width:'100%',boxSizing:'border-box'},
   });
   const lbl = {fontSize:11,color:'var(--ink-3)',fontWeight:600,margin:'0 0 4px'};
+  const box = {padding:'8px 10px',borderRadius:8,background:'var(--surface-muted)',border:'1px solid var(--border)',fontSize:14,fontWeight:600,color:'var(--ink)'};
   return (
     <Modal open onClose={onClose} width={420}>
       <div style={{maxHeight:'86vh',overflowY:'auto'}}>
@@ -981,29 +986,66 @@ const DayAttModal = ({ s, date, onClose, onSaved }) => {
           <div style={{fontSize:12,color:'rgba(255,255,255,.82)',marginTop:2}}>{tr('ថ្ងៃ','')}{dowKm} · {date}</div>
         </div>
         <div style={{padding:18}}>
-          <div style={lbl}>{tr('ស្ថានភាព','Status')}</div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6}}>
-            {STATUSES.map(([k,c,l]) => (
-              <button key={k} onClick={()=>setStatus(k)} style={{padding:'8px 0',borderRadius:8,cursor:'pointer',fontSize:12,fontWeight:700,fontFamily:'inherit',
-                border:`1.5px solid ${val===k?c:'var(--border)'}`, background: val===k?c:'var(--surface)', color: val===k?'#fff':'var(--ink-2)'}}>{l}</button>
-            ))}
-          </div>
-          <button onClick={()=>setStatus('')} style={{background:'none',border:'none',color:'var(--ink-3)',fontSize:11,cursor:'pointer',fontFamily:'inherit',padding:'6px 0 0'}}>{tr('សម្អាត','Clear')}</button>
-
-          {showTime ? (
-            <div style={{marginTop:12,display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-              <div><div style={lbl}>{tr('ម៉ោង​ចូល','Clock in')}</div><input {...tInp('in')}/></div>
-              <div><div style={lbl}>{tr('ម៉ោង​ចេញ','Clock out')}</div><input {...tInp('out')}/></div>
-              <div><div style={lbl}>{tr('សម្រាក (ម៉ោង)','Break (h)')}</div><input {...tInp('break')}/></div>
-              <div><div style={lbl}>{tr('ម៉ោង​បន្ថែម (OT)','Overtime')}</div>
-                <div style={{padding:'8px 10px',borderRadius:8,background:ot>0?'#FEF3E8':'var(--surface-muted)',border:`1px solid ${ot>0?'var(--warn)':'var(--border)'}`,fontSize:14,fontWeight:700,color:ot>0?'var(--warn)':'var(--ink-3)'}}>{ot} {tr('ម៉ោង','h')}</div>
-              </div>
+          {editing ? (<>
+            {/* ── EDIT ── */}
+            <div style={lbl}>{tr('ស្ថានភាព','Status')}</div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6}}>
+              {STATUSES.map(([k,c,l]) => (
+                <button key={k} onClick={()=>setStatus(k)} style={{padding:'8px 0',borderRadius:8,cursor:'pointer',fontSize:12,fontWeight:700,fontFamily:'inherit',
+                  border:`1.5px solid ${val===k?c:'var(--border)'}`, background: val===k?c:'var(--surface)', color: val===k?'#fff':'var(--ink-2)'}}>{l}</button>
+              ))}
             </div>
-          ) : (
-            <div style={{marginTop:12,fontSize:12,color:'var(--ink-3)'}}>{tr('គ្មាន​ម៉ោង​សម្រាប់​ស្ថានភាព​នេះ','No clock times for this status')}</div>
-          )}
+            <button onClick={()=>setStatus('')} style={{background:'none',border:'none',color:'var(--ink-3)',fontSize:11,cursor:'pointer',fontFamily:'inherit',padding:'6px 0 0'}}>{tr('សម្អាត','Clear')}</button>
 
-          <button onClick={onClose} style={{width:'100%',marginTop:18,padding:'11px',borderRadius:9,border:'none',background:'var(--accent)',color:'#fff',cursor:'pointer',fontSize:14,fontWeight:600,fontFamily:'inherit'}}>{tr('រួចរាល់','Done')}</button>
+            {showTime && (
+              <div style={{marginTop:12,display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                <div><div style={lbl}>{tr('ម៉ោង​ចូល','Clock in')}</div><input {...tInp('in')}/></div>
+                <div><div style={lbl}>{tr('ម៉ោង​ចេញ','Clock out')}</div><input {...tInp('out')}/></div>
+                <div><div style={lbl}>{tr('សម្រាក (ម៉ោង)','Break (h)')}</div><input {...tInp('break')}/></div>
+                <div><div style={lbl}>{tr('ម៉ោង​បន្ថែម (OT)','Overtime')}</div>
+                  <div style={{...box,background:ot>0?'#FEF3E8':'var(--surface-muted)',border:`1px solid ${ot>0?'var(--warn)':'var(--border)'}`,fontWeight:700,color:ot>0?'var(--warn)':'var(--ink-3)'}}>{ot} {tr('ម៉ោង','h')}</div>
+                </div>
+              </div>
+            )}
+
+            <div style={{marginTop:12}}>
+              <div style={lbl}>{tr('កំណត់​ចំណាំ','Note')}</div>
+              <textarea value={note} onChange={e=>setT('note', e.target.value)} rows={2}
+                placeholder={tr('ឧ. សុំច្បាប់ព្រឹក, ធ្វើការពីផ្ទះ...','e.g. left early, remote...')}
+                style={{padding:'8px 10px',border:'1px solid var(--border)',borderRadius:8,fontSize:14,background:'var(--surface)',color:'var(--ink)',fontFamily:'inherit',width:'100%',boxSizing:'border-box',resize:'vertical'}}/>
+            </div>
+
+            <button onClick={()=>setEditing(false)} style={{width:'100%',marginTop:16,padding:'11px',borderRadius:9,border:'none',background:'var(--accent)',color:'#fff',cursor:'pointer',fontSize:14,fontWeight:600,fontFamily:'inherit'}}>✓ {tr('រួចរាល់','Done')}</button>
+          </>) : (<>
+            {/* ── DETAIL VIEW ── */}
+            <div style={lbl}>{tr('ស្ថានភាព','Status')}</div>
+            <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'7px 12px',borderRadius:8,
+              background:ATT_BG[val],border:`1.5px solid ${ATT_COLOR[val]}`,color:ATT_COLOR[val],fontWeight:700,fontSize:13.5}}>
+              <span style={{width:22,height:22,borderRadius:5,display:'flex',alignItems:'center',justifyContent:'center',
+                background:'var(--surface)',border:`1.5px solid ${ATT_COLOR[val]}`,fontSize:11}}>{val||'·'}</span>
+              {statusText}
+            </div>
+
+            {showTime && (
+              <div style={{marginTop:14,display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                <div><div style={lbl}>{tr('ម៉ោង​ចូល','Clock in')}</div><div style={{...box,fontFamily:'monospace'}}>{times.in||'—'}</div></div>
+                <div><div style={lbl}>{tr('ម៉ោង​ចេញ','Clock out')}</div><div style={{...box,fontFamily:'monospace'}}>{times.out||'—'}</div></div>
+                <div><div style={lbl}>{tr('សម្រាក','Break')}</div><div style={box}>{times.break ?? 1} {tr('ម៉ោង','h')}</div></div>
+                <div><div style={lbl}>{tr('ម៉ោង​បន្ថែម (OT)','Overtime')}</div><div style={{...box,color:ot>0?'var(--warn)':'var(--ink-3)',fontWeight:700}}>{ot} {tr('ម៉ោង','h')}</div></div>
+              </div>
+            )}
+
+            <div style={{marginTop:14}}>
+              <div style={lbl}>{tr('កំណត់​ចំណាំ','Note')}</div>
+              <div style={{...box,minHeight:38,whiteSpace:'pre-wrap',color:note?'var(--ink)':'var(--ink-3)',fontWeight:note?500:400}}>{note || '—'}</div>
+            </div>
+
+            <div style={{display:'flex',gap:8,marginTop:18}}>
+              <button onClick={()=>setEditing(true)} style={{flex:1,padding:'11px',borderRadius:9,cursor:'pointer',fontSize:14,fontWeight:600,fontFamily:'inherit',
+                border:'1.5px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)'}}>✎ {tr('កែ','Edit')}</button>
+              <button onClick={onClose} style={{flex:1,padding:'11px',borderRadius:9,border:'none',background:'var(--accent)',color:'#fff',cursor:'pointer',fontSize:14,fontWeight:600,fontFamily:'inherit'}}>{tr('រួចរាល់','Done')}</button>
+            </div>
+          </>)}
         </div>
       </div>
     </Modal>
