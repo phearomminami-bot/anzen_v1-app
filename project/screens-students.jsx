@@ -929,6 +929,21 @@ const StudentsScreenV2 = () => {
       : tr('បាន​យក​មក​សិក្សា​វិញ', 'Restored to active'), 'good');
   };
 
+  // Toggle completion of a tracking phase (KH/JP/AI). Finishing ANY phase counts
+  // as success, so we keep the "graduated" flag in sync (= any phase complete).
+  const togglePhase = (stu, ph) => {
+    const i = STUDENTS.findIndex(x => x.id === stu.id);
+    if (i === -1) return;
+    const pd = { ...(STUDENTS[i].phaseDone || {}) };
+    pd[ph] = !pd[ph];
+    STUDENTS[i].phaseDone = pd;
+    STUDENTS[i].graduated = Object.values(pd).some(Boolean);
+    if (window.saveAllData) window.saveAllData();
+    forceUpdate();
+    toast(pd[ph] ? tr(`បាន​បញ្ចប់​វគ្គ ${ph} ✓`, `Completed ${ph} ✓`)
+                 : tr(`ដក​ការ​បញ្ចប់​វគ្គ ${ph}`, `Unmarked ${ph}`), 'good');
+  };
+
   // Save an instructor evaluation/feedback back onto a lesson (rating, notes,
   // status). Persists to localStorage + cloud via saveAllData.
   const saveLessonFeedback = (lesson, fields, offset = 0) => {
@@ -1059,22 +1074,31 @@ const StudentsScreenV2 = () => {
               display:'flex',alignItems:'center',justifyContent:'center'}}>
             <span style={{display:'flex',transform:'scaleX(-1)'}}><Icon name="arrow" size={22} stroke={2.4}/></span>
           </button>
-          {/* Profile title + graduation checkbox (icon only, turns green when checked) */}
-          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:14}}>
-            <button onClick={()=>toggleGraduate(s)}
-              title={grad ? tr('បាន​បញ្ចប់​ការសិក្សា — ចុច​ដើម្បី​យក​មក​វិញ','Graduated — tap to restore')
-                          : tr('សម្គាល់​ថា​បាន​បញ្ចប់​ការសិក្សា','Mark as graduated')}
-              aria-label={tr('សម្គាល់​ថា​បាន​បញ្ចប់​ការសិក្សា','Mark as graduated')}
-              style={{width:22,height:22,borderRadius:5,flexShrink:0,padding:0,cursor:'pointer',
-                display:'flex',alignItems:'center',justifyContent:'center',
-                border:'1.5px solid '+(grad?'var(--good)':'var(--border-strong)'),
-                background:grad?'var(--good)':'var(--surface)',
-                color:grad?'#fff':'transparent'}}>
-              <Icon name="check" size={14} stroke={2.8}/>
-            </button>
+          {/* Profile title + phase tracking (KH / JP / AI — check to complete a
+              phase; finishing any one counts as success) */}
+          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14,flexWrap:'wrap'}}>
             <div style={{fontSize:15,fontWeight:700,fontFamily:'var(--font-km)',
-              overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+              overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',minWidth:0}}>
               {lang==='km' ? s.name : (s.en || s.name)}
+            </div>
+            <div style={{display:'flex',gap:6}}>
+              {(window.STUDENT_PHASES||[]).map(p => {
+                const done = !!(s.phaseDone && s.phaseDone[p.k]);
+                return (
+                  <button key={p.k} onClick={()=>togglePhase(s, p.k)} title={tr('វគ្គ '+p.label,p.label+' phase')}
+                    style={{display:'inline-flex',alignItems:'center',gap:5,padding:'5px 10px',borderRadius:999,cursor:'pointer',
+                      fontSize:12,fontWeight:700,fontFamily:'inherit',
+                      border:'1.5px solid '+(done?p.color:'var(--border-strong)'),
+                      background: done?p.color:'var(--surface)', color: done?'#fff':'var(--ink-3)'}}>
+                    <span style={{width:15,height:15,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,
+                      border:'1.5px solid '+(done?'#fff':'var(--border-strong)'),
+                      background:done?'transparent':'#fff', color:done?'#fff':'transparent'}}>
+                      <Icon name="check" size={10} stroke={3}/>
+                    </span>
+                    {p.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -1169,24 +1193,45 @@ const StudentsScreenV2 = () => {
           {/* Section 5: Lessons & comments */}
           <CvSection label={tr('បញ្ជីមេរៀន និង មតិគ្រូ','Lessons & Comments')} isOpen={openSections.lessons} onToggle={()=>toggleSection('lessons')}>
             {(() => {
-              // Merge lessons + exams, split each lesson into its hours, and order
-              // oldest-first (earlier on top) by date + hour — same as the PDF.
-              // Theory & Practical hours are numbered separately (1),(2),…
+              // Group lessons by tracking phase (KH / JP / AI) so each program's
+              // record is kept separately; exams get their own group below.
+              // Hours are still numbered (1),(2),… (theory & practical separately).
               const hourNumMap = buildHourNumbering(studentLessons);
-              const items = [
-                ...studentLessons.flatMap(l => lessonHourSlices(l).map(sl => ({ t:'lesson', k:(l.date||'')+' '+String(sl.h).padStart(2,'0'), item:l, sl }))),
-                ...studentExams.map(e  => ({ t:'exam',   k:(e.date||'')+' '+String(e.time||'').slice(0,5),    item:e })),
-              ].sort((a,b)=> a.k<b.k ? -1 : a.k>b.k ? 1 : 0);
-              if (items.length === 0) return (
+              if (studentLessons.length === 0 && studentExams.length === 0) return (
                 <div style={{fontSize:13,color:'var(--ink-3)',textAlign:'center',padding:'12px 0'}}>{tr('មិន​ទាន់​មាន​មេរៀន','No lessons yet')}</div>
               );
-              return items.map((row,i) => {
-                if (row.t === 'exam') {
-                  return <ExamFeedbackRow key={row.item.id||('ex'+i)} e={row.item} sid={s.id} tr={tr} onSave={saveExamResult}/>;
-                }
-                const cumNo = (hourNumMap[row.item.id] || [])[row.sl.offset];
-                return <CvLessonRow key={(row.item.id||('ls'+i))+'-'+row.sl.offset} l={row.item} offset={row.sl.offset} h={row.sl.h} total={row.sl.total} cumNo={cumNo} tr={tr} onSave={saveLessonFeedback}/>;
-              });
+              const groups = (window.STUDENT_PHASES || []).map(p => ({
+                p,
+                items: studentLessons.filter(l => lessonPhase(l) === p.k)
+                  .flatMap(l => lessonHourSlices(l).map(sl => ({ l, sl, k:(l.date||'')+' '+String(sl.h).padStart(2,'0') })))
+                  .sort((a,b)=> a.k<b.k ? -1 : a.k>b.k ? 1 : 0),
+              })).filter(g => g.items.length > 0);
+              const GroupHead = ({bg, label, sub}) => (
+                <div style={{display:'flex',alignItems:'center',gap:8,margin:'10px 0 8px'}}>
+                  <span style={{background:bg,color:'#fff',fontSize:11,fontWeight:800,padding:'3px 10px',borderRadius:6,letterSpacing:'.03em'}}>{label}</span>
+                  {sub!=null && <span style={{fontSize:11,color:'var(--ink-3)'}}>{sub}</span>}
+                  <div style={{flex:1,height:1,background:'var(--border)'}}/>
+                </div>
+              );
+              return (<>
+                {groups.map(g => (
+                  <div key={g.p.k}>
+                    <GroupHead bg={g.p.color} label={g.p.label} sub={`${g.items.length} ${tr('ម៉ោង','hrs')}`}/>
+                    {g.items.map((it,i) => {
+                      const cumNo = (hourNumMap[it.l.id] || [])[it.sl.offset];
+                      return <CvLessonRow key={(it.l.id||('ls'+i))+'-'+it.sl.offset} l={it.l} offset={it.sl.offset} h={it.sl.h} total={it.sl.total} cumNo={cumNo} tr={tr} onSave={saveLessonFeedback}/>;
+                    })}
+                  </div>
+                ))}
+                {studentExams.length > 0 && (
+                  <div>
+                    <GroupHead bg="var(--ink-2)" label={tr('ការ​ប្រឡង','EXAMS')}/>
+                    {[...studentExams].sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))).map((e,i)=>(
+                      <ExamFeedbackRow key={e.id||('ex'+i)} e={e} sid={s.id} tr={tr} onSave={saveExamResult}/>
+                    ))}
+                  </div>
+                )}
+              </>);
             })()}
             <div style={{fontSize:11,color:'var(--ink-3)',marginTop:12,marginBottom:4}}>⬇ {tr('ទាញយក PDF — ជ្រើសភាសា','Download PDF — choose language')}</div>
             <div style={{display:'flex',gap:8}}>

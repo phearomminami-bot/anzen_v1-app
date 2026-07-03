@@ -1838,6 +1838,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
   ];
   const [cat,     setCat]     = React.useState(editLesson ? (editLesson.color==='c' ? 'theory' : 'practical') : 'theory');
   const [selLessons, setSelLessons] = React.useState(editLesson && Array.isArray(editLesson.lessonIds) ? [...editLesson.lessonIds] : []);   // selected lesson ids
+  const [phase,   setPhase]   = React.useState(editLesson ? (editLesson.phase || 'KH') : (ctx.phase || 'KH'));   // tracking phase KH/JP/AI
   const catObj = TYPE_CATS.find(c => c.k === cat) || TYPE_CATS[0];
 
   // When category changes, clear the selection
@@ -1922,7 +1923,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
           instId,
           guests: guests.length > 0 ? [...guests] : undefined,
           veh: vehId || '—',
-          type: typeName, color: catObj.color,
+          type: typeName, color: catObj.color, phase,
           lessonIds: [...selLessons], lessonNo,
           pickup, location: locationText.trim(), note: note.trim(),
         };
@@ -1946,6 +1947,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
         veh: vehId || '—',
         type: typeName,
         color: catObj.color,
+        phase,
         lessonIds: [...selLessons],
         lessonNo,
         status: 'scheduled',
@@ -2005,6 +2007,20 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
               cursor:'pointer',textAlign:'center',lineHeight:1.4,
             }}>{tr(tc.km, tc.en)} <span style={{opacity:.7,fontWeight:400}}>· {tc.items.length}</span></button>
           ))}
+        </div>
+        {/* Tracking phase — small KH / JP / AI selector */}
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+          <span style={{fontSize:11,color:'var(--ink-3)',fontWeight:600}}>{tr('វគ្គ','Phase')}</span>
+          <div style={{display:'flex',gap:6}}>
+            {(window.STUDENT_PHASES||[]).map(p => (
+              <button key={p.k} type="button" onClick={()=>setPhase(p.k)} style={{
+                padding:'5px 14px',borderRadius:999,fontSize:12,fontWeight:700,cursor:'pointer',
+                border:`1.5px solid ${phase===p.k?p.color:'var(--border)'}`,
+                background: phase===p.k?p.color:'var(--surface)',
+                color: phase===p.k?'#fff':'var(--ink-2)',
+              }}>{p.label}</button>
+            ))}
+          </div>
         </div>
         {/* Multi-select real lessons from Tab Lessons */}
         <Field label={tr('ជ្រើស​មេរៀន (ពី Tab Lessons)','Select lessons (from Tab Lessons)')}>

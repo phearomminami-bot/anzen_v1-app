@@ -1,5 +1,17 @@
 // data.jsx — fake content (bilingual KH/EN)
 
+// Student tracking phases. A student may pursue up to three programs; finishing
+// ANY one counts as a success. Lessons are tagged with a phase so the record can
+// be grouped KH / JP / AI.
+const STUDENT_PHASES = [
+  { k:'KH', label:'KH', color:'#2A5DB0' },
+  { k:'JP', label:'JP', color:'#B0413E' },
+  { k:'AI', label:'AI', color:'#12A302' },
+];
+const lessonPhase = (l) => (l && l.phase) || 'KH';   // legacy lessons default to KH
+const phaseMeta   = (k) => STUDENT_PHASES.find(p => p.k === k) || STUDENT_PHASES[0];
+if (typeof window !== 'undefined') { window.STUDENT_PHASES = STUDENT_PHASES; }
+
 const CURRICULUM = [
   {
     id: 'stage1', km: 'ដំណាលទី១', en: 'Stage 1 — Driving Range',
