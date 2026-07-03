@@ -2940,7 +2940,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v140";</script>
+<script>window.__ANZEN_VERSION="v141";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -61742,9 +61742,21 @@ var AnalyticsScreen = ({
   var enrollSeries = seriesBy(S, s => s.regDate || s.study_start);
   var cumEnroll = enrollSeries.map((_, i) => S.filter(s => A_mkey(s.regDate || s.study_start || '9999') <= MO[i].key).length);
   var lessonsSeries = seriesBy(doneL, l => l.date, l => l.len || 1);
-  var paySeries = MO.map(m => S.reduce((a, s) => a + (s.payment_log || []).filter(p => A_mkey(p.date) === m.key).reduce((x, p) => x + (p.amount || 0), 0), 0));
-  var noPayLog = paySeries.every(v => v === 0);
-  var paySeries2 = noPayLog ? seriesBy(S, s => s.regDate, s => (s.paid || 0) * studentPrice(s)) : paySeries;
+  var stuFiltered = !!(fBranch || fGender || fStatus || fCourse || fAge || fInst);
+  var invStu = v => v.student || v.studentId || v.sId;
+  var stuOf = v => S0.find(s => s.id === invStu(v)) || {};
+  var paidInv = (window.INVOICES || []).filter(v => v.status === 'Paid' && (!stuFiltered || sIds.has(invStu(v))));
+  var incLog = stuFiltered ? [] : window.__incomeLog || [];
+  var revMonthMap = {};
+  paidInv.forEach(v => {
+    var m = A_mkey(v.date);
+    if (m) revMonthMap[m] = (revMonthMap[m] || 0) + (v.amount || 0);
+  });
+  incLog.forEach(e => {
+    var m = A_mkey(e.date);
+    if (m) revMonthMap[m] = (revMonthMap[m] || 0) + (e.amount || 0);
+  });
+  var paySeries2 = MO.map(m => revMonthMap[m.key] || 0);
   var examPassSeries = MO.map(m => fEX.filter(e => A_mkey(e.date) === m.key).reduce((a, e) => a + Object.values(e.results || {}).filter(r => r.result === 'pass').length, 0));
   var examFailSeries = MO.map(m => fEX.filter(e => A_mkey(e.date) === m.key).reduce((a, e) => a + Object.values(e.results || {}).filter(r => r.result === 'fail').length, 0));
   var ratingByMo = MO.map(m => {
@@ -62020,36 +62032,33 @@ var AnalyticsScreen = ({
   var vehUtil = V.length ? A_pct(vehInUse, V.length) : 0;
   var maintLog = window.__maintenanceData || window.__serviceLog || [];
   var maintCost = (maintLog || []).reduce((a, m) => a + (m.cost || m.amount || 0), 0);
-  var totalBilled = S.reduce((a, s) => a + studentPrice(s), 0);
-  var collected = S.reduce((a, s) => a + (s.paid || 0) * studentPrice(s), 0);
-  var outstanding = Math.max(0, totalBilled - collected);
+  var collected = paidInv.reduce((a, v) => a + (v.amount || 0), 0) + incLog.reduce((a, e) => a + (e.amount || 0), 0);
+  var billInv = (window.INVOICES || []).filter(v => !stuFiltered || sIds.has(invStu(v)));
+  var totalBilled = billInv.reduce((a, v) => a + (v.amount || 0), 0);
+  var outstanding = billInv.filter(v => v.status !== 'Paid').reduce((a, v) => a + (v.amount || 0), 0);
   var salaryExpense = (window.__staffData || []).filter(p => !p.offboarded).reduce((a, p) => a + (p.salaryType === 'hourly' ? (p.salary || 0) * (p.hours || 40) * 4 : p.salary || 0), 0);
   var expenses = salaryExpense + maintCost + (window.__expenseLog || []).reduce((a, e) => a + (e.amount || 0), 0);
   var profit = collected - expenses;
-  var revByBranch = byBranch().map((b, i) => {
-    var bs = S.filter(s => branchName(s.branch) === b.label);
-    return {
-      label: b.label,
-      value: Math.round(bs.reduce((a, s) => a + (s.paid || 0) * studentPrice(s), 0)),
-      color: A_PAL[i % A_PAL.length]
-    };
-  });
-  var revByCourse = [['AT', tr('អូតូ', 'Automatic')], ['MT', tr('លេខ​ដៃ', 'Manual')]].map(([k, l], i) => ({
-    label: l,
-    value: Math.round(S.filter(s => s.trans === k).reduce((a, s) => a + (s.paid || 0) * studentPrice(s), 0)),
-    color: ['#2A5DB0', '#CA8A04'][i]
-  }));
-  var payMethods = ss.payments || {};
-  var revByMethod = Object.keys(payMethods).filter(k => payMethods[k]).map((k, i) => ({
-    label: k.toUpperCase(),
-    value: 0,
+  var revByBranch = byBranch().map((b, i) => ({
+    label: b.label,
+    value: Math.round(paidInv.filter(v => branchName(stuOf(v).branch) === b.label).reduce((a, v) => a + (v.amount || 0), 0)),
     color: A_PAL[i % A_PAL.length]
   }));
-  S.forEach(s => (s.payment_log || []).forEach(p => {
-    var m = revByMethod.find(x => x.label.toLowerCase() === String(p.method || '').toLowerCase());
-    if (m) m.value += p.amount || 0;
+  var revByCourse = [['AT', tr('អូតូ', 'Automatic')], ['MT', tr('លេខ​ដៃ', 'Manual')]].map(([k, l], i) => ({
+    label: l,
+    value: Math.round(paidInv.filter(v => stuOf(v).trans === k).reduce((a, v) => a + (v.amount || 0), 0)),
+    color: ['#2A5DB0', '#CA8A04'][i]
   }));
-  var revMethodShown = revByMethod.filter(d => d.value);
+  var methodMap = {};
+  paidInv.forEach(v => {
+    var m = v.method || tr('ផ្សេងៗ', 'Other');
+    methodMap[m] = (methodMap[m] || 0) + (v.amount || 0);
+  });
+  var revMethodShown = Object.entries(methodMap).map(([label, value], i) => ({
+    label,
+    value,
+    color: A_PAL[i % A_PAL.length]
+  })).filter(d => d.value);
   var ratingDist = [5, 4, 3, 2, 1].map(n => ({
     label: '★'.repeat(n),
     value: ratedAll.filter(l => l.rating === n).length,
@@ -62060,7 +62069,7 @@ var AnalyticsScreen = ({
   var nps = ratedAll.length ? Math.round((promoters - detractors) / ratedAll.length * 100) : 0;
   var branchRank = byBranch().map(b => {
     var bs = S.filter(s => branchName(s.branch) === b.label);
-    var rev = Math.round(bs.reduce((a, s) => a + (s.paid || 0) * studentPrice(s), 0));
+    var rev = Math.round(paidInv.filter(v => branchName(stuOf(v).branch) === b.label).reduce((a, v) => a + (v.amount || 0), 0));
     var {
       p,
       f

@@ -335,10 +335,17 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
   const enrollSeries = seriesBy(S, s => s.regDate || s.study_start);
   const cumEnroll = enrollSeries.map((_, i) => S.filter(s => A_mkey(s.regDate || s.study_start || '9999') <= MO[i].key).length);
   const lessonsSeries = seriesBy(doneL, l => l.date, l => l.len || 1);
-  const paySeries = MO.map(m => S.reduce((a, s) => a + (s.payment_log || []).filter(p => A_mkey(p.date) === m.key).reduce((x, p) => x + (p.amount || 0), 0), 0));
-  // fallback: if no payment_log data at all, spread paid amount to reg month.
-  const noPayLog = paySeries.every(v => v === 0);
-  const paySeries2 = noPayLog ? seriesBy(S, s => s.regDate, s => (s.paid || 0) * studentPrice(s)) : paySeries;
+  // Revenue — IDENTICAL source to the Finance screen: paid invoices + income
+  // log. Respect the student filters (each invoice belongs to a student).
+  const stuFiltered = !!(fBranch || fGender || fStatus || fCourse || fAge || fInst);
+  const invStu = v => v.student || v.studentId || v.sId;
+  const stuOf  = v => S0.find(s => s.id === invStu(v)) || {};
+  const paidInv = (window.INVOICES || []).filter(v => v.status === 'Paid' && (!stuFiltered || sIds.has(invStu(v))));
+  const incLog  = stuFiltered ? [] : (window.__incomeLog || []);
+  const revMonthMap = {};
+  paidInv.forEach(v => { const m = A_mkey(v.date); if (m) revMonthMap[m] = (revMonthMap[m] || 0) + (v.amount || 0); });
+  incLog.forEach(e => { const m = A_mkey(e.date); if (m) revMonthMap[m] = (revMonthMap[m] || 0) + (e.amount || 0); });
+  const paySeries2 = MO.map(m => revMonthMap[m.key] || 0);
   const examPassSeries = MO.map(m => fEX.filter(e => A_mkey(e.date) === m.key).reduce((a, e) => a + Object.values(e.results || {}).filter(r => r.result === 'pass').length, 0));
   const examFailSeries = MO.map(m => fEX.filter(e => A_mkey(e.date) === m.key).reduce((a, e) => a + Object.values(e.results || {}).filter(r => r.result === 'fail').length, 0));
   const ratingByMo = MO.map(m => {
@@ -475,10 +482,11 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
   const maintLog = window.__maintenanceData || window.__serviceLog || [];
   const maintCost = (maintLog || []).reduce((a, m) => a + (m.cost || m.amount || 0), 0);
 
-  // Financial
-  const totalBilled = S.reduce((a, s) => a + studentPrice(s), 0);
-  const collected = S.reduce((a, s) => a + (s.paid || 0) * studentPrice(s), 0);
-  const outstanding = Math.max(0, totalBilled - collected);
+  // Financial — invoice-based so it matches the Finance screen exactly.
+  const collected = paidInv.reduce((a, v) => a + (v.amount || 0), 0) + incLog.reduce((a, e) => a + (e.amount || 0), 0);
+  const billInv = (window.INVOICES || []).filter(v => (!stuFiltered || sIds.has(invStu(v))));
+  const totalBilled = billInv.reduce((a, v) => a + (v.amount || 0), 0);
+  const outstanding = billInv.filter(v => v.status !== 'Paid').reduce((a, v) => a + (v.amount || 0), 0);
   // Staff salary is the main real expense — count only ACTIVE (non-offboarded)
   // staff so people who have left don't keep inflating expenses. Matches the
   // Finance screen's model (monthly salary + maintenance + logged expenses).
@@ -486,12 +494,13 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
     .reduce((a, p) => a + (p.salaryType === 'hourly' ? (p.salary || 0) * (p.hours || 40) * 4 : (p.salary || 0)), 0);
   const expenses = salaryExpense + maintCost + (window.__expenseLog || []).reduce((a, e) => a + (e.amount || 0), 0);
   const profit = collected - expenses;
-  const revByBranch = byBranch().map((b, i) => { const bs = S.filter(s => branchName(s.branch) === b.label); return { label: b.label, value: Math.round(bs.reduce((a, s) => a + (s.paid || 0) * studentPrice(s), 0)), color: A_PAL[i % A_PAL.length] }; });
-  const revByCourse = [['AT', tr('អូតូ', 'Automatic')], ['MT', tr('លេខ​ដៃ', 'Manual')]].map(([k, l], i) => ({ label: l, value: Math.round(S.filter(s => s.trans === k).reduce((a, s) => a + (s.paid || 0) * studentPrice(s), 0)), color: [ '#2A5DB0', '#CA8A04'][i] }));
-  const payMethods = ss.payments || {};
-  const revByMethod = Object.keys(payMethods).filter(k => payMethods[k]).map((k, i) => ({ label: k.toUpperCase(), value: 0, color: A_PAL[i % A_PAL.length] }));
-  S.forEach(s => (s.payment_log || []).forEach(p => { const m = revByMethod.find(x => x.label.toLowerCase() === String(p.method || '').toLowerCase()); if (m) m.value += p.amount || 0; }));
-  const revMethodShown = revByMethod.filter(d => d.value);   // only real recorded payments
+  // Revenue breakdowns — all from paid invoices (via each invoice's student),
+  // so they sum to the same collected total as the Finance screen.
+  const revByBranch = byBranch().map((b, i) => ({ label: b.label, value: Math.round(paidInv.filter(v => branchName(stuOf(v).branch) === b.label).reduce((a, v) => a + (v.amount || 0), 0)), color: A_PAL[i % A_PAL.length] }));
+  const revByCourse = [['AT', tr('អូតូ', 'Automatic')], ['MT', tr('លេខ​ដៃ', 'Manual')]].map(([k, l], i) => ({ label: l, value: Math.round(paidInv.filter(v => stuOf(v).trans === k).reduce((a, v) => a + (v.amount || 0), 0)), color: ['#2A5DB0', '#CA8A04'][i] }));
+  const methodMap = {};
+  paidInv.forEach(v => { const m = v.method || tr('ផ្សេងៗ', 'Other'); methodMap[m] = (methodMap[m] || 0) + (v.amount || 0); });
+  const revMethodShown = Object.entries(methodMap).map(([label, value], i) => ({ label, value, color: A_PAL[i % A_PAL.length] })).filter(d => d.value);
 
   // Satisfaction
   const ratingDist = [5, 4, 3, 2, 1].map(n => ({ label: '★'.repeat(n), value: ratedAll.filter(l => l.rating === n).length, color: n >= 4 ? '#12A302' : n === 3 ? '#CA8A04' : '#B0413E' }));
@@ -501,7 +510,7 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
   // Branch comparison / ranking
   const branchRank = byBranch().map(b => {
     const bs = S.filter(s => branchName(s.branch) === b.label);
-    const rev = Math.round(bs.reduce((a, s) => a + (s.paid || 0) * studentPrice(s), 0));
+    const rev = Math.round(paidInv.filter(v => branchName(stuOf(v).branch) === b.label).reduce((a, v) => a + (v.amount || 0), 0));
     const { p, f } = pfOf(bs.map(s => s.id));
     return { branch: b.label, students: bs.length, revenue: rev, pass: A_pct(p, p + f || 1) };
   }).sort((a, b) => b.revenue - a.revenue);
