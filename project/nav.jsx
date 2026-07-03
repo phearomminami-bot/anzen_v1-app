@@ -137,8 +137,6 @@ const UserPill = ({ role, onLogout, compact = false }) => {
             </div>
           </button>
         }>{menu}</Dropdown>
-        {/* Build version — helps confirm which version is live on this device */}
-        {window.__ANZEN_VERSION && <span style={{flexShrink:0,fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{window.__ANZEN_VERSION}</span>}
         {/* Direct logout button — always visible */}
         <button onClick={handleLogout} title={tt('ចេញ','Sign out')} style={{
           flexShrink:0,width:30,height:30,borderRadius:8,
@@ -153,6 +151,8 @@ const UserPill = ({ role, onLogout, compact = false }) => {
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
           </svg>
         </button>
+        {/* Build version — after the logout button; confirms which version is live */}
+        {window.__ANZEN_VERSION && <span style={{flexShrink:0,fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{window.__ANZEN_VERSION}</span>}
       </div>
     );
   }

@@ -2934,7 +2934,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v135";</script>
+<script>window.__ANZEN_VERSION="v136";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -13728,14 +13728,7 @@ var UserPill = ({
           color: 'var(--ink-3)'
         }
       }, ll(r))))
-    }, menu), window.__ANZEN_VERSION && React.createElement("span", {
-      style: {
-        flexShrink: 0,
-        fontSize: 10,
-        color: 'var(--ink-3)',
-        fontFamily: '"JetBrains Mono",monospace'
-      }
-    }, window.__ANZEN_VERSION), React.createElement("button", {
+    }, menu), React.createElement("button", {
       onClick: handleLogout,
       title: tt('ចេញ', 'Sign out'),
       style: {
@@ -13780,7 +13773,14 @@ var UserPill = ({
       y1: "12",
       x2: "9",
       y2: "12"
-    }))));
+    }))), window.__ANZEN_VERSION && React.createElement("span", {
+      style: {
+        flexShrink: 0,
+        fontSize: 10,
+        color: 'var(--ink-3)',
+        fontFamily: '"JetBrains Mono",monospace'
+      }
+    }, window.__ANZEN_VERSION));
   }
   return React.createElement(Dropdown, {
     align: "right",
