@@ -244,7 +244,7 @@ const StaffScreen = () => {
     });
   const pending   = leaves.filter(l => l.status === 'Pending');
   const upcoming  = leaves.filter(l => l.status === 'Approved');
-  const total$    = staff.reduce((a, s) => a + (s.salary || 0), 0);
+  const total$    = activeStaff.reduce((a, s) => a + (s.salary || 0), 0);   // exclude former staff
   const missingDocs = staff.filter(s => s.docs && Object.values(s.docs).some(v => !v)).length;
 
   const TABS = [
@@ -355,7 +355,7 @@ const StaffScreen = () => {
 
         {tab==='schedule' && <SfSchedule staff={activeStaff.slice().sort((a,b)=>{ const A=a.since||'9999-99', B=b.since||'9999-99'; return A<B?-1:A>B?1:0; })}/>}
         {tab==='leave'    && <SfLeave    staff={staff} leaves={leaves} pending={pending} upcoming={upcoming} addLeave={addLeave} setAddLeave={setAddLeave} onApprove={approveLeave} onDeny={denyLeave} onDelete={deleteLeave} onEditDays={editLeaveDays}/>}
-        {tab==='payroll'  && <SfPayroll  staff={staff}/>}
+        {tab==='payroll'  && <SfPayroll  staff={activeStaff}/>}
         {tab==='docs'     && <SfDocs     staff={staff} forceUpdate={forceUpdate}/>}
       </Card>
 

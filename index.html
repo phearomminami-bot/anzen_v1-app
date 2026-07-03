@@ -2940,7 +2940,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v139";</script>
+<script>window.__ANZEN_VERSION="v140";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -27165,7 +27165,7 @@ var StaffScreen = () => {
   });
   var pending = leaves.filter(l => l.status === 'Pending');
   var upcoming = leaves.filter(l => l.status === 'Approved');
-  var total$ = staff.reduce((a, s) => a + (s.salary || 0), 0);
+  var total$ = activeStaff.reduce((a, s) => a + (s.salary || 0), 0);
   var missingDocs = staff.filter(s => s.docs && Object.values(s.docs).some(v => !v)).length;
   var TABS = [{
     id: 'directory',
@@ -27411,7 +27411,7 @@ var StaffScreen = () => {
     onDelete: deleteLeave,
     onEditDays: editLeaveDays
   }), tab === 'payroll' && React.createElement(SfPayroll, {
-    staff: staff
+    staff: activeStaff
   }), tab === 'docs' && React.createElement(SfDocs, {
     staff: staff,
     forceUpdate: forceUpdate
@@ -58671,7 +58671,8 @@ var monthlyRevenue = () => {
   });
   return map;
 };
-var staffExpense = () => (window.__staffData || []).reduce((a, s) => {
+var activeStaffList = () => (window.__staffData || []).filter(s => !s.offboarded);
+var staffExpense = () => activeStaffList().reduce((a, s) => {
   return a + (s.salaryType === 'hourly' ? (s.salary || 0) * (s.hours || 40) * 4 : s.salary || 0);
 }, 0);
 var maintExpense = () => (window.__maintenanceData || []).filter(m => m.done).reduce((a, m) => a + (m.cost || 0), 0);
@@ -58735,7 +58736,7 @@ var generateVATInvoice = ({
 var generatePayrollPDF = monthStr => {
   var [y, m] = monthStr.split('-');
   var label = `${MONTHS_EN[parseInt(m) - 1]} ${y}`;
-  var staff = window.__staffData || [];
+  var staff = (window.__staffData || []).filter(s => !s.offboarded);
   var tGross = 0,
     tEeNSSF = 0,
     tWHT = 0,
@@ -58774,7 +58775,7 @@ var generateMonthlyTaxPDF = monthStr => {
   var rev = calcRevenue();
   var vat = Math.round(rev * 0.10 * 100) / 100;
   var prepay = Math.round(rev * 0.01 * 100) / 100;
-  var whtTotal = (window.__staffData || []).reduce((a, s) => {
+  var whtTotal = (window.__staffData || []).filter(s => !s.offboarded).reduce((a, s) => {
     var g = s.salaryType === 'hourly' ? (s.salary || 0) * (s.hours || 40) * 4 : s.salary || 0;
     return a + Math.round(calcSalaryTax(Math.round(g * USD_KHR)) / USD_KHR * 100) / 100;
   }, 0);
@@ -58793,7 +58794,7 @@ var generateMonthlyTaxPDF = monthStr => {
 var generateNSSFReportPDF = monthStr => {
   var [y, m] = monthStr.split('-');
   var label = `${MONTHS_EN[parseInt(m) - 1]} ${y}`;
-  var staff = window.__staffData || [];
+  var staff = (window.__staffData || []).filter(s => !s.offboarded);
   var tEmp = 0,
     tEe = 0;
   var rows = staff.map(s => {
@@ -59451,14 +59452,14 @@ var FExpensesTab = ({
     onCancel: () => setAdding(false)
   }), React.createElement(Card, {
     label: tr('ប្រាក់ខែបុគ្គលិក', 'STAFF SALARIES')
-  }, (window.__staffData || []).length === 0 ? React.createElement("div", {
+  }, activeStaffList().length === 0 ? React.createElement("div", {
     style: {
       padding: '14px 0',
       textAlign: 'center',
       color: 'var(--ink-3)',
       fontSize: 13
     }
-  }, tr('មិនទាន់មានបុគ្គលិក', 'No staff yet')) : (window.__staffData || []).map((s, i) => React.createElement("div", {
+  }, tr('មិនទាន់មានបុគ្គលិក', 'No staff yet')) : activeStaffList().map((s, i) => React.createElement("div", {
     key: s.id,
     style: {
       display: 'flex',
@@ -59714,7 +59715,7 @@ var FPayrollTab = ({
   tr
 }) => {
   var [month, setMonth] = React.useState(currMonth());
-  var staff = window.__staffData || [];
+  var staff = (window.__staffData || []).filter(s => !s.offboarded);
   var rows = staff.map(s => {
     var gross = s.salaryType === 'hourly' ? (s.salary || 0) * (s.hours || 40) * 4 : s.salary || 0;
     var nssf = calcNSSF(gross);
@@ -60074,7 +60075,7 @@ var FTaxTab = ({
   var m = parseInt(month.split('-')[1]);
   var vat = Math.round(revenue * 0.10 * 100) / 100;
   var prepay = Math.round(revenue * 0.01 * 100) / 100;
-  var whtTotal = (window.__staffData || []).reduce((a, s) => {
+  var whtTotal = (window.__staffData || []).filter(s => !s.offboarded).reduce((a, s) => {
     var g = s.salaryType === 'hourly' ? (s.salary || 0) * (s.hours || 40) * 4 : s.salary || 0;
     return a + Math.round(calcSalaryTax(Math.round(g * USD_KHR)) / USD_KHR * 100) / 100;
   }, 0);
@@ -62022,7 +62023,8 @@ var AnalyticsScreen = ({
   var totalBilled = S.reduce((a, s) => a + studentPrice(s), 0);
   var collected = S.reduce((a, s) => a + (s.paid || 0) * studentPrice(s), 0);
   var outstanding = Math.max(0, totalBilled - collected);
-  var expenses = maintCost + (window.__expenseLog || []).reduce((a, e) => a + (e.amount || 0), 0);
+  var salaryExpense = (window.__staffData || []).filter(p => !p.offboarded).reduce((a, p) => a + (p.salaryType === 'hourly' ? (p.salary || 0) * (p.hours || 40) * 4 : p.salary || 0), 0);
+  var expenses = salaryExpense + maintCost + (window.__expenseLog || []).reduce((a, e) => a + (e.amount || 0), 0);
   var profit = collected - expenses;
   var revByBranch = byBranch().map((b, i) => {
     var bs = S.filter(s => branchName(s.branch) === b.label);

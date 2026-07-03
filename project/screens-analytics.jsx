@@ -479,7 +479,12 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
   const totalBilled = S.reduce((a, s) => a + studentPrice(s), 0);
   const collected = S.reduce((a, s) => a + (s.paid || 0) * studentPrice(s), 0);
   const outstanding = Math.max(0, totalBilled - collected);
-  const expenses = maintCost + (window.__expenseLog || []).reduce((a, e) => a + (e.amount || 0), 0);
+  // Staff salary is the main real expense — count only ACTIVE (non-offboarded)
+  // staff so people who have left don't keep inflating expenses. Matches the
+  // Finance screen's model (monthly salary + maintenance + logged expenses).
+  const salaryExpense = (window.__staffData || []).filter(p => !p.offboarded)
+    .reduce((a, p) => a + (p.salaryType === 'hourly' ? (p.salary || 0) * (p.hours || 40) * 4 : (p.salary || 0)), 0);
+  const expenses = salaryExpense + maintCost + (window.__expenseLog || []).reduce((a, e) => a + (e.amount || 0), 0);
   const profit = collected - expenses;
   const revByBranch = byBranch().map((b, i) => { const bs = S.filter(s => branchName(s.branch) === b.label); return { label: b.label, value: Math.round(bs.reduce((a, s) => a + (s.paid || 0) * studentPrice(s), 0)), color: A_PAL[i % A_PAL.length] }; });
   const revByCourse = [['AT', tr('អូតូ', 'Automatic')], ['MT', tr('លេខ​ដៃ', 'Manual')]].map(([k, l], i) => ({ label: l, value: Math.round(S.filter(s => s.trans === k).reduce((a, s) => a + (s.paid || 0) * studentPrice(s), 0)), color: [ '#2A5DB0', '#CA8A04'][i] }));
