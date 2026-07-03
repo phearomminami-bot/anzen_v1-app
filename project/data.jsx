@@ -12,6 +12,10 @@ const lessonPhase = (l) => (l && l.phase) || 'KH';   // legacy lessons default t
 const phaseMeta   = (k) => STUDENT_PHASES.find(p => p.k === k) || STUDENT_PHASES[0];
 if (typeof window !== 'undefined') { window.STUDENT_PHASES = STUDENT_PHASES; }
 
+// Driving-license classes a student may already hold (multi-select).
+const LICENSE_CLASSES = ['ក','ខ','គ','ឃ១','ឃ២','ង(ខ)','ង(គ)','ង(ឃ)'];
+if (typeof window !== 'undefined') { window.LICENSE_CLASSES = LICENSE_CLASSES; }
+
 const CURRICULUM = [
   {
     id: 'stage1', km: 'ដំណាលទី១', en: 'Stage 1 — Driving Range',

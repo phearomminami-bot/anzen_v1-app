@@ -2249,6 +2249,39 @@ const SEDocChk = ({label, checked, onChange}) => (
   </label>
 );
 
+// Existing driving-license picker: None / Has → multi-check the classes held.
+const LicensePicker = ({ has, setHas, classes, setClasses, tr }) => {
+  const CLS = (typeof window !== 'undefined' && window.LICENSE_CLASSES) || ['ក','ខ','គ','ឃ១','ឃ២','ង(ខ)','ង(គ)','ង(ឃ)'];
+  const toggle = (c) => setClasses(prev => prev.includes(c) ? prev.filter(x=>x!==c) : [...prev, c]);
+  const segBtn = (val, label) => (
+    <button type="button" onClick={()=>setHas(val)} style={{
+      flex:1,padding:'8px 0',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit',border:'none',
+      background: has===val ? 'var(--accent)' : 'transparent', color: has===val ? '#fff' : 'var(--ink-2)'}}>{label}</button>
+  );
+  return (
+    <div style={{marginBottom:12}}>
+      <div style={{display:'flex',borderRadius:8,overflow:'hidden',border:'1px solid var(--border-strong)',maxWidth:260,marginBottom:has?10:0}}>
+        {segBtn(false, tr('គ្មាន','None'))}
+        <span style={{width:1,background:'var(--border)'}}/>
+        {segBtn(true, tr('មាន','Has'))}
+      </div>
+      {has && (
+        <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+          {CLS.map(c => {
+            const on = (classes||[]).includes(c);
+            return (
+              <button key={c} type="button" onClick={()=>toggle(c)} style={{
+                minWidth:44,padding:'7px 12px',borderRadius:8,cursor:'pointer',fontSize:13,fontWeight:700,fontFamily:'inherit',
+                border:'1.5px solid '+(on?'var(--accent)':'var(--border)'),
+                background: on?'var(--accent)':'var(--surface)', color: on?'#fff':'var(--ink-2)'}}>{c}</button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ── Edit panel ───────────────────────────────────────────────────────────────
 const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
   const { tr, toast } = useAppActions();
@@ -2264,6 +2297,8 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
   const [licenseNo, setLicenseNo] = React.useState(s.license_no || '');
   const [natId,     setNatId]     = React.useState(s.natId || '');
   const [examLoc,   setExamLoc]   = React.useState(s.exam_location || '');
+  const [licenseClasses, setLicenseClasses] = React.useState(Array.isArray(s.licenseClasses) ? s.licenseClasses : []);
+  const [hasLicense, setHasLicense] = React.useState(!!(s.licenseClasses && s.licenseClasses.length) || !!s.hasLicense);
 
   const [nationality,   setNationality]   = React.useState(s.nationality   || 'ខ្មែរ');
   const [eyeLeft,       setEyeLeft]       = React.useState(s.eye_left      || '');
@@ -2344,6 +2379,8 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
       license_no:    licenseNo.trim(),
       natId:         natId.trim(),
       exam_location: examLoc.trim(),
+      hasLicense:    hasLicense,
+      licenseClasses: hasLicense ? licenseClasses : [],
       nationality:   nationality.trim(),
       eye_left:      eyeLeft,
       eye_right:     eyeRight,
@@ -2516,33 +2553,10 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
             ))}
           </select>
         </SEField>
-        <SEField label={tr('ថ្ងៃ​ចុះ​ឈ្មោះ','Enrolled')}><input {...inp} type="date" value={enrolled} onChange={e=>setEnrolled(e.target.value)}/></SEField>
-        <SEField label={tr('ម៉ោងគោល','Target hours')}><input {...inp} type="number" value={target} onChange={e=>setTarget(e.target.value)} min="1" placeholder="40"/></SEField>
-        <SEField label={tr('ទូទាត់​','Paid')+` ($) / $${studentPrice({trans})}`}><input {...inp} type="number" value={paid} onChange={e=>setPaid(e.target.value)} min="0" max={studentPrice({trans})} placeholder="0"/></SEField>
       </div>
 
-      {secTitle(tr('ប្រវត្តិសិក្សា','STUDY HISTORY'))}
-      <div {...g2}>
-        <SEField label={tr('ចាប់ផ្ដើមសិក្សា','Study start')}><input {...inp} type="date" value={studyStart} onChange={e=>setStudyStart(e.target.value)}/></SEField>
-        <SEField label={tr('បញ្ចប់សិក្សា','Study end')}><input {...inp} type="date" value={studyEnd} onChange={e=>setStudyEnd(e.target.value)}/></SEField>
-        <SEField label={tr('ស្នើរ​ប្រឡង','Exam apply')}><input {...inp} type="date" value={examApply} onChange={e=>setExamApply(e.target.value)}/></SEField>
-        <SEField label={tr('ថ្ងៃ​ប្រឡង','Exam date')}><input {...inp} type="date" value={examDate} onChange={e=>setExamDate(e.target.value)}/></SEField>
-        <SEField label={tr('លទ្ធផល​ប្រឡង','Exam result')}>
-          <select {...sel} value={examResult} onChange={e=>setExamResult(e.target.value)}>
-            <option value="">— {tr('មិន​ទាន់','Pending')} —</option>
-            <option value="pass">{tr('ជាប់','Pass')}</option>
-            <option value="fail">{tr('ធ្លាក់','Fail')}</option>
-          </select>
-        </SEField>
-      </div>
-
-      {secTitle(tr('ឯកសារ','DOCUMENTS'))}
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:12}}>
-        <SEDocChk label={tr('អនុញ្ញាត​សិក្សា','Learner permit')}  checked={permit}  onChange={e=>setPermit(e.target.checked)}/>
-        <SEDocChk label={tr('អត្តសញ្ញាណប័ណ្ណ','ID card')}          checked={idDoc}   onChange={e=>setIdDoc(e.target.checked)}/>
-        <SEDocChk label={tr('វិញ្ញាបនបត្រ','Medical cert.')}        checked={medical} onChange={e=>setMedical(e.target.checked)}/>
-        <SEDocChk label={tr('រូប​ថត','Photo 4×6')}                  checked={photoId} onChange={e=>setPhotoId(e.target.checked)}/>
-      </div>
+      {secTitle(tr('បណ្ណ​បើកបរ​ដែល​មាន​ស្រាប់','EXISTING DRIVING LICENSE'))}
+      <LicensePicker has={hasLicense} setHas={setHasLicense} classes={licenseClasses} setClasses={setLicenseClasses} tr={tr}/>
 
       <div style={{display:'flex',gap:8,justifyContent:'flex-end',paddingTop:14,borderTop:'1px solid var(--border)'}}>
         <Btn kind="ghost" size="md" onClick={onCancel}>{tr('បោះ​បង់','Cancel')}</Btn>

@@ -1264,6 +1264,8 @@ const NewStudentForm = ({ onClose }) => {
   const [phone,   setPhone]   = React.useState('');
   const [email,   setEmail]   = React.useState('');
   const [licenseNo, setLicenseNo] = React.useState('');
+  const [hasLicense, setHasLicense] = React.useState(false);
+  const [licenseClasses, setLicenseClasses] = React.useState([]);
   const [examLoc, setExamLoc] = React.useState('');
   const [eyeLeft,  setEyeLeft]  = React.useState('');
   const [eyeRight, setEyeRight] = React.useState('');
@@ -1512,6 +1514,8 @@ Use "" for any field that cannot be read clearly.`;
       phone: phone.trim() || '—',
       email: email.trim(),
       license_no: licenseNo.trim(),
+      hasLicense,
+      licenseClasses: hasLicense ? licenseClasses : [],
       exam_location: examLoc.trim(),
       eye_left: eyeLeft, eye_right: eyeRight, eye_both: eyeBoth,
       paid: 0,
@@ -1548,40 +1552,8 @@ Use "" for any field that cannot be read clearly.`;
     <FormShell onCancel={onClose} onSave={save}
       saveLabel={tr('ចុះ​ឈ្មោះ​ចូល​រៀន','Save Registration')}>
 
-      {/* ════ ID CARD SCANNER ════ */}
-      <input ref={idFileRef} type="file" accept="image/*" capture="environment"
-        style={{display:'none'}} onChange={e => { scanIdCard(e.target.files?.[0]); e.target.value=''; }}/>
-      <div style={{display:'flex',gap:12,alignItems:'center',padding:'12px 14px',
-        background: idPreview ? 'var(--surface-muted)' : 'var(--accent-soft)',
-        border:'1.5px dashed var(--accent)', borderRadius:12, marginBottom:4}}>
-        {idPreview && (
-          <img src={idPreview} alt="ID" style={{width:100,height:63,objectFit:'cover',
-            borderRadius:6,border:'1px solid var(--border)',flexShrink:0}}/>
-        )}
-        <div style={{flex:1}}>
-          <div style={{fontSize:13,fontWeight:600,marginBottom:4}}>
-            {idPreview
-              ? tr('អត្តសញ្ញាណប័ណ្ណ ✓ — ពិនិត្យព័ត៌មានខាងក្រោម','ID card scanned ✓ — Review the fields below')
-              : tr('ថតអត្តសញ្ញាណប័ណ្ណ ដើម្បីបំពេញ Form ស្វ័យប្រវត្ត','Scan ID card to auto-fill the form')}
-          </div>
-          <div style={{fontSize:11,color:'var(--ink-3)'}}>
-            {tr('ប្រើ Camera ថតអត្តសញ្ញាណប័ណ្ណ → AI នឹងយកទិន្នន័យបំពេញ','Use camera to photograph ID card → AI will extract data')}
-          </div>
-        </div>
-        <button onClick={() => idFileRef.current?.click()} disabled={scanning}
-          style={{display:'flex',alignItems:'center',gap:7,padding:'10px 16px',
-          background: scanning ? 'var(--surface-muted)' : 'var(--accent)',
-          color: scanning ? 'var(--ink-3)' : '#fff', border:'none', borderRadius:9,
-          cursor: scanning ? 'wait' : 'pointer', fontWeight:600, fontSize:13,
-          font:'inherit', flexShrink:0, transition:'all .15s'}}>
-          {scanning
-            ? <><span style={{fontSize:16}}>⏳</span> {tr('កំពុង​ស្គេន...','Scanning...')}</>
-            : <><span style={{fontSize:16}}>📷</span> {tr('ស្គេន​ ID Card','Scan ID Card')}</>}
-        </button>
-      </div>
-
-      {/* ════ SECTION 1: ID Card Info (auto-filled by scan) ════ */}
-      <SEC num={tr('១','1')} label={tr('ព័ត៌មានពីអត្តសញ្ញាណប័ណ្ណ','ID Card Information')}/>
+      {/* ════ SECTION 1: Personal info ════ */}
+      <SEC num={tr('១','1')} label={tr('ព័ត៌មានផ្ទាល់ខ្លួន','Personal Information')}/>
 
       <Row>
         <Field label={tr('គោត្តនាម-នាម (ខ្មែរ) *','Full name (Khmer) *')} sub={err.name?tr('ទាមទារ','Required'):''}>
@@ -1735,6 +1707,11 @@ Use "" for any field that cannot be read clearly.`;
         </Field>
         <Field label={tr('ទីតាំង​ប្រឡង · Exam location','Exam location')}>
           <Input placeholder={tr('ឧ. ភ្នំពេញ','e.g. Phnom Penh')} value={examLoc} onChange={e=>setExamLoc(e.target.value)}/>
+        </Field>
+      </Row>
+      <Row>
+        <Field full label={tr('បណ្ណ​បើកបរ​ដែល​មាន​ស្រាប់','Existing driving license')}>
+          <LicensePicker has={hasLicense} setHas={setHasLicense} classes={licenseClasses} setClasses={setLicenseClasses} tr={tr}/>
         </Field>
       </Row>
       <Row>
