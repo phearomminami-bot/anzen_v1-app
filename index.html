@@ -2964,7 +2964,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v154";</script>
+<script>window.__ANZEN_VERSION="v155";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -18392,7 +18392,8 @@ var ScheduleWeek = ({
 var ScheduleMonth = ({
   lessons = LESSONS,
   studentMode = false,
-  weekDates = []
+  weekDates = [],
+  weeks = 5
 }) => {
   var {
     openDetail,
@@ -18402,12 +18403,14 @@ var ScheduleMonth = ({
   var today = todayStr();
   var startDate = weekDates[0] || today;
   var monthDates = Array.from({
-    length: 35
+    length: weeks * 7
   }, (_, i) => {
     var d = new Date(startDate + 'T00:00:00');
     d.setDate(d.getDate() + i);
     return localDateStr(d);
   });
+  var rowMin = weeks === 1 ? 220 : 100;
+  var cap = weeks === 1 ? 12 : 3;
   return React.createElement(Card, {
     pad: 0
   }, React.createElement("div", {
@@ -18432,7 +18435,7 @@ var ScheduleMonth = ({
     style: {
       display: 'grid',
       gridTemplateColumns: 'repeat(7,1fr)',
-      gridTemplateRows: 'repeat(5,minmax(100px,1fr))'
+      gridTemplateRows: `repeat(${weeks},minmax(${rowMin}px,1fr))`
     }
   }, monthDates.map((date, i) => {
     var dayNum = parseInt(date.slice(8));
@@ -18499,7 +18502,7 @@ var ScheduleMonth = ({
         color: 'var(--ink-3)',
         fontFamily: '"JetBrains Mono",monospace'
       }
-    }, dayLessons.length)), dayLessons.slice(0, 3).map((l, j) => {
+    }, dayLessons.length)), dayLessons.slice(0, cap).map((l, j) => {
       var clr = lessonBlockColor(l, studentMode);
       var s = studentById(l.studentId);
       return React.createElement("div", {
@@ -18752,6 +18755,8 @@ var ScheduleScreen = ({
   var meName = (lang === 'km' ? me.km : me.en) || me.en || me.km || tr('នាយក', 'Admin');
   var [v, setV] = React.useState(view || 'week');
   var [allHours, setAllHours] = React.useState(false);
+  var [mobileView, setMobileView] = React.useState('day');
+  var [viewMenuOpen, setViewMenuOpen] = React.useState(false);
   var [weekOffset, setWeekOffset] = React.useState(0);
   var [dayOffset, setDayOffset] = React.useState(0);
   var [ver, setVer] = React.useState(0);
@@ -18955,6 +18960,17 @@ var ScheduleScreen = ({
     return localDateStr(d);
   };
   var mobileDate = getMobileDate(dayOffset);
+  var mobileWeekStart = (() => {
+    var d = new Date(mobileDate + 'T00:00:00');
+    d.setDate(d.getDate() - (d.getDay() + 6) % 7);
+    return localDateStr(d);
+  })();
+  var monthStart = (() => {
+    var d = new Date(mobileDate + 'T00:00:00');
+    var first = new Date(d.getFullYear(), d.getMonth(), 1);
+    first.setDate(first.getDate() - (first.getDay() + 6) % 7);
+    return localDateStr(first);
+  })();
   var setMobileDateAbs = dateStr => {
     if (!dateStr) return;
     var a = new Date(dateStr + 'T00:00:00'),
@@ -19731,7 +19747,76 @@ var ScheduleScreen = ({
         flexShrink: 0
       }
     }, "\xD7")))));
-  })(), (bp.mobile || v === 'week') && React.createElement("button", {
+  })(), bp.mobile && React.createElement(React.Fragment, null, viewMenuOpen && React.createElement("div", {
+    onClick: () => setViewMenuOpen(false),
+    style: {
+      position: 'fixed',
+      inset: 0,
+      zIndex: 59
+    }
+  }), React.createElement("div", {
+    style: {
+      position: 'fixed',
+      right: 16,
+      bottom: `calc(${mobileView === 'day' ? 136 : 82}px + env(safe-area-inset-bottom,0px))`,
+      zIndex: 61
+    }
+  }, viewMenuOpen && React.createElement("div", {
+    style: {
+      position: 'absolute',
+      bottom: 'calc(100% + 8px)',
+      right: 0,
+      minWidth: 150,
+      background: 'var(--surface)',
+      border: '1px solid var(--border)',
+      borderRadius: 12,
+      boxShadow: '0 10px 30px rgba(0,0,0,.25)',
+      padding: 6
+    }
+  }, [['day', 'ថ្ងៃ', 'Day'], ['week', 'សប្ដាហ៍', 'Week'], ['month', 'ខែ', 'Month']].map(([k, km, en]) => {
+    var active = mobileView === k;
+    return React.createElement("button", {
+      key: k,
+      onClick: () => {
+        setMobileView(k);
+        setViewMenuOpen(false);
+      },
+      style: {
+        display: 'block',
+        width: '100%',
+        textAlign: 'left',
+        padding: '10px 12px',
+        border: 'none',
+        borderRadius: 8,
+        cursor: 'pointer',
+        fontSize: 13,
+        fontFamily: 'inherit',
+        fontWeight: active ? 700 : 500,
+        background: active ? 'var(--accent-soft)' : 'transparent',
+        color: active ? 'var(--accent)' : 'var(--ink-2)'
+      }
+    }, tr(km, en));
+  })), React.createElement("button", {
+    onClick: () => setViewMenuOpen(o => !o),
+    "aria-label": tr('ទិដ្ឋភាព', 'View'),
+    title: tr('ទិដ្ឋភាព', 'View'),
+    style: {
+      width: 44,
+      height: 44,
+      borderRadius: '50%',
+      cursor: 'pointer',
+      border: '1.5px solid var(--border-strong)',
+      background: 'var(--surface)',
+      color: 'var(--ink-2)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      boxShadow: '0 3px 12px rgba(0,0,0,.22)'
+    }
+  }, React.createElement(Icon, {
+    name: "cal",
+    size: 20
+  })))), (bp.mobile && mobileView === 'day' || !bp.mobile && v === 'week') && React.createElement("button", {
     onClick: () => setAllHours(a => !a),
     title: allHours ? tr('បង្ហាញ​តែ​ម៉ោង​ធ្វើ​ការ (៧–៦ល្ងាច)', 'Show working hours (7–18)') : tr('បង្ហាញ​ទាំង ២៤ ម៉ោង', 'Show all 24 hours'),
     "aria-label": allHours ? '24 hours' : 'working hours',
@@ -19772,7 +19857,7 @@ var ScheduleScreen = ({
       lineHeight: 1.1,
       border: '1px solid var(--accent)'
     }
-  }, "24")), bp.mobile ? React.createElement(ScheduleWeek, _extends({}, viewProps, {
+  }, "24")), bp.mobile ? mobileView === 'day' ? React.createElement(ScheduleWeek, _extends({}, viewProps, {
     dayNav: {
       onPrev: () => setDayOffset(o => o - 1),
       onNext: () => setDayOffset(o => o + 1),
@@ -19780,6 +19865,12 @@ var ScheduleScreen = ({
       onPick: dateStr => setMobileDateAbs(dateStr),
       isToday: mobileDate === today
     }
+  })) : mobileView === 'week' ? React.createElement(ScheduleMonth, _extends({}, viewProps, {
+    weekDates: [mobileWeekStart],
+    weeks: 1
+  })) : React.createElement(ScheduleMonth, _extends({}, viewProps, {
+    weekDates: [monthStart],
+    weeks: 6
   })) : v === 'week' ? React.createElement(ScheduleWeek, viewProps) : v === 'month' ? React.createElement(ScheduleMonth, viewProps) : React.createElement(ScheduleAgenda, viewProps), bp.mobile && React.createElement(Btn, {
     kind: "ghost",
     size: "md",
