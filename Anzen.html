@@ -2950,7 +2950,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v147";</script>
+<script>window.__ANZEN_VERSION="v148";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -42120,6 +42120,7 @@ var StudentsScreenV2 = () => {
         })()))));
       })(), (() => {
         var pdfLessons = studentLessons.filter(l => pdfPhase === 'all' || lessonPhase(l) === pdfPhase);
+        var pdfExams = studentExams.filter(e => pdfPhase === 'all' || (e.phase || 'KH') === pdfPhase);
         var PHASE_OPTS = [{
           k: 'all',
           label: tr('ទាំង៣', 'All')
@@ -42172,7 +42173,7 @@ var StudentsScreenV2 = () => {
             gap: 8
           }
         }, React.createElement("button", {
-          onClick: () => printStudentLessonsPDF(s, pdfLessons, studentExams, 'km'),
+          onClick: () => printStudentLessonsPDF(s, pdfLessons, pdfExams, 'km'),
           style: {
             flex: 1,
             padding: '10px',
@@ -42189,7 +42190,7 @@ var StudentsScreenV2 = () => {
             gap: 6
           }
         }, "\uD83C\uDDF0\uD83C\uDDED ", tr('ខ្មែរ', 'Khmer')), React.createElement("button", {
-          onClick: () => printStudentLessonsPDF(s, pdfLessons, studentExams, 'en'),
+          onClick: () => printStudentLessonsPDF(s, pdfLessons, pdfExams, 'en'),
           style: {
             flex: 1,
             padding: '10px',

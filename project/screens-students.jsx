@@ -1247,6 +1247,7 @@ const StudentsScreenV2 = () => {
             {/* PDF export — choose which phase(s) to include, then a language */}
             {(() => {
               const pdfLessons = studentLessons.filter(l => pdfPhase === 'all' || lessonPhase(l) === pdfPhase);
+              const pdfExams   = studentExams.filter(e => pdfPhase === 'all' || (e.phase||'KH') === pdfPhase);
               const PHASE_OPTS = [{k:'all', label:tr('ទាំង៣','All')}, ...(window.STUDENT_PHASES||[]).map(p=>({k:p.k,label:p.label,color:p.color}))];
               return (<>
                 <div style={{fontSize:11,color:'var(--ink-3)',marginTop:12,marginBottom:5}}>⬇ {tr('ទាញយក PDF — ជ្រើសវគ្គ','Download PDF — choose phase')}</div>
@@ -1264,12 +1265,12 @@ const StudentsScreenV2 = () => {
                 </div>
                 <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:4}}>{tr('ជ្រើសភាសា','Choose language')}</div>
                 <div style={{display:'flex',gap:8}}>
-                  <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, studentExams, 'km')} style={{
+                  <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, pdfExams, 'km')} style={{
                     flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',
                     background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,
                     display:'flex',alignItems:'center',justifyContent:'center',gap:6,
                   }}>🇰🇭 {tr('ខ្មែរ','Khmer')}</button>
-                  <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, studentExams, 'en')} style={{
+                  <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, pdfExams, 'en')} style={{
                     flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',
                     background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,
                     display:'flex',alignItems:'center',justifyContent:'center',gap:6,
