@@ -2944,7 +2944,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v144";</script>
+<script>window.__ANZEN_VERSION="v145";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -40385,17 +40385,6 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
       })).filter(c => c.no);
       return [];
     };
-    var hourMap = buildHourNumbering(lessons);
-    var items = [...lessons.filter(l => l.status !== 'cancelled').flatMap(l => lessonHourSlices(l).map(sl => ({
-      t: 'lesson',
-      k: (l.date || '') + ' ' + String(sl.h).padStart(2, '0'),
-      item: l,
-      sl
-    }))), ...exams.map(e => ({
-      t: 'exam',
-      k: (e.date || '') + ' ' + String(e.time || '').slice(0, 5),
-      item: e
-    }))].sort((a, b) => a.k < b.k ? -1 : a.k > b.k ? 1 : 0);
     var txMap = {};
     if (lang === 'en') {
       var hasKh = x => typeof x === 'string' && /[ក-៿]/.test(x);
@@ -40417,33 +40406,30 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
       if (src.length) txMap = await translateFeedbackTexts(src, 'en');
     }
     var T = x => x && txMap[x] ? txMap[x] : x;
-    var rows = items.map(row => {
-      if (row.t === 'exam') {
-        var e = row.item;
-        var r = e.results && e.results[sid] || {};
-        var km = window.__SCHED_KIND ? window.__SCHED_KIND(e.kind) : {
-          km: 'ប្រឡង',
-          en: 'Exam',
-          icon: '🎓',
-          color: '#12A302'
-        };
-        var ins = (e.instIds || []).map(id => {
-          var it = instById(id);
-          return it ? esc(it.en || it.name) : null;
-        }).filter(Boolean).join(', ') || '—';
-        var isApply = e.kind === 'apply';
-        var isFail = !isApply && r.result === 'fail';
-        var badge = isApply ? '—' : r.result === 'pass' ? `<b style="color:#12A302">${L('ជាប់', 'Pass')} ✓</b>` : r.result === 'fail' ? `<b style="color:#B0413E">${L('ធ្លាក់', 'Fail')} ✗</b>` : '—';
-        var failInfo = isFail ? `${r.failLocation ? '<div>📍 ' + esc(T(r.failLocation)) + '</div>' : ''}${r.failReason ? '<div style="color:#7a2b29">' + esc(T(r.failReason)) + '</div>' : ''}` : '';
-        var bg = isApply ? '#fff8e1' : isFail ? '#fbeceb' : '#eafbe7';
-        return `<tr style="background:${bg};-webkit-print-color-adjust:exact;print-color-adjust:exact">
-        <td style="white-space:nowrap;font-family:monospace;color:${km.color};font-weight:700">${esc(e.date)}<br>${esc(String(e.time || '').slice(0, 5))}</td>
-        <td><b>${km.icon} ${L(km.km, km.en)}</b><br><span style="color:#555">${ins}</span>${e.note ? '<div style="color:#777;font-size:11px">' + esc(e.note) + '</div>' : ''}</td>
-        <td>${badge}${failInfo}</td>
-      </tr>`;
-      }
-      var l = row.item;
-      var o = row.sl.offset;
+    var examRowHtml = e => {
+      var r = e.results && e.results[sid] || {};
+      var km = window.__SCHED_KIND ? window.__SCHED_KIND(e.kind) : {
+        km: 'ប្រឡង',
+        en: 'Exam',
+        icon: '🎓',
+        color: '#12A302'
+      };
+      var ins = (e.instIds || []).map(id => {
+        var it = instById(id);
+        return it ? esc(it.en || it.name) : null;
+      }).filter(Boolean).join(', ') || '—';
+      var isApply = e.kind === 'apply';
+      var isFail = !isApply && r.result === 'fail';
+      var badge = isApply ? '—' : r.result === 'pass' ? `<b style="color:#12A302">${L('ជាប់', 'Pass')} ✓</b>` : r.result === 'fail' ? `<b style="color:#B0413E">${L('ធ្លាក់', 'Fail')} ✗</b>` : '—';
+      var failInfo = isFail ? `${r.failLocation ? '<div>📍 ' + esc(T(r.failLocation)) + '</div>' : ''}${r.failReason ? '<div style="color:#7a2b29">' + esc(T(r.failReason)) + '</div>' : ''}` : '';
+      var bg = isApply ? '#fff8e1' : isFail ? '#fbeceb' : '#eafbe7';
+      return `<tr style="background:${bg};-webkit-print-color-adjust:exact;print-color-adjust:exact">
+      <td style="white-space:nowrap;font-family:monospace;color:${km.color};font-weight:700">${esc(e.date)}<br>${esc(String(e.time || '').slice(0, 5))}</td>
+      <td><b>${km.icon} ${L(km.km, km.en)}</b><br><span style="color:#555">${ins}</span>${e.note ? '<div style="color:#777;font-size:11px">' + esc(e.note) + '</div>' : ''}</td>
+      <td>${badge}${failInfo}</td>
+    </tr>`;
+    };
+    var lessonRowHtml = (l, o, phaseHourMap) => {
       var f = hourFbOf(l, o);
       var it = instById(l.instId);
       var inst = it ? esc(it.en || it.name) : '—';
@@ -40455,22 +40441,54 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
       if (f.toImprove) fb.push('<div><b>' + L('ខ្វះខាត', 'Needs work') + ':</b> ' + esc(T(f.toImprove)) + '</div>');
       if (f.note) fb.push('<div><b>' + L('មតិ', 'Comment') + ':</b> ' + esc(T(f.note)) + '</div>');
       var status = l.status === 'done' ? `<b style="color:#1A6B3C">${L('រួចរាល់', 'Done')}</b>` : l.status === 'cancelled' ? `<span style="color:#999">${L('បានលុប', 'Cancelled')}</span>` : L('កំពុង', 'Pending');
-      var hrs = hourMap[l.id];
+      var hrs = phaseHourMap[l.id];
       var cumNo = hrs && hrs[o] != null ? hrs[o] : null;
       var hrLabel = cumNo != null ? ` <span style="color:#2a5db0;font-weight:700;font-size:10px;font-style:italic">(${cumNo})</span>` : '';
       var hh = (l.h || 0) + o;
       var timeStr = `${String(hh).padStart(2, '0')}:00-${String(hh + 1).padStart(2, '0')}:00`;
-      var ph = typeof phaseMeta === 'function' ? phaseMeta(typeof lessonPhase === 'function' ? lessonPhase(l) : l.phase || 'KH') : {
-        label: l.phase || 'KH',
-        color: '#2A5DB0'
-      };
-      var phBadge = `<span style="display:inline-block;background:${ph.color};color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:middle;-webkit-print-color-adjust:exact;print-color-adjust:exact">${ph.label}</span>`;
       return `<tr>
       <td style="white-space:nowrap;font-family:monospace;color:#444;font-weight:700">${esc(l.date)}<br>${timeStr}${hrLabel}</td>
-      <td><b>${typeKm(l)}</b>${phBadge}${coveredHtml}<div style="color:#888;margin-top:2px">${inst}</div></td>
+      <td><b>${typeKm(l)}</b>${coveredHtml}<div style="color:#888;margin-top:2px">${inst}</div></td>
       <td>${status}${fb.length ? '<div style="margin-top:3px;color:#333">' + fb.join('') + '</div>' : ''}</td>
     </tr>`;
-    }).join('');
+    };
+    var PH_LIST = window.STUDENT_PHASES || [{
+      k: 'KH',
+      label: 'KH',
+      color: '#2A5DB0'
+    }];
+    var getPhase = l => typeof lessonPhase === 'function' ? lessonPhase(l) : l.phase || 'KH';
+    var isTheoryL = l => l.color === 'c' || l.color === 'e';
+    var phaseSections = PH_LIST.map(p => {
+      var pl = lessons.filter(l => getPhase(l) === p.k);
+      var pExams = p.k === 'KH' ? exams : [];
+      if (!pl.length && !pExams.length) return null;
+      var phaseHourMap = buildHourNumbering(pl);
+      var thHrs = 0,
+        prHrs = 0;
+      pl.filter(l => l.status !== 'cancelled').forEach(l => {
+        var n = lessonHourSlices(l).length;
+        if (isTheoryL(l)) thHrs += n;else prHrs += n;
+      });
+      var its = [...pl.filter(l => l.status !== 'cancelled').flatMap(l => lessonHourSlices(l).map(sl => ({
+        t: 'lesson',
+        k: (l.date || '') + ' ' + String(sl.h).padStart(2, '0'),
+        l,
+        sl
+      }))), ...pExams.map(e => ({
+        t: 'exam',
+        k: (e.date || '') + ' ' + String(e.time || '').slice(0, 5),
+        e
+      }))].sort((a, b) => a.k < b.k ? -1 : a.k > b.k ? 1 : 0);
+      var body = its.map(row => row.t === 'exam' ? examRowHtml(row.e) : lessonRowHtml(row.l, row.sl.offset, phaseHourMap)).join('');
+      return {
+        p,
+        thHrs,
+        prHrs,
+        body
+      };
+    }).filter(Boolean);
+    var totalRows = phaseSections.reduce((a, s) => a + s.thHrs + s.prHrs, 0) + (phaseSections.some(s => s.p.k === 'KH') ? exams.length : 0);
     var NV = '#1e3a6e';
     var address = ss.address || '';
     var fmtDob = d => {
@@ -40548,7 +40566,7 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
       ${schoolEn ? `<div class="en">${esc(schoolEn)}</div>` : ''}
       ${address ? `<div class="ad">${esc(address)}</div>` : ''}
     </div>
-    <div class="pg"><div class="l">${L('ទំព័រ', 'PAGE')}</div><div class="n">1</div><div class="t">/${Math.max(1, Math.ceil(items.length / 18) + 1)}</div></div>
+    <div class="pg"><div class="l">${L('ទំព័រ', 'PAGE')}</div><div class="n">1</div><div class="t">/${Math.max(1, Math.ceil(totalRows / 18) + 1)}</div></div>
   </div>
   <div class="rule"></div>
 
@@ -40585,11 +40603,14 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
     ${aptBox('ស្ថានភាពភ្នែក', 'Eye condition', trGlasses(s.glasses))}
   </div>
 
-  <div class="secbar">${L('ប្រវត្តិសិក្សា', 'Lesson Records')}<span class="r">${items.length}</span></div>
+  ${phaseSections.length ? phaseSections.map(sec => `
+  <div class="secbar" style="background:${sec.p.color}">${L('វគ្គ', 'Phase')} ${sec.p.label}<span class="r">${L('ទ្រឹស្ដី', 'Theory')} ${sec.thHrs} · ${L('អនុវត្តន៍', 'Practical')} ${sec.prHrs}</span></div>
   <table class="lt">
     <thead><tr><th style="width:124px">${L('ថ្ងៃ/ម៉ោង', 'Date / Time')}</th><th style="width:36%">${L('ប្រភេទ · គ្រូ', 'Type · Instructor')}</th><th>${L('លទ្ធផល · មតិគ្រូ', 'Result · Feedback')}</th></tr></thead>
-    <tbody>${rows || '<tr><td colspan="3" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr>'}</tbody>
-  </table>
+    <tbody>${sec.body}</tbody>
+  </table>`).join('') : `
+  <div class="secbar">${L('ប្រវត្តិសិក្សា', 'Lesson Records')}</div>
+  <table class="lt"><tbody><tr><td colspan="3" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr></tbody></table>`}
 </div>
 </body></html>`;
     try {
