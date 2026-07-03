@@ -527,7 +527,7 @@ window.__trRegistry = {
   "No lesson booked yet": "មិន​ទាន់​មាន​​មេរៀន​កក់",
   "Book now": "កក់​ឥឡូវ",
   "COURSE PROGRESS": "វឌ្ឍនភាព​​​នៃ​វគ្គ",
-  "hours": "ម៉ោង​បង្រៀន",
+  "hours": "ម៉ោង",
   "Theory · traffic law": "ច្បាប់​ចរាចរណ៍",
   "Yard practice": "ការ​បើក​ក្នុង​ទីលាន",
   "City driving": "ការ​បើក​ក្នុង​ទីក្រុង",
@@ -1456,6 +1456,10 @@ window.__trRegistry = {
   "Practice Complete %": "អត្រា​អនុវត្ត​គ្រប់",
   "Lesson Completion Trend": "និន្នាការ​បញ្ចប់​មេរៀន",
   "Training Hours / Student (Top 10)": "ម៉ោង​បណ្ដុះ​តាម​សិស្ស (កំពូល ១០)",
+  "completed": "បញ្ចប់",
+  "Training Hours by Phase": "ម៉ោង​បណ្ដុះ​តាម​វគ្គ",
+  "Students by Phase (active · done)": "សិស្ស​តាម​វគ្គ (កំពុង · បញ្ចប់)",
+  "Completed Students by Phase": "សិស្ស​បញ្ចប់​តាម​វគ្គ",
   "Pass Rate by Month": "អត្រា​ជាប់​ប្រចាំ​ខែ",
   "Overall Pass Rate": "អត្រា​ជាប់​សរុប",
   "passed / total": "ជាប់ / សរុប",
@@ -2901,6 +2905,10 @@ window.__trGroups = {
     "Practice Complete %": "អត្រា​អនុវត្ត​គ្រប់",
     "Lesson Completion Trend": "និន្នាការ​បញ្ចប់​មេរៀន",
     "Training Hours / Student (Top 10)": "ម៉ោង​បណ្ដុះ​តាម​សិស្ស (កំពូល ១០)",
+    "completed": "បញ្ចប់",
+    "Training Hours by Phase": "ម៉ោង​បណ្ដុះ​តាម​វគ្គ",
+    "Students by Phase (active · done)": "សិស្ស​តាម​វគ្គ (កំពុង · បញ្ចប់)",
+    "Completed Students by Phase": "សិស្ស​បញ្ចប់​តាម​វគ្គ",
     "Pass Rate by Month": "អត្រា​ជាប់​ប្រចាំ​ខែ",
     "Overall Pass Rate": "អត្រា​ជាប់​សរុប",
     "passed / total": "ជាប់ / សរុប",
@@ -2944,7 +2952,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v145";</script>
+<script>window.__ANZEN_VERSION="v146";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -61942,6 +61950,29 @@ var AnalyticsScreen = ({
   var moLabels = MO.map(m => moLbl(m.mo) + (m.mo === 0 ? " '" + String(m.y).slice(2) : ''));
   var seriesBy = (items, dateOf, valOf = () => 1) => MO.map(m => items.filter(x => A_mkey(dateOf(x)) === m.key).reduce((a, x) => a + valOf(x), 0));
   var doneL = fL.filter(l => l.status === 'done');
+  var A_PHASES = window.STUDENT_PHASES || [];
+  var A_lessonPhase = l => typeof lessonPhase === 'function' ? lessonPhase(l) : l.phase || 'KH';
+  var phaseHours = A_PHASES.map(p => ({
+    label: p.label,
+    value: A_num(doneL.filter(l => A_lessonPhase(l) === p.k).reduce((a, l) => a + (l.len || 1), 0)),
+    color: p.color
+  }));
+  var phaseStudentBars = A_PHASES.map(p => {
+    var working = new Set(fL.filter(l => A_lessonPhase(l) === p.k).map(l => l.studentId)).size;
+    var completed = S.filter(s => s.phaseDone && s.phaseDone[p.k]).length;
+    return {
+      label: p.label,
+      value: working,
+      color: p.color,
+      sub: `✓ ${completed}`
+    };
+  });
+  var phaseCompleted = A_PHASES.map((p, i) => ({
+    label: p.label,
+    value: S.filter(s => s.phaseDone && s.phaseDone[p.k]).length,
+    color: p.color
+  }));
+  var anyPhaseData = phaseHours.some(d => d.value > 0) || phaseStudentBars.some(d => d.value > 0) || phaseCompleted.some(d => d.value > 0);
   var enrollSeries = seriesBy(S, s => s.regDate || s.study_start);
   var cumEnroll = enrollSeries.map((_, i) => S.filter(s => A_mkey(s.regDate || s.study_start || '9999') <= MO[i].key).length);
   var lessonsSeries = seriesBy(doneL, l => l.date, l => l.len || 1);
@@ -62625,6 +62656,103 @@ var AnalyticsScreen = ({
       color: '#2A5DB0'
     })),
     fmt: v => v + 'h'
+  }))), React.createElement(A_SectionHead, {
+    n: "\u25C6",
+    km: "\u1780\u17B6\u179A\u179C\u17B7\u1797\u17B6\u1782\u200B\u178F\u17B6\u1798\u200B\u179C\u1782\u17D2\u1782 (KH / JP / AI)",
+    en: "Phase Analytics (KH / JP / AI)",
+    lang: lang
+  }), React.createElement("div", {
+    style: kpiGrid
+  }, A_PHASES.map(p => {
+    var hrs = phaseHours.find(x => x.label === p.label)?.value || 0;
+    var working = phaseStudentBars.find(x => x.label === p.label)?.value || 0;
+    var done = phaseCompleted.find(x => x.label === p.label)?.value || 0;
+    return React.createElement("div", {
+      key: p.k,
+      style: {
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 12,
+        padding: 12
+      }
+    }, React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        marginBottom: 8
+      }
+    }, React.createElement("span", {
+      style: {
+        background: p.color,
+        color: '#fff',
+        fontSize: 11,
+        fontWeight: 800,
+        padding: '2px 9px',
+        borderRadius: 6
+      }
+    }, p.label), React.createElement("span", {
+      style: {
+        fontSize: 11,
+        color: 'var(--ink-3)'
+      }
+    }, working, " ", tr('សិស្ស', 'students'))), React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 14
+      }
+    }, React.createElement("div", null, React.createElement("div", {
+      style: {
+        fontSize: 18,
+        fontWeight: 800,
+        color: 'var(--ink)',
+        fontFamily: 'var(--font-display)',
+        lineHeight: 1
+      }
+    }, hrs), React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: 'var(--ink-3)'
+      }
+    }, tr('ម៉ោង', 'hours'))), React.createElement("div", null, React.createElement("div", {
+      style: {
+        fontSize: 18,
+        fontWeight: 800,
+        color: p.color,
+        fontFamily: 'var(--font-display)',
+        lineHeight: 1
+      }
+    }, done), React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: 'var(--ink-3)'
+      }
+    }, tr('បញ្ចប់', 'completed')))));
+  })), React.createElement("div", {
+    style: chartGrid
+  }, React.createElement(ChartCard, {
+    title: tr('ម៉ោង​បណ្ដុះ​តាម​វគ្គ', 'Training Hours by Phase')
+  }, anyPhaseData ? React.createElement(Donut, {
+    data: phaseHours.filter(d => d.value),
+    center: {
+      value: A_num(phaseHours.reduce((a, d) => a + d.value, 0)),
+      label: tr('ម៉ោង', 'hrs')
+    }
+  }) : React.createElement(Empty, {
+    tr: tr
+  })), React.createElement(ChartCard, {
+    title: tr('សិស្ស​តាម​វគ្គ (កំពុង · បញ្ចប់)', 'Students by Phase (active · done)')
+  }, anyPhaseData ? React.createElement(BarsV, {
+    data: phaseStudentBars,
+    lang: lang
+  }) : React.createElement(Empty, {
+    tr: tr
+  })), React.createElement(ChartCard, {
+    title: tr('សិស្ស​បញ្ចប់​តាម​វគ្គ', 'Completed Students by Phase')
+  }, phaseCompleted.some(d => d.value) ? React.createElement(BarsH, {
+    data: phaseCompleted.filter(d => d.value)
+  }) : React.createElement(Empty, {
+    tr: tr
   }))), React.createElement(A_SectionHead, {
     n: 3,
     km: "\u179B\u1791\u17D2\u1792\u1795\u179B\u200B\u1794\u17D2\u179A\u17A1\u1784",

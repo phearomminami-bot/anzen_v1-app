@@ -332,6 +332,19 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
   const seriesBy = (items, dateOf, valOf = () => 1) => MO.map(m => items.filter(x => A_mkey(dateOf(x)) === m.key).reduce((a, x) => a + valOf(x), 0));
 
   const doneL = fL.filter(l => l.status === 'done');
+
+  // ── Tracking-phase (KH / JP / AI) datasets ──────────────────────────────────
+  const A_PHASES = (window.STUDENT_PHASES || []);
+  const A_lessonPhase = (l) => (typeof lessonPhase === 'function' ? lessonPhase(l) : (l.phase || 'KH'));
+  const phaseHours = A_PHASES.map(p => ({ label: p.label, value: A_num(doneL.filter(l => A_lessonPhase(l) === p.k).reduce((a, l) => a + (l.len || 1), 0)), color: p.color }));
+  const phaseStudentBars = A_PHASES.map(p => {
+    const working = new Set(fL.filter(l => A_lessonPhase(l) === p.k).map(l => l.studentId)).size;
+    const completed = S.filter(s => s.phaseDone && s.phaseDone[p.k]).length;
+    return { label: p.label, value: working, color: p.color, sub: `✓ ${completed}` };
+  });
+  const phaseCompleted = A_PHASES.map((p, i) => ({ label: p.label, value: S.filter(s => s.phaseDone && s.phaseDone[p.k]).length, color: p.color }));
+  const anyPhaseData = phaseHours.some(d => d.value > 0) || phaseStudentBars.some(d => d.value > 0) || phaseCompleted.some(d => d.value > 0);
+
   const enrollSeries = seriesBy(S, s => s.regDate || s.study_start);
   const cumEnroll = enrollSeries.map((_, i) => S.filter(s => A_mkey(s.regDate || s.study_start || '9999') <= MO[i].key).length);
   const lessonsSeries = seriesBy(doneL, l => l.date, l => l.len || 1);
@@ -617,6 +630,37 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
         </ChartCard>
         <ChartCard title={tr('ម៉ោង​បណ្ដុះ​តាម​សិស្ស (កំពូល ១០)', 'Training Hours / Student (Top 10)')}>
           <BarsH data={hoursPerStudent.map(h => ({ label: h.label, value: h.value, color: '#2A5DB0' }))} fmt={v => v + 'h'} />
+        </ChartCard>
+      </div>
+
+      {/* ── Phase analytics (KH / JP / AI) ── */}
+      <A_SectionHead n="◆" km="ការវិភាគ​តាម​វគ្គ (KH / JP / AI)" en="Phase Analytics (KH / JP / AI)" lang={lang} />
+      <div style={kpiGrid}>
+        {A_PHASES.map(p => {
+          const hrs = phaseHours.find(x => x.label === p.label)?.value || 0;
+          const working = phaseStudentBars.find(x => x.label === p.label)?.value || 0;
+          const done = phaseCompleted.find(x => x.label === p.label)?.value || 0;
+          return <div key={p.k} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <span style={{ background: p.color, color: '#fff', fontSize: 11, fontWeight: 800, padding: '2px 9px', borderRadius: 6 }}>{p.label}</span>
+              <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>{working} {tr('សិស្ស', 'students')}</span>
+            </div>
+            <div style={{ display: 'flex', gap: 14 }}>
+              <div><div style={{ fontSize: 18, fontWeight: 800, color: 'var(--ink)', fontFamily: 'var(--font-display)', lineHeight: 1 }}>{hrs}</div><div style={{ fontSize: 10, color: 'var(--ink-3)' }}>{tr('ម៉ោង', 'hours')}</div></div>
+              <div><div style={{ fontSize: 18, fontWeight: 800, color: p.color, fontFamily: 'var(--font-display)', lineHeight: 1 }}>{done}</div><div style={{ fontSize: 10, color: 'var(--ink-3)' }}>{tr('បញ្ចប់', 'completed')}</div></div>
+            </div>
+          </div>;
+        })}
+      </div>
+      <div style={chartGrid}>
+        <ChartCard title={tr('ម៉ោង​បណ្ដុះ​តាម​វគ្គ', 'Training Hours by Phase')}>
+          {anyPhaseData ? <Donut data={phaseHours.filter(d => d.value)} center={{ value: A_num(phaseHours.reduce((a, d) => a + d.value, 0)), label: tr('ម៉ោង', 'hrs') }} /> : <Empty tr={tr} />}
+        </ChartCard>
+        <ChartCard title={tr('សិស្ស​តាម​វគ្គ (កំពុង · បញ្ចប់)', 'Students by Phase (active · done)')}>
+          {anyPhaseData ? <BarsV data={phaseStudentBars} lang={lang} /> : <Empty tr={tr} />}
+        </ChartCard>
+        <ChartCard title={tr('សិស្ស​បញ្ចប់​តាម​វគ្គ', 'Completed Students by Phase')}>
+          {phaseCompleted.some(d => d.value) ? <BarsH data={phaseCompleted.filter(d => d.value)} /> : <Empty tr={tr} />}
         </ChartCard>
       </div>
 
