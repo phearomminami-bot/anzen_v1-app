@@ -701,6 +701,12 @@ window.__trRegistry = {
   "路上 19h": "路上 19h",
   "Add an Anthropic API key in Settings → AI to auto-translate": "បញ្ចូល Anthropic API Key ក្នុង Settings → AI ដើម្បីបកប្រែស្វ័យប្រវត្តិ",
   "Image upload failed": "បន្ទុក​រូប​មិន​បាន",
+  "Title · English": "ចំណងជើង · អង់គ្លេស",
+  "Title · Khmer": "ចំណងជើង · ខ្មែរ",
+  "Content · English": "ខ្លឹមសារ · អង់គ្លេស",
+  "Content · Khmer": "ខ្លឹមសារ · ខ្មែរ",
+  "Put the cursor in the title or content, then use the toolbar above · click an image to resize": "ដាក់ Cursor ក្នុងចំណងជើង ឬ ខ្លឹមសារ រួចប្រើ Tool ខាងលើ · ចុចលើរូបដើម្បីប្ដូរទំហំ",
+  "Saving…": "កំពុង​រក្សាទុក…",
   "Enter a YouTube ID to preview": "វាយ YouTube ID ដើម្បីមើល",
   "Add video": "បន្ថែម​វីដេអូ",
   "If you paste a Google Form link, this exercise uses the form instead of the questions below.": "បើ​ដាក់​តំណ Google Form នោះ​លំហាត់​នេះ​នឹង​ប្រើ Google Form ជំនួស​សំណួរ​ខាង​ក្រោម។",
@@ -1946,6 +1952,12 @@ window.__trGroups = {
   "កែ​មេរៀន · Lesson editor": {
     "Add an Anthropic API key in Settings → AI to auto-translate": "បញ្ចូល Anthropic API Key ក្នុង Settings → AI ដើម្បីបកប្រែស្វ័យប្រវត្តិ",
     "Image upload failed": "បន្ទុក​រូប​មិន​បាន",
+    "Title · English": "ចំណងជើង · អង់គ្លេស",
+    "Title · Khmer": "ចំណងជើង · ខ្មែរ",
+    "Content · English": "ខ្លឹមសារ · អង់គ្លេស",
+    "Content · Khmer": "ខ្លឹមសារ · ខ្មែរ",
+    "Put the cursor in the title or content, then use the toolbar above · click an image to resize": "ដាក់ Cursor ក្នុងចំណងជើង ឬ ខ្លឹមសារ រួចប្រើ Tool ខាងលើ · ចុចលើរូបដើម្បីប្ដូរទំហំ",
+    "Saving…": "កំពុង​រក្សាទុក…",
     "Enter a YouTube ID to preview": "វាយ YouTube ID ដើម្បីមើល",
     "Add video": "បន្ថែម",
     "If you paste a Google Form link, this exercise uses the form instead of the questions below.": "បើ​ដាក់​តំណ Google Form នោះ​លំហាត់​នេះ​នឹង​ប្រើ Google Form ជំនួស​សំណួរ​ខាង​ក្រោម។",
@@ -2964,7 +2976,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v157";</script>
+<script>window.__ANZEN_VERSION="v158";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -22566,6 +22578,16 @@ var sanitizeLessonHtml = (html, images) => {
   s = s.replace(/<a\s+/gi, '<a target="_blank" rel="noopener noreferrer" ');
   return s;
 };
+var lessonPlainText = s => isLessonHtml(s) ? String(s).replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim() : s || '';
+var lessonInlineHtml = s => isLessonHtml(s) ? React.createElement('span', {
+  dangerouslySetInnerHTML: {
+    __html: sanitizeLessonHtml(s)
+  }
+}) : s || '';
+if (typeof window !== 'undefined') {
+  window.lessonPlainText = lessonPlainText;
+  window.lessonInlineHtml = lessonInlineHtml;
+}
 (() => {
   if (typeof document === 'undefined' || document.getElementById('lesson-rich-style')) return;
   var st = document.createElement('style');
@@ -24111,7 +24133,7 @@ var TextCard = ({
       transition: 'border-color .15s'
     }
   }, React.createElement("button", {
-    onClick: () => setOpen(o => !o),
+    onClick: () => setOpen(true),
     style: {
       width: '100%',
       background: 'transparent',
@@ -24154,7 +24176,7 @@ var TextCard = ({
       fontSize: 14,
       fontWeight: 600
     }
-  }, tr(lesson.km, lesson.en)), React.createElement("div", {
+  }, lessonInlineHtml(tr(lesson.km, lesson.en))), React.createElement("div", {
     style: {
       fontSize: 12,
       color: 'var(--ink-3)',
@@ -24183,33 +24205,127 @@ var TextCard = ({
     strokeWidth: "2",
     strokeLinecap: "round",
     style: {
-      transform: open ? 'rotate(90deg)' : '',
-      transition: 'transform .15s',
       flexShrink: 0
     }
   }, React.createElement("path", {
     d: "M9 6l6 6-6 6"
-  }))), open && React.createElement("div", {
+  }))), React.createElement(Modal, {
+    open: open,
+    onClose: () => setOpen(false),
+    width: 720
+  }, React.createElement("div", {
     style: {
-      padding: '4px 14px 16px',
-      borderTop: '1px solid var(--border)'
+      display: 'flex',
+      flexDirection: 'column',
+      maxHeight: window.innerWidth < 700 ? '86vh' : '84vh'
     }
   }, React.createElement("div", {
     style: {
-      marginTop: 10,
-      fontSize: 13,
-      lineHeight: 1.75
+      flexShrink: 0,
+      position: 'sticky',
+      top: 0,
+      background: 'var(--surface)',
+      padding: '16px 20px 12px',
+      borderBottom: '1px solid var(--border)',
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: 12,
+      zIndex: 2
+    }
+  }, React.createElement("div", {
+    style: {
+      width: 38,
+      height: 38,
+      borderRadius: 10,
+      flexShrink: 0,
+      background: done ? 'var(--good)' : 'var(--surface-muted)',
+      color: done ? '#fff' : 'var(--ink-3)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }
+  }, done ? React.createElement(Icon, {
+    name: "check",
+    size: 18,
+    stroke: 2.5
+  }) : React.createElement(Icon, {
+    name: "book",
+    size: 18
+  })), React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 17,
+      fontWeight: 700,
+      fontFamily: 'var(--font-display)',
+      lineHeight: 1.25
+    }
+  }, lessonInlineHtml(tr(lesson.km, lesson.en))), React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'var(--ink-3)',
+      marginTop: 3,
+      display: 'flex',
+      gap: 8,
+      alignItems: 'center',
+      flexWrap: 'wrap'
+    }
+  }, lesson.no && React.createElement("span", {
+    style: {
+      fontFamily: '"JetBrains Mono",monospace',
+      color: 'var(--accent)',
+      fontWeight: 600
+    }
+  }, lesson.no), lesson.ja && React.createElement("span", {
+    style: {
+      color: 'var(--ink-2)'
+    }
+  }, lesson.ja), React.createElement("span", null, "\xB7 ", lesson.mins, " ", tr('នាទី', 'min')))), React.createElement("button", {
+    onClick: () => setOpen(false),
+    title: tr('បិទ', 'Close'),
+    style: {
+      flexShrink: 0,
+      width: 32,
+      height: 32,
+      borderRadius: 8,
+      border: '1px solid var(--border)',
+      background: 'var(--surface)',
+      cursor: 'pointer',
+      color: 'var(--ink-2)',
+      fontSize: 16,
+      lineHeight: 1
+    }
+  }, "\u2715")), React.createElement("div", {
+    style: {
+      flex: 1,
+      minHeight: 0,
+      overflowY: 'auto',
+      padding: '14px 20px 18px',
+      fontSize: 14,
+      lineHeight: 1.8
     }
   }, renderBody(tr(lesson.body_km, lesson.body_en))), React.createElement("div", {
     style: {
-      marginTop: 14,
+      flexShrink: 0,
+      position: 'sticky',
+      bottom: 0,
+      background: 'var(--surface)',
+      borderTop: '1px solid var(--border)',
+      padding: '12px 20px',
       display: 'flex',
-      justifyContent: 'flex-end'
+      justifyContent: 'flex-end',
+      gap: 8
     }
   }, React.createElement(Btn, {
     kind: done ? 'ghost' : 'primary',
-    onClick: () => onToggle(lesson.id)
-  }, done ? tr('សម្គាល់ថាមិនទាន់អាន', 'Mark as unread') : tr('សម្គាល់ថាបានអាន ✓', 'Mark as read ✓')))));
+    onClick: () => {
+      onToggle(lesson.id);
+      setOpen(false);
+    }
+  }, done ? tr('សម្គាល់ថាមិនទាន់អាន', 'Mark as unread') : tr('សម្គាល់ថាបានអាន ✓', 'Mark as read ✓'))))));
 };
 var ExerciseCard = ({
   exercise,
@@ -25010,6 +25126,36 @@ async function aiTranslateKmToEn(kmText) {
     return '';
   }
 }
+async function aiTranslateHtmlKmToEn(html) {
+  var text = (html || '').trim();
+  if (!text) return '';
+  var apiKey = window.__schoolSettings && window.__schoolSettings.anthropicKey;
+  if (!apiKey) return null;
+  try {
+    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 3000,
+        messages: [{
+          role: 'user',
+          content: 'Translate the Khmer text inside this HTML driving-school lesson into natural, concise English. ' + 'Keep every HTML tag, attribute and <img> element exactly as-is — translate only the human-readable text. ' + 'Return ONLY the resulting HTML, nothing else.\n\n' + text
+        }]
+      })
+    });
+    if (!resp.ok) return '';
+    var data = await resp.json();
+    return (data.content && data.content[0] && data.content[0].text || '').trim();
+  } catch (e) {
+    return '';
+  }
+}
 var useAutoTranslate = () => {
   var {
     tr,
@@ -25670,8 +25816,398 @@ var ImagePickerButton = ({
     }))
   }, label));
 };
+var useSharedRte = () => {
+  var active = React.useRef(null);
+  var savedRange = React.useRef(null);
+  var saveSel = () => {
+    try {
+      var sel = window.getSelection();
+      if (sel && sel.rangeCount) {
+        var r = sel.getRangeAt(0);
+        var el = active.current && active.current.el;
+        if (el && el.contains(r.commonAncestorContainer)) savedRange.current = r.cloneRange();
+      }
+    } catch (e) {}
+  };
+  var restoreSel = () => {
+    try {
+      var r = savedRange.current,
+        el = active.current && active.current.el;
+      if (r && el && el.contains(r.commonAncestorContainer)) {
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(r);
+      }
+    } catch (e) {}
+  };
+  var setActive = entry => {
+    active.current = entry;
+  };
+  var exec = (cmd, val) => {
+    var el = active.current && active.current.el;
+    if (!el) return;
+    el.focus();
+    restoreSel();
+    try {
+      document.execCommand('styleWithCSS', false, true);
+    } catch (e) {}
+    try {
+      document.execCommand(cmd, false, val);
+    } catch (e) {}
+    if (active.current && active.current.fire) active.current.fire();
+    saveSel();
+  };
+  var setBlock = tag => exec('formatBlock', tag);
+  var addLink = () => {
+    var url = typeof window !== 'undefined' && window.prompt ? window.prompt('បញ្ចូល​តំណ · Enter link URL', 'https://') : '';
+    if (url && url.trim()) exec('createLink', url.trim());
+  };
+  var insertImage = dataUrl => {
+    var el = active.current && active.current.el;
+    if (!el) return;
+    el.focus();
+    var sel = window.getSelection();
+    var range = savedRange.current;
+    if (range && el.contains(range.commonAncestorContainer)) {
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+    range = sel.rangeCount ? sel.getRangeAt(0) : null;
+    var img = document.createElement('img');
+    img.src = dataUrl;
+    img.setAttribute('data-sz', 'm');
+    img.style.width = '60%';
+    if (range && el.contains(range.commonAncestorContainer)) {
+      range.deleteContents();
+      range.insertNode(img);
+      var space = document.createTextNode(' ');
+      if (img.parentNode) img.parentNode.insertBefore(space, img.nextSibling);
+      var after = document.createRange();
+      after.setStartAfter(space);
+      after.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(after);
+    } else {
+      el.appendChild(img);
+    }
+    savedRange.current = null;
+    if (active.current && active.current.fire) active.current.fire();
+  };
+  return {
+    active,
+    savedRange,
+    saveSel,
+    restoreSel,
+    setActive,
+    exec,
+    setBlock,
+    addLink,
+    insertImage
+  };
+};
+var RteToolbar = ({
+  rte,
+  sticky = true
+}) => {
+  var fileRef = React.useRef(null);
+  var pickImage = async e => {
+    var f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    try {
+      var url = await compressImageFile(f);
+      rte.insertImage(url);
+    } catch (err) {}
+  };
+  return React.createElement("div", {
+    style: {
+      position: sticky ? 'sticky' : 'static',
+      top: 0,
+      zIndex: 5,
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: 4,
+      padding: '7px 8px',
+      borderBottom: '1px solid var(--border)',
+      background: 'var(--surface-muted)',
+      alignItems: 'center'
+    }
+  }, React.createElement("input", {
+    ref: fileRef,
+    type: "file",
+    accept: "image/*",
+    style: {
+      display: 'none'
+    },
+    onChange: pickImage
+  }), React.createElement(RteBtn, {
+    onClick: () => rte.exec('undo'),
+    title: "\u1798\u17B7\u1793\u200B\u1792\u17D2\u179C\u17BE\u200B\u179C\u17B7\u1789 \xB7 Undo"
+  }, "\u21B6"), React.createElement(RteBtn, {
+    onClick: () => rte.exec('redo'),
+    title: "\u1792\u17D2\u179C\u17BE\u200B\u17A1\u17BE\u1784\u200B\u179C\u17B7\u1789 \xB7 Redo"
+  }, "\u21B7"), React.createElement(RteSep, null), React.createElement("select", {
+    title: "\u179A\u1785\u1793\u17B6\u1794\u1790 \xB7 Paragraph style",
+    onMouseDown: rte.saveSel,
+    onChange: e => {
+      if (e.target.value) rte.setBlock(e.target.value);
+      e.target.selectedIndex = 0;
+    },
+    style: {
+      height: 30,
+      borderRadius: 6,
+      border: '1px solid var(--border)',
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      fontSize: 12,
+      padding: '0 6px',
+      cursor: 'pointer'
+    }
+  }, React.createElement("option", {
+    value: ""
+  }, "\u179A\u1785\u1793\u17B6\u1794\u1790"), RTE_BLOCKS.map(b => React.createElement("option", {
+    key: b.v,
+    value: b.v
+  }, b.km))), React.createElement("select", {
+    title: "\u1791\u17C6\u17A0\u17C6\u200B\u17A2\u1780\u17D2\u179F\u179A \xB7 Font size",
+    onMouseDown: rte.saveSel,
+    onChange: e => {
+      if (e.target.value) rte.exec('fontSize', e.target.value);
+      e.target.selectedIndex = 0;
+    },
+    style: {
+      height: 30,
+      borderRadius: 6,
+      border: '1px solid var(--border)',
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      fontSize: 12,
+      padding: '0 6px',
+      cursor: 'pointer'
+    }
+  }, React.createElement("option", {
+    value: ""
+  }, "\u1791\u17C6\u17A0\u17C6"), RTE_SIZES.map(s => React.createElement("option", {
+    key: s.v,
+    value: s.v
+  }, s.km))), React.createElement(RteSep, null), React.createElement(RteBtn, {
+    onClick: () => rte.exec('bold'),
+    title: "\u178A\u17B7\u178F \xB7 Bold"
+  }, React.createElement("b", null, "B")), React.createElement(RteBtn, {
+    onClick: () => rte.exec('italic'),
+    title: "\u1791\u17D2\u179A\u17C1\u178F \xB7 Italic"
+  }, React.createElement("i", null, "I")), React.createElement(RteBtn, {
+    onClick: () => rte.exec('underline'),
+    title: "\u1782\u17BC\u179F\u200B\u1794\u1793\u17D2\u1791\u17B6\u178F\u17CB \xB7 Underline"
+  }, React.createElement("span", {
+    style: {
+      textDecoration: 'underline'
+    }
+  }, "U")), React.createElement(RteBtn, {
+    onClick: () => rte.exec('strikeThrough'),
+    title: "\u1782\u17BC\u179F\u200B\u1786\u17BC\u178F \xB7 Strikethrough"
+  }, React.createElement("span", {
+    style: {
+      textDecoration: 'line-through'
+    }
+  }, "S")), React.createElement(RteSep, null), RTE_COLORS.map(c => React.createElement("button", {
+    key: c,
+    type: "button",
+    title: "\u1796\u178E\u17CC\u200B\u17A2\u1780\u17D2\u179F\u179A \xB7 Text colour",
+    onMouseDown: e => e.preventDefault(),
+    onClick: () => rte.exec('foreColor', c),
+    style: {
+      width: 18,
+      height: 18,
+      borderRadius: '50%',
+      background: c,
+      border: '1px solid rgba(0,0,0,.2)',
+      cursor: 'pointer',
+      padding: 0,
+      flexShrink: 0
+    }
+  })), RTE_HILITES.map(c => React.createElement("button", {
+    key: c,
+    type: "button",
+    title: "\u200B\u1796\u178E\u17CC\u200B\u1795\u17D2\u1791\u17C3\u200B\u1781\u17B6\u1784\u1780\u17D2\u179A\u17C4\u1799 \xB7 Highlight",
+    onMouseDown: e => e.preventDefault(),
+    onClick: () => rte.exec('hiliteColor', c),
+    style: {
+      width: 18,
+      height: 18,
+      borderRadius: 4,
+      background: c,
+      border: '1px solid rgba(0,0,0,.2)',
+      cursor: 'pointer',
+      padding: 0,
+      flexShrink: 0
+    }
+  })), React.createElement(RteBtn, {
+    onClick: () => rte.exec('hiliteColor', 'transparent'),
+    title: "\u178A\u1780\u200B\u1796\u178E\u17CC\u200B\u1795\u17D2\u1791\u17C3 \xB7 No highlight",
+    w: 26
+  }, "\u232B"), React.createElement(RteSep, null), React.createElement(RteBtn, {
+    onClick: () => rte.exec('justifyLeft'),
+    title: "\u178F\u1798\u17D2\u179A\u17B9\u1798\u200B\u1786\u17D2\u179C\u17C1\u1784 \xB7 Align left"
+  }, "\u2261"), React.createElement(RteBtn, {
+    onClick: () => rte.exec('justifyCenter'),
+    title: "\u178F\u1798\u17D2\u179A\u17B9\u1798\u200B\u1780\u178E\u17D2\u178A\u17B6\u179B \xB7 Align centre"
+  }, "\u2630"), React.createElement(RteBtn, {
+    onClick: () => rte.exec('justifyRight'),
+    title: "\u178F\u1798\u17D2\u179A\u17B9\u1798\u200B\u179F\u17D2\u178A\u17B6\u17C6 \xB7 Align right"
+  }, "\u2263"), React.createElement(RteBtn, {
+    onClick: () => rte.exec('justifyFull'),
+    title: "\u178F\u1798\u17D2\u179A\u17B9\u1798\u200B\u179F\u1784\u1781\u17B6\u1784 \xB7 Justify"
+  }, "\u25A4"), React.createElement(RteSep, null), React.createElement(RteBtn, {
+    onClick: () => rte.exec('insertUnorderedList'),
+    title: "\u1785\u17C6\u178E\u17BB\u1785\u200B\u178F\u17D2\u179A\u17BD\u1799 \xB7 Bullet list"
+  }, "\u2022\xA0\u2261"), React.createElement(RteBtn, {
+    onClick: () => rte.exec('insertOrderedList'),
+    title: "\u179B\u17C1\u1781\u200B\u179A\u17C0\u1784 \xB7 Numbered list"
+  }, "1."), React.createElement(RteBtn, {
+    onClick: () => rte.exec('outdent'),
+    title: "\u1794\u1793\u17D2\u1790\u1799\u200B\u1780\u17B6\u179A\u200B\u1785\u17BC\u179B\u200B\u1794\u1793\u17D2\u1791\u17B6\u178F\u17CB \xB7 Outdent"
+  }, "\u21E4"), React.createElement(RteBtn, {
+    onClick: () => rte.exec('indent'),
+    title: "\u1785\u17BC\u179B\u200B\u1794\u1793\u17D2\u1791\u17B6\u178F\u17CB \xB7 Indent"
+  }, "\u21E5"), React.createElement(RteSep, null), React.createElement(RteBtn, {
+    onClick: rte.addLink,
+    title: "\u178F\u17C6\u178E \xB7 Link"
+  }, "\uD83D\uDD17"), React.createElement(RteBtn, {
+    onClick: () => rte.exec('insertHorizontalRule'),
+    title: "\u1794\u1793\u17D2\u1791\u17B6\u178F\u17CB\u200B\u1781\u178E\u17D2\u178C \xB7 Divider"
+  }, "\u2015"), React.createElement(RteBtn, {
+    onClick: () => rte.exec('removeFormat'),
+    title: "\u179F\u1798\u17D2\u17A2\u17B6\u178F\u200B\u1791\u17D2\u179A\u1784\u17CB\u1791\u17D2\u179A\u17B6\u1799 \xB7 Clear formatting",
+    w: 26
+  }, "\u2715"), React.createElement(RteSep, null), React.createElement("button", {
+    type: "button",
+    title: "\u178A\u17B6\u1780\u17CB\u200B\u179A\u17BC\u1794 \xB7 Insert image at cursor",
+    onMouseDown: e => {
+      e.preventDefault();
+      rte.saveSel();
+    },
+    onClick: () => fileRef.current && fileRef.current.click(),
+    style: {
+      height: 30,
+      padding: '0 10px',
+      borderRadius: 6,
+      cursor: 'pointer',
+      border: '1px solid var(--border)',
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      fontSize: 12,
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 6
+    }
+  }, React.createElement("svg", {
+    width: "14",
+    height: "14",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }, React.createElement("rect", {
+    x: "3",
+    y: "5",
+    width: "18",
+    height: "14",
+    rx: "2"
+  }), React.createElement("circle", {
+    cx: "9",
+    cy: "11",
+    r: "2"
+  }), React.createElement("path", {
+    d: "M21 17l-5-5L8 19"
+  })), "\u179A\u17BC\u1794"));
+};
+var RteField = React.forwardRef(({
+  rte,
+  langKey,
+  initialHtml,
+  onChange,
+  onBlur,
+  placeholder,
+  single = false,
+  minHeight = 280,
+  maxHeight,
+  fontSize = 15,
+  fontWeight = 400
+}, ref) => {
+  var edRef = React.useRef(null);
+  React.useImperativeHandle(ref, () => edRef.current);
+  React.useEffect(() => {
+    if (edRef.current && edRef.current.innerHTML !== (initialHtml || '')) edRef.current.innerHTML = initialHtml || '';
+  }, [langKey]);
+  var fire = () => {
+    if (edRef.current) onChange(edRef.current.innerHTML);
+  };
+  var entry = React.useRef({
+    el: null,
+    fire
+  });
+  entry.current.fire = fire;
+  var activate = () => {
+    entry.current.el = edRef.current;
+    rte.setActive(entry.current);
+    rte.saveSel();
+  };
+  var onImgClick = e => {
+    var img = e.target;
+    if (img && img.tagName === 'IMG') {
+      var cur = img.getAttribute('data-sz') || 'm';
+      var next = cur === 's' ? 'm' : cur === 'm' ? 'l' : 's';
+      img.setAttribute('data-sz', next);
+      img.style.width = next === 's' ? '30%' : next === 'l' ? '100%' : '60%';
+      fire();
+    }
+  };
+  return React.createElement("div", {
+    ref: edRef,
+    className: "al-rte",
+    contentEditable: true,
+    suppressContentEditableWarning: true,
+    "data-ph": placeholder || '',
+    onFocus: activate,
+    onInput: () => {
+      fire();
+      rte.saveSel();
+    },
+    onKeyUp: activate,
+    onMouseUp: activate,
+    onKeyDown: single ? e => {
+      if (e.key === 'Enter') e.preventDefault();
+    } : undefined,
+    onClick: onImgClick,
+    onBlur: () => {
+      rte.saveSel();
+      onBlur && onBlur();
+    },
+    style: {
+      minHeight: single ? undefined : minHeight,
+      maxHeight,
+      overflowY: maxHeight ? 'auto' : single ? 'hidden' : 'visible',
+      whiteSpace: single ? 'pre-wrap' : 'normal',
+      padding: single ? '9px 12px' : '12px 14px',
+      fontSize,
+      fontWeight,
+      lineHeight: single ? 1.3 : 1.8,
+      color: 'var(--ink)',
+      fontFamily: 'var(--font-km),var(--font-en),sans-serif',
+      border: '1px solid var(--border)',
+      borderRadius: 8,
+      background: 'var(--surface)',
+      outline: 'none'
+    }
+  });
+});
 var TextLessonForm = ({
   initial,
+  crumb,
+  headerTitle,
   onSave,
   onCancel
 }) => {
@@ -25684,9 +26220,9 @@ var TextLessonForm = ({
     busy: trBusy,
     translate
   } = useAutoTranslate();
+  var rte = useSharedRte();
   var [km, setKm] = React.useState(initial?.km || '');
   var [en, setEn] = React.useState(initial?.en || '');
-  var [mins, setMins] = React.useState(initial?.mins || 10);
   var [bodyKm, setBodyKm] = React.useState(() => {
     var b = initial?.body_km || '';
     return isLessonHtml(b) ? b : lessonMdToHtml(b, initial?.images);
@@ -25695,84 +26231,153 @@ var TextLessonForm = ({
     var b = initial?.body_en || '';
     return isLessonHtml(b) ? b : lessonMdToHtml(b, initial?.images);
   });
-  var bodyKmRef = React.useRef(null);
-  var bodyEnRef = React.useRef(null);
+  var [saving, setSaving] = React.useState(false);
   var enMode = lang === 'en';
-  React.useEffect(() => {
-    if (!enMode) return;
-    if (!en.trim() && km.trim()) translate(km, en, v => setEn(p => (p || '').trim() ? p : v));
-  }, [enMode]);
+  var curTitle = enMode ? en : km;
+  var setCurTitle = enMode ? setEn : setKm;
   var curBody = enMode ? bodyEn : bodyKm;
   var setCurBody = enMode ? setBodyEn : setBodyKm;
-  var curBodyRef = enMode ? bodyEnRef : bodyKmRef;
-  var submit = () => {
-    if (!km.trim() && !en.trim()) return;
+  var langKey = enMode ? 'en' : 'km';
+  var plain = s => (window.lessonPlainText ? window.lessonPlainText(s) : String(s || '').replace(/<[^>]+>/g, '')).trim();
+  var estMins = () => Math.max(1, Math.round(plain(bodyKm).replace(/\s+/g, '').length / 500)) || 1;
+  var submit = async () => {
+    if (!plain(km) && !plain(en)) return;
+    setSaving(true);
+    var outEn = en,
+      outBodyEn = bodyEn;
+    try {
+      if (!plain(en) && plain(km)) {
+        var t = await aiTranslateKmToEn(plain(km));
+        if (t) outEn = t;
+      }
+      if (!plain(bodyEn) && plain(bodyKm)) {
+        var _t = await aiTranslateHtmlKmToEn(bodyKm);
+        if (_t) outBodyEn = _t;
+      }
+    } catch (e) {}
+    setSaving(false);
     onSave({
       ...(initial || {}),
-      km: km.trim(),
-      en: en.trim(),
-      mins: parseInt(mins) || 10,
+      km: (km || '').trim(),
+      en: (outEn || '').trim(),
+      mins: estMins(),
       body_km: bodyKm,
-      body_en: bodyEn && bodyEn.trim() ? bodyEn : bodyKm,
+      body_en: plain(outBodyEn) ? outBodyEn : bodyKm,
       images: {}
     });
   };
+  var fieldLabel = {
+    fontSize: 11,
+    fontWeight: 600,
+    color: 'var(--ink-3)',
+    letterSpacing: '.02em',
+    margin: '0 0 6px'
+  };
   return React.createElement("div", {
     style: {
-      padding: bp.mobile ? '18px 16px 22px' : '20px 28px 24px',
-      display: 'grid',
-      gridTemplateColumns: bp.mobile ? '1fr' : '1fr 1fr',
-      gap: bp.mobile ? 12 : 16
+      display: 'flex',
+      flexDirection: 'column',
+      maxHeight: bp.mobile ? '86vh' : '84vh'
     }
-  }, React.createElement(AlField, {
-    km: enMode ? 'ចំណងជើង · អង់គ្លេស' : 'ចំណងជើង · ខ្មែរ',
-    full: false
-  }, React.createElement(AlInput, {
-    value: enMode ? en : km,
-    onChange: e => enMode ? setEn(e.target.value) : setKm(e.target.value),
-    onBlur: () => {
-      if (!enMode) translate(km, en, v => setEn(p => (p || '').trim() ? p : v));
-    },
-    placeholder: enMode ? 'e.g. Road Traffic Law' : 'ឧ. ច្បាប់ចរាចរណ៍'
-  }), React.createElement(TrBadge, {
-    show: trBusy
-  })), React.createElement(AlField, {
-    km: "\u179A\u1799\u17C8\u1796\u17C1\u179B\u17A2\u17B6\u1793 (\u1793\u17B6\u1791\u17B8)",
-    full: false
-  }, React.createElement(AlInput, {
-    type: "number",
-    min: "1",
-    max: "120",
-    value: mins,
-    onChange: e => setMins(e.target.value),
+  }, React.createElement("div", {
     style: {
-      width: 120
+      flexShrink: 0,
+      position: 'sticky',
+      top: 0,
+      zIndex: 6,
+      background: 'var(--surface)',
+      borderBottom: '1px solid var(--border)'
     }
-  })), React.createElement(AlField, {
-    km: enMode ? 'ខ្លឹមសារ · អង់គ្លេស' : 'ខ្លឹមសារ · ខ្មែរ'
-  }, React.createElement(RichBodyEditor, {
-    ref: curBodyRef,
-    langKey: enMode ? 'en' : 'km',
-    initialHtml: curBody,
-    onChange: setCurBody,
-    placeholder: enMode ? 'Lesson content…' : 'ខ្លឹមសារ​មេរៀន…'
+  }, React.createElement("div", {
+    style: {
+      padding: bp.mobile ? '14px 16px 10px' : '18px 24px 12px'
+    }
+  }, crumb && React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--ink-3)',
+      fontFamily: '"JetBrains Mono",monospace',
+      letterSpacing: '.08em'
+    }
+  }, crumb), React.createElement("div", {
+    style: {
+      fontSize: bp.mobile ? 17 : 20,
+      fontWeight: 600,
+      fontFamily: 'var(--font-display)',
+      letterSpacing: '-.01em',
+      marginTop: 4
+    }
+  }, headerTitle)), React.createElement(RteToolbar, {
+    rte: rte,
+    sticky: false
   })), React.createElement("div", {
     style: {
-      gridColumn: '1 / -1',
+      flex: 1,
+      minHeight: 0,
+      overflowY: 'auto',
+      padding: bp.mobile ? '14px 16px 18px' : '16px 24px 20px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 14
+    }
+  }, React.createElement("div", null, React.createElement("div", {
+    style: fieldLabel
+  }, enMode ? tr('ចំណងជើង · អង់គ្លេស', 'Title · English') : tr('ចំណងជើង · ខ្មែរ', 'Title · Khmer')), React.createElement(RteField, {
+    rte: rte,
+    langKey: langKey,
+    initialHtml: curTitle,
+    onChange: setCurTitle,
+    single: true,
+    fontSize: 17,
+    fontWeight: 700,
+    placeholder: enMode ? 'e.g. Road Traffic Law' : 'ឧ. ច្បាប់ចរាចរណ៍'
+  }), saving && React.createElement(TrBadge, {
+    show: true
+  })), React.createElement("div", null, React.createElement("div", {
+    style: fieldLabel
+  }, enMode ? tr('ខ្លឹមសារ · អង់គ្លេស', 'Content · English') : tr('ខ្លឹមសារ · ខ្មែរ', 'Content · Khmer')), React.createElement(RteField, {
+    rte: rte,
+    langKey: langKey,
+    initialHtml: curBody,
+    onChange: setCurBody,
+    minHeight: 300,
+    placeholder: enMode ? 'Lesson content…' : 'ខ្លឹមសារ​មេរៀន…'
+  }), React.createElement("div", {
+    style: {
+      marginTop: 6,
+      fontSize: 11,
+      color: 'var(--ink-3)'
+    }
+  }, "\uD83D\uDDBC ", tr('ដាក់ Cursor ក្នុងចំណងជើង ឬ ខ្លឹមសារ រួចប្រើ Tool ខាងលើ · ចុចលើរូបដើម្បីប្ដូរទំហំ', 'Put the cursor in the title or content, then use the toolbar above · click an image to resize')))), React.createElement("div", {
+    style: {
+      flexShrink: 0,
+      position: 'sticky',
+      bottom: 0,
+      zIndex: 6,
+      background: 'var(--surface)',
+      borderTop: '1px solid var(--border)',
+      padding: bp.mobile ? '12px 16px' : '14px 24px',
       display: 'flex',
       justifyContent: 'flex-end',
-      gap: 8,
-      marginTop: 8
+      gap: 8
     }
   }, React.createElement(Btn, {
     kind: "ghost",
     size: "md",
-    onClick: onCancel
+    onClick: onCancel,
+    style: saving ? {
+      opacity: .5,
+      pointerEvents: 'none'
+    } : {}
   }, tr('បោះបង់', 'Cancel')), React.createElement(Btn, {
     kind: "primary",
     size: "md",
-    onClick: submit
-  }, initial ? tr('រក្សាទុក', 'Save') : tr('បន្ថែម', 'Add lesson'))));
+    onClick: submit,
+    style: saving ? {
+      opacity: .6,
+      pointerEvents: 'none'
+    } : {}
+  }, saving ? tr('កំពុង​រក្សាទុក…', 'Saving…') : initial ? tr('រក្សាទុក', 'Save') : tr('បន្ថែម', 'Add lesson'))));
 };
 var BODY_IMG_RE_G = /!\[[^\]]*\]\(([^)]+)\)/g;
 var extractBodyImages = body => {
@@ -26417,13 +27022,13 @@ var TextLessonRow = ({
       fontWeight: 600,
       lineHeight: 1.3
     }
-  }, item.km), React.createElement("div", {
+  }, window.lessonInlineHtml ? window.lessonInlineHtml(item.km) : item.km), React.createElement("div", {
     style: {
       fontSize: 12,
       color: 'var(--ink-3)',
       marginTop: 1
     }
-  }, item.en, " \xB7 ", item.mins, " ", tr('នាទី', 'min')));
+  }, window.lessonPlainText ? window.lessonPlainText(item.en) : item.en, " \xB7 ", item.mins, " ", tr('នាទី', 'min')));
   if (mobile) return React.createElement("div", {
     style: {
       display: 'flex',
@@ -27142,39 +27747,48 @@ var AdminLessonsScreen = ({
     open: !!editor,
     onClose: () => setEditor(null),
     width: editor?.type === 'text' ? 900 : 820
-  }, editor && React.createElement("div", null, React.createElement("div", {
-    style: {
-      padding: '22px 28px 16px',
-      borderBottom: '1px solid var(--border)'
+  }, editor && (() => {
+    var crumb = editor.target === textsKey ? isTheory ? 'ទ្រឹស្ដី · អត្ថបទ' : 'អនុវត្តន៍ · អត្ថបទ' : editor.target === videosKey ? isTheory ? 'ទ្រឹស្ដី · វីដេអូ' : 'អនុវត្តន៍ · វីដេអូ' : isTheory ? 'ទ្រឹស្ដី · លំហាត់' : 'អនុវត្តន៍ · លំហាត់';
+    var headerTitle = editor.initial ? tr('កែ​មេរៀន', 'Edit lesson') : editor.type === 'text' ? tr('បន្ថែម​មេរៀន​អត្ថបទ', 'Add text lesson') : editor.type === 'video' ? tr('បន្ថែម​មេរៀន​វីដេអូ', 'Add video lesson') : tr('បន្ថែម​លំហាត់', 'Add quiz');
+    if (editor.type === 'text') {
+      return React.createElement(TextLessonForm, {
+        initial: editor.initial,
+        crumb: crumb,
+        headerTitle: headerTitle,
+        onSave: handleSave,
+        onCancel: () => setEditor(null)
+      });
     }
-  }, React.createElement("div", {
-    style: {
-      fontSize: 11,
-      color: 'var(--ink-3)',
-      fontFamily: '"JetBrains Mono",monospace',
-      letterSpacing: '.08em'
-    }
-  }, editor.target === textsKey ? isTheory ? 'ទ្រឹស្ដី · អត្ថបទ' : 'អនុវត្តន៍ · អត្ថបទ' : editor.target === videosKey ? isTheory ? 'ទ្រឹស្ដី · វីដេអូ' : 'អនុវត្តន៍ · វីដេអូ' : isTheory ? 'ទ្រឹស្ដី · លំហាត់' : 'អនុវត្តន៍ · លំហាត់'), React.createElement("div", {
-    style: {
-      fontSize: 20,
-      fontWeight: 600,
-      fontFamily: 'var(--font-display)',
-      letterSpacing: '-.01em',
-      marginTop: 4
-    }
-  }, editor.initial ? tr('កែ​មេរៀន', 'Edit lesson') : editor.type === 'text' ? tr('បន្ថែម​មេរៀន​អត្ថបទ', 'Add text lesson') : editor.type === 'video' ? tr('បន្ថែម​មេរៀន​វីដេអូ', 'Add video lesson') : tr('បន្ថែម​លំហាត់', 'Add quiz'))), editor.type === 'text' && React.createElement(TextLessonForm, {
-    initial: editor.initial,
-    onSave: handleSave,
-    onCancel: () => setEditor(null)
-  }), editor.type === 'video' && React.createElement(VideoLessonForm, {
-    initial: editor.initial,
-    onSave: handleSave,
-    onCancel: () => setEditor(null)
-  }), editor.type === 'quiz' && React.createElement(QuizForm, {
-    initial: editor.initial,
-    onSave: handleSave,
-    onCancel: () => setEditor(null)
-  }))));
+    return React.createElement("div", null, React.createElement("div", {
+      style: {
+        padding: '22px 28px 16px',
+        borderBottom: '1px solid var(--border)'
+      }
+    }, React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: 'var(--ink-3)',
+        fontFamily: '"JetBrains Mono",monospace',
+        letterSpacing: '.08em'
+      }
+    }, crumb), React.createElement("div", {
+      style: {
+        fontSize: 20,
+        fontWeight: 600,
+        fontFamily: 'var(--font-display)',
+        letterSpacing: '-.01em',
+        marginTop: 4
+      }
+    }, headerTitle)), editor.type === 'video' && React.createElement(VideoLessonForm, {
+      initial: editor.initial,
+      onSave: handleSave,
+      onCancel: () => setEditor(null)
+    }), editor.type === 'quiz' && React.createElement(QuizForm, {
+      initial: editor.initial,
+      onSave: handleSave,
+      onCancel: () => setEditor(null)
+    }));
+  })()));
 };
 var EmptyState = ({
   km,

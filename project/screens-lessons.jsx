@@ -50,6 +50,15 @@ const sanitizeLessonHtml = (html, images) => {
   return s;
 };
 
+// Lesson titles may now carry light inline formatting (colour / bold / size)
+// from the editor toolbar. Render stored HTML inline where formatting should
+// show; strip tags to plain text where a string is required.
+const lessonPlainText = (s) => isLessonHtml(s) ? String(s).replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim() : (s || '');
+const lessonInlineHtml = (s) => isLessonHtml(s)
+  ? React.createElement('span', { dangerouslySetInnerHTML: { __html: sanitizeLessonHtml(s) } })
+  : (s || '');
+if (typeof window !== 'undefined') { window.lessonPlainText = lessonPlainText; window.lessonInlineHtml = lessonInlineHtml; }
+
 // One-time stylesheet for rendered rich lesson bodies.
 (() => {
   if (typeof document === 'undefined' || document.getElementById('lesson-rich-style')) return;
@@ -1190,7 +1199,7 @@ const TextCard = ({ lesson, done, onToggle }) => {
       borderRadius: 12, overflow: 'hidden', background: 'var(--surface)',
       transition: 'border-color .15s',
     }}>
-      <button onClick={() => setOpen(o => !o)} style={{
+      <button onClick={() => setOpen(true)} style={{
         width: '100%', background: 'transparent', border: 'none', cursor: 'pointer',
         padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12,
         textAlign: 'left', font: 'inherit', color: 'inherit',
@@ -1204,7 +1213,7 @@ const TextCard = ({ lesson, done, onToggle }) => {
           {done ? <Icon name="check" size={16} stroke={2.5}/> : <Icon name="book" size={16}/>}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 600 }}>{tr(lesson.km, lesson.en)}</div>
+          <div style={{ fontSize: 14, fontWeight: 600 }}>{lessonInlineHtml(tr(lesson.km, lesson.en))}</div>
           <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2, display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
             {lesson.no && <span style={{ fontFamily:'"JetBrains Mono",monospace', color:'var(--accent)', fontWeight:600 }}>{lesson.no}</span>}
             {lesson.ja && <span style={{ color:'var(--ink-2)' }}>{lesson.ja}</span>}
@@ -1212,23 +1221,38 @@ const TextCard = ({ lesson, done, onToggle }) => {
           </div>
         </div>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2" strokeLinecap="round"
-          style={{ transform: open ? 'rotate(90deg)' : '', transition: 'transform .15s', flexShrink: 0 }}>
+          style={{ flexShrink: 0 }}>
           <path d="M9 6l6 6-6 6"/>
         </svg>
       </button>
 
-      {open && (
-        <div style={{ padding: '4px 14px 16px', borderTop: '1px solid var(--border)' }}>
-          <div style={{ marginTop: 10, fontSize: 13, lineHeight: 1.75 }}>
+      {/* Reading popup — sticky header + footer, scrollable body */}
+      <Modal open={open} onClose={() => setOpen(false)} width={720}>
+        <div style={{ display:'flex', flexDirection:'column', maxHeight: window.innerWidth < 700 ? '86vh' : '84vh' }}>
+          <div style={{ flexShrink:0, position:'sticky', top:0, background:'var(--surface)', padding:'16px 20px 12px', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'flex-start', gap:12, zIndex:2 }}>
+            <div style={{ width:38, height:38, borderRadius:10, flexShrink:0, background: done ? 'var(--good)' : 'var(--surface-muted)', color: done ? '#fff' : 'var(--ink-3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              {done ? <Icon name="check" size={18} stroke={2.5}/> : <Icon name="book" size={18}/>}
+            </div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:17, fontWeight:700, fontFamily:'var(--font-display)', lineHeight:1.25 }}>{lessonInlineHtml(tr(lesson.km, lesson.en))}</div>
+              <div style={{ fontSize:12, color:'var(--ink-3)', marginTop:3, display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+                {lesson.no && <span style={{ fontFamily:'"JetBrains Mono",monospace', color:'var(--accent)', fontWeight:600 }}>{lesson.no}</span>}
+                {lesson.ja && <span style={{ color:'var(--ink-2)' }}>{lesson.ja}</span>}
+                <span>· {lesson.mins} {tr('នាទី', 'min')}</span>
+              </div>
+            </div>
+            <button onClick={() => setOpen(false)} title={tr('បិទ','Close')} style={{ flexShrink:0, width:32, height:32, borderRadius:8, border:'1px solid var(--border)', background:'var(--surface)', cursor:'pointer', color:'var(--ink-2)', fontSize:16, lineHeight:1 }}>✕</button>
+          </div>
+          <div style={{ flex:1, minHeight:0, overflowY:'auto', padding:'14px 20px 18px', fontSize:14, lineHeight:1.8 }}>
             {renderBody(tr(lesson.body_km, lesson.body_en))}
           </div>
-          <div style={{ marginTop: 14, display: 'flex', justifyContent: 'flex-end' }}>
-            <Btn kind={done ? 'ghost' : 'primary'} onClick={() => onToggle(lesson.id)}>
+          <div style={{ flexShrink:0, position:'sticky', bottom:0, background:'var(--surface)', borderTop:'1px solid var(--border)', padding:'12px 20px', display:'flex', justifyContent:'flex-end', gap:8 }}>
+            <Btn kind={done ? 'ghost' : 'primary'} onClick={() => { onToggle(lesson.id); setOpen(false); }}>
               {done ? tr('សម្គាល់ថាមិនទាន់អាន', 'Mark as unread') : tr('សម្គាល់ថាបានអាន ✓', 'Mark as read ✓')}
             </Btn>
           </div>
         </div>
-      )}
+      </Modal>
     </div>
   );
 };

@@ -84,6 +84,37 @@ async function aiTranslateKmToEn(kmText) {
   } catch (e) { return ''; }
 }
 
+// Translate a rich-HTML lesson body Khmer→English while keeping every tag,
+// attribute and <img> intact. Returns null when no API key is configured.
+async function aiTranslateHtmlKmToEn(html) {
+  const text = (html || '').trim();
+  if (!text) return '';
+  const apiKey = window.__schoolSettings && window.__schoolSettings.anthropicKey;
+  if (!apiKey) return null;
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 3000,
+        messages: [{ role: 'user', content:
+          'Translate the Khmer text inside this HTML driving-school lesson into natural, concise English. '
+          + 'Keep every HTML tag, attribute and <img> element exactly as-is — translate only the human-readable text. '
+          + 'Return ONLY the resulting HTML, nothing else.\n\n' + text }],
+      }),
+    });
+    if (!resp.ok) return '';
+    const data = await resp.json();
+    return ((data.content && data.content[0] && data.content[0].text) || '').trim();
+  } catch (e) { return ''; }
+}
+
 const useAutoTranslate = () => {
   const { tr, toast } = useAppActions();
   const [busy, setBusy] = React.useState(0);
@@ -447,65 +478,265 @@ const ImagePickerButton = ({ onPick, label, accept = 'image/*', size = 'sm' }) =
   );
 };
 
+// ── Shared rich-text controller ───────────────────────────────────────────
+// One toolbar drives several contentEditable regions (the title AND the body).
+// Whichever field was focused last is the "active" one; toolbar commands apply
+// there via document.execCommand, with its caret/selection saved + restored.
+const useSharedRte = () => {
+  const active = React.useRef(null);        // { el, fire }
+  const savedRange = React.useRef(null);
+  const saveSel = () => {
+    try {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount) {
+        const r = sel.getRangeAt(0);
+        const el = active.current && active.current.el;
+        if (el && el.contains(r.commonAncestorContainer)) savedRange.current = r.cloneRange();
+      }
+    } catch (e) {}
+  };
+  const restoreSel = () => {
+    try {
+      const r = savedRange.current, el = active.current && active.current.el;
+      if (r && el && el.contains(r.commonAncestorContainer)) {
+        const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      }
+    } catch (e) {}
+  };
+  const setActive = (entry) => { active.current = entry; };
+  const exec = (cmd, val) => {
+    const el = active.current && active.current.el; if (!el) return;
+    el.focus(); restoreSel();
+    try { document.execCommand('styleWithCSS', false, true); } catch (e) {}
+    try { document.execCommand(cmd, false, val); } catch (e) {}
+    if (active.current && active.current.fire) active.current.fire();
+    saveSel();
+  };
+  const setBlock = (tag) => exec('formatBlock', tag);
+  const addLink = () => {
+    const url = (typeof window !== 'undefined' && window.prompt) ? window.prompt('បញ្ចូល​តំណ · Enter link URL', 'https://') : '';
+    if (url && url.trim()) exec('createLink', url.trim());
+  };
+  const insertImage = (dataUrl) => {
+    const el = active.current && active.current.el; if (!el) return;
+    el.focus();
+    const sel = window.getSelection();
+    let range = savedRange.current;
+    if (range && el.contains(range.commonAncestorContainer)) { sel.removeAllRanges(); sel.addRange(range); }
+    range = sel.rangeCount ? sel.getRangeAt(0) : null;
+    const img = document.createElement('img');
+    img.src = dataUrl; img.setAttribute('data-sz', 'm'); img.style.width = '60%';
+    if (range && el.contains(range.commonAncestorContainer)) {
+      range.deleteContents(); range.insertNode(img);
+      const space = document.createTextNode(' ');
+      if (img.parentNode) img.parentNode.insertBefore(space, img.nextSibling);
+      const after = document.createRange(); after.setStartAfter(space); after.collapse(true);
+      sel.removeAllRanges(); sel.addRange(after);
+    } else { el.appendChild(img); }
+    savedRange.current = null;
+    if (active.current && active.current.fire) active.current.fire();
+  };
+  return { active, savedRange, saveSel, restoreSel, setActive, exec, setBlock, addLink, insertImage };
+};
+
+// The shared toolbar UI. `sticky` pins it to the top of the scroll container.
+const RteToolbar = ({ rte, sticky = true }) => {
+  const fileRef = React.useRef(null);
+  const pickImage = async (e) => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    try { const url = await compressImageFile(f); rte.insertImage(url); } catch (err) {}
+  };
+  return (
+    <div style={{position: sticky ? 'sticky' : 'static', top:0, zIndex:5,
+      display:'flex',flexWrap:'wrap',gap:4,padding:'7px 8px',borderBottom:'1px solid var(--border)',background:'var(--surface-muted)',alignItems:'center'}}>
+      <input ref={fileRef} type="file" accept="image/*" style={{display:'none'}} onChange={pickImage}/>
+      <RteBtn onClick={()=>rte.exec('undo')} title="មិន​ធ្វើ​វិញ · Undo">↶</RteBtn>
+      <RteBtn onClick={()=>rte.exec('redo')} title="ធ្វើ​ឡើង​វិញ · Redo">↷</RteBtn>
+      <RteSep/>
+      <select title="រចនាបថ · Paragraph style" onMouseDown={rte.saveSel}
+        onChange={e=>{ if(e.target.value) rte.setBlock(e.target.value); e.target.selectedIndex=0; }}
+        style={{height:30,borderRadius:6,border:'1px solid var(--border)',background:'var(--surface)',color:'var(--ink)',fontSize:12,padding:'0 6px',cursor:'pointer'}}>
+        <option value="">រចនាបថ</option>
+        {RTE_BLOCKS.map(b=><option key={b.v} value={b.v}>{b.km}</option>)}
+      </select>
+      <select title="ទំហំ​អក្សរ · Font size" onMouseDown={rte.saveSel}
+        onChange={e=>{ if(e.target.value) rte.exec('fontSize', e.target.value); e.target.selectedIndex=0; }}
+        style={{height:30,borderRadius:6,border:'1px solid var(--border)',background:'var(--surface)',color:'var(--ink)',fontSize:12,padding:'0 6px',cursor:'pointer'}}>
+        <option value="">ទំហំ</option>
+        {RTE_SIZES.map(s=><option key={s.v} value={s.v}>{s.km}</option>)}
+      </select>
+      <RteSep/>
+      <RteBtn onClick={()=>rte.exec('bold')}          title="ដិត · Bold"><b>B</b></RteBtn>
+      <RteBtn onClick={()=>rte.exec('italic')}        title="ទ្រេត · Italic"><i>I</i></RteBtn>
+      <RteBtn onClick={()=>rte.exec('underline')}     title="គូស​បន្ទាត់ · Underline"><span style={{textDecoration:'underline'}}>U</span></RteBtn>
+      <RteBtn onClick={()=>rte.exec('strikeThrough')} title="គូស​ឆូត · Strikethrough"><span style={{textDecoration:'line-through'}}>S</span></RteBtn>
+      <RteSep/>
+      {RTE_COLORS.map(c=>(
+        <button key={c} type="button" title="ពណ៌​អក្សរ · Text colour" onMouseDown={e=>e.preventDefault()} onClick={()=>rte.exec('foreColor', c)}
+          style={{width:18,height:18,borderRadius:'50%',background:c,border:'1px solid rgba(0,0,0,.2)',cursor:'pointer',padding:0,flexShrink:0}}/>
+      ))}
+      {RTE_HILITES.map(c=>(
+        <button key={c} type="button" title="​ពណ៌​ផ្ទៃ​ខាងក្រោយ · Highlight" onMouseDown={e=>e.preventDefault()} onClick={()=>rte.exec('hiliteColor', c)}
+          style={{width:18,height:18,borderRadius:4,background:c,border:'1px solid rgba(0,0,0,.2)',cursor:'pointer',padding:0,flexShrink:0}}/>
+      ))}
+      <RteBtn onClick={()=>rte.exec('hiliteColor','transparent')} title="ដក​ពណ៌​ផ្ទៃ · No highlight" w={26}>⌫</RteBtn>
+      <RteSep/>
+      <RteBtn onClick={()=>rte.exec('justifyLeft')}   title="តម្រឹម​ឆ្វេង · Align left">≡</RteBtn>
+      <RteBtn onClick={()=>rte.exec('justifyCenter')} title="តម្រឹម​កណ្ដាល · Align centre">☰</RteBtn>
+      <RteBtn onClick={()=>rte.exec('justifyRight')}  title="តម្រឹម​ស្ដាំ · Align right">≣</RteBtn>
+      <RteBtn onClick={()=>rte.exec('justifyFull')}   title="តម្រឹម​សងខាង · Justify">▤</RteBtn>
+      <RteSep/>
+      <RteBtn onClick={()=>rte.exec('insertUnorderedList')} title="ចំណុច​ត្រួយ · Bullet list">•&nbsp;≡</RteBtn>
+      <RteBtn onClick={()=>rte.exec('insertOrderedList')}   title="លេខ​រៀង · Numbered list">1.</RteBtn>
+      <RteBtn onClick={()=>rte.exec('outdent')} title="បន្ថយ​ការ​ចូល​បន្ទាត់ · Outdent">⇤</RteBtn>
+      <RteBtn onClick={()=>rte.exec('indent')}  title="ចូល​បន្ទាត់ · Indent">⇥</RteBtn>
+      <RteSep/>
+      <RteBtn onClick={rte.addLink} title="តំណ · Link">🔗</RteBtn>
+      <RteBtn onClick={()=>rte.exec('insertHorizontalRule')} title="បន្ទាត់​ខណ្ឌ · Divider">―</RteBtn>
+      <RteBtn onClick={()=>rte.exec('removeFormat')} title="សម្អាត​ទ្រង់ទ្រាយ · Clear formatting" w={26}>✕</RteBtn>
+      <RteSep/>
+      <button type="button" title="ដាក់​រូប · Insert image at cursor"
+        onMouseDown={e=>{ e.preventDefault(); rte.saveSel(); }}
+        onClick={()=>fileRef.current && fileRef.current.click()}
+        style={{height:30,padding:'0 10px',borderRadius:6,cursor:'pointer',border:'1px solid var(--border)',
+          background:'var(--surface)',color:'var(--ink)',fontSize:12,display:'inline-flex',alignItems:'center',gap:6}}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5L8 19"/>
+        </svg>
+        រូប
+      </button>
+    </div>
+  );
+};
+
+// A single contentEditable region wired to a shared controller. `single` keeps
+// it to one line (used for the title); otherwise it's a multi-line body.
+const RteField = React.forwardRef(({ rte, langKey, initialHtml, onChange, onBlur, placeholder, single=false, minHeight=280, maxHeight, fontSize=15, fontWeight=400 }, ref) => {
+  const edRef = React.useRef(null);
+  React.useImperativeHandle(ref, () => edRef.current);
+  React.useEffect(() => {
+    if (edRef.current && edRef.current.innerHTML !== (initialHtml || '')) edRef.current.innerHTML = initialHtml || '';
+  }, [langKey]);
+  const fire = () => { if (edRef.current) onChange(edRef.current.innerHTML); };
+  const entry = React.useRef({ el:null, fire });
+  entry.current.fire = fire;
+  const activate = () => { entry.current.el = edRef.current; rte.setActive(entry.current); rte.saveSel(); };
+  const onImgClick = (e) => {
+    const img = e.target;
+    if (img && img.tagName === 'IMG') {
+      const cur = img.getAttribute('data-sz') || 'm';
+      const next = cur === 's' ? 'm' : cur === 'm' ? 'l' : 's';
+      img.setAttribute('data-sz', next);
+      img.style.width = next === 's' ? '30%' : next === 'l' ? '100%' : '60%';
+      fire();
+    }
+  };
+  return (
+    <div ref={edRef} className="al-rte" contentEditable suppressContentEditableWarning data-ph={placeholder||''}
+      onFocus={activate}
+      onInput={()=>{ fire(); rte.saveSel(); }}
+      onKeyUp={activate} onMouseUp={activate}
+      onKeyDown={single ? (e)=>{ if (e.key==='Enter') e.preventDefault(); } : undefined}
+      onClick={onImgClick}
+      onBlur={()=>{ rte.saveSel(); onBlur && onBlur(); }}
+      style={{minHeight:single?undefined:minHeight, maxHeight, overflowY: maxHeight?'auto':(single?'hidden':'visible'),
+        whiteSpace: single?'pre-wrap':'normal',
+        padding:single?'9px 12px':'12px 14px', fontSize, fontWeight, lineHeight:single?1.3:1.8,
+        color:'var(--ink)', fontFamily:'var(--font-km),var(--font-en),sans-serif',
+        border:'1px solid var(--border)', borderRadius:8, background:'var(--surface)', outline:'none'}}/>
+  );
+});
+
 // ── Text-lesson form ──────────────────────────────────────────────────────
-const TextLessonForm = ({ initial, onSave, onCancel }) => {
+const TextLessonForm = ({ initial, crumb, headerTitle, onSave, onCancel }) => {
   const { tr, lang } = useAppActions();
   const bp = useBreakpoint();
   const { busy: trBusy, translate } = useAutoTranslate();
+  const rte = useSharedRte();
+  // Titles may carry light inline formatting now — stored as HTML like the body.
   const [km,    setKm]    = React.useState(initial?.km    || '');
   const [en,    setEn]    = React.useState(initial?.en    || '');
-  const [mins,  setMins]  = React.useState(initial?.mins  || 10);
   // Bodies are stored as rich HTML. Legacy markdown bodies are converted on
   // open so they show formatted in the WYSIWYG editor (and migrate on save).
   const [bodyKm, setBodyKm] = React.useState(() => { const b = initial?.body_km || ''; return isLessonHtml(b) ? b : lessonMdToHtml(b, initial?.images); });
   const [bodyEn, setBodyEn] = React.useState(() => { const b = initial?.body_en || ''; return isLessonHtml(b) ? b : lessonMdToHtml(b, initial?.images); });
-  const bodyKmRef = React.useRef(null);
-  const bodyEnRef = React.useRef(null);
+  const [saving, setSaving] = React.useState(false);
 
-  // Title follows the app language: Khmer when km, the translated English when
-  // the whole UI is switched to English. (Body is rich HTML — not auto-translated.)
+  // Everything is authored in Khmer; when the whole UI is in English we edit /
+  // show the English variant, auto-translated from Khmer (needs an API key).
   const enMode = lang === 'en';
-  React.useEffect(() => {
-    if (!enMode) return;
-    if (!en.trim() && km.trim()) translate(km, en, v => setEn(p => (p||'').trim()?p:v));
-  }, [enMode]);
-  const curBody    = enMode ? bodyEn : bodyKm;
-  const setCurBody = enMode ? setBodyEn : setBodyKm;
-  const curBodyRef = enMode ? bodyEnRef : bodyKmRef;
+  const curTitle    = enMode ? en : km;
+  const setCurTitle = enMode ? setEn : setKm;
+  const curBody     = enMode ? bodyEn : bodyKm;
+  const setCurBody  = enMode ? setBodyEn : setBodyKm;
+  const langKey     = enMode ? 'en' : 'km';
+  const plain = (s) => (window.lessonPlainText ? window.lessonPlainText(s) : String(s||'').replace(/<[^>]+>/g,'')).trim();
 
-  const submit = () => {
-    if (!km.trim() && !en.trim()) return;
+  // Estimate reading time from the Khmer body length (~500 chars ≈ 1 min).
+  const estMins = () => Math.max(1, Math.round(plain(bodyKm).replace(/\s+/g,'').length / 500)) || 1;
+
+  const submit = async () => {
+    if (!plain(km) && !plain(en)) return;
+    setSaving(true);
+    let outEn = en, outBodyEn = bodyEn;
+    // When the English variants are empty, translate them from Khmer so English
+    // viewers see real English (falls back to Khmer if no API key / failure).
+    try {
+      if (!plain(en) && plain(km)) { const t = await aiTranslateKmToEn(plain(km)); if (t) outEn = t; }
+      if (!plain(bodyEn) && plain(bodyKm)) { const t = await aiTranslateHtmlKmToEn(bodyKm); if (t) outBodyEn = t; }
+    } catch (e) {}
+    setSaving(false);
     onSave({
       ...(initial || {}),
-      km: km.trim(), en: en.trim(),
-      mins: parseInt(mins) || 10,
+      km: (km||'').trim(), en: (outEn||'').trim(),
+      mins: estMins(),
       body_km: bodyKm,
-      body_en: (bodyEn && bodyEn.trim()) ? bodyEn : bodyKm,  // fall back to KH so EN viewers see content
+      body_en: plain(outBodyEn) ? outBodyEn : bodyKm,   // fall back to KH so EN viewers still see content
       images: {},   // images are embedded inline in the HTML body now
     });
   };
 
+  const fieldLabel = { fontSize:11, fontWeight:600, color:'var(--ink-3)', letterSpacing:'.02em', margin:'0 0 6px' };
+
   return (
-    <div style={{padding:bp.mobile?'18px 16px 22px':'20px 28px 24px',display:'grid',gridTemplateColumns:bp.mobile?'1fr':'1fr 1fr',gap:bp.mobile?12:16}}>
-      <AlField km={enMode ? 'ចំណងជើង · អង់គ្លេស' : 'ចំណងជើង · ខ្មែរ'} full={false}>
-        <AlInput value={enMode ? en : km}
-          onChange={e=> enMode ? setEn(e.target.value) : setKm(e.target.value)}
-          onBlur={()=>{ if (!enMode) translate(km, en, v=>setEn(p=>(p||'').trim()?p:v)); }}
-          placeholder={enMode ? 'e.g. Road Traffic Law' : 'ឧ. ច្បាប់ចរាចរណ៍'}/>
-        <TrBadge show={trBusy}/>
-      </AlField>
-      <AlField km="រយៈពេលអាន (នាទី)" full={false}>
-        <AlInput type="number" min="1" max="120" value={mins} onChange={e=>setMins(e.target.value)} style={{width:120}}/>
-      </AlField>
-      <AlField km={enMode ? 'ខ្លឹមសារ · អង់គ្លេស' : 'ខ្លឹមសារ · ខ្មែរ'}>
-        <RichBodyEditor ref={curBodyRef} langKey={enMode ? 'en' : 'km'} initialHtml={curBody}
-          onChange={setCurBody}
-          placeholder={enMode ? 'Lesson content…' : 'ខ្លឹមសារ​មេរៀន…'}/>
-      </AlField>
-      {/* English body is hidden — still auto-translated from Khmer on blur and saved. */}
-      <div style={{gridColumn:'1 / -1',display:'flex',justifyContent:'flex-end',gap:8,marginTop:8}}>
-        <Btn kind="ghost"   size="md" onClick={onCancel}>{tr('បោះបង់','Cancel')}</Btn>
-        <Btn kind="primary" size="md" onClick={submit}>{initial ? tr('រក្សាទុក','Save') : tr('បន្ថែម','Add lesson')}</Btn>
+    <div style={{display:'flex',flexDirection:'column',maxHeight: bp.mobile ? '86vh' : '84vh'}}>
+      {/* Sticky header: breadcrumb + title + the shared formatting toolbar */}
+      <div style={{flexShrink:0,position:'sticky',top:0,zIndex:6,background:'var(--surface)',borderBottom:'1px solid var(--border)'}}>
+        <div style={{padding:bp.mobile?'14px 16px 10px':'18px 24px 12px'}}>
+          {crumb && <div style={{fontSize:11,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.08em'}}>{crumb}</div>}
+          <div style={{fontSize:bp.mobile?17:20,fontWeight:600,fontFamily:'var(--font-display)',letterSpacing:'-.01em',marginTop:4}}>{headerTitle}</div>
+        </div>
+        <RteToolbar rte={rte} sticky={false}/>
+      </div>
+
+      {/* Scrollable middle: title (rich) + content (rich) */}
+      <div style={{flex:1,minHeight:0,overflowY:'auto',padding:bp.mobile?'14px 16px 18px':'16px 24px 20px',display:'flex',flexDirection:'column',gap:14}}>
+        <div>
+          <div style={fieldLabel}>{enMode ? tr('ចំណងជើង · អង់គ្លេស','Title · English') : tr('ចំណងជើង · ខ្មែរ','Title · Khmer')}</div>
+          <RteField rte={rte} langKey={langKey} initialHtml={curTitle} onChange={setCurTitle}
+            single fontSize={17} fontWeight={700}
+            placeholder={enMode ? 'e.g. Road Traffic Law' : 'ឧ. ច្បាប់ចរាចរណ៍'}/>
+          {saving && <TrBadge show={true}/>}
+        </div>
+        <div>
+          <div style={fieldLabel}>{enMode ? tr('ខ្លឹមសារ · អង់គ្លេស','Content · English') : tr('ខ្លឹមសារ · ខ្មែរ','Content · Khmer')}</div>
+          <RteField rte={rte} langKey={langKey} initialHtml={curBody} onChange={setCurBody}
+            minHeight={300}
+            placeholder={enMode ? 'Lesson content…' : 'ខ្លឹមសារ​មេរៀន…'}/>
+          <div style={{marginTop:6,fontSize:11,color:'var(--ink-3)'}}>
+            🖼 {tr('ដាក់ Cursor ក្នុងចំណងជើង ឬ ខ្លឹមសារ រួចប្រើ Tool ខាងលើ · ចុចលើរូបដើម្បីប្ដូរទំហំ','Put the cursor in the title or content, then use the toolbar above · click an image to resize')}
+          </div>
+        </div>
+      </div>
+
+      {/* Sticky footer */}
+      <div style={{flexShrink:0,position:'sticky',bottom:0,zIndex:6,background:'var(--surface)',borderTop:'1px solid var(--border)',padding:bp.mobile?'12px 16px':'14px 24px',display:'flex',justifyContent:'flex-end',gap:8}}>
+        <Btn kind="ghost"   size="md" onClick={onCancel} style={saving?{opacity:.5,pointerEvents:'none'}:{}}>{tr('បោះបង់','Cancel')}</Btn>
+        <Btn kind="primary" size="md" onClick={submit} style={saving?{opacity:.6,pointerEvents:'none'}:{}}>
+          {saving ? tr('កំពុង​រក្សាទុក…','Saving…') : (initial ? tr('រក្សាទុក','Save') : tr('បន្ថែម','Add lesson'))}
+        </Btn>
       </div>
     </div>
   );
@@ -849,8 +1080,8 @@ const TextLessonRow = ({ item, onEdit, onDelete, tr, mobile }) => {
   );
   const title = (
     <div style={{minWidth:0,flex:1}}>
-      <div style={{fontSize:14,fontWeight:600,lineHeight:1.3}}>{item.km}</div>
-      <div style={{fontSize:12,color:'var(--ink-3)',marginTop:1}}>{item.en} · {item.mins} {tr('នាទី','min')}</div>
+      <div style={{fontSize:14,fontWeight:600,lineHeight:1.3}}>{window.lessonInlineHtml ? window.lessonInlineHtml(item.km) : item.km}</div>
+      <div style={{fontSize:12,color:'var(--ink-3)',marginTop:1}}>{window.lessonPlainText ? window.lessonPlainText(item.en) : item.en} · {item.mins} {tr('នាទី','min')}</div>
     </div>
   );
   if (mobile) return (
@@ -1214,27 +1445,31 @@ const AdminLessonsScreen = ({ role = 'admin' }) => {
 
       {/* Editor modal */}
       <Modal open={!!editor} onClose={()=>setEditor(null)} width={editor?.type === 'text' ? 900 : 820}>
-        {editor && (
-          <div>
-            <div style={{padding:'22px 28px 16px',borderBottom:'1px solid var(--border)'}}>
-              <div style={{fontSize:11,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.08em'}}>
-                {editor.target === textsKey   ? (isTheory?'ទ្រឹស្ដី · អត្ថបទ':'អនុវត្តន៍ · អត្ថបទ')   :
-                 editor.target === videosKey  ? (isTheory?'ទ្រឹស្ដី · វីដេអូ':'អនុវត្តន៍ · វីដេអូ') :
-                                                (isTheory?'ទ្រឹស្ដី · លំហាត់':'អនុវត្តន៍ · លំហាត់')}
+        {editor && (() => {
+          const crumb = editor.target === textsKey   ? (isTheory?'ទ្រឹស្ដី · អត្ថបទ':'អនុវត្តន៍ · អត្ថបទ')   :
+                        editor.target === videosKey  ? (isTheory?'ទ្រឹស្ដី · វីដេអូ':'អនុវត្តន៍ · វីដេអូ') :
+                                                       (isTheory?'ទ្រឹស្ដី · លំហាត់':'អនុវត្តន៍ · លំហាត់');
+          const headerTitle = editor.initial
+            ? tr('កែ​មេរៀន', 'Edit lesson')
+            : editor.type === 'text'  ? tr('បន្ថែម​មេរៀន​អត្ថបទ', 'Add text lesson')
+            : editor.type === 'video' ? tr('បន្ថែម​មេរៀន​វីដេអូ', 'Add video lesson')
+                                      : tr('បន្ថែម​លំហាត់', 'Add quiz');
+          // The text editor renders its own sticky header (with the toolbar); the
+          // other forms keep the shared static header above them.
+          if (editor.type === 'text') {
+            return <TextLessonForm initial={editor.initial} crumb={crumb} headerTitle={headerTitle} onSave={handleSave} onCancel={()=>setEditor(null)}/>;
+          }
+          return (
+            <div>
+              <div style={{padding:'22px 28px 16px',borderBottom:'1px solid var(--border)'}}>
+                <div style={{fontSize:11,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.08em'}}>{crumb}</div>
+                <div style={{fontSize:20,fontWeight:600,fontFamily:'var(--font-display)',letterSpacing:'-.01em',marginTop:4}}>{headerTitle}</div>
               </div>
-              <div style={{fontSize:20,fontWeight:600,fontFamily:'var(--font-display)',letterSpacing:'-.01em',marginTop:4}}>
-                {editor.initial
-                  ? tr('កែ​មេរៀន', 'Edit lesson')
-                  : editor.type === 'text'  ? tr('បន្ថែម​មេរៀន​អត្ថបទ', 'Add text lesson')
-                  : editor.type === 'video' ? tr('បន្ថែម​មេរៀន​វីដេអូ', 'Add video lesson')
-                                            : tr('បន្ថែម​លំហាត់', 'Add quiz')}
-              </div>
+              {editor.type === 'video' && <VideoLessonForm initial={editor.initial} onSave={handleSave} onCancel={()=>setEditor(null)}/>}
+              {editor.type === 'quiz'  && <QuizForm        initial={editor.initial} onSave={handleSave} onCancel={()=>setEditor(null)}/>}
             </div>
-            {editor.type === 'text'  && <TextLessonForm  initial={editor.initial} onSave={handleSave} onCancel={()=>setEditor(null)}/>}
-            {editor.type === 'video' && <VideoLessonForm initial={editor.initial} onSave={handleSave} onCancel={()=>setEditor(null)}/>}
-            {editor.type === 'quiz'  && <QuizForm        initial={editor.initial} onSave={handleSave} onCancel={()=>setEditor(null)}/>}
-          </div>
-        )}
+          );
+        })()}
       </Modal>
     </div>
   );
