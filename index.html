@@ -2976,7 +2976,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v158";</script>
+<script>window.__ANZEN_VERSION="v159";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -33388,7 +33388,7 @@ var FleetScreenV2 = () => {
     };
   }, []);
   var [tab, setTab] = React.useState('directory');
-  var [view, setView] = React.useState('cards');
+  var [view, setView] = React.useState('table');
   var [cls, setCls] = React.useState('all');
   var [station, setStation] = React.useState('all');
   var [selectedId, setSelectedId] = React.useState(null);
@@ -36741,7 +36741,7 @@ var FvCards = ({
     style: {
       padding: bp.mobile ? 10 : 14,
       display: 'grid',
-      gridTemplateColumns: bp.mobile ? 'repeat(auto-fill,minmax(160px,1fr))' : 'repeat(auto-fill,minmax(280px,1fr))',
+      gridTemplateColumns: bp.mobile ? 'repeat(auto-fill,minmax(max(31%,150px),1fr))' : 'repeat(3,minmax(0,1fr))',
       gap: bp.mobile ? 10 : 12
     }
   }, vehicles.map(v => React.createElement(FvCard, {

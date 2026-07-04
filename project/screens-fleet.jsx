@@ -64,7 +64,7 @@ const FleetScreenV2 = () => {
   }, []);
 
   const [tab,        setTab]        = React.useState('directory');
-  const [view,       setView]       = React.useState('cards');
+  const [view,       setView]       = React.useState('table');   // default to the table view
   const [cls,        setCls]        = React.useState('all');
   const [station,    setStation]    = React.useState('all');
   const [selectedId, setSelectedId] = React.useState(null);
@@ -1538,7 +1538,7 @@ const FvCard = ({ v, onSelect, selectedId, onStatusChange, onSaveDates, onParkin
 const FvCards = ({ vehicles, onSelect, selectedId, onStatusChange, onSaveDates, onParkingChange, viewDate, manage, onToggleVisible }) => {
   const bp = useBreakpoint();
   return (
-    <div style={{padding:bp.mobile?10:14,display:'grid',gridTemplateColumns:bp.mobile?'repeat(auto-fill,minmax(160px,1fr))':'repeat(auto-fill,minmax(280px,1fr))',gap:bp.mobile?10:12}}>
+    <div style={{padding:bp.mobile?10:14,display:'grid',gridTemplateColumns:bp.mobile?'repeat(auto-fill,minmax(max(31%,150px),1fr))':'repeat(3,minmax(0,1fr))',gap:bp.mobile?10:12}}>
       {vehicles.map(v => (
         <FvCard key={v.id} v={v} onSelect={onSelect} selectedId={selectedId}
           onStatusChange={onStatusChange} onSaveDates={onSaveDates} onParkingChange={onParkingChange}
