@@ -2964,7 +2964,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v155";</script>
+<script>window.__ANZEN_VERSION="v157";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -18393,7 +18393,10 @@ var ScheduleMonth = ({
   lessons = LESSONS,
   studentMode = false,
   weekDates = [],
-  weeks = 5
+  weeks = 5,
+  exams = [],
+  onExamClick,
+  compact = false
 }) => {
   var {
     openDetail,
@@ -18416,31 +18419,45 @@ var ScheduleMonth = ({
   }, React.createElement("div", {
     style: {
       display: 'grid',
-      gridTemplateColumns: 'repeat(7,1fr)',
+      gridTemplateColumns: 'repeat(7,minmax(0,1fr))',
       borderBottom: '1px solid var(--border)'
     }
   }, DAYS_EN.map((d, i) => React.createElement("div", {
     key: i,
     style: {
-      padding: '10px 12px',
+      padding: compact ? '7px 2px' : '10px 12px',
       fontSize: 10,
-      letterSpacing: '.08em',
+      letterSpacing: compact ? 0 : '.08em',
       color: i === 6 ? '#b0413e' : 'var(--ink-3)',
       fontFamily: '"JetBrains Mono",monospace',
       textTransform: 'uppercase',
+      textAlign: compact ? 'center' : 'left',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
       borderLeft: i ? '1px solid var(--border)' : 'none',
       background: i === 6 ? 'rgba(176,65,62,.05)' : 'transparent'
     }
-  }, tr(DAYS_KM[i], d)))), React.createElement("div", {
+  }, compact ? ['ច', 'អ', 'ព', 'ព្រ', 'សុ', 'ស', 'អា'][i] : tr(DAYS_KM[i], d)))), React.createElement("div", {
     style: {
       display: 'grid',
-      gridTemplateColumns: 'repeat(7,1fr)',
+      gridTemplateColumns: 'repeat(7,minmax(0,1fr))',
       gridTemplateRows: `repeat(${weeks},minmax(${rowMin}px,1fr))`
     }
   }, monthDates.map((date, i) => {
     var dayNum = parseInt(date.slice(8));
     var isToday = date === today;
     var dayLessons = lessons.filter(l => l.date === date && l.status !== 'cancelled');
+    var dayExams = (exams || []).filter(e => e.date === date);
+    var dayItems = [...dayLessons.map(l => ({
+      t: 'lesson',
+      time: l.h || 0,
+      l
+    })), ...dayExams.map(e => ({
+      t: 'exam',
+      time: parseInt(String(e.time || '0').slice(0, 2)) || 0,
+      e
+    }))].sort((a, b) => a.time - b.time);
     var avail = studentMode ? dayAvailabilitySummary(date) : null;
     var isSun = isSunday(date);
     return React.createElement("div", {
@@ -18451,12 +18468,14 @@ var ScheduleMonth = ({
       style: {
         borderLeft: i % 7 ? '1px solid var(--border)' : 'none',
         borderTop: i >= 7 ? '1px solid var(--border)' : 'none',
-        padding: '8px 10px',
+        padding: compact ? '6px 4px' : '8px 10px',
         background: isToday ? 'var(--surface-muted)' : isSun ? 'rgba(176,65,62,.05)' : 'transparent',
         display: 'flex',
         flexDirection: 'column',
-        gap: 4,
+        gap: compact ? 3 : 4,
+        minWidth: 0,
         minHeight: 0,
+        overflow: 'hidden',
         cursor: studentMode ? 'default' : 'pointer'
       }
     }, React.createElement("div", {
@@ -18496,15 +18515,44 @@ var ScheduleMonth = ({
         padding: '1px 5px',
         borderRadius: 4
       }
-    }, "\u1796\u17C1\u1789")), !studentMode && dayLessons.length > 0 && React.createElement("div", {
+    }, "\u1796\u17C1\u1789")), !studentMode && dayItems.length > 0 && React.createElement("div", {
       style: {
         fontSize: 10,
         color: 'var(--ink-3)',
         fontFamily: '"JetBrains Mono",monospace'
       }
-    }, dayLessons.length)), dayLessons.slice(0, cap).map((l, j) => {
+    }, dayItems.length)), dayItems.slice(0, cap).map((it, j) => {
+      if (it.t === 'exam') {
+        var e = it.e;
+        var km = window.__SCHED_KIND ? window.__SCHED_KIND(e.kind) : {
+          icon: '🎓',
+          color: '#12A302',
+          soft: '#eafbe7',
+          text: '#0c5a01'
+        };
+        return React.createElement("div", {
+          key: j,
+          onClick: ev => {
+            ev.stopPropagation();
+            onExamClick && onExamClick(e);
+          },
+          style: {
+            fontSize: compact ? 9 : 10,
+            padding: compact ? '1px 4px' : '2px 5px',
+            fontWeight: 700,
+            background: km.soft,
+            color: km.text,
+            borderLeft: `2px solid ${km.color}`,
+            borderRadius: 3,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            cursor: 'pointer'
+          }
+        }, String(e.time || '').slice(0, 5), compact ? '' : ' ' + km.icon);
+      }
+      var l = it.l;
       var clr = lessonBlockColor(l, studentMode);
-      var s = studentById(l.studentId);
       return React.createElement("div", {
         key: j,
         onClick: e => {
@@ -18512,8 +18560,8 @@ var ScheduleMonth = ({
           openDetail('lesson', l);
         },
         style: {
-          fontSize: 10,
-          padding: '2px 5px',
+          fontSize: compact ? 9 : 10,
+          padding: compact ? '1px 4px' : '2px 5px',
           fontWeight: isTheoryLesson(l) ? 600 : 400,
           background: clr.bg,
           color: clr.text,
@@ -18522,9 +18570,10 @@ var ScheduleMonth = ({
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
-          cursor: 'pointer'
+          cursor: 'pointer',
+          fontFamily: '"JetBrains Mono",monospace'
         }
-      }, String(l.h).padStart(2, '0'), ":00 ", lessonShort(l) || (studentMode ? l.type.split('·')[0].trim() : s ? s.name.split(' ')[0] : l.type.split('·')[0].trim()));
+      }, String(l.h).padStart(2, '0'), ":00");
     }));
   })));
 };
@@ -19758,8 +19807,16 @@ var ScheduleScreen = ({
     style: {
       position: 'fixed',
       right: 16,
-      bottom: `calc(${mobileView === 'day' ? 136 : 82}px + env(safe-area-inset-bottom,0px))`,
-      zIndex: 61
+      bottom: 'calc(80px + env(safe-area-inset-bottom,0px))',
+      zIndex: 61,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'flex-end',
+      gap: 10
+    }
+  }, React.createElement("div", {
+    style: {
+      position: 'relative'
     }
   }, viewMenuOpen && React.createElement("div", {
     style: {
@@ -19816,14 +19873,52 @@ var ScheduleScreen = ({
   }, React.createElement(Icon, {
     name: "cal",
     size: 20
-  })))), (bp.mobile && mobileView === 'day' || !bp.mobile && v === 'week') && React.createElement("button", {
+  }))), mobileView === 'day' && React.createElement("button", {
+    onClick: () => setAllHours(a => !a),
+    title: allHours ? tr('បង្ហាញ​តែ​ម៉ោង​ធ្វើ​ការ (៧–៦ល្ងាច)', 'Show working hours (7–18)') : tr('បង្ហាញ​ទាំង ២៤ ម៉ោង', 'Show all 24 hours'),
+    "aria-label": allHours ? '24 hours' : 'working hours',
+    style: {
+      position: 'relative',
+      width: 44,
+      height: 44,
+      borderRadius: '50%',
+      cursor: 'pointer',
+      padding: 0,
+      border: '1px solid ' + (allHours ? 'var(--accent)' : 'var(--border-strong)'),
+      background: allHours ? 'var(--accent)' : 'var(--surface)',
+      color: allHours ? '#fff' : 'var(--ink-2)',
+      boxShadow: '0 3px 12px rgba(0,0,0,.22)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      lineHeight: 1
+    }
+  }, React.createElement("span", {
+    style: {
+      fontSize: 19
+    }
+  }, "\uD83D\uDD50"), allHours && React.createElement("span", {
+    style: {
+      position: 'absolute',
+      bottom: -3,
+      right: -3,
+      fontSize: 8,
+      fontWeight: 800,
+      background: '#fff',
+      color: 'var(--accent)',
+      borderRadius: 7,
+      padding: '1px 3px',
+      lineHeight: 1.1,
+      border: '1px solid var(--accent)'
+    }
+  }, "24")))), !bp.mobile && v === 'week' && React.createElement("button", {
     onClick: () => setAllHours(a => !a),
     title: allHours ? tr('បង្ហាញ​តែ​ម៉ោង​ធ្វើ​ការ (៧–៦ល្ងាច)', 'Show working hours (7–18)') : tr('បង្ហាញ​ទាំង ២៤ ម៉ោង', 'Show all 24 hours'),
     "aria-label": allHours ? '24 hours' : 'working hours',
     style: {
       position: 'fixed',
       right: 16,
-      bottom: bp.mobile ? 82 : 24,
+      bottom: 24,
       zIndex: 60,
       width: 44,
       height: 44,
@@ -19867,10 +19962,12 @@ var ScheduleScreen = ({
     }
   })) : mobileView === 'week' ? React.createElement(ScheduleMonth, _extends({}, viewProps, {
     weekDates: [mobileWeekStart],
-    weeks: 1
+    weeks: 1,
+    compact: true
   })) : React.createElement(ScheduleMonth, _extends({}, viewProps, {
     weekDates: [monthStart],
-    weeks: 6
+    weeks: 6,
+    compact: true
   })) : v === 'week' ? React.createElement(ScheduleWeek, viewProps) : v === 'month' ? React.createElement(ScheduleMonth, viewProps) : React.createElement(ScheduleAgenda, viewProps), bp.mobile && React.createElement(Btn, {
     kind: "ghost",
     size: "md",

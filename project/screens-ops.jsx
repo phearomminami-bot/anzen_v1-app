@@ -443,7 +443,7 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
 };
 
 // ── Month view ──
-const ScheduleMonth = ({ lessons = LESSONS, studentMode = false, weekDates = [], weeks = 5 }) => {
+const ScheduleMonth = ({ lessons = LESSONS, studentMode = false, weekDates = [], weeks = 5, exams = [], onExamClick, compact = false }) => {
   const { openDetail, openForm, tr } = useAppActions();
   const today = todayStr();
   // Build a `weeks`-row grid (7 cols) from the Monday in weekDates[0].
@@ -457,16 +457,21 @@ const ScheduleMonth = ({ lessons = LESSONS, studentMode = false, weekDates = [],
   const cap    = weeks === 1 ? 12 : 3;
   return (
     <Card pad={0}>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',borderBottom:'1px solid var(--border)'}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(7,minmax(0,1fr))',borderBottom:'1px solid var(--border)'}}>
         {DAYS_EN.map((d,i)=>(
-          <div key={i} style={{padding:'10px 12px',fontSize:10,letterSpacing:'.08em',color:i===6?'#b0413e':'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',textTransform:'uppercase',borderLeft:i?'1px solid var(--border)':'none',background:i===6?'rgba(176,65,62,.05)':'transparent'}}>{tr(DAYS_KM[i], d)}</div>
+          <div key={i} style={{padding:compact?'7px 2px':'10px 12px',fontSize:10,letterSpacing:compact?0:'.08em',color:i===6?'#b0413e':'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',textTransform:'uppercase',textAlign:compact?'center':'left',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',borderLeft:i?'1px solid var(--border)':'none',background:i===6?'rgba(176,65,62,.05)':'transparent'}}>{compact?['ច','អ','ព','ព្រ','សុ','ស','អា'][i]:tr(DAYS_KM[i], d)}</div>
         ))}
       </div>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gridTemplateRows:`repeat(${weeks},minmax(${rowMin}px,1fr))`}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(7,minmax(0,1fr))',gridTemplateRows:`repeat(${weeks},minmax(${rowMin}px,1fr))`}}>
         {monthDates.map((date, i) => {
           const dayNum = parseInt(date.slice(8));
           const isToday = date === today;
           const dayLessons = lessons.filter(l => l.date === date && l.status !== 'cancelled');
+          const dayExams   = (exams || []).filter(e => e.date === date);
+          const dayItems = [
+            ...dayLessons.map(l => ({ t:'lesson', time:(l.h||0), l })),
+            ...dayExams.map(e => ({ t:'exam', time: parseInt(String(e.time||'0').slice(0,2)) || 0, e })),
+          ].sort((a,b) => a.time - b.time);
           const avail = studentMode ? dayAvailabilitySummary(date) : null;
           const isSun = isSunday(date);
           return (
@@ -475,10 +480,10 @@ const ScheduleMonth = ({ lessons = LESSONS, studentMode = false, weekDates = [],
               style={{
                 borderLeft: i%7 ? '1px solid var(--border)':'none',
                 borderTop: i>=7 ? '1px solid var(--border)':'none',
-                padding:'8px 10px',
+                padding:compact?'6px 4px':'8px 10px',
                 background: isToday ? 'var(--surface-muted)' : isSun ? 'rgba(176,65,62,.05)' : 'transparent',
-                display:'flex',flexDirection:'column',gap:4,
-                minHeight:0, cursor:studentMode?'default':'pointer',
+                display:'flex',flexDirection:'column',gap:compact?3:4,
+                minWidth:0, minHeight:0, overflow:'hidden', cursor:studentMode?'default':'pointer',
               }}>
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
                 <div style={{
@@ -493,21 +498,31 @@ const ScheduleMonth = ({ lessons = LESSONS, studentMode = false, weekDates = [],
                     ? <span style={{fontSize:9,color:'var(--good)',fontFamily:'"JetBrains Mono",monospace',background:'rgba(59,122,87,.1)',padding:'1px 5px',borderRadius:4}}>{avail.available}</span>
                     : <span style={{fontSize:9,color:'var(--danger)',fontFamily:'"JetBrains Mono",monospace',background:'rgba(176,65,62,.08)',padding:'1px 5px',borderRadius:4}}>ពេញ</span>
                 )}
-                {!studentMode && dayLessons.length > 0 && (
-                  <div style={{fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{dayLessons.length}</div>
+                {!studentMode && dayItems.length > 0 && (
+                  <div style={{fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{dayItems.length}</div>
                 )}
               </div>
-              {dayLessons.slice(0,cap).map((l,j) => {
-                const clr = lessonBlockColor(l, studentMode);
-                const s = studentById(l.studentId);
+              {dayItems.slice(0,cap).map((it,j) => {
+                if (it.t === 'exam') {
+                  const e = it.e; const km = window.__SCHED_KIND ? window.__SCHED_KIND(e.kind) : {icon:'🎓',color:'#12A302',soft:'#eafbe7',text:'#0c5a01'};
+                  return (
+                    <div key={j} onClick={ev=>{ev.stopPropagation(); onExamClick && onExamClick(e);}} style={{
+                      fontSize:compact?9:10,padding:compact?'1px 4px':'2px 5px',fontWeight:700,background:km.soft,color:km.text,
+                      borderLeft:`2px solid ${km.color}`,borderRadius:3,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',cursor:'pointer'}}>
+                      {String(e.time||'').slice(0,5)}{compact ? '' : ' ' + km.icon}
+                    </div>
+                  );
+                }
+                const l = it.l; const clr = lessonBlockColor(l, studentMode);
                 return (
                   <div key={j} onClick={e=>{e.stopPropagation(); openDetail('lesson', l);}} style={{
-                    fontSize:10,padding:'2px 5px',fontWeight:isTheoryLesson(l)?600:400,
+                    fontSize:compact?9:10,padding:compact?'1px 4px':'2px 5px',fontWeight:isTheoryLesson(l)?600:400,
                     background:clr.bg,color:clr.text,
                     borderLeft:`2px solid ${clr.accent}`,borderRadius:3,
                     whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',cursor:'pointer',
+                    fontFamily:'"JetBrains Mono",monospace',
                   }}>
-                    {String(l.h).padStart(2,'0')}:00 {lessonShort(l) || (studentMode ? l.type.split('·')[0].trim() : (s ? s.name.split(' ')[0] : l.type.split('·')[0].trim()))}
+                    {String(l.h).padStart(2,'0')}:00
                   </div>
                 );
               })}
@@ -1120,36 +1135,63 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
         );
       })()}
 
-      {/* Mobile view selector — small FAB above the clock, opens a list upward */}
+      {/* Mobile floating controls — view selector + (day-view) clock, grouped as
+          one tight stack. Both share a single container + bottom anchor so the
+          iOS safe-area inset applies once (previously the view FAB added it and
+          the clock didn't, drifting them ~40px apart on iPhone). */}
       {bp.mobile && (<>
         {viewMenuOpen && <div onClick={()=>setViewMenuOpen(false)} style={{position:'fixed',inset:0,zIndex:59}}/>}
-        <div style={{position:'fixed',right:16,bottom: `calc(${mobileView==='day'?136:82}px + env(safe-area-inset-bottom,0px))`,zIndex:61}}>
-          {viewMenuOpen && (
-            <div style={{position:'absolute',bottom:'calc(100% + 8px)',right:0,minWidth:150,background:'var(--surface)',border:'1px solid var(--border)',borderRadius:12,boxShadow:'0 10px 30px rgba(0,0,0,.25)',padding:6}}>
-              {[['day','ថ្ងៃ','Day'],['week','សប្ដាហ៍','Week'],['month','ខែ','Month']].map(([k,km,en]) => {
-                const active = mobileView===k;
-                return <button key={k} onClick={()=>{ setMobileView(k); setViewMenuOpen(false); }} style={{
-                  display:'block',width:'100%',textAlign:'left',padding:'10px 12px',border:'none',borderRadius:8,cursor:'pointer',
-                  fontSize:13,fontFamily:'inherit',fontWeight:active?700:500,
-                  background:active?'var(--accent-soft)':'transparent',color:active?'var(--accent)':'var(--ink-2)'}}>{tr(km,en)}</button>;
-              })}
-            </div>
+        <div style={{position:'fixed',right:16,bottom:'calc(80px + env(safe-area-inset-bottom,0px))',zIndex:61,
+          display:'flex',flexDirection:'column',alignItems:'flex-end',gap:10}}>
+          {/* View selector — opens the Day / Week / Month list upward */}
+          <div style={{position:'relative'}}>
+            {viewMenuOpen && (
+              <div style={{position:'absolute',bottom:'calc(100% + 8px)',right:0,minWidth:150,background:'var(--surface)',border:'1px solid var(--border)',borderRadius:12,boxShadow:'0 10px 30px rgba(0,0,0,.25)',padding:6}}>
+                {[['day','ថ្ងៃ','Day'],['week','សប្ដាហ៍','Week'],['month','ខែ','Month']].map(([k,km,en]) => {
+                  const active = mobileView===k;
+                  return <button key={k} onClick={()=>{ setMobileView(k); setViewMenuOpen(false); }} style={{
+                    display:'block',width:'100%',textAlign:'left',padding:'10px 12px',border:'none',borderRadius:8,cursor:'pointer',
+                    fontSize:13,fontFamily:'inherit',fontWeight:active?700:500,
+                    background:active?'var(--accent-soft)':'transparent',color:active?'var(--accent)':'var(--ink-2)'}}>{tr(km,en)}</button>;
+                })}
+              </div>
+            )}
+            <button onClick={()=>setViewMenuOpen(o=>!o)} aria-label={tr('ទិដ្ឋភាព','View')} title={tr('ទិដ្ឋភាព','View')} style={{
+              width:44,height:44,borderRadius:'50%',cursor:'pointer',border:'1.5px solid var(--border-strong)',
+              background:'var(--surface)',color:'var(--ink-2)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 3px 12px rgba(0,0,0,.22)'}}>
+              <Icon name="cal" size={20}/>
+            </button>
+          </div>
+          {/* Clock toggle — only meaningful in the day (time-grid) view */}
+          {mobileView==='day' && (
+            <button onClick={()=>setAllHours(a=>!a)}
+              title={allHours ? tr('បង្ហាញ​តែ​ម៉ោង​ធ្វើ​ការ (៧–៦ល្ងាច)','Show working hours (7–18)') : tr('បង្ហាញ​ទាំង ២៤ ម៉ោង','Show all 24 hours')}
+              aria-label={allHours ? '24 hours' : 'working hours'}
+              style={{
+                position:'relative',
+                width:44, height:44, borderRadius:'50%', cursor:'pointer', padding:0,
+                border:'1px solid '+(allHours ? 'var(--accent)' : 'var(--border-strong)'),
+                background: allHours ? 'var(--accent)' : 'var(--surface)',
+                color: allHours ? '#fff' : 'var(--ink-2)',
+                boxShadow:'0 3px 12px rgba(0,0,0,.22)',
+                display:'flex', alignItems:'center', justifyContent:'center', lineHeight:1,
+              }}>
+              <span style={{fontSize:19}}>🕐</span>
+              {allHours && <span style={{position:'absolute',bottom:-3,right:-3,fontSize:8,fontWeight:800,
+                background:'#fff',color:'var(--accent)',borderRadius:7,padding:'1px 3px',lineHeight:1.1,
+                border:'1px solid var(--accent)'}}>24</span>}
+            </button>
           )}
-          <button onClick={()=>setViewMenuOpen(o=>!o)} aria-label={tr('ទិដ្ឋភាព','View')} title={tr('ទិដ្ឋភាព','View')} style={{
-            width:44,height:44,borderRadius:'50%',cursor:'pointer',border:'1.5px solid var(--border-strong)',
-            background:'var(--surface)',color:'var(--ink-2)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 3px 12px rgba(0,0,0,.22)'}}>
-            <Icon name="cal" size={20}/>
-          </button>
         </div>
       </>)}
 
-      {/* Small floating clock toggle (bottom-right): working hours ⇄ full 24h. */}
-      {((bp.mobile && mobileView==='day') || (!bp.mobile && v==='week')) && (
+      {/* Desktop clock toggle (week view): working hours ⇄ full 24h. */}
+      {!bp.mobile && v==='week' && (
         <button onClick={()=>setAllHours(a=>!a)}
           title={allHours ? tr('បង្ហាញ​តែ​ម៉ោង​ធ្វើ​ការ (៧–៦ល្ងាច)','Show working hours (7–18)') : tr('បង្ហាញ​ទាំង ២៤ ម៉ោង','Show all 24 hours')}
           aria-label={allHours ? '24 hours' : 'working hours'}
           style={{
-            position:'fixed', right:16, bottom: bp.mobile ? 82 : 24, zIndex:60,
+            position:'fixed', right:16, bottom:24, zIndex:60,
             width:44, height:44, borderRadius:'50%', cursor:'pointer', padding:0,
             border:'1px solid '+(allHours ? 'var(--accent)' : 'var(--border-strong)'),
             background: allHours ? 'var(--accent)' : 'var(--surface)',
@@ -1174,8 +1216,8 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
                   isToday: mobileDate===today,
                 }}/>
               : mobileView==='week'
-                ? <ScheduleMonth {...viewProps} weekDates={[mobileWeekStart]} weeks={1}/>
-                : <ScheduleMonth {...viewProps} weekDates={[monthStart]} weeks={6}/> )
+                ? <ScheduleMonth {...viewProps} weekDates={[mobileWeekStart]} weeks={1} compact/>
+                : <ScheduleMonth {...viewProps} weekDates={[monthStart]} weeks={6} compact/> )
         : v==='week'   ? <ScheduleWeek   {...viewProps}/>
         : v==='month'  ? <ScheduleMonth  {...viewProps}/>
         :                <ScheduleAgenda {...viewProps}/>}
