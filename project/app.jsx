@@ -208,10 +208,12 @@ function App() {
     try { return JSON.parse(localStorage.getItem('anzen_nav_order_v1') || '{}'); }
     catch { return {}; }
   });
-  // All roles start from the full admin tab list; admin restricts via rolePermissions
-  const baseItems = NAV_ITEMS.admin || [];
+  // Students get a fixed, restricted nav (own profile + lessons/schedule — never
+  // the student directory or vehicles). Admin/instructor start from the full
+  // admin tab list; admin restricts via rolePermissions.
+  const baseItems = role === 'student' ? (NAV_ITEMS.student || []) : (NAV_ITEMS.admin || []);
   const rolePerms = window.__schoolSettings?.rolePermissions?.[role] || {};
-  const visibleBase = role === 'admin'
+  const visibleBase = (role === 'admin' || role === 'student')
     ? baseItems
     : baseItems.filter(i => (rolePerms[i.id] || 'full') !== 'hidden');
   const savedOrder = navOrder[role];
@@ -500,7 +502,8 @@ function App() {
   // ─── Main app ──────────────────────────────────────────────────
   const screens = {
     dashboard:   <Dashboard role={role} studentId={activeStudentId}/>,
-    students:    <StudentsScreen role={role}/>,
+    students:    role === 'student' ? <StudentSelfProfile studentId={activeStudentId}/> : <StudentsScreen role={role}/>,
+    myprofile:   <StudentSelfProfile studentId={activeStudentId}/>,
     schedule:    <ScheduleScreen view={t.calendar} role={role} studentId={activeStudentId}/>,
     lessons:     <LessonsScreen role={role}/>,
     instructors: <InstructorsScreen role={role}/>,

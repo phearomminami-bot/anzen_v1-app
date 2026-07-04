@@ -721,7 +721,7 @@ window.__trRegistry = {
   "Add quiz": "បន្ថែម​លំហាត់",
   "Google Form exercise": "លំហាត់ Google Form",
   "question' + (qCount===1?'':'s": "សំណួរ",
-  "Saved": "បានបង់'),'good'); }\n            }}\n            onSaveBio={(id, updates) => {\n              const i = STUDENTS.findIndex(s => s.id === id);\n              if (i !== -1) { Object.assign(STUDENTS[i], updates); if(window.saveAllData)window.saveAllData(); forceUpdate(); toast(tr('បានរក្សាទុក",
+  "Saved": "បានរក្សាទុក",
   "Added": "បានបន្ថែម",
   "Delete this item?": "លុប​មេរៀន?",
   "Removed": "បានលុប",
@@ -1109,6 +1109,7 @@ window.__trRegistry = {
   "Attach image / PDF": "ភ្ជាប់ រូប / PDF",
   "No documents yet – Send an invoice or add manually": "មិន​ទាន់​មាន​ឯកសារ – ផ្ញើ​វិក្កយបត្រ​ ឬ​ បន្ថែម​ដោយ​ដៃ",
   "View file": "មើល​ឯកសារ",
+  "Your student profile was not found": "រក​មិន​ឃើញ​ព័ត៌មាន​សិស្ស​របស់​អ្នក",
   "Send to student": "ផ្ញើ​​ទៅ​សិស្ស",
   "BILL TO": "សិស្ស",
   "COURSE PLAN": "វគ្គ​សិក្សា",
@@ -1783,7 +1784,8 @@ window.__trGroups = {
     "File (image or PDF)": "ឯកសារ (រូបភាព ឬ PDF)",
     "Attach image / PDF": "ភ្ជាប់ រូប / PDF",
     "No documents yet – Send an invoice or add manually": "មិន​ទាន់​មាន​ឯកសារ – ផ្ញើ​វិក្កយបត្រ​ ឬ​ បន្ថែម​ដោយ​ដៃ",
-    "View file": "មើល​ឯកសារ"
+    "View file": "មើល​ឯកសារ",
+    "Your student profile was not found": "រក​មិន​ឃើញ​ព័ត៌មាន​សិស្ស​របស់​អ្នក"
   },
   "សិស្ស & គ្រូ · Students & Instructors": {
     "Class B": "ថ្នាក់ B",
@@ -2976,7 +2978,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v159";</script>
+<script>window.__ANZEN_VERSION="v160";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -13687,17 +13689,23 @@ var NAV_ITEMS = {
     jp: 'ホーム',
     icon: 'home'
   }, {
-    id: 'schedule',
-    km: 'មេរៀនរបស់ខ្ញុំ',
-    en: 'My lessons',
-    jp: '授業',
-    icon: 'cal'
-  }, {
     id: 'lessons',
     km: 'មេរៀន',
     en: 'Lessons',
     jp: 'レッスン',
     icon: 'book'
+  }, {
+    id: 'schedule',
+    km: 'កាលវិភាគ',
+    en: 'My schedule',
+    jp: '授業',
+    icon: 'cal'
+  }, {
+    id: 'myprofile',
+    km: 'សិស្ស',
+    en: 'My profile',
+    jp: 'プロフィール',
+    icon: 'users'
   }, {
     id: 'progress',
     km: 'វឌ្ឍនភាព',
@@ -14064,6 +14072,10 @@ var BAR_SHORT = {
     km: 'យានយន្ត',
     en: 'Vehicle'
   },
+  myprofile: {
+    km: 'សិស្ស',
+    en: 'Profile'
+  },
   fleet: {
     km: 'យានយន្ត',
     en: 'Fleet'
@@ -14244,8 +14256,8 @@ var MobileBottomBar = ({
     return s && (s[lang] || s.en) || ll(it);
   };
   var [menuOpen, setMenuOpen] = React.useState(false);
-  var QUICK_IDS = ['dashboard', 'students', 'schedule', 'vehicle'];
-  var quickItems = QUICK_IDS.map(id => items.find(i => i.id === id) || (window.NAV_ITEMS && window.NAV_ITEMS.admin || []).find(i => i.id === id)).filter(Boolean);
+  var QUICK_IDS = role === 'student' ? ['dashboard', 'lessons', 'schedule', 'myprofile'] : ['dashboard', 'students', 'schedule', 'vehicle'];
+  var quickItems = QUICK_IDS.map(id => items.find(i => i.id === id) || role !== 'student' && (window.NAV_ITEMS && window.NAV_ITEMS.admin || []).find(i => i.id === id)).filter(Boolean);
   var ss = window.__schoolSettings;
   var close = () => setMenuOpen(false);
   var doRefresh = () => location.reload();
@@ -19175,9 +19187,9 @@ var ScheduleScreen = ({
     highlights,
     onHighlight: handleHighlight,
     hlColor: activeColor,
-    notes: visNotes,
+    notes: studentMode ? [] : visNotes,
     onSlotClick: studentMode ? null : openSlot,
-    onNoteClick: n => openDetail('note', n),
+    onNoteClick: studentMode ? null : n => openDetail('note', n),
     clip: studentMode ? null : clip,
     onStartCopy: studentMode ? null : startCopy,
     onStartMove: studentMode ? null : startMove,
@@ -49314,10 +49326,114 @@ var StPrintRowStudents = ({
     }
   }, "\uD83D\uDCBE PDF"));
 };
+var StudentSelfProfile = ({
+  studentId
+}) => {
+  var {
+    tr,
+    toast,
+    navigate
+  } = useAppActions();
+  var [, force] = React.useReducer(n => n + 1, 0);
+  var [editing, setEditing] = React.useState(false);
+  React.useEffect(() => {
+    window.__notifyStudentsChanged = force;
+    return () => {
+      delete window.__notifyStudentsChanged;
+    };
+  }, []);
+  React.useEffect(() => {
+    var prev = window.__notifyLessonsChanged;
+    window.__notifyLessonsChanged = force;
+    return () => {
+      window.__notifyLessonsChanged = prev && prev !== force ? prev : null;
+    };
+  }, []);
+  var id = studentId || window.__anzenStudentId;
+  var raw = STUDENTS.find(s => s.id === id) || STUDENTS.find(s => s.id === window.__anzenStudentId);
+  var s = raw ? extendStudent(raw) : null;
+  if (!s) return React.createElement("div", {
+    style: {
+      padding: '60px 24px',
+      textAlign: 'center',
+      color: 'var(--ink-3)',
+      fontSize: 14
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 34,
+      marginBottom: 12
+    }
+  }, "\uD83D\uDC64"), tr('រក​មិន​ឃើញ​ព័ត៌មាន​សិស្ស​របស់​អ្នក', 'Your student profile was not found'));
+  var persist = () => {
+    if (window.saveAllData) window.saveAllData();
+    force();
+  };
+  var saveStudent = updated => {
+    var i = STUDENTS.findIndex(x => x.id === s.id);
+    if (i !== -1) {
+      STUDENTS[i] = {
+        ...STUDENTS[i],
+        ...updated
+      };
+      persist();
+    }
+    setEditing(false);
+    toast(tr('បានរក្សាទុក', 'Saved'), 'good');
+  };
+  if (editing) return React.createElement(Card, {
+    pad: 0,
+    style: {
+      overflow: 'hidden'
+    }
+  }, React.createElement(StudentEditPanel, {
+    key: s.id,
+    s: s,
+    onSave: saveStudent,
+    onCancel: () => setEditing(false)
+  }));
+  return React.createElement(Card, {
+    pad: 0,
+    style: {
+      overflow: 'hidden'
+    }
+  }, React.createElement(StudentProfile, {
+    s: s,
+    onEdit: () => setEditing(true),
+    onBook: () => navigate('booking'),
+    onCall: null,
+    onMessage: null,
+    onSavePhoto: dataUrl => {
+      var i = STUDENTS.findIndex(x => x.id === s.id);
+      if (i !== -1) {
+        STUDENTS[i].photo = dataUrl;
+        persist();
+      }
+    },
+    onSaveDoc: (pid, field, val) => {
+      var i = STUDENTS.findIndex(x => x.id === pid);
+      if (i !== -1) {
+        STUDENTS[i][field] = val;
+        persist();
+      }
+    },
+    onSaveBio: (pid, updates) => {
+      var i = STUDENTS.findIndex(x => x.id === pid);
+      if (i !== -1) {
+        Object.assign(STUDENTS[i], updates);
+        persist();
+        toast(tr('បានរក្សាទុក', 'Saved'), 'good');
+      }
+    },
+    onSavePaid: null,
+    onAddPayment: null
+  }));
+};
 var StudentsScreen = StudentsScreenV2;
 Object.assign(window, {
   StudentsScreenV2,
-  StudentsScreen
+  StudentsScreen,
+  StudentSelfProfile
 });
 </script>
 
@@ -66293,9 +66409,9 @@ function App() {
       return {};
     }
   });
-  var baseItems = NAV_ITEMS.admin || [];
+  var baseItems = role === 'student' ? NAV_ITEMS.student || [] : NAV_ITEMS.admin || [];
   var rolePerms = window.__schoolSettings?.rolePermissions?.[role] || {};
-  var visibleBase = role === 'admin' ? baseItems : baseItems.filter(i => (rolePerms[i.id] || 'full') !== 'hidden');
+  var visibleBase = role === 'admin' || role === 'student' ? baseItems : baseItems.filter(i => (rolePerms[i.id] || 'full') !== 'hidden');
   var savedOrder = navOrder[role];
   var items = savedOrder ? [...visibleBase].sort((a, b) => {
     var ai = savedOrder.indexOf(a.id);
@@ -66656,8 +66772,13 @@ function App() {
       role: role,
       studentId: activeStudentId
     }),
-    students: React.createElement(StudentsScreen, {
+    students: role === 'student' ? React.createElement(StudentSelfProfile, {
+      studentId: activeStudentId
+    }) : React.createElement(StudentsScreen, {
       role: role
+    }),
+    myprofile: React.createElement(StudentSelfProfile, {
+      studentId: activeStudentId
     }),
     schedule: React.createElement(ScheduleScreen, {
       view: t.calendar,

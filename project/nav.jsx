@@ -71,8 +71,9 @@ const NAV_ITEMS = {
   ],
   student: [
     { id:'dashboard',   km:'ទំព័រដើម',              en:'Home',               jp:'ホーム',           icon:'home' },
-    { id:'schedule',    km:'មេរៀនរបស់ខ្ញុំ',         en:'My lessons',         jp:'授業',             icon:'cal' },
     { id:'lessons',     km:'មេរៀន',                 en:'Lessons',            jp:'レッスン',         icon:'book' },
+    { id:'schedule',    km:'កាលវិភាគ',              en:'My schedule',        jp:'授業',             icon:'cal' },
+    { id:'myprofile',   km:'សិស្ស',                 en:'My profile',         jp:'プロフィール',     icon:'users' },
     { id:'progress',    km:'វឌ្ឍនភាព',              en:'My progress',        jp:'進捗',             icon:'chart' },
     { id:'billing',     km:'ការទូទាត់',              en:'Payments',           jp:'支払い',           icon:'cash' },
     { id:'booking',     km:'កក់មេរៀន',              en:'Book lesson',        jp:'レッスン予約',     icon:'star' },
@@ -217,6 +218,7 @@ const BAR_SHORT = {
   dashboard:{km:'ដើម',en:'Home'}, students:{km:'សិស្ស',en:'Students'},
   lessons:{km:'មេរៀន',en:'Lessons'}, schedule:{km:'កាលវិភាគ',en:'Schedule'},
   instructors:{km:'គ្រូ',en:'Tutors'}, vehicle:{km:'យានយន្ត',en:'Vehicle'},
+  myprofile:{km:'សិស្ស',en:'Profile'},
   fleet:{km:'យានយន្ត',en:'Fleet'}, progress:{km:'វឌ្ឍនភាព',en:'Progress'},
   billing:{km:'វិក្កយបត្រ',en:'Billing'}, finance:{km:'ហិរញ្ញវត្ថុ',en:'Finance'},
   staff:{km:'បុគ្គលិក',en:'Staff'}, settings:{km:'កំណត់',en:'Settings'},
@@ -268,10 +270,15 @@ const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
   };
   const shortLabel = (it) => { const s = BAR_SHORT[it.id]; return (s && (s[lang] || s.en)) || ll(it); };
   const [menuOpen, setMenuOpen] = React.useState(false);
-  // Fixed bottom-bar tabs: Home · Students · Schedule · Vehicle (then More)
-  const QUICK_IDS = ['dashboard','students','schedule','vehicle'];
+  // Fixed bottom-bar tabs. Students get Home · Lessons · Schedule · My profile
+  // (never the directory or vehicles); staff get Home · Students · Schedule · Vehicle.
+  const QUICK_IDS = role === 'student'
+    ? ['dashboard','lessons','schedule','myprofile']
+    : ['dashboard','students','schedule','vehicle'];
+  // Only pull from THIS role's own nav items — no cross-role fallback, so a
+  // student can never surface an admin-only screen (e.g. vehicles) in the bar.
   const quickItems = QUICK_IDS
-    .map(id => items.find(i => i.id === id) || (window.NAV_ITEMS && window.NAV_ITEMS.admin || []).find(i => i.id === id))
+    .map(id => items.find(i => i.id === id) || (role !== 'student' && (window.NAV_ITEMS && window.NAV_ITEMS.admin || []).find(i => i.id === id)))
     .filter(Boolean);
   const ss = window.__schoolSettings;
   const close = () => setMenuOpen(false);

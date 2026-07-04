@@ -4510,5 +4510,61 @@ const StPrintRowStudents = ({ label, students, onPrint }) => {
   );
 };
 
+// ── Student self-profile ──────────────────────────────────────────────────
+// The logged-in student's own detailed profile. Reuses <StudentProfile> but
+// scoped to a single student (their own id) — a student can never browse the
+// directory or see anyone else. Payment recording stays school-side (no-op),
+// but the student may update their own bio / photo / documents.
+const StudentSelfProfile = ({ studentId }) => {
+  const { tr, toast, navigate } = useAppActions();
+  const [, force] = React.useReducer(n => n + 1, 0);
+  const [editing, setEditing] = React.useState(false);
+  React.useEffect(() => { window.__notifyStudentsChanged = force; return () => { delete window.__notifyStudentsChanged; }; }, []);
+  React.useEffect(() => {
+    const prev = window.__notifyLessonsChanged;
+    window.__notifyLessonsChanged = force;
+    return () => { window.__notifyLessonsChanged = (prev && prev !== force) ? prev : null; };
+  }, []);
+
+  const id  = studentId || window.__anzenStudentId;
+  const raw = STUDENTS.find(s => s.id === id) || STUDENTS.find(s => s.id === window.__anzenStudentId);
+  const s   = raw ? extendStudent(raw) : null;
+  if (!s) return (
+    <div style={{padding:'60px 24px',textAlign:'center',color:'var(--ink-3)',fontSize:14}}>
+      <div style={{fontSize:34,marginBottom:12}}>👤</div>
+      {tr('រក​មិន​ឃើញ​ព័ត៌មាន​សិស្ស​របស់​អ្នក','Your student profile was not found')}
+    </div>
+  );
+
+  const persist = () => { if (window.saveAllData) window.saveAllData(); force(); };
+  const saveStudent = (updated) => {
+    const i = STUDENTS.findIndex(x => x.id === s.id);
+    if (i !== -1) { STUDENTS[i] = { ...STUDENTS[i], ...updated }; persist(); }
+    setEditing(false);
+    toast(tr('បានរក្សាទុក','Saved'), 'good');
+  };
+
+  if (editing) return (
+    <Card pad={0} style={{overflow:'hidden'}}>
+      <StudentEditPanel key={s.id} s={s} onSave={saveStudent} onCancel={() => setEditing(false)}/>
+    </Card>
+  );
+
+  return (
+    <Card pad={0} style={{overflow:'hidden'}}>
+      <StudentProfile s={s}
+        onEdit={() => setEditing(true)}
+        onBook={() => navigate('booking')}
+        onCall={null} onMessage={null}
+        onSavePhoto={(dataUrl) => { const i = STUDENTS.findIndex(x => x.id === s.id); if (i !== -1) { STUDENTS[i].photo = dataUrl; persist(); } }}
+        onSaveDoc={(pid, field, val) => { const i = STUDENTS.findIndex(x => x.id === pid); if (i !== -1) { STUDENTS[i][field] = val; persist(); } }}
+        onSaveBio={(pid, updates) => { const i = STUDENTS.findIndex(x => x.id === pid); if (i !== -1) { Object.assign(STUDENTS[i], updates); persist(); toast(tr('បានរក្សាទុក','Saved'), 'good'); } }}
+        onSavePaid={null}
+        onAddPayment={null}
+      />
+    </Card>
+  );
+};
+
 const StudentsScreen = StudentsScreenV2;
-Object.assign(window, { StudentsScreenV2, StudentsScreen });
+Object.assign(window, { StudentsScreenV2, StudentsScreen, StudentSelfProfile });

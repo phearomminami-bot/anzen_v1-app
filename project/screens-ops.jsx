@@ -911,7 +911,8 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   }, [clip]);
 
   const viewProps = { lessons:visibleLessons, studentMode, weekDates, highlights, onHighlight:handleHighlight, hlColor:activeColor,
-    notes:visNotes, onSlotClick: studentMode ? null : openSlot, onNoteClick: (n)=>openDetail('note', n),
+    // Students never see internal teacher notes; their own exams/applications stay visible.
+    notes: studentMode ? [] : visNotes, onSlotClick: studentMode ? null : openSlot, onNoteClick: studentMode ? null : (n)=>openDetail('note', n),
     clip: studentMode ? null : clip, onStartCopy: studentMode ? null : startCopy, onStartMove: studentMode ? null : startMove,
     onPlace: studentMode ? null : placeLesson, onMoveLesson: studentMode ? null : moveLesson,
     exams: visExams, onExamClick: studentMode ? null : (e)=>openDetail('exam', e), allHours };
