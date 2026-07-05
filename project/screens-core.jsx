@@ -492,133 +492,220 @@ const DashboardInstructor = () => {
   );
 };
 
-const DashboardStudent = ({ studentId }) => {
-  const { navigate, toast, tr, lang } = useAppActions();
-  const bp = useBreakpoint();
-  const me = STUDENTS.find(s => s.id === studentId) || null;
-  const u  = LOGIN_USERS.student;
+// Circular progress ring for the student dashboard.
+const ProgressRing = ({ pct, size = 92, stroke = 9, color = 'var(--accent)', children }) => {
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  const off = c * (1 - Math.max(0, Math.min(1, pct || 0)));
+  return (
+    <div style={{ position:'relative', width:size, height:size, flexShrink:0 }}>
+      <svg width={size} height={size} style={{ transform:'rotate(-90deg)' }}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--surface-muted)" strokeWidth={stroke}/>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={off} style={{ transition:'stroke-dashoffset .6s ease' }}/>
+      </svg>
+      <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>{children}</div>
+    </div>
+  );
+};
 
-  const displayName = me ? (lang === 'km' ? me.name : me.en) : (lang === 'km' ? u.km : u.en);
-  const firstName   = displayName.split(' ').pop();
-  const hours       = me?.hours  ?? 0;
-  const target      = me?.target ?? 30;
+const DashboardStudent = ({ studentId }) => {
+  const { navigate, tr, lang } = useAppActions();
+  const bp = useBreakpoint();
+  const me = STUDENTS.find(s => s.id === studentId) || STUDENTS.find(s => s.id === window.__anzenStudentId) || null;
+  const u  = LOGIN_USERS.student;
+  const today = (typeof todayStr === 'function') ? todayStr() : new Date().toISOString().slice(0,10);
+
+  const displayName = me ? (lang === 'km' ? me.name : (me.en || me.name)) : (lang === 'km' ? u.km : u.en);
+  const firstName   = (displayName || '').split(' ').pop();
+
+  // ── Real progress from logged lessons ─────────────────────────────────────
+  const myLessons   = me ? LESSONS.filter(l => l.studentId === me.id) : [];
+  const doneLessons = myLessons.filter(l => l.status === 'done');
+  const doneHours   = doneLessons.reduce((a,l) => a + (Number(l.len) || 1), 0);
+  const target      = Math.max(1, Number(me?.target) || 30);
+  // Prefer real logged hours; fall back to a stored value only when it is sane.
+  const hours       = doneLessons.length ? doneHours : Math.min(Number(me?.hours) || 0, target);
   const hoursLeft   = Math.max(0, target - hours);
-  const pct         = target > 0 ? hours / target : 0;
-  const paidPct     = me?.paid ?? 0;
+  const pct         = Math.min(1, hours / target);
+  const paidPct     = Math.max(0, Math.min(1, Number(me?.paid) || 0));
+  const price       = (me && typeof studentPrice === 'function') ? studentPrice(me) : null;
   const instName    = me?.inst && me.inst !== '—' ? me.inst : null;
 
+  // ── Next scheduled lesson ─────────────────────────────────────────────────
+  const skey = (d, h) => `${d} ${String(h ?? 0).padStart(2,'0')}`;
+  const upcoming = myLessons
+    .filter(l => l.status !== 'cancelled' && l.status !== 'done' && l.date >= today)
+    .sort((a,b) => skey(a.date,a.h).localeCompare(skey(b.date,b.h)));
+  const nextLesson = upcoming[0];
+
+  // ── Next exam / application (from the shared schedule) ─────────────────────
+  const myExams = ((window.__schoolSettings && window.__schoolSettings.scheduleExams) || [])
+    .filter(e => (e.studentIds || []).includes(me?.id) && e.date >= today)
+    .sort((a,b) => (a.date + (a.time||'')).localeCompare(b.date + (b.time||'')));
+  const nextExam = myExams[0];
+  const SK = (k) => (window.__SCHED_KIND ? window.__SCHED_KIND(k) : { km:'ប្រឡង', en:'Exam', icon:'🎓', color:'#12A302', soft:'#eafbe7', text:'#0c5a01' });
+
+  // ── Phase tracking (KH / JP / AI) — the school's real progress model ───────
+  const PHASES = window.STUDENT_PHASES || [{k:'KH',label:'KH',color:'#2A5DB0'},{k:'JP',label:'JP',color:'#B0413E'},{k:'AI',label:'AI',color:'#12A302'}];
+  const phaseStatus = me?.phaseStatus || {};
+
+  const daysUntil = (d) => Math.round((new Date(d+'T00:00:00') - new Date(today+'T00:00:00')) / 86400000);
+  const fmtDate = (d) => { const dd = d.slice(8); const mi = parseInt(d.slice(5,7))-1; const m = (typeof KM_MONTHS!=='undefined' && lang==='km') ? KM_MONTHS[mi] : (typeof EN_MONTHS!=='undefined' ? (EN_MONTHS[mi]||'').slice(0,3) : d.slice(5,7)); return `${parseInt(dd)} ${m}`; };
+  const countLabel = (n) => n === 0 ? tr('ថ្ងៃ​នេះ','Today') : n === 1 ? tr('ស្អែក','Tomorrow') : tr(`នៅ ${n} ថ្ងៃ​ទៀត`, `in ${n} days`);
+  const hr = new Date().getHours();
+  const greet = hr < 12 ? tr('អរុណ​សួស្ដី','Good morning') : hr < 17 ? tr('ទិវា​សួស្ដី','Good afternoon') : tr('សាយ័ណ្ហ​សួស្ដី','Good evening');
+
+  const labelCss = { fontSize:10, color:'var(--ink-3)', letterSpacing:'.05em', textTransform:'uppercase', marginBottom:2, fontFamily:'"JetBrains Mono",monospace' };
+  const gridStat = { display:'grid', gridTemplateColumns: bp.mobile ? '1fr 1fr' : '1fr 1fr 1fr', gap:12 };
+
   return (
-    <div style={{display:'flex',flexDirection:'column',gap:18}}>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end'}}>
-        <div>
+    <div style={{display:'flex',flexDirection:'column',gap:16}}>
+      {/* Greeting */}
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',flexWrap:'wrap',gap:12}}>
+        <div style={{minWidth:0}}>
           <div style={{fontSize:11,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.08em'}}>
-            {me ? `${me.name} · ${me.id} · ${me.cls}` : (lang==='km' ? u.km : u.en)}
+            {me ? `${me.name} · ${me.id} · ${tr('ថ្នាក់','Class')} ${me.cls}` : (lang==='km' ? u.km : u.en)}
           </div>
-          <div style={{fontSize:28,fontWeight:700,letterSpacing:'-.02em',marginTop:6,fontFamily:'var(--font-display)'}}>
-            {tr(`អរុណ​សួស្ដី ${firstName} · បន្ត​ខំ!`, `Good morning, ${firstName}!`)}
+          <div style={{fontSize:bp.mobile?24:28,fontWeight:700,letterSpacing:'-.02em',marginTop:6,fontFamily:'var(--font-display)'}}>
+            {greet}, {firstName}! 👋
           </div>
           <div style={{fontSize:13,color:'var(--ink-2)',marginTop:4}}>
-            {hoursLeft > 0
-              ? tr(<>អ្នក​នៅ​សល់ <b>{hoursLeft} ម៉ោង</b> ទៀត​រហូត​ដល់​ការ​ប្រឡង​ផ្លូវ​។</>, <>You have <b>{hoursLeft} hours</b> left until your road exam.</>)
-              : tr('ស្វាគមន៍​ចូល Anzen!', 'Welcome to Anzen!')}
+            {nextExam
+              ? tr(<>ការ​{SK(nextExam.kind).km}​របស់​អ្នក {countLabel(daysUntil(nextExam.date))} — សូម​ត្រៀម​ខ្លួន!</>, <>Your {SK(nextExam.kind).en.toLowerCase()} is {countLabel(daysUntil(nextExam.date))} — get ready!</>)
+              : hoursLeft > 0
+                ? tr(<>អ្នក​នៅ​សល់ <b>{hoursLeft} ម៉ោង</b> ទៀត​រហូត​ដល់​គោលដៅ​​វគ្គ​សិក្សា។</>, <>You have <b>{hoursLeft} hours</b> left to reach your course goal.</>)
+                : tr('អ្នក​បាន​បញ្ចប់​ម៉ោង​សិក្សា​គ្រប់​ហើយ — អស្ចារ្យ! 🎉','You have completed all your training hours — great work! 🎉')}
           </div>
         </div>
-        <div style={{display:'flex',gap:8}}>
-          <Btn kind="ghost" size="md" onClick={()=>navigate('lessons')} icon={<Icon name="book" size={14}/>}>{tr('មេរៀន','Lessons')}</Btn>
+        <div style={{display:'flex',gap:8,flexShrink:0}}>
+          <Btn kind="ghost" size="md" onClick={()=>navigate('lessons')} icon={<Icon name="book" size={14}/>}>{tr('មេរៀន','Study')}</Btn>
           <Btn kind="accent" size="md" onClick={()=>navigate('booking')} icon={<Icon name="plus" size={14}/>}>{tr('កក់​មេរៀន','Book lesson')}</Btn>
         </div>
       </div>
 
-      <div style={{display:'grid',gridTemplateColumns:'1.4fr 1fr',gap:12}}>
-        <Card style={{background:'var(--ink)',color:'var(--bg)',border:'none'}}>
+      {/* Next lesson + progress */}
+      <div style={{display:'grid',gridTemplateColumns: bp.mobile ? '1fr' : '1.3fr 1fr',gap:12}}>
+        {/* Next lesson */}
+        <Card style={{background:'var(--ink)',color:'var(--bg)',border:'none',display:'flex',flexDirection:'column'}}>
           <div style={{fontSize:11,opacity:.6,fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.08em'}}>{tr('មេរៀន​បន្ទាប់','NEXT LESSON')}</div>
-          {me?.next && me.next !== '—' ? (
+          {nextLesson ? (
             <>
-              <div style={{fontSize:32,fontWeight:600,letterSpacing:'-.02em',marginTop:8,fontFamily:'var(--font-display)',lineHeight:1}}>{me.next}</div>
-              <div style={{fontSize:13,marginTop:8,opacity:.85}}>{tr('អនុវត្តន៍ · 2 ម៉ោង','Practical · 2h')}</div>
-              {instName && (
-                <div style={{marginTop:14,display:'flex',alignItems:'center',gap:12,padding:'12px',background:'rgba(255,255,255,.08)',borderRadius:8}}>
-                  <div style={{flex:1}}>
-                    <div style={{fontSize:13,fontWeight:500}}>{instName}</div>
-                  </div>
-                  <Btn kind="ghost" size="sm" onClick={()=>navigate('schedule')} style={{borderColor:'rgba(255,255,255,.3)',color:'#fff'}}>{tr('មើល','View')}</Btn>
-                </div>
-              )}
+              <div style={{display:'flex',alignItems:'baseline',gap:10,marginTop:10,flexWrap:'wrap'}}>
+                <div style={{fontSize:30,fontWeight:600,letterSpacing:'-.02em',fontFamily:'var(--font-display)',lineHeight:1}}>{fmtDate(nextLesson.date)}</div>
+                <div style={{fontSize:20,fontWeight:600,fontFamily:'"JetBrains Mono",monospace',opacity:.9}}>{String(nextLesson.h).padStart(2,'0')}:00</div>
+                <Badge tone="accent">{countLabel(daysUntil(nextLesson.date))}</Badge>
+              </div>
+              <div style={{fontSize:13,marginTop:8,opacity:.85}}>
+                {(nextLesson.type || tr('អនុវត្តន៍','Practical')).split('·').slice(-1)[0].trim()} · {nextLesson.len || 1}{tr('ម៉ោង','h')}
+                {nextLesson.instId && (() => { const i = INSTRUCTORS.find(x=>x.id===nextLesson.instId); return i ? ` · 👨‍🏫 ${lang==='km'?i.name:(i.en||i.name)}` : ''; })()}
+              </div>
+              <div style={{marginTop:'auto',paddingTop:14}}>
+                <Btn kind="ghost" size="sm" onClick={()=>navigate('schedule')} style={{borderColor:'rgba(255,255,255,.3)',color:'#fff'}}>{tr('មើល​កាលវិភាគ','View schedule')}</Btn>
+              </div>
             </>
           ) : (
             <>
-              <div style={{fontSize:22,fontWeight:600,marginTop:12,opacity:.7,fontFamily:'var(--font-display)'}}>{tr('មិន​ទាន់​មាន​​មេរៀន​កក់','No lesson booked yet')}</div>
-              <div style={{marginTop:14}}>
+              <div style={{fontSize:20,fontWeight:600,marginTop:12,opacity:.75,fontFamily:'var(--font-display)'}}>{tr('មិន​ទាន់​មាន​​មេរៀន​កក់','No lesson booked yet')}</div>
+              <div style={{fontSize:12,opacity:.6,marginTop:6}}>{tr('កក់​មេរៀន​បន្ទាប់​ដើម្បី​បន្ត​វឌ្ឍនភាព​របស់​អ្នក។','Book your next lesson to keep your progress going.')}</div>
+              <div style={{marginTop:'auto',paddingTop:14}}>
                 <Btn kind="ghost" size="sm" onClick={()=>navigate('booking')} style={{borderColor:'rgba(255,255,255,.3)',color:'#fff'}}>{tr('កក់​ឥឡូវ','Book now')}</Btn>
               </div>
             </>
           )}
         </Card>
 
-        <Card bar label={tr('វឌ្ឍនភាព​​​នៃ​វគ្គ','COURSE PROGRESS')}>
-          <div style={{display:'flex',alignItems:'baseline',gap:8}}>
-            <div style={{fontSize:42,fontWeight:600,fontFamily:'var(--font-display)',letterSpacing:'-.02em'}}>{hours}</div>
-            <div style={{fontSize:14,color:'var(--ink-3)'}}>/ {target} {tr('ម៉ោង','hours')}</div>
-          </div>
-          <div style={{height:8,background:'var(--surface-muted)',borderRadius:999,marginTop:12,overflow:'hidden'}}>
-            <div style={{width:`${pct*100}%`,height:'100%',background:'var(--accent)'}}/>
-          </div>
-          <div style={{marginTop:14,display:'flex',flexDirection:'column',gap:8}}>
-            {[
-              {l:tr('ច្បាប់​ចរាចរណ៍','Theory · traffic law'), d: hours >= target * 0.1},
-              {l:tr('ការ​បើក​ក្នុង​ទីលាន','Yard practice'),      d: hours >= target * 0.25},
-              {l:tr('ការ​បើក​ក្នុង​ទីក្រុង','City driving'),      d: hours >= target * 0.5,  p: hours > 0 && hours < target * 0.5 ? tr('កំពុង​ធ្វើ','In progress') : null},
-              {l:tr('ផ្លូវ​លឿន','Highway'),                      d: hours >= target * 0.8},
-              {l:tr('ប្រឡង​ផ្លូវ','Road exam'),                   d: hours >= target},
-            ].map((m,i)=>(
-              <div key={i} style={{display:'flex',alignItems:'center',gap:8,fontSize:12}}>
-                <div style={{
-                  width:18,height:18,borderRadius:999,flexShrink:0,
-                  border:`1.5px solid ${m.d?'var(--good)':'var(--border-strong)'}`,
-                  background:m.d?'var(--good)':'transparent',
-                  display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',
-                }}>
-                  {m.d && <Icon name="check" size={11} stroke={2.5}/>}
-                </div>
-                <div style={{flex:1,color:m.d?'var(--ink-3)':'var(--ink)',textDecoration:m.d?'line-through':'none'}}>{m.l}</div>
-                {m.p && <Badge tone="accent">{m.p}</Badge>}
+        {/* Course progress ring + phases */}
+        <Card bar label={tr('វឌ្ឍនភាព​​​វគ្គ​សិក្សា','COURSE PROGRESS')}>
+          <div style={{display:'flex',alignItems:'center',gap:16}}>
+            <ProgressRing pct={pct}>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-display)',lineHeight:1}}>{Math.round(pct*100)}%</div>
+            </ProgressRing>
+            <div style={{minWidth:0}}>
+              <div style={{display:'flex',alignItems:'baseline',gap:6}}>
+                <div style={{fontSize:28,fontWeight:700,fontFamily:'var(--font-display)',letterSpacing:'-.02em'}}>{hours}</div>
+                <div style={{fontSize:13,color:'var(--ink-3)'}}>/ {target} {tr('ម៉ោង','hrs')}</div>
               </div>
-            ))}
+              <div style={{fontSize:12,color:'var(--ink-2)',marginTop:4}}>{doneLessons.length} {tr('មេរៀន​បាន​រៀន','lessons done')}</div>
+              {hoursLeft > 0 && <div style={{fontSize:12,color:'var(--ink-3)',marginTop:2}}>{tr('នៅ​សល់','left')} {hoursLeft} {tr('ម៉ោង','hrs')}</div>}
+            </div>
+          </div>
+          {/* Phase chips (KH / JP / AI) */}
+          <div style={{display:'flex',gap:8,marginTop:16,flexWrap:'wrap'}}>
+            {PHASES.map(p => {
+              const st = phaseStatus[p.k] || '';
+              const done = st === 'finished', active = st === 'starting';
+              return (
+                <div key={p.k} style={{
+                  display:'flex',alignItems:'center',gap:6,padding:'5px 10px',borderRadius:999,
+                  border:`1.5px solid ${done||active ? p.color : 'var(--border)'}`,
+                  background: done ? p.color : active ? (p.color+'1a') : 'transparent',
+                  color: done ? '#fff' : active ? p.color : 'var(--ink-3)',
+                  fontSize:12,fontWeight:600,
+                }}>
+                  {done && <Icon name="check" size={11} stroke={3}/>}
+                  {p.label}
+                  <span style={{fontSize:10,opacity:.85,fontWeight:500}}>{done ? tr('ចប់','done') : active ? tr('កំពុង','now') : tr('រង់ចាំ','—')}</span>
+                </div>
+              );
+            })}
           </div>
         </Card>
       </div>
 
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12}}>
-        <Card bar label={tr('ការ​ទូទាត់','PAYMENTS')}>
-          <Stat label="" value={`${Math.round(paidPct*100)}%`} sub={tr('បាន​បង់','paid')}/>
-          <div style={{height:8,background:'var(--surface-muted)',borderRadius:999,marginTop:10,overflow:'hidden'}}>
-            <div style={{width:`${paidPct*100}%`,height:'100%',background:'var(--good)'}}/>
-          </div>
-          {paidPct < 1 && (
-            <div style={{marginTop:12,fontSize:12,color:'var(--ink-2)'}}>
-              {tr('ទំនាក់​ទំនង​ការិយាល័យ​ដើម្បី​ជ្រាប​​ព័ត៌មាន','Contact office for payment details')}
+      {/* Exam · Payments · Account */}
+      <div style={gridStat}>
+        {/* Next exam / application */}
+        <Card bar label={tr('ការ​ប្រឡង / ដាក់​ពាក្យ','EXAM · APPLICATION')}>
+          {nextExam ? (() => { const k = SK(nextExam.kind); return (
+            <div>
+              <div style={{display:'inline-flex',alignItems:'center',gap:6,padding:'4px 10px',borderRadius:8,background:k.soft,color:k.text,fontSize:12,fontWeight:700}}>
+                <span>{k.icon}</span>{tr(k.km,k.en)}
+              </div>
+              <div style={{fontSize:26,fontWeight:700,fontFamily:'var(--font-display)',marginTop:10,letterSpacing:'-.01em'}}>{fmtDate(nextExam.date)}</div>
+              <div style={{fontSize:13,color:'var(--ink-2)',marginTop:2}}>{(nextExam.time||'').slice(0,5)} · {countLabel(daysUntil(nextExam.date))}</div>
+              {myExams.length > 1 && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:8}}>+{myExams.length-1} {tr('ការ​ណាត់​បន្ថែម','more upcoming')}</div>}
+            </div>
+          ); })() : (
+            <div>
+              <div style={{fontSize:22,marginBottom:6}}>📝</div>
+              <div style={{fontSize:13,color:'var(--ink-2)'}}>{tr('មិន​ទាន់​មាន​ការ​ណាត់​ប្រឡង​ទេ។','No exam scheduled yet.')}</div>
+              <div style={{fontSize:11,color:'var(--ink-3)',marginTop:4}}>{tr('គ្រូ​នឹង​ណាត់​ពេល​ពេល​អ្នក​ត្រៀម​រួច។','Your instructor will schedule it when you are ready.')}</div>
             </div>
           )}
         </Card>
-        <Card bar label={tr('ប្រឡង​សាកល្បង','MOCK TESTS')}>
+
+        {/* Payments */}
+        <Card bar label={tr('ការ​ទូទាត់','PAYMENTS')}>
           <div style={{display:'flex',alignItems:'baseline',gap:8}}>
-            <div style={{fontSize:42,fontWeight:600,fontFamily:'var(--font-display)'}}>—</div>
-            <div style={{fontSize:14,color:'var(--ink-3)'}}>{tr('/100','/ 100')}</div>
+            <div style={{fontSize:34,fontWeight:700,fontFamily:'var(--font-display)'}}>{Math.round(paidPct*100)}%</div>
+            <div style={{fontSize:13,color:'var(--ink-3)'}}>{tr('បាន​បង់','paid')}</div>
           </div>
-          <div style={{marginTop:12,fontSize:12,color:'var(--ink-3)'}}>
-            {tr('មិន​ទាន់​មាន​ការ​ប្រឡង​សាកល្បង','No mock tests taken yet')}
+          <div style={{height:8,background:'var(--surface-muted)',borderRadius:999,marginTop:10,overflow:'hidden'}}>
+            <div style={{width:`${paidPct*100}%`,height:'100%',background: paidPct>=1 ? 'var(--good)' : 'var(--accent)',transition:'width .5s'}}/>
           </div>
+          {price != null && (
+            <div style={{fontSize:12,color:'var(--ink-2)',marginTop:10}}>
+              {paidPct>=1
+                ? tr('បាន​បង់​ថ្លៃ​សិក្សា​ពេញ ✓','Tuition fully paid ✓')
+                : <>{tr('នៅ​ខ្វះ','Balance')} <b>${Math.round(price*(1-paidPct))}</b> / ${price}</>}
+            </div>
+          )}
+          <div style={{fontSize:11,color:'var(--ink-3)',marginTop:6}}>{tr('ទំនាក់​ទំនង​ការិយាល័យ​សម្រាប់​ព័ត៌មាន​លម្អិត','Contact the office for details')}</div>
         </Card>
+
+        {/* Account info */}
         <Card bar label={tr('ព័ត៌មាន​គណនី','ACCOUNT INFO')}>
-          <div style={{display:'flex',flexDirection:'column',gap:8}}>
-            <div><div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',textTransform:'uppercase',marginBottom:2}}>ID</div>
-              <div style={{fontFamily:'"JetBrains Mono",monospace',fontWeight:600,fontSize:15}}>{me?.id || '—'}</div></div>
-            <div><div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',textTransform:'uppercase',marginBottom:2}}>{tr('ថ្នាក់','Class')}</div>
-              <div style={{fontWeight:500,fontSize:13}}>{me?.cls || '—'}</div></div>
-            <div><div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',textTransform:'uppercase',marginBottom:2}}>{tr('គ្រូ','Instructor')}</div>
-              <div style={{fontWeight:500,fontSize:13}}>{me?.inst || '—'}</div></div>
-            <div><div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',textTransform:'uppercase',marginBottom:2}}>{tr('ទូរស័ព្ទ','Phone')}</div>
-              <div style={{fontWeight:500,fontSize:13}}>{me?.phone || '—'}</div></div>
+          <div style={{display:'flex',flexDirection:'column',gap:10}}>
+            <div><div style={labelCss}>ID</div>
+              <div style={{fontFamily:'"JetBrains Mono",monospace',fontWeight:600,fontSize:14}}>{me?.id || '—'}</div></div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+              <div><div style={labelCss}>{tr('ថ្នាក់','Class')}</div><div style={{fontWeight:600,fontSize:13}}>{me?.cls || '—'} · {me?.trans || 'AT'}</div></div>
+              <div><div style={labelCss}>{tr('ស្ថានភាព','Status')}</div><div style={{fontWeight:500,fontSize:12}}>{me?.status || '—'}</div></div>
+            </div>
+            <div><div style={labelCss}>{tr('គ្រូ​បង្រៀន','Instructor')}</div>
+              <div style={{fontWeight:500,fontSize:13}}>{instName || tr('មិន​ទាន់​កំណត់','Not assigned')}</div></div>
+            <div><div style={labelCss}>{tr('ទូរស័ព្ទ','Phone')}</div>
+              <div style={{fontWeight:500,fontSize:13,fontFamily:'"JetBrains Mono",monospace'}}>{me?.phone || '—'}</div></div>
           </div>
         </Card>
       </div>
