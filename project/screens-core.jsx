@@ -287,9 +287,8 @@ const DashboardAdmin = () => {
             {s ? <Avatar tag={s.photo} size={32}/> : <div style={{width:32,flexShrink:0}}/>}
             <div style={{flex:1,minWidth:0}}>
               <div style={{fontSize:13.5,fontWeight:600,color:isNow?'var(--good)':'var(--ink)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{nm}</div>
-              <div style={{fontSize:11,color:'var(--ink-3)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
-                {(it?.en||it?.name||'—')}{v?.plate ? <span style={{fontFamily:'"JetBrains Mono",monospace',fontWeight:600,color:v.trans==='MT'?'#B0413E':'#2A5DB0'}}>{' · '+v.plate}</span> : ''}
-              </div>
+              <div style={{fontSize:11,color:'var(--ink-3)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{it?.en||it?.name||'—'}</div>
+              {v?.plate && <div style={{fontSize:11,marginTop:1,fontWeight:700,fontFamily:'"JetBrains Mono",monospace',color:v.trans==='MT'?'#B0413E':'#2A5DB0'}}>{v.plate}</div>}
             </div>
             <LessonBadge l={l}/>
           </button>
