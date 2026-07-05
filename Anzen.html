@@ -3004,7 +3004,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v163";</script>
+<script>window.__ANZEN_VERSION="v164";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -37761,6 +37761,7 @@ var FvEditPanel = ({
   var {
     tr
   } = useAppActions();
+  var bp = useBreakpoint();
   var [plate, setPlate] = React.useState(v.plate || '');
   var [make, setMake] = React.useState(v.make || '');
   var [year, setYear] = React.useState(v.year || '');
@@ -37833,45 +37834,96 @@ var FvEditPanel = ({
       marginBottom: 12
     }
   };
-  return React.createElement(Card, null, React.createElement("div", {
+  return React.createElement("div", {
     style: {
+      display: 'flex',
+      flexDirection: 'column',
+      maxHeight: bp.mobile ? '86vh' : '84vh',
+      background: 'var(--surface)'
+    }
+  }, React.createElement("div", {
+    style: {
+      flexShrink: 0,
+      position: 'sticky',
+      top: 0,
+      zIndex: 6,
+      background: 'var(--accent)',
+      color: '#fff',
+      padding: bp.mobile ? '14px 16px' : '16px 20px',
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 16
+      gap: 10
     }
   }, React.createElement("div", {
     style: {
       fontSize: 15,
-      fontWeight: 600
+      fontWeight: 700,
+      minWidth: 0,
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap'
     }
   }, "\u1780\u17C2\u200B \xB7 Edit \u2014 ", v.plate), confirmDel ? React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
-      alignItems: 'center'
+      alignItems: 'center',
+      flexShrink: 0
     }
   }, React.createElement("span", {
     style: {
       fontSize: 12,
-      color: 'var(--danger)'
+      color: 'rgba(255,255,255,.9)'
     }
-  }, tr('ប្រាកដ​ទេ?', 'Are you sure?')), React.createElement(Btn, {
-    kind: "danger",
-    size: "sm",
-    onClick: () => onDelete(v.id)
-  }, tr('លុប', 'Delete')), React.createElement(Btn, {
-    kind: "ghost",
-    size: "sm",
-    onClick: () => setConfirmDel(false)
-  }, tr('បោះបង់', 'Cancel'))) : React.createElement(Btn, {
-    kind: "ghost",
-    size: "sm",
+  }, tr('ប្រាកដ​ទេ?', 'Are you sure?')), React.createElement("button", {
+    onClick: () => onDelete(v.id),
+    style: {
+      padding: '5px 12px',
+      borderRadius: 7,
+      border: 'none',
+      background: 'var(--danger)',
+      color: '#fff',
+      cursor: 'pointer',
+      fontSize: 12,
+      fontWeight: 600,
+      fontFamily: 'inherit'
+    }
+  }, tr('លុប', 'Delete')), React.createElement("button", {
+    onClick: () => setConfirmDel(false),
+    style: {
+      padding: '5px 12px',
+      borderRadius: 7,
+      border: '1px solid rgba(255,255,255,.45)',
+      background: 'transparent',
+      color: '#fff',
+      cursor: 'pointer',
+      fontSize: 12,
+      fontFamily: 'inherit'
+    }
+  }, tr('បោះបង់', 'Cancel'))) : React.createElement("button", {
     onClick: () => setConfirmDel(true),
     style: {
-      color: 'var(--danger)'
+      flexShrink: 0,
+      padding: '5px 12px',
+      borderRadius: 7,
+      border: '1px solid rgba(255,255,255,.45)',
+      background: 'transparent',
+      color: '#fff',
+      cursor: 'pointer',
+      fontSize: 12,
+      fontWeight: 600,
+      fontFamily: 'inherit',
+      whiteSpace: 'nowrap'
     }
-  }, tr('លុប​យានយន្ត', 'Delete vehicle'))), fvSecTitle('ព័ត៌មាន​'), React.createElement("div", {
+  }, tr('លុប​យានយន្ត', 'Delete vehicle'))), React.createElement("div", {
+    style: {
+      flex: 1,
+      minHeight: 0,
+      overflowY: 'auto',
+      padding: bp.mobile ? '14px 16px 18px' : '16px 20px 20px'
+    }
+  }, fvSecTitle('ព័ត៌មាន​'), React.createElement("div", {
     style: {
       marginBottom: 14,
       display: 'flex',
@@ -38013,14 +38065,18 @@ var FvEditPanel = ({
     value: costMo,
     onChange: e => setCostMo(e.target.value),
     min: "0"
-  })))), React.createElement("div", {
+  }))))), React.createElement("div", {
     style: {
+      flexShrink: 0,
+      position: 'sticky',
+      bottom: 0,
+      zIndex: 6,
+      background: 'var(--surface)',
+      borderTop: '1px solid var(--border)',
+      padding: bp.mobile ? '12px 16px' : '14px 20px',
       display: 'flex',
-      gap: 8,
       justifyContent: 'flex-end',
-      marginTop: 8,
-      paddingTop: 12,
-      borderTop: '1px solid var(--border)'
+      gap: 8
     }
   }, React.createElement(Btn, {
     kind: "ghost",

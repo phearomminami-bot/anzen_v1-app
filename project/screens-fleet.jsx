@@ -1881,6 +1881,7 @@ const fvSecTitle = (t) => (
 
 const FvEditPanel = ({ v, onSave, onCancel, onDelete, onSavePhoto }) => {
   const { tr } = useAppActions();
+  const bp = useBreakpoint();
   const [plate,    setPlate]    = React.useState(v.plate    || '');
   const [make,     setMake]     = React.useState(v.make     || '');
   const [year,     setYear]     = React.useState(v.year     || '');
@@ -1939,32 +1940,26 @@ const FvEditPanel = ({ v, onSave, onCancel, onDelete, onSavePhoto }) => {
   const grid2 = { style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:12} };
 
   return (
-    <Card>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
-        <div style={{fontSize:15,fontWeight:600}}>
+    <div style={{display:'flex',flexDirection:'column',maxHeight:bp.mobile?'86vh':'84vh',background:'var(--surface)'}}>
+      {/* Sticky blue header — stays visible while the form scrolls */}
+      <div style={{flexShrink:0,position:'sticky',top:0,zIndex:6,background:'var(--accent)',color:'#fff',
+        padding:bp.mobile?'14px 16px':'16px 20px',display:'flex',justifyContent:'space-between',alignItems:'center',gap:10}}>
+        <div style={{fontSize:15,fontWeight:700,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
           កែ​ · Edit — {v.plate}
         </div>
         {confirmDel ? (
-          <div style={{display:'flex',gap:8,alignItems:'center'}}>
-            <span style={{fontSize:12,color:'var(--danger)'}}>
-              {tr('ប្រាកដ​ទេ?', 'Are you sure?')}
-            </span>
-            <Btn kind="danger" size="sm" onClick={() => onDelete(v.id)}>
-              {tr('លុប', 'Delete')}
-            </Btn>
-            <Btn kind="ghost" size="sm" onClick={() => setConfirmDel(false)}>
-              {tr('បោះបង់', 'Cancel')}
-            </Btn>
+          <div style={{display:'flex',gap:8,alignItems:'center',flexShrink:0}}>
+            <span style={{fontSize:12,color:'rgba(255,255,255,.9)'}}>{tr('ប្រាកដ​ទេ?', 'Are you sure?')}</span>
+            <button onClick={() => onDelete(v.id)} style={{padding:'5px 12px',borderRadius:7,border:'none',background:'var(--danger)',color:'#fff',cursor:'pointer',fontSize:12,fontWeight:600,fontFamily:'inherit'}}>{tr('លុប', 'Delete')}</button>
+            <button onClick={() => setConfirmDel(false)} style={{padding:'5px 12px',borderRadius:7,border:'1px solid rgba(255,255,255,.45)',background:'transparent',color:'#fff',cursor:'pointer',fontSize:12,fontFamily:'inherit'}}>{tr('បោះបង់', 'Cancel')}</button>
           </div>
         ) : (
-          <Btn kind="ghost" size="sm"
-            onClick={() => setConfirmDel(true)}
-            style={{color:'var(--danger)'}}>
-            {tr('លុប​យានយន្ត', 'Delete vehicle')}
-          </Btn>
+          <button onClick={() => setConfirmDel(true)} style={{flexShrink:0,padding:'5px 12px',borderRadius:7,border:'1px solid rgba(255,255,255,.45)',background:'transparent',color:'#fff',cursor:'pointer',fontSize:12,fontWeight:600,fontFamily:'inherit',whiteSpace:'nowrap'}}>{tr('លុប​យានយន្ត', 'Delete vehicle')}</button>
         )}
       </div>
 
+      {/* Scrollable body */}
+      <div style={{flex:1,minHeight:0,overflowY:'auto',padding:bp.mobile?'14px 16px 18px':'16px 20px 20px'}}>
       {fvSecTitle('ព័ត៌មាន​')}
       <div style={{marginBottom:14,display:'flex',gap:16,alignItems:'center'}}>
         <UploadPhoto id={v.id} photo={v.photo} w={140} h={88} r={8} onUpload={onSavePhoto}/>
@@ -2056,11 +2051,15 @@ const FvEditPanel = ({ v, onSave, onCancel, onDelete, onSavePhoto }) => {
         </FvField>
       </div>
 
-      <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:8,paddingTop:12,borderTop:'1px solid var(--border)'}}>
+      </div>
+
+      {/* Sticky footer — Save / Cancel stay visible while scrolling */}
+      <div style={{flexShrink:0,position:'sticky',bottom:0,zIndex:6,background:'var(--surface)',borderTop:'1px solid var(--border)',
+        padding:bp.mobile?'12px 16px':'14px 20px',display:'flex',justifyContent:'flex-end',gap:8}}>
         <Btn kind="ghost" size="md" onClick={onCancel}>{tr('បោះបង់','Cancel')}</Btn>
         <Btn kind="primary" size="md" onClick={save}>{tr('រក្សា​ទុក','Save changes')}</Btn>
       </div>
-    </Card>
+    </div>
   );
 };
 
