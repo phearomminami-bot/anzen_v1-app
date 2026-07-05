@@ -661,7 +661,7 @@ window.__trRegistry = {
   "Mock avg · trend": "ប្រឡង​សាក · ទិស",
   "Exam date": "ថ្ងៃ​ប្រឡង",
   "Total invoices": "វិក្កយបត្រ​សរុប",
-  "Paid": "បានបង់",
+  "Paid": "បាន​បង់",
   "Outstanding": "នៅ​ជំពាក់",
   "due": "ត្រូវ​ទូទាត់",
   "My invoices": "វិក្កយបត្រ​របស់​ខ្ញុំ",
@@ -995,6 +995,8 @@ window.__trRegistry = {
   "Fail": "ធ្លាក់",
   "Set result": "កំណត់​លទ្ធផល",
   "Fail reason": "មូលហេតុ​ធ្លាក់",
+  "Congratulations, you passed!": "អបអរសាទរ អ្នក​បាន​ជាប់!",
+  "Result pending": "កំពុង​រង់ចាំ​លទ្ធផល",
   "Result": "លទ្ធផល",
   "Failed at": "កន្លែង​ធ្លាក់",
   "e.g. parking error": "ឧ. ចត​មិន​ត្រូវ",
@@ -1043,6 +1045,10 @@ window.__trRegistry = {
   "🎓 Passed": "🎓 ជាប់ប្រឡង",
   "In progress':'neutral": "បានបង់'),'good'); }\n            }}\n          />\n        )}\n        {tab==='progress' && <StudentsProgress students={selected ? [selected] : []} onView={goToProfile} onSave={saveStudentProgress}/>}\n        {tab==='messages' && <StudentMessages activeStudentId={selectedId} students={allStudents}/>}\n        {tab==='docs'     && <StudentDocs students={selected ? [selected] : []} onToggleDoc={(id,field,val) => {\n          const i = STUDENTS.findIndex(s => s.id === id);\n          if (i !== -1) { STUDENTS[i][field] = val; if(window.saveAllData)window.saveAllData(); forceUpdate(); }\n        }}/>}\n      </Card>\n    </div>\n  );\n};\n\nconst studentStatusTone = (s) => ({\n  'New':'accent",
   "Next lesson": "មេរៀន​បន្ទាប់",
+  "invoice'+(myInvoices.length>1?'s':'": "វិក្កយបត្រ",
+  "Due": "ផុតកំណត់",
+  "Official invoices issued by the school.": "វិក្កយបត្រ​ផ្លូវការ​ពី​សាលា។",
+  "Contact the office for payment details.": "ទំនាក់​ទំនង​ការិយាល័យ​សម្រាប់​ព័ត៌មាន​ទូទាត់។",
   "EXAM READINESS": "ការ​ត្រៀម​ប្រឡង",
   "DOCUMENTS": "ឯកសារ",
   "STUDY HISTORY": "ប្រវត្តិ​សិក្សា",
@@ -1398,7 +1404,6 @@ window.__trRegistry = {
   "MONTHLY TAX OBLIGATIONS — Due by 20th": "ពន្ធប្រចាំខែ (ដំណើរការ ថ្ងៃ ២០)",
   "Form": "ទម្រង់",
   "Base": "មូលដ្ឋាន",
-  "Due": "ផុតកំណត់",
   "ANNUAL TAX OBLIGATIONS — Due by March 31": "ពន្ធប្រចាំឆ្នាំ (ផុតកំណត់ ៣១ មីនា)",
   "~$99 small / ~$297 medium enterprise — register annually": "~$99 ធុរជននូវ / ~$297 ធុរជនមធ្យម — ចុះបញ្ជីភ្លាម",
   "Submit to GDT by March 31": "ដាក់ជូន GDT ដោយ ៣១ មីនា",
@@ -1677,6 +1682,8 @@ window.__trGroups = {
     "Fail": "ធ្លាក់",
     "Set result": "កំណត់​លទ្ធផល",
     "Fail reason": "មូលហេតុ​ធ្លាក់",
+    "Congratulations, you passed!": "អបអរសាទរ អ្នក​បាន​ជាប់!",
+    "Result pending": "កំពុង​រង់ចាំ​លទ្ធផល",
     "Result": "លទ្ធផល",
     "Failed at": "កន្លែង​ធ្លាក់",
     "e.g. parking error": "ឧ. ចត​មិន​ត្រូវ",
@@ -1725,6 +1732,10 @@ window.__trGroups = {
     "🎓 Passed": "🎓 ជាប់ប្រឡង",
     "In progress':'neutral": "បានបង់'),'good'); }\n            }}\n          />\n        )}\n        {tab==='progress' && <StudentsProgress students={selected ? [selected] : []} onView={goToProfile} onSave={saveStudentProgress}/>}\n        {tab==='messages' && <StudentMessages activeStudentId={selectedId} students={allStudents}/>}\n        {tab==='docs'     && <StudentDocs students={selected ? [selected] : []} onToggleDoc={(id,field,val) => {\n          const i = STUDENTS.findIndex(s => s.id === id);\n          if (i !== -1) { STUDENTS[i][field] = val; if(window.saveAllData)window.saveAllData(); forceUpdate(); }\n        }}/>}\n      </Card>\n    </div>\n  );\n};\n\nconst studentStatusTone = (s) => ({\n  'New':'accent",
     "Next lesson": "មេរៀន​បន្ទាប់",
+    "invoice'+(myInvoices.length>1?'s':'": "វិក្កយបត្រ",
+    "Due": "ជំពាក់",
+    "Official invoices issued by the school.": "វិក្កយបត្រ​ផ្លូវការ​ពី​សាលា។",
+    "Contact the office for payment details.": "ទំនាក់​ទំនង​ការិយាល័យ​សម្រាប់​ព័ត៌មាន​ទូទាត់។",
     "EXAM READINESS": "ការ​ត្រៀម​ប្រឡង",
     "DOCUMENTS": "ឯកសារ",
     "STUDY HISTORY": "ប្រវត្តិ​សិក្សា",
@@ -2313,7 +2324,6 @@ window.__trGroups = {
     "MONTHLY TAX OBLIGATIONS — Due by 20th": "ពន្ធប្រចាំខែ (ដំណើរការ ថ្ងៃ ២០)",
     "Form": "ទម្រង់",
     "Base": "មូលដ្ឋាន",
-    "Due": "ផុតកំណត់",
     "ANNUAL TAX OBLIGATIONS — Due by March 31": "ពន្ធប្រចាំឆ្នាំ (ផុតកំណត់ ៣១ មីនា)",
     "~$99 small / ~$297 medium enterprise — register annually": "~$99 ធុរជននូវ / ~$297 ធុរជនមធ្យម — ចុះបញ្ជីភ្លាម",
     "Submit to GDT by March 31": "ដាក់ជូន GDT ដោយ ៣១ មីនា",
@@ -2994,7 +3004,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v161";</script>
+<script>window.__ANZEN_VERSION="v162";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -40932,7 +40942,8 @@ var CvLessonRow = ({
   total = 1,
   cumNo,
   tr,
-  onSave
+  onSave,
+  readOnly = false
 }) => {
   var fb0 = hourFbOf(l, offset);
   var hr = h == null ? l.h || 0 : h;
@@ -41014,13 +41025,13 @@ var CvLessonRow = ({
       opacity: cancelled ? .55 : 1
     }
   }, React.createElement("button", {
-    onClick: openEval,
+    onClick: readOnly ? undefined : openEval,
     style: {
       width: '100%',
       textAlign: 'left',
       background: 'transparent',
       border: 'none',
-      cursor: 'pointer',
+      cursor: readOnly ? 'default' : 'pointer',
       padding: '10px 0',
       display: 'flex',
       justifyContent: 'space-between',
@@ -41113,11 +41124,11 @@ var CvLessonRow = ({
       alignItems: 'center',
       gap: 5
     }
-  }, cancelled ? tr('បានប្ដូរថ្ងៃ', 'Changed') : fb0.status === 'done' ? tr('រួចរាល់', 'Done') : tr('កំពុង', 'Pending'), React.createElement(Icon, {
+  }, cancelled ? tr('បានប្ដូរថ្ងៃ', 'Changed') : fb0.status === 'done' ? tr('រួចរាល់', 'Done') : tr('កំពុង', 'Pending'), !readOnly && React.createElement(Icon, {
     name: "edit",
     size: 13,
     stroke: 2
-  }))), open && React.createElement(Modal, {
+  }))), open && !readOnly && React.createElement(Modal, {
     open: true,
     onClose: closeEval,
     width: 460
@@ -41690,7 +41701,8 @@ var ExamFeedbackRow = ({
   e,
   sid,
   tr,
-  onSave
+  onSave,
+  readOnly = false
 }) => {
   var isApply = e.kind === 'apply';
   var km = window.__SCHED_KIND(e.kind);
@@ -41861,7 +41873,31 @@ var ExamFeedbackRow = ({
     style: {
       padding: '2px 10px 12px'
     }
-  }, !showForm && hasResult ? React.createElement("div", {
+  }, readOnly ? hasResult ? React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 6
+    }
+  }, savedFail && r.failReason && React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('មូលហេតុ​ធ្លាក់', 'Fail reason')), React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: 'var(--ink)'
+    }
+  }, r.failReason)), savedPass && React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: '#12A302',
+      fontWeight: 600
+    }
+  }, "\u2713 ", tr('អបអរសាទរ អ្នក​បាន​ជាប់!', 'Congratulations, you passed!'))) : React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'var(--ink-3)'
+    }
+  }, tr('កំពុង​រង់ចាំ​លទ្ធផល', 'Result pending')) : !showForm && hasResult ? React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
@@ -43703,6 +43739,8 @@ var StudentsScreenV2 = () => {
     onBook: bookLesson,
     onMessage: goToMessages,
     onAddPayment: addPayment,
+    onSaveLesson: saveLessonFeedback,
+    onSaveExam: saveExamResult,
     onSavePhoto: savePhoto,
     onCall: s => toast(`📞 ${s.phone}`, 'neutral'),
     onSaveDoc: (id, field, val) => {
@@ -44683,7 +44721,8 @@ var BiographyCard = ({
 var PaymentCard = ({
   s,
   onAddPayment,
-  onMarkPaid
+  onMarkPaid,
+  readOnly = false
 }) => {
   var {
     tr
@@ -44693,11 +44732,16 @@ var PaymentCard = ({
   var [date, setDate] = React.useState(new Date().toISOString().split('T')[0]);
   var [method, setMethod] = React.useState('cash');
   var basePrice = studentPrice(s);
+  var myInvoices = (typeof INVOICES !== 'undefined' ? INVOICES : []).filter(v => v.student === s.id).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+  var invTotal = myInvoices.reduce((a, v) => a + (Number(v.amount) || 0), 0);
+  var invPaid = myInvoices.reduce((a, v) => a + (Number(v.paid) || 0), 0);
   var log = s.payment_log || [];
   var logTotal = log.reduce((sum, e) => sum + (e.amount || 0), 0);
-  var displayPaid = log.length > 0 ? logTotal : Math.round((s.paid || 0) * basePrice);
-  var remaining = Math.max(0, basePrice - displayPaid);
-  var pct = Math.min(100, Math.round(displayPaid / Math.max(1, basePrice) * 100));
+  var hasInv = myInvoices.length > 0;
+  var billed = hasInv ? invTotal : basePrice;
+  var displayPaid = hasInv ? invPaid : log.length > 0 ? logTotal : Math.round((s.paid || 0) * basePrice);
+  var remaining = Math.max(0, billed - displayPaid);
+  var pct = Math.min(100, Math.round(displayPaid / Math.max(1, billed) * 100));
   var inp = extra => ({
     style: {
       padding: '5px 8px',
@@ -44735,7 +44779,7 @@ var PaymentCard = ({
       fontSize: 20,
       fontWeight: 700,
       fontFamily: 'var(--font-display)',
-      color: displayPaid >= basePrice ? 'var(--good)' : 'var(--ink)'
+      color: displayPaid >= billed ? 'var(--good)' : 'var(--ink)'
     }
   }, "$", displayPaid, " ", React.createElement("span", {
     style: {
@@ -44743,13 +44787,13 @@ var PaymentCard = ({
       fontWeight: 400,
       color: 'var(--ink-3)'
     }
-  }, "/ $", basePrice)), React.createElement("div", {
+  }, "/ $", billed)), React.createElement("div", {
     style: {
       fontSize: 11,
       color: 'var(--ink-3)',
       marginTop: 2
     }
-  }, pct, "% \u1794\u17B6\u1793\u200B\u1794\u1784\u17CB")), displayPaid >= basePrice ? React.createElement("div", {
+  }, pct, "% ", tr('បាន​បង់', 'paid'), hasInv ? ` · ${myInvoices.length} ${tr('វិក្កយបត្រ', 'invoice' + (myInvoices.length > 1 ? 's' : ''))}` : '')), displayPaid >= billed ? React.createElement("div", {
     style: {
       width: 36,
       height: 36,
@@ -44764,7 +44808,7 @@ var PaymentCard = ({
     size: 16,
     stroke: 3,
     color: "#fff"
-  })) : React.createElement("button", {
+  })) : !readOnly ? React.createElement("button", {
     onClick: () => onMarkPaid && onMarkPaid(s.id, 1),
     style: {
       border: '1px dashed var(--border)',
@@ -44775,7 +44819,7 @@ var PaymentCard = ({
       cursor: 'pointer',
       color: 'var(--ink-2)'
     }
-  }, "\u2713 Full")), React.createElement("div", {
+  }, "\u2713 Full") : null), React.createElement("div", {
     style: {
       height: 6,
       background: 'var(--surface-muted)',
@@ -44800,7 +44844,52 @@ var PaymentCard = ({
     style: {
       color: 'var(--warn)'
     }
-  }, "$", remaining)), log.length > 0 && React.createElement("div", {
+  }, "$", remaining)), hasInv && React.createElement("div", {
+    style: {
+      marginBottom: 8,
+      paddingTop: 6,
+      borderTop: '1px dashed var(--border)'
+    }
+  }, myInvoices.map((v, i) => {
+    var vPaid = (Number(v.paid) || 0) >= (Number(v.amount) || 0);
+    return React.createElement("div", {
+      key: v.id || i,
+      style: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        fontSize: 11,
+        padding: '5px 0',
+        borderBottom: i < myInvoices.length - 1 ? '1px solid var(--border)' : 'none',
+        color: 'var(--ink-2)'
+      }
+    }, React.createElement("span", {
+      style: {
+        fontFamily: '"JetBrains Mono",monospace',
+        fontSize: 10,
+        color: 'var(--ink-3)'
+      }
+    }, v.id || v.date), React.createElement("span", {
+      style: {
+        fontFamily: '"JetBrains Mono",monospace',
+        fontSize: 10,
+        color: 'var(--ink-3)'
+      }
+    }, v.date), React.createElement("span", {
+      style: {
+        fontWeight: 600
+      }
+    }, "$", Number(v.amount) || 0), React.createElement("span", {
+      style: {
+        fontSize: 10,
+        fontWeight: 700,
+        padding: '1px 7px',
+        borderRadius: 4,
+        background: vPaid ? 'rgba(18,163,2,.14)' : 'rgba(202,138,4,.14)',
+        color: vPaid ? '#12A302' : '#CA8A04'
+      }
+    }, vPaid ? tr('បាន​បង់', 'Paid') : tr('ជំពាក់', 'Due')));
+  })), !hasInv && log.length > 0 && React.createElement("div", {
     style: {
       marginBottom: 8,
       paddingTop: 6,
@@ -44827,7 +44916,13 @@ var PaymentCard = ({
       fontWeight: 600,
       color: 'var(--good)'
     }
-  }, "$", e.amount)))), showForm ? React.createElement("div", {
+  }, "$", e.amount)))), readOnly ? React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--ink-3)',
+      marginTop: 4
+    }
+  }, hasInv ? tr('វិក្កយបត្រ​ផ្លូវការ​ពី​សាលា។', 'Official invoices issued by the school.') : tr('ទំនាក់​ទំនង​ការិយាល័យ​សម្រាប់​ព័ត៌មាន​ទូទាត់។', 'Contact the office for payment details.')) : showForm ? React.createElement("div", {
     style: {
       border: '1px solid var(--border)',
       borderRadius: 8,
@@ -44901,6 +44996,180 @@ var PaymentCard = ({
     }
   }, "+ \u1794\u1793\u17D2\u1790\u17C2\u1798\u200B\u1780\u17B6\u179A\u200B\u1794\u1784\u17CB \xB7 Add payment"));
 };
+var LessonRecords = ({
+  s,
+  onSaveLesson,
+  onSaveExam,
+  readOnly = false
+}) => {
+  var {
+    tr
+  } = useAppActions();
+  var [pdfPhase, setPdfPhase] = React.useState('all');
+  var studentLessons = LESSONS.filter(l => l.studentId === s.id).slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+  var studentExams = (window.__schoolSettings && window.__schoolSettings.scheduleExams || []).filter(e => (e.studentIds || []).includes(s.id)).sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+  if (studentLessons.length === 0 && studentExams.length === 0) return React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: 'var(--ink-3)',
+      textAlign: 'center',
+      padding: '16px 0'
+    }
+  }, tr('មិន​ទាន់​មាន​មេរៀន', 'No lessons yet'));
+  var hourNumMap = buildHourNumbering(studentLessons);
+  var examPhase = e => e.phase || 'KH';
+  var groups = (window.STUDENT_PHASES || []).map(p => {
+    var lessonItems = studentLessons.filter(l => lessonPhase(l) === p.k).flatMap(l => lessonHourSlices(l).map(sl => ({
+      type: 'lesson',
+      l,
+      sl,
+      k: (l.date || '') + ' ' + String(sl.h).padStart(2, '0')
+    })));
+    var examItems = studentExams.filter(e => examPhase(e) === p.k).map(e => ({
+      type: 'exam',
+      e,
+      k: (e.date || '') + ' ' + String(e.time || '').slice(0, 5)
+    }));
+    var items = [...lessonItems, ...examItems].sort((a, b) => a.k < b.k ? -1 : a.k > b.k ? 1 : 0);
+    return {
+      p,
+      items,
+      hours: lessonItems.length
+    };
+  }).filter(g => g.items.length > 0);
+  var pdfLessons = studentLessons.filter(l => pdfPhase === 'all' || lessonPhase(l) === pdfPhase);
+  var pdfExams = studentExams.filter(e => pdfPhase === 'all' || (e.phase || 'KH') === pdfPhase);
+  var PHASE_OPTS = [{
+    k: 'all',
+    label: tr('ទាំង៣', 'All')
+  }, ...(window.STUDENT_PHASES || []).map(p => ({
+    k: p.k,
+    label: p.label,
+    color: p.color
+  }))];
+  return React.createElement("div", null, groups.map(g => React.createElement("div", {
+    key: g.p.k
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      margin: '10px 0 8px'
+    }
+  }, React.createElement("span", {
+    style: {
+      background: g.p.color,
+      color: '#fff',
+      fontSize: 11,
+      fontWeight: 800,
+      padding: '3px 10px',
+      borderRadius: 6,
+      letterSpacing: '.03em'
+    }
+  }, g.p.label), React.createElement("span", {
+    style: {
+      fontSize: 11,
+      color: 'var(--ink-3)'
+    }
+  }, g.hours, " ", tr('ម៉ោង', 'hrs')), React.createElement("div", {
+    style: {
+      flex: 1,
+      height: 1,
+      background: 'var(--border)'
+    }
+  })), g.items.map((it, i) => it.type === 'exam' ? React.createElement(ExamFeedbackRow, {
+    key: it.e.id || 'ex' + i,
+    e: it.e,
+    sid: s.id,
+    tr: tr,
+    onSave: onSaveExam,
+    readOnly: readOnly
+  }) : (() => {
+    var cumNo = (hourNumMap[it.l.id] || [])[it.sl.offset];
+    return React.createElement(CvLessonRow, {
+      key: (it.l.id || 'ls' + i) + '-' + it.sl.offset,
+      l: it.l,
+      offset: it.sl.offset,
+      h: it.sl.h,
+      total: it.sl.total,
+      cumNo: cumNo,
+      tr: tr,
+      onSave: onSaveLesson,
+      readOnly: readOnly
+    });
+  })()))), React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--ink-3)',
+      marginTop: 14,
+      marginBottom: 5
+    }
+  }, "\u2B07 ", tr('ទាញយក PDF — ជ្រើសវគ្គ', 'Download PDF — choose phase')), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 6,
+      marginBottom: 8,
+      flexWrap: 'wrap'
+    }
+  }, PHASE_OPTS.map(o => {
+    var active = pdfPhase === o.k;
+    var c = o.color || 'var(--accent)';
+    return React.createElement("button", {
+      key: o.k,
+      onClick: () => setPdfPhase(o.k),
+      style: {
+        padding: '5px 14px',
+        borderRadius: 999,
+        fontSize: 12,
+        fontWeight: 700,
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+        border: '1.5px solid ' + (active ? c : 'var(--border)'),
+        background: active ? c : 'var(--surface)',
+        color: active ? '#fff' : 'var(--ink-2)'
+      }
+    }, o.label);
+  })), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8
+    }
+  }, React.createElement("button", {
+    onClick: () => printStudentLessonsPDF(s, pdfLessons, pdfExams, 'km'),
+    style: {
+      flex: 1,
+      padding: '10px',
+      borderRadius: 8,
+      border: '1px solid var(--border-strong)',
+      background: 'var(--surface)',
+      color: 'var(--ink-2)',
+      cursor: 'pointer',
+      fontSize: 13,
+      fontWeight: 600,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6
+    }
+  }, "\uD83C\uDDF0\uD83C\uDDED ", tr('ខ្មែរ', 'Khmer')), React.createElement("button", {
+    onClick: () => printStudentLessonsPDF(s, pdfLessons, pdfExams, 'en'),
+    style: {
+      flex: 1,
+      padding: '10px',
+      borderRadius: 8,
+      border: '1px solid var(--border-strong)',
+      background: 'var(--surface)',
+      color: 'var(--ink-2)',
+      cursor: 'pointer',
+      fontSize: 13,
+      fontWeight: 600,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6
+    }
+  }, "\uD83C\uDDEC\uD83C\uDDE7 English")));
+};
 var StudentProfile = ({
   s,
   onEdit,
@@ -44911,11 +45180,15 @@ var StudentProfile = ({
   onSavePaid,
   onSaveBio,
   onAddPayment,
-  onSavePhoto
+  onSavePhoto,
+  onSaveLesson,
+  onSaveExam,
+  self = false
 }) => {
   var {
     tr
   } = useAppActions();
+  var bp = useBreakpoint();
   if (!s) return React.createElement("div", {
     style: {
       padding: '60px 24px',
@@ -44965,22 +45238,24 @@ var StudentProfile = ({
   var mockHistory = s.mock_history || (s.mock_avg > 0 ? [s.mock_avg] : []);
   return React.createElement("div", null, React.createElement("div", {
     style: {
-      padding: '24px 24px 20px',
+      padding: bp.mobile ? '16px 16px 14px' : '24px 24px 20px',
       display: 'flex',
-      alignItems: 'center',
-      gap: 20,
+      flexDirection: bp.mobile ? 'column' : 'row',
+      alignItems: bp.mobile ? 'flex-start' : 'center',
+      gap: bp.mobile ? 12 : 20,
       borderBottom: '1px solid var(--border)',
       background: 'var(--surface-muted)'
     }
   }, React.createElement(UploadAvatar, {
     id: s.id,
     photo: s.photo,
-    size: 96,
+    size: bp.mobile ? 72 : 96,
     ring: true,
     onUpload: onSavePhoto
   }), React.createElement("div", {
     style: {
-      flex: 1
+      flex: 1,
+      minWidth: 0
     }
   }, React.createElement("div", {
     style: {
@@ -45056,10 +45331,10 @@ var StudentProfile = ({
     onClick: onEdit
   }, "\u1780\u17C2\u200B \xB7 Edit"))), React.createElement("div", {
     style: {
-      padding: 24,
+      padding: bp.mobile ? 16 : 24,
       display: 'grid',
-      gridTemplateColumns: '1.4fr 1fr',
-      gap: 24
+      gridTemplateColumns: bp.mobile ? '1fr' : '1.4fr 1fr',
+      gap: bp.mobile ? 18 : 24
     }
   }, React.createElement("div", null, React.createElement(BiographyCard, {
     s: s,
@@ -45132,54 +45407,12 @@ var StudentProfile = ({
       color: 'var(--ink-3)',
       marginBottom: 14
     }
-  }, "\u1798\u17C1\u179A\u17C0\u1793\u200B\u1790\u17D2\u1798\u17B8\u17D7 \xB7 LESSON LOG"), (() => {
-    var sLessons = LESSONS.filter(l => l.studentId === s.id).sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 8);
-    if (sLessons.length === 0) return React.createElement("div", {
-      style: {
-        padding: '12px 0',
-        fontSize: 12,
-        color: 'var(--ink-3)'
-      }
-    }, "\u1798\u17B7\u1793\u200B\u1791\u17B6\u1793\u17CB\u200B\u1798\u17B6\u1793\u200B\u1798\u17C1\u179A\u17C0\u1793 \xB7 No lessons yet");
-    return sLessons.map((l, i) => {
-      var inst = INSTRUCTORS.find(ii => ii.id === l.instId);
-      return React.createElement("div", {
-        key: i,
-        style: {
-          padding: '12px 0',
-          borderTop: i ? '1px dashed var(--border)' : 'none',
-          display: 'grid',
-          gridTemplateColumns: '100px 1fr 120px',
-          gap: 12,
-          alignItems: 'flex-start',
-          fontSize: 12
-        }
-      }, React.createElement("div", {
-        style: {
-          fontFamily: '"JetBrains Mono",monospace',
-          fontSize: 11,
-          color: 'var(--ink-3)'
-        }
-      }, l.date), React.createElement("div", null, React.createElement("div", {
-        style: {
-          fontWeight: 500
-        }
-      }, l.type || l.color), l.note && React.createElement("div", {
-        style: {
-          fontSize: 11,
-          color: 'var(--ink-3)',
-          marginTop: 3,
-          fontStyle: 'italic'
-        }
-      }, "\"", l.note, "\"")), React.createElement("div", {
-        style: {
-          fontSize: 11,
-          color: 'var(--ink-2)',
-          textAlign: 'right'
-        }
-      }, inst?.en || l.inst || '—'));
-    });
-  })()), React.createElement("div", null, React.createElement(Card, {
+  }, "\u1794\u1789\u17D2\u1787\u17B8\u1798\u17C1\u179A\u17C0\u1793 \u1793\u17B7\u1784 \u1798\u178F\u17B7\u1782\u17D2\u179A\u17BC \xB7 LESSONS & INSTRUCTOR COMMENTS"), React.createElement(LessonRecords, {
+    s: s,
+    onSaveLesson: onSaveLesson,
+    onSaveExam: onSaveExam,
+    readOnly: self || !onSaveLesson
+  })), React.createElement("div", null, React.createElement(Card, {
     label: tr('ការ​ត្រៀម​ប្រឡង', 'EXAM READINESS')
   }, React.createElement("div", {
     style: {
@@ -45314,7 +45547,8 @@ var StudentProfile = ({
   }, React.createElement(PaymentCard, {
     s: s,
     onAddPayment: onAddPayment,
-    onMarkPaid: onSavePaid
+    onMarkPaid: onSavePaid,
+    readOnly: self
   })), React.createElement("div", {
     style: {
       marginTop: 14
@@ -49575,6 +49809,7 @@ var StudentSelfProfile = ({
     }
   }, React.createElement(StudentProfile, {
     s: s,
+    self: true,
     onEdit: () => setEditing(true),
     onBook: () => navigate('booking'),
     onCall: null,

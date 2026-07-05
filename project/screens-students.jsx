@@ -104,7 +104,7 @@ const lessonLibGroups = () => {
 };
 const lessonNumOf = (no) => { const m = String(no||'').match(/\d+/); return m ? m[0] : String(no||'').trim(); };
 
-const CvLessonRow = ({ l, offset = 0, h, total = 1, cumNo, tr, onSave }) => {
+const CvLessonRow = ({ l, offset = 0, h, total = 1, cumNo, tr, onSave, readOnly = false }) => {
   const fb0 = hourFbOf(l, offset);
   const hr  = (h == null ? (l.h || 0) : h);
   const pad = (n) => String(n).padStart(2, '0');
@@ -136,8 +136,8 @@ const CvLessonRow = ({ l, offset = 0, h, total = 1, cumNo, tr, onSave }) => {
   const stars = (n) => <span style={{color:'var(--gold)',letterSpacing:1}}>{'★'.repeat(n)}<span style={{color:'var(--border-strong)'}}>{'★'.repeat(5-n)}</span></span>;
   return (
     <div style={{borderBottom:'1px solid var(--border)', opacity: cancelled ? .55 : 1}}>
-      <button onClick={openEval} style={{
-        width:'100%', textAlign:'left', background:'transparent', border:'none', cursor:'pointer',
+      <button onClick={readOnly ? undefined : openEval} style={{
+        width:'100%', textAlign:'left', background:'transparent', border:'none', cursor: readOnly ? 'default' : 'pointer',
         padding:'10px 0', display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:10,
       }}>
         <div style={{minWidth:0}}>
@@ -162,10 +162,10 @@ const CvLessonRow = ({ l, offset = 0, h, total = 1, cumNo, tr, onSave }) => {
         </div>
         <span style={{fontSize:11,color:cancelled?'var(--warn)':fb0.status==='done'?'var(--good)':'var(--ink-3)',fontWeight:500,flexShrink:0,display:'flex',alignItems:'center',gap:5}}>
           {cancelled?tr('បានប្ដូរថ្ងៃ','Changed'):fb0.status==='done'?tr('រួចរាល់','Done'):tr('កំពុង','Pending')}
-          <Icon name="edit" size={13} stroke={2}/>
+          {!readOnly && <Icon name="edit" size={13} stroke={2}/>}
         </span>
       </button>
-      {open && (
+      {open && !readOnly && (
         <Modal open onClose={closeEval} width={460}>
           <div style={{padding:20,maxHeight:'86vh',overflowY:'auto'}}>
             {/* Navy title bar — bleeds to the modal edges, white text */}
@@ -554,7 +554,7 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
 
 // Exam row in a student's Lessons & Comments — mark pass/fail per student and
 // record where they failed. Fail turns the row red.
-const ExamFeedbackRow = ({ e, sid, tr, onSave }) => {
+const ExamFeedbackRow = ({ e, sid, tr, onSave, readOnly = false }) => {
   const isApply = e.kind === 'apply';
   const km = window.__SCHED_KIND(e.kind);
   const r = (e.results && e.results[sid]) || {};
@@ -597,7 +597,16 @@ const ExamFeedbackRow = ({ e, sid, tr, onSave }) => {
       </button>
       {open && !isApply && (
         <div style={{padding:'2px 10px 12px'}}>
-          {!showForm && hasResult ? (
+          {readOnly ? (
+            hasResult ? (
+              <div style={{display:'flex',flexDirection:'column',gap:6}}>
+                {savedFail && r.failReason && <div><div style={lbl}>{tr('មូលហេតុ​ធ្លាក់','Fail reason')}</div><div style={{fontSize:13,color:'var(--ink)'}}>{r.failReason}</div></div>}
+                {savedPass && <div style={{fontSize:13,color:'#12A302',fontWeight:600}}>✓ {tr('អបអរសាទរ អ្នក​បាន​ជាប់!','Congratulations, you passed!')}</div>}
+              </div>
+            ) : (
+              <div style={{fontSize:12,color:'var(--ink-3)'}}>{tr('កំពុង​រង់ចាំ​លទ្ធផល','Result pending')}</div>
+            )
+          ) : !showForm && hasResult ? (
             <div style={{display:'flex',flexDirection:'column',gap:6}}>
               {savedFail && r.failReason && <div><div style={lbl}>{tr('មូលហេតុ​ធ្លាក់','Fail reason')}</div><div style={{fontSize:13,color:'var(--ink)'}}>{r.failReason}</div></div>}
               <button onClick={()=>setEditing(true)} style={{alignSelf:'flex-start',marginTop:6,padding:'7px 14px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,fontFamily:'inherit'}}>✎ {tr('កែ','Edit')}</button>
@@ -1497,6 +1506,7 @@ const StudentsScreenV2 = () => {
         {tab==='profile' && !editing && (
           <StudentProfile s={selected} onEdit={() => goToEdit(selected)}
             onBook={bookLesson} onMessage={goToMessages} onAddPayment={addPayment}
+            onSaveLesson={saveLessonFeedback} onSaveExam={saveExamResult}
             onSavePhoto={savePhoto}
             onCall={s => toast(`📞 ${s.phone}`, 'neutral')}
             onSaveDoc={(id, field, val) => {
@@ -1934,7 +1944,7 @@ const BiographyCard = ({ s, onSave }) => {
 };
 
 // ── Payment card (module-level to avoid remount) ────────────────────────────
-const PaymentCard = ({ s, onAddPayment, onMarkPaid }) => {
+const PaymentCard = ({ s, onAddPayment, onMarkPaid, readOnly = false }) => {
   const { tr } = useAppActions();
   const [showForm, setShowForm] = React.useState(false);
   const [amount,   setAmount]   = React.useState('');
@@ -1942,11 +1952,20 @@ const PaymentCard = ({ s, onAddPayment, onMarkPaid }) => {
   const [method,   setMethod]   = React.useState('cash');
 
   const basePrice = studentPrice(s);
+  // Real invoices issued to this student (from Billing) take priority — the
+  // billed total and amount paid come from those actual documents.
+  const myInvoices = (typeof INVOICES !== 'undefined' ? INVOICES : [])
+    .filter(v => v.student === s.id)
+    .sort((a,b) => String(a.date||'').localeCompare(String(b.date||'')));
+  const invTotal = myInvoices.reduce((a,v) => a + (Number(v.amount) || 0), 0);
+  const invPaid  = myInvoices.reduce((a,v) => a + (Number(v.paid) || 0), 0);
   const log = s.payment_log || [];
   const logTotal = log.reduce((sum, e) => sum + (e.amount || 0), 0);
-  const displayPaid = log.length > 0 ? logTotal : Math.round((s.paid || 0) * basePrice);
-  const remaining = Math.max(0, basePrice - displayPaid);
-  const pct = Math.min(100, Math.round((displayPaid / Math.max(1, basePrice)) * 100));
+  const hasInv = myInvoices.length > 0;
+  const billed = hasInv ? invTotal : basePrice;
+  const displayPaid = hasInv ? invPaid : (log.length > 0 ? logTotal : Math.round((s.paid || 0) * basePrice));
+  const remaining = Math.max(0, billed - displayPaid);
+  const pct = Math.min(100, Math.round((displayPaid / Math.max(1, billed)) * 100));
 
   const inp = (extra) => ({style:{padding:'5px 8px',border:'1px solid var(--border)',borderRadius:5,fontSize:12,fontFamily:'inherit',background:'var(--surface)',color:'var(--ink)',...extra}});
 
@@ -1962,20 +1981,20 @@ const PaymentCard = ({ s, onAddPayment, onMarkPaid }) => {
     <Card label={tr('ការ​ទូទាត់','PAYMENTS')}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
         <div>
-          <div style={{fontSize:20,fontWeight:700,fontFamily:'var(--font-display)',color:displayPaid>=basePrice?'var(--good)':'var(--ink)'}}>
-            ${displayPaid} <span style={{fontSize:13,fontWeight:400,color:'var(--ink-3)'}}>/ ${basePrice}</span>
+          <div style={{fontSize:20,fontWeight:700,fontFamily:'var(--font-display)',color:displayPaid>=billed?'var(--good)':'var(--ink)'}}>
+            ${displayPaid} <span style={{fontSize:13,fontWeight:400,color:'var(--ink-3)'}}>/ ${billed}</span>
           </div>
-          <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2}}>{pct}% បាន​បង់</div>
+          <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2}}>{pct}% {tr('បាន​បង់','paid')}{hasInv ? ` · ${myInvoices.length} ${tr('វិក្កយបត្រ','invoice'+(myInvoices.length>1?'s':''))}` : ''}</div>
         </div>
-        {displayPaid >= basePrice ? (
+        {displayPaid >= billed ? (
           <div style={{width:36,height:36,borderRadius:'50%',background:'var(--good)',display:'flex',alignItems:'center',justifyContent:'center'}}>
             <Icon name="check" size={16} stroke={3} color="#fff"/>
           </div>
-        ) : (
+        ) : !readOnly ? (
           <button onClick={() => onMarkPaid && onMarkPaid(s.id, 1)} style={{border:'1px dashed var(--border)',background:'var(--surface)',borderRadius:6,padding:'4px 10px',fontSize:11,cursor:'pointer',color:'var(--ink-2)'}}>
             ✓ Full
           </button>
-        )}
+        ) : null}
       </div>
       <div style={{height:6,background:'var(--surface-muted)',borderRadius:999,overflow:'hidden',marginBottom:remaining>0?6:10}}>
         <div style={{width:`${pct}%`,height:'100%',background:'var(--good)',transition:'width .3s'}}/>
@@ -1985,7 +2004,23 @@ const PaymentCard = ({ s, onAddPayment, onMarkPaid }) => {
           នៅខ្វះ: <b style={{color:'var(--warn)'}}>${remaining}</b>
         </div>
       )}
-      {log.length > 0 && (
+      {/* Real invoices issued from Billing */}
+      {hasInv && (
+        <div style={{marginBottom:8,paddingTop:6,borderTop:'1px dashed var(--border)'}}>
+          {myInvoices.map((v,i) => {
+            const vPaid = (Number(v.paid)||0) >= (Number(v.amount)||0);
+            return (
+              <div key={v.id||i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',fontSize:11,padding:'5px 0',borderBottom:i<myInvoices.length-1?'1px solid var(--border)':'none',color:'var(--ink-2)'}}>
+                <span style={{fontFamily:'"JetBrains Mono",monospace',fontSize:10,color:'var(--ink-3)'}}>{v.id || v.date}</span>
+                <span style={{fontFamily:'"JetBrains Mono",monospace',fontSize:10,color:'var(--ink-3)'}}>{v.date}</span>
+                <span style={{fontWeight:600}}>${Number(v.amount)||0}</span>
+                <span style={{fontSize:10,fontWeight:700,padding:'1px 7px',borderRadius:4,background:vPaid?'rgba(18,163,2,.14)':'rgba(202,138,4,.14)',color:vPaid?'#12A302':'#CA8A04'}}>{vPaid?tr('បាន​បង់','Paid'):tr('ជំពាក់','Due')}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {!hasInv && log.length > 0 && (
         <div style={{marginBottom:8,paddingTop:6,borderTop:'1px dashed var(--border)'}}>
           {log.map((e,i) => (
             <div key={i} style={{display:'flex',justifyContent:'space-between',fontSize:11,padding:'4px 0',borderBottom:i<log.length-1?'1px solid var(--border)':'none',color:'var(--ink-2)'}}>
@@ -1996,7 +2031,11 @@ const PaymentCard = ({ s, onAddPayment, onMarkPaid }) => {
           ))}
         </div>
       )}
-      {showForm ? (
+      {readOnly ? (
+        <div style={{fontSize:11,color:'var(--ink-3)',marginTop:4}}>
+          {hasInv ? tr('វិក្កយបត្រ​ផ្លូវការ​ពី​សាលា។','Official invoices issued by the school.') : tr('ទំនាក់​ទំនង​ការិយាល័យ​សម្រាប់​ព័ត៌មាន​ទូទាត់។','Contact the office for payment details.')}
+        </div>
+      ) : showForm ? (
         <div style={{border:'1px solid var(--border)',borderRadius:8,padding:10,marginTop:4}}>
           <div style={{display:'flex',gap:6,marginBottom:6}}>
             <input type="number" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="$0"
@@ -2028,8 +2067,69 @@ const PaymentCard = ({ s, onAddPayment, onMarkPaid }) => {
 };
 
 // ── Profile tab ──────────────────────────────────────────────────────────────
-const StudentProfile = ({ s, onEdit, onBook, onMessage, onCall, onSaveDoc, onSavePaid, onSaveBio, onAddPayment, onSavePhoto }) => {
+// ── Lessons & instructor comments — phase-grouped records + PDF export.
+// Shared by the admin profile (editable) and the student's own profile
+// (readOnly — the student sees every comment/result but cannot change them).
+const LessonRecords = ({ s, onSaveLesson, onSaveExam, readOnly = false }) => {
   const { tr } = useAppActions();
+  const [pdfPhase, setPdfPhase] = React.useState('all');
+  const studentLessons = LESSONS.filter(l => l.studentId === s.id).slice()
+    .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+  const studentExams = ((window.__schoolSettings && window.__schoolSettings.scheduleExams) || [])
+    .filter(e => (e.studentIds || []).includes(s.id))
+    .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+  if (studentLessons.length === 0 && studentExams.length === 0) return (
+    <div style={{fontSize:13,color:'var(--ink-3)',textAlign:'center',padding:'16px 0'}}>{tr('មិន​ទាន់​មាន​មេរៀន','No lessons yet')}</div>
+  );
+  const hourNumMap = buildHourNumbering(studentLessons);
+  const examPhase = (e) => e.phase || 'KH';
+  const groups = (window.STUDENT_PHASES || []).map(p => {
+    const lessonItems = studentLessons.filter(l => lessonPhase(l) === p.k)
+      .flatMap(l => lessonHourSlices(l).map(sl => ({ type:'lesson', l, sl, k:(l.date||'')+' '+String(sl.h).padStart(2,'0') })));
+    const examItems = studentExams.filter(e => examPhase(e) === p.k)
+      .map(e => ({ type:'exam', e, k:(e.date||'')+' '+String(e.time||'').slice(0,5) }));
+    const items = [...lessonItems, ...examItems].sort((a,b)=> a.k<b.k ? -1 : a.k>b.k ? 1 : 0);
+    return { p, items, hours: lessonItems.length };
+  }).filter(g => g.items.length > 0);
+  const pdfLessons = studentLessons.filter(l => pdfPhase === 'all' || lessonPhase(l) === pdfPhase);
+  const pdfExams   = studentExams.filter(e => pdfPhase === 'all' || (e.phase||'KH') === pdfPhase);
+  const PHASE_OPTS = [{k:'all', label:tr('ទាំង៣','All')}, ...(window.STUDENT_PHASES||[]).map(p=>({k:p.k,label:p.label,color:p.color}))];
+  return (
+    <div>
+      {groups.map(g => (
+        <div key={g.p.k}>
+          <div style={{display:'flex',alignItems:'center',gap:8,margin:'10px 0 8px'}}>
+            <span style={{background:g.p.color,color:'#fff',fontSize:11,fontWeight:800,padding:'3px 10px',borderRadius:6,letterSpacing:'.03em'}}>{g.p.label}</span>
+            <span style={{fontSize:11,color:'var(--ink-3)'}}>{g.hours} {tr('ម៉ោង','hrs')}</span>
+            <div style={{flex:1,height:1,background:'var(--border)'}}/>
+          </div>
+          {g.items.map((it,i) => it.type === 'exam'
+            ? <ExamFeedbackRow key={it.e.id||('ex'+i)} e={it.e} sid={s.id} tr={tr} onSave={onSaveExam} readOnly={readOnly}/>
+            : (() => { const cumNo = (hourNumMap[it.l.id] || [])[it.sl.offset];
+                return <CvLessonRow key={(it.l.id||('ls'+i))+'-'+it.sl.offset} l={it.l} offset={it.sl.offset} h={it.sl.h} total={it.sl.total} cumNo={cumNo} tr={tr} onSave={onSaveLesson} readOnly={readOnly}/>; })()
+          )}
+        </div>
+      ))}
+      {/* PDF export — choose which phase(s) to include, then a language */}
+      <div style={{fontSize:11,color:'var(--ink-3)',marginTop:14,marginBottom:5}}>⬇ {tr('ទាញយក PDF — ជ្រើសវគ្គ','Download PDF — choose phase')}</div>
+      <div style={{display:'flex',gap:6,marginBottom:8,flexWrap:'wrap'}}>
+        {PHASE_OPTS.map(o => { const active = pdfPhase === o.k; const c = o.color || 'var(--accent)';
+          return <button key={o.k} onClick={()=>setPdfPhase(o.k)} style={{
+            padding:'5px 14px',borderRadius:999,fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'inherit',
+            border:'1.5px solid '+(active?c:'var(--border)'), background: active?c:'var(--surface)', color: active?'#fff':'var(--ink-2)'}}>{o.label}</button>;
+        })}
+      </div>
+      <div style={{display:'flex',gap:8}}>
+        <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, pdfExams, 'km')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>🇰🇭 {tr('ខ្មែរ','Khmer')}</button>
+        <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, pdfExams, 'en')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>🇬🇧 English</button>
+      </div>
+    </div>
+  );
+};
+
+const StudentProfile = ({ s, onEdit, onBook, onMessage, onCall, onSaveDoc, onSavePaid, onSaveBio, onAddPayment, onSavePhoto, onSaveLesson, onSaveExam, self = false }) => {
+  const { tr } = useAppActions();
+  const bp = useBreakpoint();
   if (!s) return (
     <div style={{padding:'60px 24px',textAlign:'center',color:'var(--ink-3)',fontSize:13}}>
       ជ្រើស​សិស្ស​ពី​បញ្ជី​ · Select a student from the directory
@@ -2056,9 +2156,9 @@ const StudentProfile = ({ s, onEdit, onBook, onMessage, onCall, onSaveDoc, onSav
   return (
     <div>
       {/* Header */}
-      <div style={{padding:'24px 24px 20px',display:'flex',alignItems:'center',gap:20,borderBottom:'1px solid var(--border)',background:'var(--surface-muted)'}}>
-        <UploadAvatar id={s.id} photo={s.photo} size={96} ring onUpload={onSavePhoto}/>
-        <div style={{flex:1}}>
+      <div style={{padding:bp.mobile?'16px 16px 14px':'24px 24px 20px',display:'flex',flexDirection:bp.mobile?'column':'row',alignItems:bp.mobile?'flex-start':'center',gap:bp.mobile?12:20,borderBottom:'1px solid var(--border)',background:'var(--surface-muted)'}}>
+        <UploadAvatar id={s.id} photo={s.photo} size={bp.mobile?72:96} ring onUpload={onSavePhoto}/>
+        <div style={{flex:1,minWidth:0}}>
           <div style={{display:'flex',alignItems:'baseline',gap:10,flexWrap:'wrap'}}>
             <div style={{fontSize:26,fontWeight:600,fontFamily:'var(--font-display)',letterSpacing:'-.01em'}}>{s.name}</div>
             <div style={{fontSize:13,color:'var(--ink-3)'}}>{s.en} · {s.id} · {s.age}y{s.dob?` · 🎂 ${s.dob}`:''} · {s.gender==='M'?'♂':'♀'}</div>
@@ -2080,7 +2180,7 @@ const StudentProfile = ({ s, onEdit, onBook, onMessage, onCall, onSaveDoc, onSav
         </div>
       </div>
 
-      <div style={{padding:24,display:'grid',gridTemplateColumns:'1.4fr 1fr',gap:24}}>
+      <div style={{padding:bp.mobile?16:24,display:'grid',gridTemplateColumns:bp.mobile?'1fr':'1.4fr 1fr',gap:bp.mobile?18:24}}>
         {/* Left: biography + mock history + lesson log */}
         <div>
           <BiographyCard s={s} onSave={onSaveBio}/>
@@ -2104,24 +2204,8 @@ const StudentProfile = ({ s, onEdit, onBook, onMessage, onCall, onSaveDoc, onSav
             ចុច "កែ · Edit" ដើម្បី​បន្ថែម​ពិន្ទុ​ · Click Edit to add scores
           </div>
 
-          <div style={{marginTop:28,font:'500 10px/1 "JetBrains Mono",monospace',letterSpacing:'.08em',textTransform:'uppercase',color:'var(--ink-3)',marginBottom:14}}>មេរៀន​ថ្មីៗ · LESSON LOG</div>
-          {(() => {
-            const sLessons = LESSONS.filter(l=>l.studentId===s.id).sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,8);
-            if (sLessons.length === 0) return <div style={{padding:'12px 0',fontSize:12,color:'var(--ink-3)'}}>មិន​ទាន់​មាន​មេរៀន · No lessons yet</div>;
-            return sLessons.map((l,i) => {
-              const inst = INSTRUCTORS.find(ii=>ii.id===l.instId);
-              return (
-                <div key={i} style={{padding:'12px 0',borderTop:i?'1px dashed var(--border)':'none',display:'grid',gridTemplateColumns:'100px 1fr 120px',gap:12,alignItems:'flex-start',fontSize:12}}>
-                  <div style={{fontFamily:'"JetBrains Mono",monospace',fontSize:11,color:'var(--ink-3)'}}>{l.date}</div>
-                  <div>
-                    <div style={{fontWeight:500}}>{l.type || l.color}</div>
-                    {l.note && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:3,fontStyle:'italic'}}>"{l.note}"</div>}
-                  </div>
-                  <div style={{fontSize:11,color:'var(--ink-2)',textAlign:'right'}}>{inst?.en || l.inst || '—'}</div>
-                </div>
-              );
-            });
-          })()}
+          <div style={{marginTop:28,font:'500 10px/1 "JetBrains Mono",monospace',letterSpacing:'.08em',textTransform:'uppercase',color:'var(--ink-3)',marginBottom:14}}>បញ្ជីមេរៀន និង មតិគ្រូ · LESSONS & INSTRUCTOR COMMENTS</div>
+          <LessonRecords s={s} onSaveLesson={onSaveLesson} onSaveExam={onSaveExam} readOnly={self || !onSaveLesson}/>
         </div>
 
         {/* Right: exam readiness + docs + payments */}
@@ -2172,7 +2256,7 @@ const StudentProfile = ({ s, onEdit, onBook, onMessage, onCall, onSaveDoc, onSav
           </div>
 
           <div style={{marginTop:14}}>
-            <PaymentCard s={s} onAddPayment={onAddPayment} onMarkPaid={onSavePaid}/>
+            <PaymentCard s={s} onAddPayment={onAddPayment} onMarkPaid={onSavePaid} readOnly={self}/>
           </div>
 
           <div style={{marginTop:14}}>
@@ -4552,7 +4636,7 @@ const StudentSelfProfile = ({ studentId }) => {
 
   return (
     <Card pad={0} style={{overflow:'hidden'}}>
-      <StudentProfile s={s}
+      <StudentProfile s={s} self
         onEdit={() => setEditing(true)}
         onBook={() => navigate('booking')}
         onCall={null} onMessage={null}
