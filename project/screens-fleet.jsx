@@ -101,10 +101,7 @@ const FleetScreenV2 = () => {
   const incidents  = window.__incidentData || [];
   const expenseLog = window.__expenseLog || [];
 
-  React.useEffect(() => {
-    if (!selectedId && vehicles.length) setSelectedId(vehicles[0].id);
-  }, [vehicles.length]);
-
+  // No auto-select: the detail popup only opens when a row/card is clicked.
   const selected = vehicles.find(v => v.id === selectedId) || null;
 
   const filtered = vehicles.filter(v =>
@@ -115,7 +112,7 @@ const FleetScreenV2 = () => {
   const deleteVehicle = (id) => {
     const i = VEHICLES.findIndex(v => v.id === id);
     if (i !== -1) VEHICLES.splice(i, 1);
-    setSelectedId(VEHICLES[0]?.id || null);
+    setSelectedId(null);
     setEditing(false);
     if (window.saveAllData) window.saveAllData();
     forceUpdate();
@@ -342,13 +339,13 @@ const FleetScreenV2 = () => {
         {tab === 'expenses'  && <FvExpenses  vehicles={vehicles} expenseLog={expenseLog} forceUpdate={forceUpdate}/>}
       </Card>
 
-      {/* Detail / edit panel below the card */}
-      {tab === 'directory' && selected && !editing && (
-        <FvDetailRow v={selected} onEdit={() => setEditing(true)} forceUpdate={forceUpdate}/>
-      )}
-      {tab === 'directory' && selected && editing && (
-        <FvEditPanel v={selected} onSave={saveEdit} onCancel={() => setEditing(false)} onDelete={deleteVehicle} onSavePhoto={savePhoto}/>
-      )}
+      {/* Detail / edit popup — opens when a vehicle row or card is clicked */}
+      <Modal open={tab === 'directory' && !!selected} onClose={() => { setSelectedId(null); setEditing(false); }} width={900}>
+        {selected && (editing
+          ? <FvEditPanel v={selected} onSave={saveEdit} onCancel={() => setEditing(false)} onDelete={deleteVehicle} onSavePhoto={savePhoto}/>
+          : <FvDetailRow v={selected} onEdit={() => setEditing(true)} onClose={() => setSelectedId(null)} forceUpdate={forceUpdate}/>
+        )}
+      </Modal>
     </div>
   );
 };
@@ -1605,8 +1602,9 @@ const FvTable = ({ vehicles, onSelect, selectedId }) => (
 );
 
 // ── Detail row ────────────────────────────────────────────────────────────────
-const FvDetailRow = ({ v, onEdit, forceUpdate }) => {
+const FvDetailRow = ({ v, onEdit, onClose, forceUpdate }) => {
   const { toast, tr } = useAppActions();
+  const bp = useBreakpoint();
   const uploadRef = React.useRef();
   const [photoIdx, setPhotoIdx] = React.useState(0);
   const [sliding,  setSliding]  = React.useState(null); // 'left' | 'right' | null
@@ -1796,10 +1794,16 @@ const FvDetailRow = ({ v, onEdit, forceUpdate }) => {
           onClick={() => toast(tr('សូម​ប្រើ​ "Work order" ខាង​ជើង', 'Use "Work order" button above'), 'neutral')}>
           បញ្ជារការងារ
         </Btn>
+        {onClose && (
+          <button onClick={onClose} title={tr('បិទ','Close')} aria-label={tr('បិទ','Close')} style={{
+            flexShrink:0,width:34,height:34,borderRadius:8,border:'1px solid var(--border)',
+            background:'var(--surface)',cursor:'pointer',color:'var(--ink-2)',fontSize:16,lineHeight:1,
+            display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+        )}
       </div>
 
-      {/* 4-column detail grid */}
-      <div style={{padding:16,display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14}}>
+      {/* detail grid — 4 cols on desktop, 2 on mobile */}
+      <div style={{padding:16,display:'grid',gridTemplateColumns:bp.mobile?'repeat(2,1fr)':'repeat(4,1fr)',gap:14}}>
         <div>
           <div style={{font:'500 10px/1 "JetBrains Mono",monospace',letterSpacing:'.08em',
             textTransform:'uppercase',color:'var(--ink-3)',marginBottom:8}}>SPECS</div>

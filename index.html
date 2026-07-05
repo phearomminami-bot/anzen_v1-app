@@ -3004,7 +3004,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v162";</script>
+<script>window.__ANZEN_VERSION="v163";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -33606,15 +33606,12 @@ var FleetScreenV2 = () => {
   }
   var incidents = window.__incidentData || [];
   var expenseLog = window.__expenseLog || [];
-  React.useEffect(() => {
-    if (!selectedId && vehicles.length) setSelectedId(vehicles[0].id);
-  }, [vehicles.length]);
   var selected = vehicles.find(v => v.id === selectedId) || null;
   var filtered = vehicles.filter(v => (cls === 'all' || v.cls.startsWith(cls)) && (station === 'all' || v.station === station));
   var deleteVehicle = id => {
     var i = VEHICLES.findIndex(v => v.id === id);
     if (i !== -1) VEHICLES.splice(i, 1);
-    setSelectedId(VEHICLES[0]?.id || null);
+    setSelectedId(null);
     setEditing(false);
     if (window.saveAllData) window.saveAllData();
     forceUpdate();
@@ -34024,17 +34021,25 @@ var FleetScreenV2 = () => {
     vehicles: vehicles,
     expenseLog: expenseLog,
     forceUpdate: forceUpdate
-  })), tab === 'directory' && selected && !editing && React.createElement(FvDetailRow, {
-    v: selected,
-    onEdit: () => setEditing(true),
-    forceUpdate: forceUpdate
-  }), tab === 'directory' && selected && editing && React.createElement(FvEditPanel, {
+  })), React.createElement(Modal, {
+    open: tab === 'directory' && !!selected,
+    onClose: () => {
+      setSelectedId(null);
+      setEditing(false);
+    },
+    width: 900
+  }, selected && (editing ? React.createElement(FvEditPanel, {
     v: selected,
     onSave: saveEdit,
     onCancel: () => setEditing(false),
     onDelete: deleteVehicle,
     onSavePhoto: savePhoto
-  }));
+  }) : React.createElement(FvDetailRow, {
+    v: selected,
+    onEdit: () => setEditing(true),
+    onClose: () => setSelectedId(null),
+    forceUpdate: forceUpdate
+  }))));
 };
 var FvEmpty = ({
   onAdd
@@ -37077,12 +37082,14 @@ var FvTable = ({
 var FvDetailRow = ({
   v,
   onEdit,
+  onClose,
   forceUpdate
 }) => {
   var {
     toast,
     tr
   } = useAppActions();
+  var bp = useBreakpoint();
   var uploadRef = React.useRef();
   var [photoIdx, setPhotoIdx] = React.useState(0);
   var [sliding, setSliding] = React.useState(null);
@@ -37538,11 +37545,30 @@ var FvDetailRow = ({
       size: 13
     }),
     onClick: () => toast(tr('សូម​ប្រើ​ "Work order" ខាង​ជើង', 'Use "Work order" button above'), 'neutral')
-  }, "\u1794\u1789\u17D2\u1787\u17B6\u179A\u1780\u17B6\u179A\u1784\u17B6\u179A")), React.createElement("div", {
+  }, "\u1794\u1789\u17D2\u1787\u17B6\u179A\u1780\u17B6\u179A\u1784\u17B6\u179A"), onClose && React.createElement("button", {
+    onClick: onClose,
+    title: tr('បិទ', 'Close'),
+    "aria-label": tr('បិទ', 'Close'),
+    style: {
+      flexShrink: 0,
+      width: 34,
+      height: 34,
+      borderRadius: 8,
+      border: '1px solid var(--border)',
+      background: 'var(--surface)',
+      cursor: 'pointer',
+      color: 'var(--ink-2)',
+      fontSize: 16,
+      lineHeight: 1,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }
+  }, "\u2715")), React.createElement("div", {
     style: {
       padding: 16,
       display: 'grid',
-      gridTemplateColumns: 'repeat(4,1fr)',
+      gridTemplateColumns: bp.mobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)',
       gap: 14
     }
   }, React.createElement("div", null, React.createElement("div", {
