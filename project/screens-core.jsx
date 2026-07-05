@@ -257,8 +257,137 @@ const DashboardAdmin = () => {
         </div>
       );
 
+      // ── Aurora home (mobile) — gradient hero + soft cards, names in English ──
+      const AuCard = ({ title, children }) => (
+        <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:18,padding:'14px 15px',boxShadow:'0 6px 16px rgba(20,30,60,.05)'}}>
+          <div style={{fontSize:13,fontWeight:700,fontFamily:'var(--font-km),sans-serif',marginBottom:9,display:'flex',alignItems:'center',gap:7}}>{title}</div>
+          {children}
+        </div>
+      );
+      const AuStats = ({ vehIds, instIds, studIds }) => (
+        <div style={{display:'flex',gap:8}}>
+          {[[vehIds.length,tr('រថយន្ត','Vehicles'),'var(--accent)'],[instIds.length,tr('គ្រូ','Instructors'),'var(--good)'],[studIds.length,tr('សិស្ស','Students'),'var(--warn)']].map(([n,lab,c],i)=>(
+            <div key={i} style={{flex:1,background:'var(--surface-muted)',borderRadius:12,padding:'8px 11px',display:'flex',alignItems:'baseline',gap:6}}>
+              <span style={{fontSize:19,fontWeight:800,fontFamily:'"JetBrains Mono",monospace',color:n>0?c:'var(--ink-3)'}}>{n}</span>
+              <span style={{fontSize:10,color:'var(--ink-3)',fontFamily:'var(--font-km),sans-serif'}}>{lab}</span>
+            </div>
+          ))}
+        </div>
+      );
+      const AuLessonRow = ({ l, i }) => {
+        const s = studentById(l.studentId), it = instById(l.instId), v = vehById(l.veh);
+        const isNow = l.date === today && nowHour >= l.h && nowHour < l.h + (l.len||1);
+        const nm = s ? (s.en || s.name) : (l.type ? l.type.split('·')[0].trim() : '—');
+        return (
+          <button onClick={()=>openDetail('lesson',l)} style={{width:'100%',textAlign:'left',display:'flex',alignItems:'center',gap:10,padding:'9px 0',borderTop:i?'1px dashed var(--border)':'none',border:'none',background:'transparent',cursor:'pointer',font:'inherit',color:'inherit'}}>
+            <div style={{width:46,flexShrink:0}}>
+              <div style={{fontSize:14,fontWeight:700,fontFamily:'"JetBrains Mono",monospace',color:isNow?'var(--good)':'var(--accent)'}}>{String(l.h).padStart(2,'0')}:00</div>
+              <div style={{fontSize:10,color:isNow?'var(--good)':'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{isNow?tr('ឥឡូវ','now'):`${l.len||1}h`}</div>
+            </div>
+            {s ? <Avatar tag={s.photo} size={32}/> : <div style={{width:32,flexShrink:0}}/>}
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:13.5,fontWeight:600,color:isNow?'var(--good)':'var(--ink)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{nm}</div>
+              <div style={{fontSize:11,color:'var(--ink-3)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+                {(it?.en||it?.name||'—')}{v?.plate ? <span style={{fontFamily:'"JetBrains Mono",monospace',fontWeight:600,color:v.trans==='MT'?'#B0413E':'#2A5DB0'}}>{' · '+v.plate}</span> : ''}
+              </div>
+            </div>
+            <LessonBadge l={l}/>
+          </button>
+        );
+      };
+
+      if (bp.mobile) {
+        const greet = nowHour<12?tr('អរុណ​សួស្ដី','Good morning'):nowHour<17?tr('ទិវា​សួស្ដី','Good afternoon'):tr('សាយ័ណ្ហ​សួស្ដី','Good evening');
+        const sortedToday = todayLessons.slice().sort((a,b)=>a.h-b.h);
+        const sortedTmrw  = tomorrowLessons.slice().sort((a,b)=>a.h-b.h);
+        const chips = [
+          [todayLessons.length, tr('មេរៀន​ថ្ងៃ​នេះ','Lessons today')],
+          [todayExams.length,   tr('ប្រឡង/ដាក់ពាក្យ','Exams / apps')],
+          [newStudents,         tr('សិស្ស​ថ្មី','New students')],
+        ];
+        return (
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            {/* Gradient hero */}
+            <div style={{borderRadius:22,position:'relative',overflow:'hidden',color:'#fff',padding:'16px 17px',
+              background:'linear-gradient(135deg,#2b4f8c 0%,#3f6db0 55%,#5a86c9 100%)',boxShadow:'0 14px 30px rgba(42,77,134,.30)'}}>
+              <div style={{position:'absolute',right:-30,top:-30,width:150,height:150,borderRadius:'50%',background:'rgba(255,255,255,.10)'}}/>
+              <div style={{position:'absolute',right:24,bottom:-42,width:104,height:104,borderRadius:'50%',background:'rgba(255,255,255,.08)'}}/>
+              <div style={{position:'relative',display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:10}}>
+                <div style={{minWidth:0}}>
+                  <div style={{fontSize:11,opacity:.85,fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.06em'}}>{today}</div>
+                  <div style={{fontSize:20,fontWeight:800,marginTop:3,fontFamily:'var(--font-km),sans-serif'}}>{greet} 👋</div>
+                  <div style={{fontSize:12,opacity:.85,marginTop:2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{ss.nameEn||ss.name||'Anzen'}</div>
+                </div>
+                <div style={{width:36,height:36,borderRadius:12,background:'rgba(255,255,255,.16)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>🚗</div>
+              </div>
+              <div style={{position:'relative',display:'flex',gap:8,marginTop:15}}>
+                {chips.map(([n,lab],i)=>(
+                  <div key={i} style={{flex:1,background:'rgba(255,255,255,.14)',borderRadius:14,padding:'10px 11px'}}>
+                    <div style={{fontSize:22,fontWeight:800,fontFamily:'"JetBrains Mono",monospace',lineHeight:1}}>{n}</div>
+                    <div style={{fontSize:10.5,opacity:.9,marginTop:4,fontFamily:'var(--font-km),sans-serif',lineHeight:1.2}}>{lab}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Exams / applications today */}
+            {todayExams.length>0 && (
+              <AuCard title={<>🏁 {tr('ប្រឡង / ដាក់​ពាក្យ​ថ្ងៃ​នេះ','Exams / applications today')}</>}>
+                {todayExams.map((e,i)=>{
+                  const stu=(e.studentIds||[]).map(id=>{const s=studentById(id);return s?(s.en||s.name):null;}).filter(Boolean);
+                  const ins=(e.instIds||[]).map(id=>{const it=instById(id);return it?(it.en||it.name):null;}).filter(Boolean);
+                  const km=window.__SCHED_KIND(e.kind);
+                  return (
+                    <button key={e.id||i} onClick={()=>openDetail('exam',e)} style={{width:'100%',textAlign:'left',display:'flex',gap:10,alignItems:'flex-start',padding:'8px 0',borderTop:i?'1px dashed var(--border)':'none',border:'none',background:'none',cursor:'pointer',font:'inherit'}}>
+                      <div style={{fontSize:12.5,fontWeight:700,fontFamily:'"JetBrains Mono",monospace',color:km.color,minWidth:44}}>{String(e.time||'').slice(0,5)}</div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:13,fontWeight:600,color:'var(--ink)'}}>{km.icon} {tr(km.km,km.en)}{stu.length?' · '+stu.join(', '):''}</div>
+                        {ins.length>0 && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:1}}>👨‍🏫 {ins.join(' · ')}</div>}
+                      </div>
+                    </button>
+                  );
+                })}
+              </AuCard>
+            )}
+
+            {/* Today */}
+            <AuCard title={<>📘 {tr('មេរៀន​ថ្ងៃ​នេះ',"Today's lessons")}</>}>
+              {sortedToday.length===0 ? (
+                <div style={{padding:'18px 0',textAlign:'center',color:'var(--ink-3)'}}>
+                  <div style={{fontSize:24}}>🌤️</div>
+                  <div style={{fontSize:12.5,marginTop:5}}>{tr('គ្មាន​មេរៀន​ថ្ងៃ​នេះ','No lessons today')}</div>
+                  <Btn kind="ghost" size="sm" onClick={()=>openForm('newLesson')} style={{marginTop:10}} icon={<Icon name="plus" size={13}/>}>{tr('បន្ថែម​មេរៀន','Add lesson')}</Btn>
+                </div>
+              ) : sortedToday.map((l,i)=><AuLessonRow key={l.id||i} l={l} i={i}/>)}
+            </AuCard>
+            <AuStats vehIds={todayVehIds} instIds={todayInstIds} studIds={todayStudIds}/>
+
+            {/* Tomorrow */}
+            <AuCard title={<>🌅 {tr('មេរៀន​ថ្ងៃ​ស្អែក',"Tomorrow's lessons")}</>}>
+              {sortedTmrw.length===0 ? (
+                <div style={{padding:'18px 0',textAlign:'center',color:'var(--ink-3)',fontSize:12.5}}>{tr('គ្មាន​មេរៀន​ថ្ងៃ​ស្អែក','No lessons tomorrow')}</div>
+              ) : sortedTmrw.map((l,i)=><AuLessonRow key={l.id||i} l={l} i={i}/>)}
+            </AuCard>
+            <AuStats vehIds={tmrwVehIds} instIds={tmrwInstIds} studIds={tmrwStudIds}/>
+
+            {/* Alerts */}
+            <AuCard title={<>🔔 {tr('ការ​ជូន​ដំណឹង','Alerts')}</>}>
+              {alerts.length===0 ? (
+                <div style={{padding:'14px 0',textAlign:'center',color:'var(--ink-3)',fontSize:12.5}}>{tr('គ្មាន​ការ​ជូន​ដំណឹង','No alerts — all good')}</div>
+              ) : alerts.map((a,i)=>(
+                <button key={i} onClick={()=>navigate(a.go)} style={{display:'flex',gap:10,padding:'9px 0',borderTop:i?'1px dashed var(--border)':'none',width:'100%',textAlign:'left',border:'none',background:'transparent',cursor:'pointer',font:'inherit',color:'inherit',alignItems:'center'}}>
+                  <div style={{width:32,height:32,borderRadius:10,flexShrink:0,background:a.tone==='warn'?'#F6E9DC':a.tone==='danger'?'#F4DEDD':a.tone==='good'?'#E5F0EA':'var(--accent-soft)',display:'flex',alignItems:'center',justifyContent:'center',color:a.tone==='warn'?'var(--warn)':a.tone==='danger'?'var(--danger)':a.tone==='good'?'var(--good)':'var(--accent)'}}><Icon name={a.icon} size={15}/></div>
+                  <div style={{flex:1,minWidth:0}}><div style={{fontSize:12.5,fontWeight:600}}>{a.k}</div><div style={{fontSize:11,color:'var(--ink-3)',marginTop:1}}>{a.e}</div></div>
+                  <span style={{color:'var(--ink-3)',flexShrink:0}}>›</span>
+                </button>
+              ))}
+            </AuCard>
+          </div>
+        );
+      }
+
       return (
-        <div style={{display:'grid',gridTemplateColumns:bp.mobile?'1fr':bp.tablet?'1fr 1fr':'1fr 1fr 1fr',gap:12,alignItems:'start'}}>
+        <div style={{display:'grid',gridTemplateColumns:bp.tablet?'1fr 1fr':'1fr 1fr 1fr',gap:12,alignItems:'start'}}>
           {/* Column 1 — Today */}
           {(() => {
             const sorted = todayLessons.slice().sort((a,b)=>a.h-b.h);
