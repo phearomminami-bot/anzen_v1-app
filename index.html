@@ -3024,7 +3024,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v167";</script>
+<script>window.__ANZEN_VERSION="v168";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -43941,12 +43941,35 @@ var StudentsScreenV2 = () => {
       }
     }, tr('គ្មាន​សិស្ស', 'No students')), filtered.map(s => {
       var tMeta = ST_TYPE_META[s.studentType] || ST_TYPE_META['ធម្មតា'];
+      var doneH = LESSONS.filter(l => l.studentId === s.id && l.status === 'done').reduce((a, l) => a + (l.len || 1), 0);
+      var learned = Math.max(Number(s.hours) || 0, doneH);
+      var target = Math.max(1, Number(s.target) || 30);
+      var pct = Math.min(1, learned / target);
+      var grad = isGraduated(s);
+      var ringCol = grad ? '#2E9E5B' : s.status === 'Road exam soon' ? '#E07B39' : 'var(--accent)';
+      var R = 23,
+        C = 2 * Math.PI * R,
+        off = C * (1 - pct);
+      var phases = window.STUDENT_PHASES || [{
+        k: 'KH',
+        label: 'KH',
+        color: '#2A5DB0'
+      }, {
+        k: 'JP',
+        label: 'JP',
+        color: '#B0413E'
+      }, {
+        k: 'AI',
+        label: 'AI',
+        color: '#12A302'
+      }];
       return React.createElement("div", {
         key: s.id,
         style: {
           background: 'var(--surface)',
           border: '1px solid var(--border)',
-          borderRadius: 10,
+          borderRadius: 16,
+          boxShadow: '0 4px 14px rgba(20,30,60,.05)',
           overflow: 'hidden'
         }
       }, React.createElement("button", {
@@ -43958,61 +43981,130 @@ var StudentsScreenV2 = () => {
         },
         style: {
           width: '100%',
-          padding: '11px 14px',
+          padding: '13px 14px',
           display: 'flex',
           alignItems: 'center',
-          gap: 10,
+          gap: 12,
           background: 'transparent',
           border: 'none',
           cursor: 'pointer',
           textAlign: 'left'
         }
+      }, React.createElement("div", {
+        style: {
+          position: 'relative',
+          width: 56,
+          height: 56,
+          flexShrink: 0
+        }
+      }, React.createElement("svg", {
+        width: "56",
+        height: "56",
+        style: {
+          position: 'absolute',
+          inset: 0,
+          transform: 'rotate(-90deg)'
+        }
+      }, React.createElement("circle", {
+        cx: "28",
+        cy: "28",
+        r: R,
+        fill: "none",
+        stroke: "var(--surface-muted)",
+        strokeWidth: "4"
+      }), React.createElement("circle", {
+        cx: "28",
+        cy: "28",
+        r: R,
+        fill: "none",
+        stroke: ringCol,
+        strokeWidth: "4",
+        strokeLinecap: "round",
+        strokeDasharray: C,
+        strokeDashoffset: off,
+        style: {
+          transition: 'stroke-dashoffset .5s'
+        }
+      })), React.createElement("div", {
+        style: {
+          position: 'absolute',
+          inset: 8,
+          borderRadius: '50%',
+          overflow: 'hidden',
+          display: 'flex'
+        }
       }, React.createElement(Avatar, {
         tag: s.photo,
-        size: 36
-      }), React.createElement("div", {
+        size: 40
+      }))), React.createElement("div", {
         style: {
           flex: 1,
           minWidth: 0
         }
       }, React.createElement("div", {
         style: {
-          fontSize: 14,
-          fontWeight: 600,
-          lineHeight: 1.3,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 8
+        }
+      }, React.createElement("span", {
+        style: {
+          fontSize: 14.5,
+          fontWeight: 700,
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis'
         }
-      }, s.en || s.name), React.createElement("div", {
-        style: {
-          fontSize: 11,
-          color: 'var(--ink-3)',
-          marginTop: 1
-        }
-      }, s.id, " \xB7 ", clsKm(s.cls))), React.createElement("div", {
-        style: {
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          flexShrink: 0
-        }
-      }, React.createElement("div", {
+      }, s.en || s.name), React.createElement("span", {
         style: {
           fontSize: 10,
           fontWeight: 700,
           padding: '2px 8px',
           borderRadius: 20,
+          flexShrink: 0,
           background: tMeta.bg,
           color: tMeta.color,
           border: `1px solid ${tMeta.color}33`
         }
-      }, stTypeEn(s.studentType)), React.createElement("div", {
+      }, stTypeEn(s.studentType))), React.createElement("div", {
         style: {
-          fontSize: 13,
-          color: 'var(--ink-3)'
+          fontSize: 11,
+          color: 'var(--ink-3)',
+          marginTop: 2,
+          fontFamily: '"JetBrains Mono",monospace'
         }
-      }, "\u203A"))));
+      }, s.id, " \xB7 ", clsKm(s.cls), " \xB7 ", learned, "/", target, "h"), React.createElement("div", {
+        style: {
+          display: 'flex',
+          gap: 5,
+          marginTop: 7,
+          flexWrap: 'wrap'
+        }
+      }, phases.map(p => {
+        var st = typeof phaseStatusOf === 'function' ? phaseStatusOf(s, p.k) : (s.phaseStatus || {})[p.k] || '';
+        var done = st === 'finished',
+          active = st === 'starting';
+        return React.createElement("span", {
+          key: p.k,
+          style: {
+            fontSize: 9,
+            fontWeight: 800,
+            padding: '2px 8px',
+            borderRadius: 999,
+            whiteSpace: 'nowrap',
+            border: `1px solid ${done || active ? p.color : 'var(--border)'}`,
+            background: done ? p.color : active ? p.color + '1a' : 'transparent',
+            color: done ? '#fff' : active ? p.color : 'var(--ink-3)'
+          }
+        }, done ? '✓ ' : '', p.label, active ? tr(' កំពុង', ' now') : '');
+      }))), React.createElement("span", {
+        style: {
+          fontSize: 15,
+          color: 'var(--ink-3)',
+          flexShrink: 0
+        }
+      }, "\u203A")));
     })));
   }
   return React.createElement("div", {

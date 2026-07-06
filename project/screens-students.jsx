@@ -1363,27 +1363,51 @@ const StudentsScreenV2 = () => {
           )}
           {filtered.map(s => {
             const tMeta = ST_TYPE_META[s.studentType] || ST_TYPE_META['ធម្មតា'];
+            // Real progress: logged practical hours vs the target.
+            const doneH   = LESSONS.filter(l => l.studentId === s.id && l.status === 'done').reduce((a,l)=>a+(l.len||1),0);
+            const learned = Math.max(Number(s.hours)||0, doneH);
+            const target  = Math.max(1, Number(s.target)||30);
+            const pct     = Math.min(1, learned/target);
+            const grad    = isGraduated(s);
+            const ringCol = grad ? '#2E9E5B' : s.status==='Road exam soon' ? '#E07B39' : 'var(--accent)';
+            const R = 23, C = 2*Math.PI*R, off = C*(1-pct);
+            const phases = window.STUDENT_PHASES || [{k:'KH',label:'KH',color:'#2A5DB0'},{k:'JP',label:'JP',color:'#B0413E'},{k:'AI',label:'AI',color:'#12A302'}];
             return (
-              <div key={s.id} style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:10,overflow:'hidden'}}>
+              <div key={s.id} style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:16,boxShadow:'0 4px 14px rgba(20,30,60,.05)',overflow:'hidden'}}>
                 <button onClick={()=>{ setMobileProfileId(s.id); setOpenSections({bio:true}); }} style={{
-                  width:'100%',padding:'11px 14px',display:'flex',alignItems:'center',gap:10,
+                  width:'100%',padding:'13px 14px',display:'flex',alignItems:'center',gap:12,
                   background:'transparent',border:'none',cursor:'pointer',textAlign:'left',
                 }}>
-                  <Avatar tag={s.photo} size={36}/>
+                  {/* progress ring around the photo */}
+                  <div style={{position:'relative',width:56,height:56,flexShrink:0}}>
+                    <svg width="56" height="56" style={{position:'absolute',inset:0,transform:'rotate(-90deg)'}}>
+                      <circle cx="28" cy="28" r={R} fill="none" stroke="var(--surface-muted)" strokeWidth="4"/>
+                      <circle cx="28" cy="28" r={R} fill="none" stroke={ringCol} strokeWidth="4" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={off} style={{transition:'stroke-dashoffset .5s'}}/>
+                    </svg>
+                    <div style={{position:'absolute',inset:8,borderRadius:'50%',overflow:'hidden',display:'flex'}}><Avatar tag={s.photo} size={40}/></div>
+                  </div>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:14,fontWeight:600,lineHeight:1.3,
-                      whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
-                      {s.en || s.name}
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
+                      <span style={{fontSize:14.5,fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.en || s.name}</span>
+                      <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:20,flexShrink:0,background:tMeta.bg,color:tMeta.color,border:`1px solid ${tMeta.color}33`}}>{stTypeEn(s.studentType)}</span>
                     </div>
-                    <div style={{fontSize:11,color:'var(--ink-3)',marginTop:1}}>{s.id} · {clsKm(s.cls)}</div>
-                  </div>
-                  <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
-                    <div style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:20,
-                      background:tMeta.bg,color:tMeta.color,border:`1px solid ${tMeta.color}33`}}>
-                      {stTypeEn(s.studentType)}
+                    <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2,fontFamily:'"JetBrains Mono",monospace'}}>{s.id} · {clsKm(s.cls)} · {learned}/{target}h</div>
+                    <div style={{display:'flex',gap:5,marginTop:7,flexWrap:'wrap'}}>
+                      {phases.map(p => {
+                        const st = (typeof phaseStatusOf==='function' ? phaseStatusOf(s,p.k) : ((s.phaseStatus||{})[p.k]||''));
+                        const done = st==='finished', active = st==='starting';
+                        return (
+                          <span key={p.k} style={{fontSize:9,fontWeight:800,padding:'2px 8px',borderRadius:999,whiteSpace:'nowrap',
+                            border:`1px solid ${done||active?p.color:'var(--border)'}`,
+                            background: done?p.color:active?(p.color+'1a'):'transparent',
+                            color: done?'#fff':active?p.color:'var(--ink-3)'}}>
+                            {done?'✓ ':''}{p.label}{active?tr(' កំពុង',' now'):''}
+                          </span>
+                        );
+                      })}
                     </div>
-                    <div style={{fontSize:13,color:'var(--ink-3)'}}>›</div>
                   </div>
+                  <span style={{fontSize:15,color:'var(--ink-3)',flexShrink:0}}>›</span>
                 </button>
               </div>
             );
