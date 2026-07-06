@@ -1312,6 +1312,22 @@ const plateBg = (trans) => {
   return { bg:'rgba(0,0,0,.72)', color:'#FFFFFF' };
 };
 
+// Line-icons the shared <Icon> set doesn't carry (fuel pump, gauge). Used by
+// the mobile "Fleet Command" vehicle list.
+const FuelGlyph = ({ size = 12, color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+    <line x1="3" y1="22" x2="13" y2="22"/>
+    <path d="M4 22V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v18"/>
+    <path d="M4 11h8"/>
+    <path d="M15 8l2.5 2.5V17a2 2 0 0 0 4 0V9l-3-3"/>
+  </svg>
+);
+// Fleet status → accent colour for the row's left bar / dots.
+const fleetStatusColor = (s) =>
+  s === 'Active' ? '#2E9E5B' : s === 'Service due' ? '#CA8A04' :
+  s === 'Workshop' ? '#B0413E' : '#B7B3A8';
+
 const FvCard = ({ v, onSelect, selectedId, onStatusChange, onSaveDates, onParkingChange, viewDate, manage, onToggleVisible }) => {
   const { tr } = useAppActions();
   const bp = useBreakpoint();
@@ -3263,26 +3279,70 @@ const VehicleScreen = () => {
     forceUpdate();
   };
 
-  // ── Mobile: simple list ──────────────────────────────────────────────────────
+  // ── Mobile: "Fleet Command" — gradient summary hero + status-bar list ─────────
   if (bp.mobile) {
+    const total    = visible.length;
+    const nActive  = visible.filter(v => (v.status||'Active') === 'Active').length;
+    const nService = visible.filter(v => v.status === 'Service due' || v.status === 'Workshop').length;
+    const stat = { flex:1, background:'rgba(255,255,255,.13)', borderRadius:12, padding:'9px 11px' };
+    const statNum = { fontFamily:'"JetBrains Mono",monospace', fontSize:18, fontWeight:800, lineHeight:1 };
+    const statLbl = { fontSize:10, opacity:.85, marginTop:3 };
     return (
       <>
         {selected && (
           <VehicleMobileDetail v={selected} onClose={()=>setSelectedId(null)} tr={tr} onSaved={forceUpdate} onStatusChange={cycleStatus} onParkingChange={cycleParking}/>
         )}
-        <div style={{display:'flex',flexDirection:'column',gap:0}}>
-          <div style={{padding:'10px 0 6px',display:'flex',alignItems:'center',gap:8}}>
+        <div style={{display:'flex',flexDirection:'column',gap:12}}>
+
+          {/* Gradient summary hero */}
+          <div style={{
+            position:'relative', overflow:'hidden', borderRadius:20, padding:'15px 16px', color:'#fff',
+            background:'linear-gradient(135deg,#243a66,#365a9c 60%,#4f7bc0)',
+            boxShadow:'0 12px 28px rgba(36,58,102,.30)',
+          }}>
+            <div style={{position:'absolute',right:-8,bottom:-14,opacity:.14,color:'#fff'}}>
+              <Icon name="car" size={104} stroke={1.4}/>
+            </div>
+            <div style={{position:'relative',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <div style={{fontSize:17,fontWeight:800}}>{tr('យានយន្ត','Vehicles')}</div>
+              <button onClick={() => openForm('newVehicle')} style={{
+                display:'inline-flex',alignItems:'center',gap:5,height:30,padding:'0 12px',
+                border:'none',borderRadius:999,cursor:'pointer',
+                background:'rgba(255,255,255,.18)',color:'#fff',fontSize:12,fontWeight:700,fontFamily:'inherit',
+              }}>
+                <Icon name="plus" size={14}/>{tr('បន្ថែម','Add')}
+              </button>
+            </div>
+            <div style={{position:'relative',display:'flex',gap:8,marginTop:14}}>
+              <div style={stat}>
+                <div style={{display:'flex',alignItems:'center',gap:6}}><Icon name="car" size={14}/><span style={statNum}>{total}</span></div>
+                <div style={statLbl}>{tr('សរុប','Total')}</div>
+              </div>
+              <div style={stat}>
+                <div style={{display:'flex',alignItems:'center',gap:6}}><span style={{width:8,height:8,borderRadius:'50%',background:'#6BE39A'}}/><span style={statNum}>{nActive}</span></div>
+                <div style={statLbl}>{tr('សកម្ម','Active')}</div>
+              </div>
+              <div style={stat}>
+                <div style={{display:'flex',alignItems:'center',gap:6}}><Icon name="wrench" size={14}/><span style={statNum}>{nService}</span></div>
+                <div style={statLbl}>{tr('ថែទាំ','Service')}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Compact controls */}
+          <div style={{display:'flex',alignItems:'center',gap:8}}>
             <select value={sortBy} onChange={e=>setSortBy(e.target.value)} style={{
-              padding:'9px 12px',borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)',
-              color:'var(--ink)',fontSize:13,fontFamily:'inherit',cursor:'pointer',minWidth:160}}>
+              padding:'8px 11px',borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)',
+              color:'var(--ink)',fontSize:12.5,fontFamily:'inherit',cursor:'pointer',minWidth:150}}>
               {SORT_OPTS.map(s => <option key={s.id} value={s.id}>{tr('តម្រៀប៖ ','Sort: ')}{tr(s.km,s.en)}</option>)}
             </select>
             <button onClick={()=>setSortAsc(x=>!x)} title={tr('លំដាប់','Order')} style={{
-              width:40,height:38,borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)',
+              width:38,height:36,borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)',
               color:'var(--ink-2)',cursor:'pointer',fontSize:15,flexShrink:0}}>{sortAsc?'↑':'↓'}</button>
             <div style={{flex:1}}/>
             <Btn kind="ghost" size="sm" icon={<Icon name="download" size={13}/>} onClick={exportVehiclesCSV}>{tr('CSV','CSV')}</Btn>
           </div>
+
           {visible.length === 0 ? (
             <div style={{textAlign:'center',padding:'48px 20px',color:'var(--ink-3)',fontSize:13}}>
               {tr('មិន​ទាន់​មាន​យានយន្ត', 'No vehicles to display')}
@@ -3294,29 +3354,48 @@ const VehicleScreen = () => {
                 const allInsp = (window.__vehicleInspections||[]).filter(r=>r.vehicleId===v.id).sort((a,b)=>b.date.localeCompare(a.date));
                 const todayRec = allInsp.find(r=>r.date===todayStr()) || null;
                 const todayC = todayRec ? INSP_VALS[todayRec.overallStatus] : null;
+                const fuel = allInsp[0]?.fuelLevel ?? null;
+                const inShop = v.status === 'Service due' || v.status === 'Workshop';
                 const docWarn = [v.reg_exp,v.road_tax,v.oil_exp].some(d=>d && monthsUntil(d)<=1);
                 return (
                   <div key={v.id} onClick={()=>setSelectedId(v.id)} style={{
-                    display:'flex',alignItems:'center',gap:12,
-                    padding:'11px 14px',
-                    borderBottom: idx < visible.length-1 ? '1px solid var(--border)' : 'none',
+                    display:'flex',alignItems:'center',gap:11,
+                    padding:'11px 13px',
+                    borderTop: idx ? '1px solid var(--border)' : 'none',
                     cursor:'pointer',
-                    background:'transparent',
                   }}>
-                    <Photo tag={v.photo} w={60} h={44} r={6}/>
+                    {/* status accent bar */}
+                    <div style={{width:3,height:38,borderRadius:3,flexShrink:0,background:fleetStatusColor(v.status||'Active')}}/>
+                    <Photo tag={v.photo} w={46} h={36} r={8}/>
                     <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:15,fontWeight:700,lineHeight:1.2,display:'flex',alignItems:'center',gap:6}}>
+                      <div style={{fontSize:14,fontWeight:700,lineHeight:1.2,display:'flex',alignItems:'center',gap:5}}>
                         {v.make}
-                        {docWarn && <span style={{fontSize:14}}>⚠️</span>}
+                        {docWarn && <span style={{fontSize:13}}>⚠️</span>}
                       </div>
-                      <div style={{marginTop:3,display:'flex',alignItems:'center',gap:6}}>
+                      <div style={{marginTop:3,display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
                         <span style={{
-                          display:'inline-block',padding:'2px 7px',borderRadius:5,
+                          display:'inline-block',padding:'1px 6px',borderRadius:5,
                           background:pc.bg,color:pc.color,
-                          fontFamily:'"JetBrains Mono",monospace',fontSize:11,fontWeight:700,
+                          fontFamily:'"JetBrains Mono",monospace',fontSize:10,fontWeight:700,
                         }}>{v.plate}</span>
+                        {inShop ? (
+                          <span style={{display:'inline-flex',alignItems:'center',gap:3,fontSize:11,color:'#B5650E',fontWeight:600}}>
+                            <Icon name="wrench" size={11}/>{tr('ថែទាំ','Service')}
+                          </span>
+                        ) : fuel != null && (
+                          <span style={{display:'inline-flex',alignItems:'center',gap:3,fontSize:11,color:'var(--ink-3)'}}>
+                            <FuelGlyph size={12} color={fuelColor(fuel)}/>
+                            <span style={{fontFamily:'"JetBrains Mono",monospace',fontWeight:600,color:fuelColor(fuel)}}>{fuel}%</span>
+                          </span>
+                        )}
+                        {v.trans && (
+                          <span style={{display:'inline-flex',alignItems:'center',gap:3,fontSize:11,color:'var(--ink-3)'}}>
+                            <Icon name="settings" size={11}/>
+                            <span style={{fontFamily:'"JetBrains Mono",monospace',fontWeight:600}}>{v.trans}</span>
+                          </span>
+                        )}
                         {todayC && (
-                          <span style={{fontSize:16,color:todayC.color,fontFamily:'"JetBrains Mono",monospace',fontWeight:700,lineHeight:1}}>{todayC.label}</span>
+                          <span style={{fontSize:14,color:todayC.color,fontFamily:'"JetBrains Mono",monospace',fontWeight:700,lineHeight:1}}>{todayC.label}</span>
                         )}
                       </div>
                     </div>
@@ -3327,7 +3406,6 @@ const VehicleScreen = () => {
             </Card>
           )}
         </div>
-        {!selected && <MobileFab onClick={() => openForm('newVehicle')} label={tr('បន្ថែម​យានយន្ត','Add vehicle')}/>}
       </>
     );
   }

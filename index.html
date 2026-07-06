@@ -491,7 +491,7 @@ window.__trRegistry = {
   "No active lessons now": "គ្មាន​មេរៀន​ឥឡូវ",
   "Cleared rate": "អត្រា​ជោគ​ជ័យ",
   "No data yet": "មិន​ទាន់​មាន​ទិន្នន័យ",
-  "Vehicles": "រថយន្ត",
+  "Vehicles": "យានយន្ត",
   "Instructors": "គ្រូ",
   "Students": "សិស្ស",
   "Good morning": "អរុណ​សួស្ដី",
@@ -37002,6 +37002,34 @@ var plateBg = trans => {
     color: '#FFFFFF'
   };
 };
+var FuelGlyph = ({
+  size = 12,
+  color = 'currentColor'
+}) => React.createElement("svg", {
+  width: size,
+  height: size,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: color,
+  strokeWidth: "2",
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+  style: {
+    flexShrink: 0
+  }
+}, React.createElement("line", {
+  x1: "3",
+  y1: "22",
+  x2: "13",
+  y2: "22"
+}), React.createElement("path", {
+  d: "M4 22V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v18"
+}), React.createElement("path", {
+  d: "M4 11h8"
+}), React.createElement("path", {
+  d: "M15 8l2.5 2.5V17a2 2 0 0 0 4 0V9l-3-3"
+}));
+var fleetStatusColor = s => s === 'Active' ? '#2E9E5B' : s === 'Service due' ? '#CA8A04' : s === 'Workshop' ? '#B0413E' : '#B7B3A8';
 var FvCard = ({
   v,
   onSelect,
@@ -41208,6 +41236,26 @@ var VehicleScreen = () => {
     forceUpdate();
   };
   if (bp.mobile) {
+    var total = visible.length;
+    var nActive = visible.filter(v => (v.status || 'Active') === 'Active').length;
+    var nService = visible.filter(v => v.status === 'Service due' || v.status === 'Workshop').length;
+    var stat = {
+      flex: 1,
+      background: 'rgba(255,255,255,.13)',
+      borderRadius: 12,
+      padding: '9px 11px'
+    };
+    var statNum = {
+      fontFamily: '"JetBrains Mono",monospace',
+      fontSize: 18,
+      fontWeight: 800,
+      lineHeight: 1
+    };
+    var statLbl = {
+      fontSize: 10,
+      opacity: .85,
+      marginTop: 3
+    };
     return React.createElement(React.Fragment, null, selected && React.createElement(VehicleMobileDetail, {
       v: selected,
       onClose: () => setSelectedId(null),
@@ -41219,11 +41267,120 @@ var VehicleScreen = () => {
       style: {
         display: 'flex',
         flexDirection: 'column',
-        gap: 0
+        gap: 12
       }
     }, React.createElement("div", {
       style: {
-        padding: '10px 0 6px',
+        position: 'relative',
+        overflow: 'hidden',
+        borderRadius: 20,
+        padding: '15px 16px',
+        color: '#fff',
+        background: 'linear-gradient(135deg,#243a66,#365a9c 60%,#4f7bc0)',
+        boxShadow: '0 12px 28px rgba(36,58,102,.30)'
+      }
+    }, React.createElement("div", {
+      style: {
+        position: 'absolute',
+        right: -8,
+        bottom: -14,
+        opacity: .14,
+        color: '#fff'
+      }
+    }, React.createElement(Icon, {
+      name: "car",
+      size: 104,
+      stroke: 1.4
+    })), React.createElement("div", {
+      style: {
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }
+    }, React.createElement("div", {
+      style: {
+        fontSize: 17,
+        fontWeight: 800
+      }
+    }, tr('យានយន្ត', 'Vehicles')), React.createElement("button", {
+      onClick: () => openForm('newVehicle'),
+      style: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 5,
+        height: 30,
+        padding: '0 12px',
+        border: 'none',
+        borderRadius: 999,
+        cursor: 'pointer',
+        background: 'rgba(255,255,255,.18)',
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: 700,
+        fontFamily: 'inherit'
+      }
+    }, React.createElement(Icon, {
+      name: "plus",
+      size: 14
+    }), tr('បន្ថែម', 'Add'))), React.createElement("div", {
+      style: {
+        position: 'relative',
+        display: 'flex',
+        gap: 8,
+        marginTop: 14
+      }
+    }, React.createElement("div", {
+      style: stat
+    }, React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6
+      }
+    }, React.createElement(Icon, {
+      name: "car",
+      size: 14
+    }), React.createElement("span", {
+      style: statNum
+    }, total)), React.createElement("div", {
+      style: statLbl
+    }, tr('សរុប', 'Total'))), React.createElement("div", {
+      style: stat
+    }, React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6
+      }
+    }, React.createElement("span", {
+      style: {
+        width: 8,
+        height: 8,
+        borderRadius: '50%',
+        background: '#6BE39A'
+      }
+    }), React.createElement("span", {
+      style: statNum
+    }, nActive)), React.createElement("div", {
+      style: statLbl
+    }, tr('សកម្ម', 'Active'))), React.createElement("div", {
+      style: stat
+    }, React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6
+      }
+    }, React.createElement(Icon, {
+      name: "wrench",
+      size: 14
+    }), React.createElement("span", {
+      style: statNum
+    }, nService)), React.createElement("div", {
+      style: statLbl
+    }, tr('ថែទាំ', 'Service'))))), React.createElement("div", {
+      style: {
         display: 'flex',
         alignItems: 'center',
         gap: 8
@@ -41232,15 +41389,15 @@ var VehicleScreen = () => {
       value: sortBy,
       onChange: e => setSortBy(e.target.value),
       style: {
-        padding: '9px 12px',
+        padding: '8px 11px',
         borderRadius: 9,
         border: '1px solid var(--border)',
         background: 'var(--surface)',
         color: 'var(--ink)',
-        fontSize: 13,
+        fontSize: 12.5,
         fontFamily: 'inherit',
         cursor: 'pointer',
-        minWidth: 160
+        minWidth: 150
       }
     }, SORT_OPTS.map(s => React.createElement("option", {
       key: s.id,
@@ -41249,8 +41406,8 @@ var VehicleScreen = () => {
       onClick: () => setSortAsc(x => !x),
       title: tr('លំដាប់', 'Order'),
       style: {
-        width: 40,
-        height: 38,
+        width: 38,
+        height: 36,
         borderRadius: 9,
         border: '1px solid var(--border)',
         background: 'var(--surface)',
@@ -41285,6 +41442,8 @@ var VehicleScreen = () => {
       var allInsp = (window.__vehicleInspections || []).filter(r => r.vehicleId === v.id).sort((a, b) => b.date.localeCompare(a.date));
       var todayRec = allInsp.find(r => r.date === todayStr()) || null;
       var todayC = todayRec ? INSP_VALS[todayRec.overallStatus] : null;
+      var fuel = allInsp[0]?.fuelLevel ?? null;
+      var inShop = v.status === 'Service due' || v.status === 'Workshop';
       var docWarn = [v.reg_exp, v.road_tax, v.oil_exp].some(d => d && monthsUntil(d) <= 1);
       return React.createElement("div", {
         key: v.id,
@@ -41292,17 +41451,24 @@ var VehicleScreen = () => {
         style: {
           display: 'flex',
           alignItems: 'center',
-          gap: 12,
-          padding: '11px 14px',
-          borderBottom: idx < visible.length - 1 ? '1px solid var(--border)' : 'none',
-          cursor: 'pointer',
-          background: 'transparent'
+          gap: 11,
+          padding: '11px 13px',
+          borderTop: idx ? '1px solid var(--border)' : 'none',
+          cursor: 'pointer'
         }
-      }, React.createElement(Photo, {
+      }, React.createElement("div", {
+        style: {
+          width: 3,
+          height: 38,
+          borderRadius: 3,
+          flexShrink: 0,
+          background: fleetStatusColor(v.status || 'Active')
+        }
+      }), React.createElement(Photo, {
         tag: v.photo,
-        w: 60,
-        h: 44,
-        r: 6
+        w: 46,
+        h: 36,
+        r: 8
       }), React.createElement("div", {
         style: {
           flex: 1,
@@ -41310,38 +41476,84 @@ var VehicleScreen = () => {
         }
       }, React.createElement("div", {
         style: {
-          fontSize: 15,
+          fontSize: 14,
           fontWeight: 700,
           lineHeight: 1.2,
           display: 'flex',
           alignItems: 'center',
-          gap: 6
+          gap: 5
         }
       }, v.make, docWarn && React.createElement("span", {
         style: {
-          fontSize: 14
+          fontSize: 13
         }
       }, "\u26A0\uFE0F")), React.createElement("div", {
         style: {
           marginTop: 3,
           display: 'flex',
           alignItems: 'center',
-          gap: 6
+          gap: 8,
+          flexWrap: 'wrap'
         }
       }, React.createElement("span", {
         style: {
           display: 'inline-block',
-          padding: '2px 7px',
+          padding: '1px 6px',
           borderRadius: 5,
           background: pc.bg,
           color: pc.color,
           fontFamily: '"JetBrains Mono",monospace',
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: 700
         }
-      }, v.plate), todayC && React.createElement("span", {
+      }, v.plate), inShop ? React.createElement("span", {
         style: {
-          fontSize: 16,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 3,
+          fontSize: 11,
+          color: '#B5650E',
+          fontWeight: 600
+        }
+      }, React.createElement(Icon, {
+        name: "wrench",
+        size: 11
+      }), tr('ថែទាំ', 'Service')) : fuel != null && React.createElement("span", {
+        style: {
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 3,
+          fontSize: 11,
+          color: 'var(--ink-3)'
+        }
+      }, React.createElement(FuelGlyph, {
+        size: 12,
+        color: fuelColor(fuel)
+      }), React.createElement("span", {
+        style: {
+          fontFamily: '"JetBrains Mono",monospace',
+          fontWeight: 600,
+          color: fuelColor(fuel)
+        }
+      }, fuel, "%")), v.trans && React.createElement("span", {
+        style: {
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 3,
+          fontSize: 11,
+          color: 'var(--ink-3)'
+        }
+      }, React.createElement(Icon, {
+        name: "settings",
+        size: 11
+      }), React.createElement("span", {
+        style: {
+          fontFamily: '"JetBrains Mono",monospace',
+          fontWeight: 600
+        }
+      }, v.trans)), todayC && React.createElement("span", {
+        style: {
+          fontSize: 14,
           color: todayC.color,
           fontFamily: '"JetBrains Mono",monospace',
           fontWeight: 700,
@@ -41359,10 +41571,7 @@ var VehicleScreen = () => {
       }, React.createElement("path", {
         d: "M1 1l5 5-5 5"
       })));
-    }))), !selected && React.createElement(MobileFab, {
-      onClick: () => openForm('newVehicle'),
-      label: tr('បន្ថែម​យានយន្ត', 'Add vehicle')
-    }));
+    }))));
   }
   return React.createElement("div", {
     style: {
