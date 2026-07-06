@@ -3024,7 +3024,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v166";</script>
+<script>window.__ANZEN_VERSION="v167";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -18279,31 +18279,40 @@ var dayAvailabilitySummary = date => {
     total: hours.length
   };
 };
-var computeLayout = dayLessons => {
-  var sorted = [...dayLessons].sort((a, b) => a.h !== b.h ? a.h - b.h : b.h + b.len - (a.h + a.len));
-  var colEnds = [];
-  var lessonCol = new Map();
-  var _loop = function (l) {
-    var c = colEnds.findIndex(end => end <= l.h);
-    if (c === -1) c = colEnds.length;
-    colEnds[c] = l.h + l.len;
-    lessonCol.set(l, c);
-  };
-  for (var l of sorted) {
-    _loop(l);
-  }
+var computeLayout = items => {
+  var end = l => l.h + (l.len || 1);
+  var sorted = [...items].sort((a, b) => a.h !== b.h ? a.h - b.h : end(b) - end(a));
   var result = new Map();
-  var _loop2 = function (_l) {
-    var overlaps = sorted.filter(o => o !== _l && o.h < _l.h + _l.len && o.h + o.len > _l.h);
-    var total = Math.max(lessonCol.get(_l) + 1, ...overlaps.map(o => lessonCol.get(o) + 1));
-    result.set(_l, {
-      col: lessonCol.get(_l),
+  var cluster = [];
+  var clusterEnd = -Infinity;
+  var flush = () => {
+    var colEnds = [];
+    var colOf = new Map();
+    var _loop = function (l) {
+      var c = colEnds.findIndex(e => e <= l.h + 1e-9);
+      if (c === -1) c = colEnds.length;
+      colEnds[c] = end(l);
+      colOf.set(l, c);
+    };
+    for (var l of cluster) {
+      _loop(l);
+    }
+    var total = colEnds.length || 1;
+    for (var _l of cluster) result.set(_l, {
+      col: colOf.get(_l),
       total
     });
+    cluster = [];
   };
-  for (var _l of sorted) {
-    _loop2(_l);
+  for (var l of sorted) {
+    if (cluster.length && l.h >= clusterEnd - 1e-9) {
+      flush();
+      clusterEnd = -Infinity;
+    }
+    cluster.push(l);
+    clusterEnd = Math.max(clusterEnd, end(l));
   }
+  if (cluster.length) flush();
   return result;
 };
 window.__SCHED_KIND = kind => ({
@@ -21560,7 +21569,7 @@ var generateSchedulePDF = ({
     var rows = '';
     for (var w = 0; w < weeks; w++) {
       var cells = '';
-      var _loop3 = function () {
+      var _loop2 = function () {
         var d = new Date(gridStart);
         d.setDate(gridStart.getDate() + w * 7 + c);
         var inMonth = d.getMonth() === M;
@@ -21605,7 +21614,7 @@ var generateSchedulePDF = ({
         </td>`;
       };
       for (var c = 0; c < 7; c++) {
-        _loop3();
+        _loop2();
       }
       rows += `<tr>${cells}</tr>`;
     }

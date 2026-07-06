@@ -122,26 +122,35 @@ const dayAvailabilitySummary = (date) => {
   return { available, total: hours.length };
 };
 
-// Compute Google Calendar-style column layout for overlapping lessons
-const computeLayout = (dayLessons) => {
-  const sorted = [...dayLessons].sort((a, b) => a.h !== b.h ? a.h - b.h : (b.h + b.len) - (a.h + a.len));
-  const colEnds = [];
-  const lessonCol = new Map();
-  for (const l of sorted) {
-    let c = colEnds.findIndex(end => end <= l.h);
-    if (c === -1) c = colEnds.length;
-    colEnds[c] = l.h + l.len;
-    lessonCol.set(l, c);
-  }
+// Google Calendar-style column layout for overlapping items (lessons/notes/exams).
+// Items are grouped into clusters of transitively-overlapping events; every item
+// in a cluster shares the SAME column count so their widths line up and blocks
+// never overlap (a per-item total would let widths disagree and blocks collide).
+const computeLayout = (items) => {
+  const end = (l) => l.h + (l.len || 1);
+  const sorted = [...items].sort((a, b) => a.h !== b.h ? a.h - b.h : end(b) - end(a));
   const result = new Map();
+  let cluster = [];
+  let clusterEnd = -Infinity;
+  const flush = () => {
+    const colEnds = [];                 // last end-time placed in each column
+    const colOf = new Map();
+    for (const l of cluster) {
+      let c = colEnds.findIndex(e => e <= l.h + 1e-9);
+      if (c === -1) c = colEnds.length;
+      colEnds[c] = end(l);
+      colOf.set(l, c);
+    }
+    const total = colEnds.length || 1;  // cluster-wide column count
+    for (const l of cluster) result.set(l, { col: colOf.get(l), total });
+    cluster = [];
+  };
   for (const l of sorted) {
-    const overlaps = sorted.filter(o => o !== l && o.h < l.h + l.len && o.h + o.len > l.h);
-    const total = Math.max(
-      lessonCol.get(l) + 1,
-      ...overlaps.map(o => lessonCol.get(o) + 1)
-    );
-    result.set(l, { col: lessonCol.get(l), total });
+    if (cluster.length && l.h >= clusterEnd - 1e-9) { flush(); clusterEnd = -Infinity; }
+    cluster.push(l);
+    clusterEnd = Math.max(clusterEnd, end(l));
   }
+  if (cluster.length) flush();
   return result;
 };
 
