@@ -18,7 +18,7 @@ const StaffScreen = () => {
   const { openForm, toast, tr, confirm } = useAppActions();
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   const [tab, setTab]         = React.useState('directory');
-  const [view, setView]       = React.useState('table');
+  const [view, setView]       = React.useState('cards');   // Aurora staff cards by default
   const [dept, setDept]       = React.useState('all');
   const [selectedId, setSelId] = React.useState(null);
   const [detailOpen, setDetailOpen] = React.useState(false);   // staff detail shows as a popup, not inline
@@ -388,52 +388,52 @@ const tenureLabel = (since, lang) => {
     : (t.y ? `${t.y}y ` : '') + `${t.m}m`;
 };
 
-// ── Cards grid ──
+// Role badge palette — colours the role chip (Instructor / Senior / Apprentice…).
+const sfRoleBadge = (role) => {
+  const r = (role || '').toLowerCase();
+  if (/senior|មេ|ជាន់ខ្ពស់/.test(r))                 return { bg:'#ECE8FA', color:'#6246C9' };
+  if (/apprentice|trainee|ហាត់ការ|សិក្ខាកាម/.test(r)) return { bg:'#FBEEDC', color:'#B5650E' };
+  if (/lead|director|head|manager|នាយក|ប្រធាន/.test(r)) return { bg:'#E2EFE7', color:'#2E7D46' };
+  return { bg:'#E5EBF5', color:'#2A5DB0' };            // Instructor / default
+};
+const sfStatusColor = (status) => ({
+  'On lesson':'var(--accent)','Available':'var(--good)','At desk':'var(--good)','Training':'var(--accent)',
+  'In shop':'var(--accent)','On route':'var(--accent)','Remote':'var(--ink-3)','Off-site':'var(--ink-3)',
+}[status] || 'var(--ink-3)');
+
+// ── Cards grid — Aurora Staff design (avatar · role badge · status · tenure) ──
 const SfCards = ({ staff, selectedId, onSelect }) => {
-  const { lang } = useAppActions();
+  const { lang, tr } = useAppActions();
   return (
-  <div style={{padding:14,display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))',gap:12}}>
+  <div style={{padding:14,display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:12}}>
     {staff.map(s => {
-      const docs = s.docs || {};
-      const docOk = Object.values(docs).every(v => v);
-      const docCount = Object.values(docs).filter(v => v).length;
-      const docTotal = Object.keys(docs).length;
+      const rb  = sfRoleBadge(s.role);
+      const sc  = sfStatusColor(s.status);
+      const yr  = (s.since || '').slice(0,4);
+      const ten = tenureLabel(s.since, lang);
       return (
         <div key={s.id} onClick={()=>onSelect(s.id)} style={{
-          padding:14,
-          background: selectedId===s.id ? 'var(--surface-muted)' : 'var(--surface)',
+          background:'var(--surface)',
           border:'1px solid ' + (selectedId===s.id ? 'var(--border-strong)' : 'var(--border)'),
-          borderRadius:10,cursor:'default',
+          borderRadius:16, padding:'13px 14px', boxShadow:'0 4px 14px rgba(20,30,60,.05)', cursor:'pointer',
         }}>
-          <div style={{display:'flex',gap:12,alignItems:'flex-start'}}>
-            <Avatar tag={s.photo} size={44}/>
+          <div style={{display:'flex',gap:11,alignItems:'center'}}>
+            <Avatar tag={s.photo} size={40}/>
             <div style={{flex:1,minWidth:0}}>
-              <div style={{fontSize:13,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.name}</div>
-              <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2}}>{s.en} · {s.id}</div>
-              <div style={{fontSize:11,color:'var(--ink-2)',marginTop:6}}>{s.role}</div>
+              <div style={{fontSize:14,fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.en || s.name}</div>
+              <div style={{fontSize:11,color:'var(--ink-3)',marginTop:1,fontFamily:'"JetBrains Mono",monospace'}}>{s.id}{s.dept ? ' · ' + s.dept : ''}</div>
             </div>
-            <SfStatusDot status={s.status}/>
-          </div>
-          <div style={{marginTop:12,padding:'10px 0 0',borderTop:'1px dashed var(--border)',display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,fontSize:11}}>
-            <div>
-              <div style={{color:'var(--ink-3)',fontSize:10,textTransform:'uppercase',letterSpacing:'.05em'}}>Dept</div>
-              <div style={{marginTop:2,fontWeight:500}}>{s.dept || '—'}</div>
-            </div>
-            <div>
-              <div style={{color:'var(--ink-3)',fontSize:10,textTransform:'uppercase',letterSpacing:'.05em'}}>Since</div>
-              <div style={{marginTop:2,fontWeight:500}}>{s.since || '—'}</div>
-              {tenureLabel(s.since, lang) && <div style={{fontSize:10,color:'var(--accent)',marginTop:1}}>{tenureLabel(s.since, lang)}</div>}
-            </div>
-            <div>
-              <div style={{color:'var(--ink-3)',fontSize:10,textTransform:'uppercase',letterSpacing:'.05em'}}>Leave bal.</div>
-              <div style={{marginTop:2,fontWeight:500}}>{s.leave ?? '—'} ថ្ងៃ</div>
-            </div>
-            <div>
-              <div style={{color:'var(--ink-3)',fontSize:10,textTransform:'uppercase',letterSpacing:'.05em'}}>Docs</div>
-              <div style={{marginTop:2,fontWeight:500,color: docOk ? 'var(--good)' : 'var(--warn)'}}>
-                {docTotal > 0 ? `${docCount}/${docTotal}` : '—'}
+            <div style={{textAlign:'right',flexShrink:0,minWidth:0}}>
+              <span style={{fontSize:9.5,fontWeight:800,padding:'2px 9px',borderRadius:999,background:rb.bg,color:rb.color,whiteSpace:'nowrap'}}>{s.role}</span>
+              <div style={{display:'flex',alignItems:'center',gap:4,justifyContent:'flex-end',marginTop:5}}>
+                <span style={{width:6,height:6,borderRadius:'50%',background:sc}}/>
+                <span style={{fontSize:10,color:sc,fontWeight:600}}>{s.status}</span>
               </div>
             </div>
+          </div>
+          <div style={{marginTop:10,paddingTop:9,borderTop:'1px dashed var(--border)',display:'flex',justifyContent:'space-between',gap:8,fontSize:10.5,color:'var(--ink-3)'}}>
+            <span>📅 {tr('ចូល','Joined')} {yr || '—'}{ten ? ' · ' : ''}{ten && <b style={{color:'var(--ink-2)'}}>{ten}</b>}</span>
+            <span>🏖 {tr('ឈប់​សល់','Leave')} <b style={{color:'var(--ink-2)'}}>{s.leave ?? '—'}{lang==='km' ? 'ថ្ងៃ' : 'd'}</b></span>
           </div>
         </div>
       );

@@ -773,6 +773,8 @@ window.__trRegistry = {
   "Request leave": "ស្នើច្បាប់",
   "Add first staff": "បន្ថែម​បុគ្គលិក​ដំបូង",
   "Former": "អតីត​បុគ្គលិក",
+  "Joined": "ចូល",
+  "Leave": "ឈប់​សល់",
   "Login saved ✓": "បាន​រក្សា​ទុក​គណនី ✓",
   "Former staff": "អតីត​បុគ្គលិក",
   "hr": "ម៉ោង",
@@ -2165,6 +2167,8 @@ window.__trGroups = {
     "Request leave": "ស្នើច្បាប់",
     "Add first staff": "បន្ថែម​បុគ្គលិក​ដំបូង",
     "Former": "អតីត​បុគ្គលិក",
+    "Joined": "ចូល",
+    "Leave": "ឈប់​សល់",
     "Login saved ✓": "បាន​រក្សា​ទុក​គណនី ✓",
     "Former staff": "អតីត​បុគ្គលិក",
     "hr": "ម៉ោង",
@@ -3024,7 +3028,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v169";</script>
+<script>window.__ANZEN_VERSION="v170";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -28598,7 +28602,7 @@ var StaffScreen = () => {
   } = useAppActions();
   var [, forceUpdate] = React.useReducer(x => x + 1, 0);
   var [tab, setTab] = React.useState('directory');
-  var [view, setView] = React.useState('table');
+  var [view, setView] = React.useState('cards');
   var [dept, setDept] = React.useState('all');
   var [selectedId, setSelId] = React.useState(null);
   var [detailOpen, setDetailOpen] = React.useState(false);
@@ -29093,45 +29097,76 @@ var tenureLabel = (since, lang) => {
   if (!t) return '';
   return lang === 'km' ? (t.y ? `${t.y}ឆ្នាំ ` : '') + `${t.m}ខែ` : (t.y ? `${t.y}y ` : '') + `${t.m}m`;
 };
+var sfRoleBadge = role => {
+  var r = (role || '').toLowerCase();
+  if (/senior|មេ|ជាន់ខ្ពស់/.test(r)) return {
+    bg: '#ECE8FA',
+    color: '#6246C9'
+  };
+  if (/apprentice|trainee|ហាត់ការ|សិក្ខាកាម/.test(r)) return {
+    bg: '#FBEEDC',
+    color: '#B5650E'
+  };
+  if (/lead|director|head|manager|នាយក|ប្រធាន/.test(r)) return {
+    bg: '#E2EFE7',
+    color: '#2E7D46'
+  };
+  return {
+    bg: '#E5EBF5',
+    color: '#2A5DB0'
+  };
+};
+var sfStatusColor = status => ({
+  'On lesson': 'var(--accent)',
+  'Available': 'var(--good)',
+  'At desk': 'var(--good)',
+  'Training': 'var(--accent)',
+  'In shop': 'var(--accent)',
+  'On route': 'var(--accent)',
+  'Remote': 'var(--ink-3)',
+  'Off-site': 'var(--ink-3)'
+})[status] || 'var(--ink-3)';
 var SfCards = ({
   staff,
   selectedId,
   onSelect
 }) => {
   var {
-    lang
+    lang,
+    tr
   } = useAppActions();
   return React.createElement("div", {
     style: {
       padding: 14,
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))',
+      gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))',
       gap: 12
     }
   }, staff.map(s => {
-    var docs = s.docs || {};
-    var docOk = Object.values(docs).every(v => v);
-    var docCount = Object.values(docs).filter(v => v).length;
-    var docTotal = Object.keys(docs).length;
+    var rb = sfRoleBadge(s.role);
+    var sc = sfStatusColor(s.status);
+    var yr = (s.since || '').slice(0, 4);
+    var ten = tenureLabel(s.since, lang);
     return React.createElement("div", {
       key: s.id,
       onClick: () => onSelect(s.id),
       style: {
-        padding: 14,
-        background: selectedId === s.id ? 'var(--surface-muted)' : 'var(--surface)',
+        background: 'var(--surface)',
         border: '1px solid ' + (selectedId === s.id ? 'var(--border-strong)' : 'var(--border)'),
-        borderRadius: 10,
-        cursor: 'default'
+        borderRadius: 16,
+        padding: '13px 14px',
+        boxShadow: '0 4px 14px rgba(20,30,60,.05)',
+        cursor: 'pointer'
       }
     }, React.createElement("div", {
       style: {
         display: 'flex',
-        gap: 12,
-        alignItems: 'flex-start'
+        gap: 11,
+        alignItems: 'center'
       }
     }, React.createElement(Avatar, {
       tag: s.photo,
-      size: 44
+      size: 40
     }), React.createElement("div", {
       style: {
         flex: 1,
@@ -29139,92 +29174,76 @@ var SfCards = ({
       }
     }, React.createElement("div", {
       style: {
-        fontSize: 13,
-        fontWeight: 600,
+        fontSize: 14,
+        fontWeight: 700,
         whiteSpace: 'nowrap',
         overflow: 'hidden',
         textOverflow: 'ellipsis'
       }
-    }, s.name), React.createElement("div", {
+    }, s.en || s.name), React.createElement("div", {
       style: {
         fontSize: 11,
         color: 'var(--ink-3)',
-        marginTop: 2
+        marginTop: 1,
+        fontFamily: '"JetBrains Mono",monospace'
       }
-    }, s.en, " \xB7 ", s.id), React.createElement("div", {
+    }, s.id, s.dept ? ' · ' + s.dept : '')), React.createElement("div", {
       style: {
-        fontSize: 11,
-        color: 'var(--ink-2)',
-        marginTop: 6
+        textAlign: 'right',
+        flexShrink: 0,
+        minWidth: 0
       }
-    }, s.role)), React.createElement(SfStatusDot, {
-      status: s.status
-    })), React.createElement("div", {
+    }, React.createElement("span", {
       style: {
-        marginTop: 12,
-        padding: '10px 0 0',
+        fontSize: 9.5,
+        fontWeight: 800,
+        padding: '2px 9px',
+        borderRadius: 999,
+        background: rb.bg,
+        color: rb.color,
+        whiteSpace: 'nowrap'
+      }
+    }, s.role), React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 4,
+        justifyContent: 'flex-end',
+        marginTop: 5
+      }
+    }, React.createElement("span", {
+      style: {
+        width: 6,
+        height: 6,
+        borderRadius: '50%',
+        background: sc
+      }
+    }), React.createElement("span", {
+      style: {
+        fontSize: 10,
+        color: sc,
+        fontWeight: 600
+      }
+    }, s.status)))), React.createElement("div", {
+      style: {
+        marginTop: 10,
+        paddingTop: 9,
         borderTop: '1px dashed var(--border)',
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
+        display: 'flex',
+        justifyContent: 'space-between',
         gap: 8,
-        fontSize: 11
+        fontSize: 10.5,
+        color: 'var(--ink-3)'
       }
-    }, React.createElement("div", null, React.createElement("div", {
+    }, React.createElement("span", null, "\uD83D\uDCC5 ", tr('ចូល', 'Joined'), " ", yr || '—', ten ? ' · ' : '', ten && React.createElement("b", {
       style: {
-        color: 'var(--ink-3)',
-        fontSize: 10,
-        textTransform: 'uppercase',
-        letterSpacing: '.05em'
+        color: 'var(--ink-2)'
       }
-    }, "Dept"), React.createElement("div", {
+    }, ten)), React.createElement("span", null, "\uD83C\uDFD6 ", tr('ឈប់​សល់', 'Leave'), " ", React.createElement("b", {
       style: {
-        marginTop: 2,
-        fontWeight: 500
+        color: 'var(--ink-2)'
       }
-    }, s.dept || '—')), React.createElement("div", null, React.createElement("div", {
-      style: {
-        color: 'var(--ink-3)',
-        fontSize: 10,
-        textTransform: 'uppercase',
-        letterSpacing: '.05em'
-      }
-    }, "Since"), React.createElement("div", {
-      style: {
-        marginTop: 2,
-        fontWeight: 500
-      }
-    }, s.since || '—'), tenureLabel(s.since, lang) && React.createElement("div", {
-      style: {
-        fontSize: 10,
-        color: 'var(--accent)',
-        marginTop: 1
-      }
-    }, tenureLabel(s.since, lang))), React.createElement("div", null, React.createElement("div", {
-      style: {
-        color: 'var(--ink-3)',
-        fontSize: 10,
-        textTransform: 'uppercase',
-        letterSpacing: '.05em'
-      }
-    }, "Leave bal."), React.createElement("div", {
-      style: {
-        marginTop: 2,
-        fontWeight: 500
-      }
-    }, s.leave ?? '—', " \u1790\u17D2\u1784\u17C3")), React.createElement("div", null, React.createElement("div", {
-      style: {
-        color: 'var(--ink-3)',
-        fontSize: 10,
-        textTransform: 'uppercase',
-        letterSpacing: '.05em'
-      }
-    }, "Docs"), React.createElement("div", {
-      style: {
-        marginTop: 2,
-        fontWeight: 500,
-        color: docOk ? 'var(--good)' : 'var(--warn)'
-      }
-    }, docTotal > 0 ? `${docCount}/${docTotal}` : '—'))));
+    }, s.leave ?? '—', lang === 'km' ? 'ថ្ងៃ' : 'd'))));
   }));
 };
 var SfTable = ({
