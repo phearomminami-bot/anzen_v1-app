@@ -92,16 +92,15 @@ const _lum = (h) => { const [r,g,b]=_hexRgb(h).map(v=>v/255); return 0.2126*r+0.
 const _autoText = (bg) => _lum(bg) > 0.55 ? '#16181d' : '#ffffff';   // guarantee legible text
 const isTheoryLesson = (l) => l && (l.color === 'c' || l.color === 'e');
 
-// Returns {bg, bd, accent, text} for a lesson block.
-// Theory keeps the same hue but darker/stronger; Practical stays light.
-const lessonBlockColor = (l, studentMode) => {
-  const base = (!studentMode && studentColor(l.studentId)) || LESSON_COLORS[l.color] || LESSON_COLORS.a;
-  if (isTheoryLesson(l)) {
-    const bg = _mix(base.bg, base.fg, 0.62);   // deepen toward the dark hue
-    return { bg, bd: base.fg, accent: base.fg, text: _autoText(bg) };
-  }
-  return { bg: base.bg, bd: base.bd, accent: base.fg, text: base.fg };
+// Returns {bg, bd, accent, text} for a lesson block, coloured by LESSON TYPE:
+// Practical (អនុវត្តន៍) = green, Theory (ទ្រឹស្ដី) = violet. Vehicle AT/MT badges
+// keep their own blue/red elsewhere. Solid light grounds read on light + dark.
+const LESSON_TYPE_COLORS = {
+  practical: { bg:'#E4F3EA', bd:'#B6DEC5', accent:'#2E9E5B', text:'#1E6E3E' },
+  theory:    { bg:'#ECE8FA', bd:'#CFC4F0', accent:'#6246C9', text:'#432B96' },
 };
+const lessonBlockColor = (l, studentMode) =>
+  isTheoryLesson(l) ? LESSON_TYPE_COLORS.theory : LESSON_TYPE_COLORS.practical;
 
 
 // ── Availability helper ────────────────────────────────────────────────────
@@ -309,6 +308,19 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                   </div>
                 );
               })}
+              {/* "Now" line — a red marker at the current time on today's column */}
+              {date === today && (() => {
+                const now = new Date();
+                const frac = now.getHours() + now.getMinutes()/60;
+                if (frac < startHour || frac >= endHour) return null;
+                const topN = (frac - startHour) * 48;
+                return (
+                  <div style={{position:'absolute',left:0,right:0,top:topN,zIndex:6,pointerEvents:'none'}}>
+                    <div style={{position:'absolute',left:-4,top:-4,width:8,height:8,borderRadius:'50%',background:'#E0483A'}}/>
+                    <div style={{position:'absolute',left:0,right:0,top:-1,height:2,background:'#E0483A'}}/>
+                  </div>
+                );
+              })()}
               {/* Lesson blocks — Google Calendar-style columns for overlaps */}
               {dayLessons.map((l,i)=>{
                 const top = (l.h - startHour) * 48 + 2;
@@ -1252,23 +1264,14 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
           ))}
         </div>
       ) : (
-        <div style={{display:'flex',gap:12,padding:'8px 4px',fontSize:11,color:'var(--ink-3)',flexWrap:'wrap',alignItems:'center'}}>
-          <span style={{fontWeight:600,color:'var(--ink-2)'}}>{tr('ពណ៌សិស្ស','Student colours')}:</span>
-          {STUDENTS.filter(s=>!isStudentFinished(s)).map(s=>{
-            const cc = studentColor(s.id) || LESSON_COLORS.a;
-            return (
-              <span key={s.id} style={{display:'flex',alignItems:'center',gap:5}}>
-                <span style={{width:10,height:10,borderRadius:3,background:cc.bg,border:`1px solid ${cc.fg}`}}/>
-                {s.name}
-              </span>
-            );
-          })}
-          {STUDENTS.filter(s=>isStudentFinished(s)).length>0 && (
-            <span style={{display:'flex',alignItems:'center',gap:5,opacity:.7}}>
-              <span style={{width:10,height:10,borderRadius:3,background:FINISHED_STUDENT_COLOR.bg,border:`1px solid ${FINISHED_STUDENT_COLOR.fg}`}}/>
-              {tr('បានបញ្ចប់','Graduated')}
-            </span>
-          )}
+        <div style={{display:'flex',gap:14,padding:'8px 4px',fontSize:11,color:'var(--ink-3)',flexWrap:'wrap',alignItems:'center'}}>
+          <span style={{fontWeight:600,color:'var(--ink-2)'}}>{tr('ប្រភេទ​មេរៀន','Lesson type')}:</span>
+          <span style={{display:'flex',alignItems:'center',gap:5}}><span style={{width:13,height:13,borderRadius:3,background:'#E4F3EA',borderLeft:'3px solid #2E9E5B'}}/>{tr('អនុវត្តន៍','Practical')}</span>
+          <span style={{display:'flex',alignItems:'center',gap:5}}><span style={{width:13,height:13,borderRadius:3,background:'#ECE8FA',borderLeft:'3px solid #6246C9'}}/>{tr('ទ្រឹស្ដី','Theory')}</span>
+          <span style={{width:1,height:14,background:'var(--border)'}}/>
+          <span style={{fontWeight:600,color:'var(--ink-2)'}}>{tr('ឡាន','Vehicle')}:</span>
+          <span style={{display:'flex',alignItems:'center',gap:5}}><span style={{fontSize:8,fontWeight:700,padding:'1px 5px',borderRadius:3,background:'#2A5DB0',color:'#fff'}}>AT</span>{tr('អូតូ','Auto')}</span>
+          <span style={{display:'flex',alignItems:'center',gap:5}}><span style={{fontSize:8,fontWeight:700,padding:'1px 5px',borderRadius:3,background:'#B0413E',color:'#fff'}}>MT</span>{tr('ដៃ','Manual')}</span>
         </div>
       )}
 

@@ -606,8 +606,9 @@ window.__trRegistry = {
   "Show working hours (7–18)": "បង្ហាញ​តែ​ម៉ោង​ធ្វើ​ការ (៧–៦ល្ងាច)",
   "Show all 24 hours": "បង្ហាញ​ទាំង ២៤ ម៉ោង",
   "Download PDF (month)": "ទាញ​យក PDF (ប្រចាំ​ខែ)",
-  "Student colours": "ពណ៌សិស្ស",
-  "Graduated": "បញ្ចប់",
+  "Lesson type": "ប្រភេទ​មេរៀន",
+  "Auto": "លេខ​អូតូ",
+  "Manual": "លេខ​ដៃ MT",
   "Edit note": "កែ​ចំណាំ",
   "Add at this time": "បន្ថែម​នៅ​ម៉ោង​នេះ",
   "New note": "ចំណាំ​ថ្មី",
@@ -1093,8 +1094,6 @@ window.__trRegistry = {
   "EXISTING DRIVING LICENSE": "បណ្ណ​បើកបរ​ដែល​មាន​ស្រាប់",
   "STUDY DAYS & TIMES": "ថ្ងៃ និង ម៉ោង​សិក្សា",
   "Select a student from the directory": "ជ្រើសសិស្ស​",
-  "Manual": "លេខ​ដៃ MT",
-  "Auto": "លេខ​អូតូ",
   "Study start": "ចាប់​ផ្ដើម",
   "Study end": "បញ្ចប់",
   "Tuition": "ថ្លៃបង្រៀន",
@@ -1464,6 +1463,7 @@ window.__trRegistry = {
   "Lessons Completed": "មេរៀន​បាន​បញ្ចប់",
   "Unassigned": "មិន​កំណត់",
   "Exam soon": "ជិត​ប្រឡង",
+  "Graduated": "បញ្ចប់",
   "Unspecified": "មិន​បាន​បញ្ជាក់",
   "Automatic": "អូតូ AT",
   "Training Hrs": "ម៉ោង​បណ្ដុះ",
@@ -1790,8 +1790,6 @@ window.__trGroups = {
     "EXISTING DRIVING LICENSE": "បណ្ណ​បើកបរ​ដែល​មាន​ស្រាប់",
     "STUDY DAYS & TIMES": "ថ្ងៃ និង ម៉ោង​សិក្សា",
     "Select a student from the directory": "ជ្រើសសិស្ស​",
-    "Manual": "លេខ​ដៃ",
-    "Auto": "លេខ​អូតូ",
     "Study start": "ចាប់​ផ្ដើម",
     "Study end": "បញ្ចប់",
     "Tuition": "ថ្លៃ​សិក្សា",
@@ -1883,8 +1881,9 @@ window.__trGroups = {
     "Show working hours (7–18)": "បង្ហាញ​តែ​ម៉ោង​ធ្វើ​ការ (៧–៦ល្ងាច)",
     "Show all 24 hours": "បង្ហាញ​ទាំង ២៤ ម៉ោង",
     "Download PDF (month)": "ទាញ​យក PDF (ប្រចាំ​ខែ)",
-    "Student colours": "ពណ៌សិស្ស",
-    "Graduated": "បានបញ្ចប់",
+    "Lesson type": "ប្រភេទ​មេរៀន",
+    "Auto": "អូតូ",
+    "Manual": "ដៃ",
     "Edit note": "កែ​ចំណាំ",
     "Add at this time": "បន្ថែម​នៅ​ម៉ោង​នេះ",
     "New note": "ចំណាំ​ថ្មី",
@@ -2949,6 +2948,7 @@ window.__trGroups = {
     "Lessons Completed": "មេរៀន​បាន​បញ្ចប់",
     "Unassigned": "មិន​កំណត់",
     "Exam soon": "ជិត​ប្រឡង",
+    "Graduated": "បញ្ចប់",
     "Unspecified": "មិន​បាន​បញ្ជាក់",
     "Automatic": "អូតូ",
     "Training Hrs": "ម៉ោង​បណ្ដុះ",
@@ -3024,7 +3024,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v168";</script>
+<script>window.__ANZEN_VERSION="v169";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -18243,24 +18243,21 @@ var _lum = h => {
 };
 var _autoText = bg => _lum(bg) > 0.55 ? '#16181d' : '#ffffff';
 var isTheoryLesson = l => l && (l.color === 'c' || l.color === 'e');
-var lessonBlockColor = (l, studentMode) => {
-  var base = !studentMode && studentColor(l.studentId) || LESSON_COLORS[l.color] || LESSON_COLORS.a;
-  if (isTheoryLesson(l)) {
-    var bg = _mix(base.bg, base.fg, 0.62);
-    return {
-      bg,
-      bd: base.fg,
-      accent: base.fg,
-      text: _autoText(bg)
-    };
+var LESSON_TYPE_COLORS = {
+  practical: {
+    bg: '#E4F3EA',
+    bd: '#B6DEC5',
+    accent: '#2E9E5B',
+    text: '#1E6E3E'
+  },
+  theory: {
+    bg: '#ECE8FA',
+    bd: '#CFC4F0',
+    accent: '#6246C9',
+    text: '#432B96'
   }
-  return {
-    bg: base.bg,
-    bd: base.bd,
-    accent: base.fg,
-    text: base.fg
-  };
 };
+var lessonBlockColor = (l, studentMode) => isTheoryLesson(l) ? LESSON_TYPE_COLORS.theory : LESSON_TYPE_COLORS.practical;
 var slotAvailability = (date, h) => {
   var overlapping = LESSONS.filter(l => l.date === date && l.status !== 'cancelled' && l.h <= h && h < l.h + l.len);
   var busyInsts = new Set(overlapping.flatMap(l => [l.instId, ...(l.guests || [])]).filter(x => x && x !== '—'));
@@ -18692,7 +18689,41 @@ var ScheduleWeek = ({
           opacity: .7
         }
       }, "\u1791\u17C6\u1793\u17C1\u179A")));
-    }), dayLessons.map((l, i) => {
+    }), date === today && (() => {
+      var now = new Date();
+      var frac = now.getHours() + now.getMinutes() / 60;
+      if (frac < startHour || frac >= endHour) return null;
+      var topN = (frac - startHour) * 48;
+      return React.createElement("div", {
+        style: {
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: topN,
+          zIndex: 6,
+          pointerEvents: 'none'
+        }
+      }, React.createElement("div", {
+        style: {
+          position: 'absolute',
+          left: -4,
+          top: -4,
+          width: 8,
+          height: 8,
+          borderRadius: '50%',
+          background: '#E0483A'
+        }
+      }), React.createElement("div", {
+        style: {
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: -1,
+          height: 2,
+          background: '#E0483A'
+        }
+      }));
+    })(), dayLessons.map((l, i) => {
       var top = (l.h - startHour) * 48 + 2;
       var height = l.len * 48 - 4;
       var isCancelled = l.status === 'cancelled';
@@ -20699,7 +20730,7 @@ var ScheduleScreen = ({
   }), t.l))) : React.createElement("div", {
     style: {
       display: 'flex',
-      gap: 12,
+      gap: 14,
       padding: '8px 4px',
       fontSize: 11,
       color: 'var(--ink-3)',
@@ -20711,40 +20742,76 @@ var ScheduleScreen = ({
       fontWeight: 600,
       color: 'var(--ink-2)'
     }
-  }, tr('ពណ៌សិស្ស', 'Student colours'), ":"), STUDENTS.filter(s => !isStudentFinished(s)).map(s => {
-    var cc = studentColor(s.id) || LESSON_COLORS.a;
-    return React.createElement("span", {
-      key: s.id,
-      style: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 5
-      }
-    }, React.createElement("span", {
-      style: {
-        width: 10,
-        height: 10,
-        borderRadius: 3,
-        background: cc.bg,
-        border: `1px solid ${cc.fg}`
-      }
-    }), s.name);
-  }), STUDENTS.filter(s => isStudentFinished(s)).length > 0 && React.createElement("span", {
+  }, tr('ប្រភេទ​មេរៀន', 'Lesson type'), ":"), React.createElement("span", {
     style: {
       display: 'flex',
       alignItems: 'center',
-      gap: 5,
-      opacity: .7
+      gap: 5
     }
   }, React.createElement("span", {
     style: {
-      width: 10,
-      height: 10,
+      width: 13,
+      height: 13,
       borderRadius: 3,
-      background: FINISHED_STUDENT_COLOR.bg,
-      border: `1px solid ${FINISHED_STUDENT_COLOR.fg}`
+      background: '#E4F3EA',
+      borderLeft: '3px solid #2E9E5B'
     }
-  }), tr('បានបញ្ចប់', 'Graduated'))), noteModal && React.createElement(Modal, {
+  }), tr('អនុវត្តន៍', 'Practical')), React.createElement("span", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 5
+    }
+  }, React.createElement("span", {
+    style: {
+      width: 13,
+      height: 13,
+      borderRadius: 3,
+      background: '#ECE8FA',
+      borderLeft: '3px solid #6246C9'
+    }
+  }), tr('ទ្រឹស្ដី', 'Theory')), React.createElement("span", {
+    style: {
+      width: 1,
+      height: 14,
+      background: 'var(--border)'
+    }
+  }), React.createElement("span", {
+    style: {
+      fontWeight: 600,
+      color: 'var(--ink-2)'
+    }
+  }, tr('ឡាន', 'Vehicle'), ":"), React.createElement("span", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 5
+    }
+  }, React.createElement("span", {
+    style: {
+      fontSize: 8,
+      fontWeight: 700,
+      padding: '1px 5px',
+      borderRadius: 3,
+      background: '#2A5DB0',
+      color: '#fff'
+    }
+  }, "AT"), tr('អូតូ', 'Auto')), React.createElement("span", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 5
+    }
+  }, React.createElement("span", {
+    style: {
+      fontSize: 8,
+      fontWeight: 700,
+      padding: '1px 5px',
+      borderRadius: 3,
+      background: '#B0413E',
+      color: '#fff'
+    }
+  }, "MT"), tr('ដៃ', 'Manual'))), noteModal && React.createElement(Modal, {
     open: true,
     onClose: () => setNoteModal(null),
     width: 420
