@@ -1397,8 +1397,16 @@ const StudentsScreenV2 = () => {
               || [...phases].reverse().find(p=>phSt(p.k)==='finished')
               || phases[0];
             const progHours = (window.__schoolSettings && window.__schoolSettings.programHours) || {};
-            const learned = LESSONS.filter(l => l.studentId===s.id && l.status==='done' && (l.phase||'KH')===activePhase.k).reduce((a,l)=>a+(l.len||1),0);
-            const target  = Math.max(1, Number(progHours[activePhase.k]) || Number(s.target) || 15);
+            // Per-phase targets split into theory / practical (with legacy fallback).
+            const rawH = progHours[activePhase.k];
+            const cfgH = (rawH && typeof rawH==='object') ? { th:Number(rawH.th)||0, pr:Number(rawH.pr)||0 }
+                       : (typeof rawH==='number') ? { th:0, pr:rawH } : { th:10, pr:15 };
+            const isTheoryLn = (l) => l.color==='c' || l.color==='e';
+            const phaseDone = LESSONS.filter(l => l.studentId===s.id && l.status==='done' && (l.phase||'KH')===activePhase.k);
+            const thDone = phaseDone.filter(isTheoryLn).reduce((a,l)=>a+(l.len||1),0);
+            const prDone = phaseDone.filter(l=>!isTheoryLn(l)).reduce((a,l)=>a+(l.len||1),0);
+            const learned = thDone + prDone;
+            const target  = Math.max(1, cfgH.th + cfgH.pr);
             const pct     = Math.min(1, learned/target);
             const grad    = isGraduated(s);
             const ringCol = grad ? '#2E9E5B' : activePhase.color;
@@ -1422,7 +1430,10 @@ const StudentsScreenV2 = () => {
                       <span style={{fontSize:14.5,fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.en || s.name}</span>
                       <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:20,flexShrink:0,background:tMeta.bg,color:tMeta.color,border:`1px solid ${tMeta.color}33`}}>{stTypeEn(s.studentType)}</span>
                     </div>
-                    <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2,fontFamily:'"JetBrains Mono",monospace'}}>{s.id} · {clsKm(s.cls)} · <span style={{color:activePhase.color,fontWeight:700}}>{activePhase.label}</span> {learned}/{target}h</div>
+                    <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2,fontFamily:'"JetBrains Mono",monospace'}}>{s.id} · {clsKm(s.cls)}</div>
+                    <div style={{fontSize:11,marginTop:2,fontFamily:'"JetBrains Mono",monospace',color:'var(--ink-3)'}}>
+                      <span style={{color:activePhase.color,fontWeight:700}}>{activePhase.label}</span> · {tr('ទ្រ','Th')} {thDone}/{cfgH.th} · {tr('អ','Pr')} {prDone}/{cfgH.pr}
+                    </div>
                     <div style={{display:'flex',gap:5,marginTop:7,flexWrap:'wrap'}}>
                       {phases.map(p => {
                         const st = (typeof phaseStatusOf==='function' ? phaseStatusOf(s,p.k) : ((s.phaseStatus||{})[p.k]||''));
