@@ -1150,7 +1150,85 @@ const AlDelBtn = ({ onDelete, tr }) => (
   ><Icon name="trash" size={13}/></button>
 );
 
-const TextLessonRow = ({ item, onEdit, onDelete, tr, mobile }) => {
+// Read-only preview popup for a text lesson — body + teaching guide. Opened by
+// tapping the lesson row; the footer "Edit" jumps into the editor.
+const LessonPreview = ({ item, onClose, onEdit }) => {
+  const { tr, lang } = useAppActions();
+  const enMode = lang === 'en';
+  const body = enMode ? (item.body_en || item.body_km) : (item.body_km || item.body_en);
+  const gp = [
+    { km:'មាតិកាបង្រៀន',            jp:'指導内容', c:'var(--accent)', items: enMode?item.teach_en:item.teach_km },
+    { km:'ចំណុចបង្រៀន',             jp:'指導事項', c:'#6246C9',       items: enMode?item.points_en:item.points_km },
+    { km:'ចំណុចត្រូវប្រុងប្រយ័ត្ន', jp:'留意事項', c:'#C98A0A',       items: enMode?item.cautions_en:item.cautions_km },
+  ];
+  const hasGuide = gp.some(p => Array.isArray(p.items) && p.items.length);
+  const renderBody = (text) => {
+    const b = text || '';
+    if (isLessonHtml(b)) return <div className="lesson-rich-body" style={{fontSize:13,lineHeight:1.75}} dangerouslySetInnerHTML={{__html: sanitizeLessonHtml(b, item.images)}}/>;
+    return b.split('\n').map((line,i)=>{
+      if(!line.trim()) return <div key={i} style={{height:8}}/>;
+      const m=line.trim().match(/^!\[[^\]]*\]\(([^)]+)\)$/);
+      if(m){ let src=m[1]; if(src.startsWith('img:')) src=(item.images||{})[src.slice(4)]||''; return src?<img key={i} src={src} alt="" style={{maxWidth:'100%',borderRadius:8,margin:'8px 0',display:'block',border:'1px solid var(--border)'}}/>:null; }
+      if(line.startsWith('**')&&line.endsWith('**')) return <div key={i} style={{fontWeight:700,marginTop:12,marginBottom:4,fontSize:13}}>{line.slice(2,-2)}</div>;
+      if(line.startsWith('• ')) return <div key={i} style={{display:'flex',gap:8,color:'var(--ink-2)',marginBottom:4,paddingLeft:4}}><span style={{color:'var(--accent)',flexShrink:0}}>·</span><span>{line.slice(2)}</span></div>;
+      return <div key={i} style={{color:'var(--ink-2)',marginBottom:3}}>{line}</div>;
+    });
+  };
+  return (
+    <Modal open onClose={onClose} width={720}>
+      <div style={{display:'flex',flexDirection:'column',maxHeight: window.innerWidth<700?'86vh':'84vh'}}>
+        <div style={{flexShrink:0,position:'sticky',top:0,background:'var(--surface)',padding:'16px 20px 12px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'flex-start',gap:12,zIndex:2}}>
+          <div style={{width:38,height:38,borderRadius:10,flexShrink:0,background:'var(--surface-muted)',color:'var(--ink-3)',display:'flex',alignItems:'center',justifyContent:'center'}}><Icon name="book" size={18}/></div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:17,fontWeight:700,lineHeight:1.25}}>{window.lessonInlineHtml?window.lessonInlineHtml(tr(item.km,item.en)):tr(item.km,item.en)}</div>
+            <div style={{fontSize:12,color:'var(--ink-3)',marginTop:3,display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+              {item.no && <span style={{fontFamily:'"JetBrains Mono",monospace',color:'var(--accent)',fontWeight:600}}>{item.no}</span>}
+              {item.ja && <span style={{color:'var(--ink-2)'}}>{item.ja}</span>}
+              <span>· {item.mins} {tr('នាទី','min')}</span>
+            </div>
+          </div>
+          <button onClick={onClose} title={tr('បិទ','Close')} style={{flexShrink:0,width:32,height:32,borderRadius:8,border:'1px solid var(--border)',background:'var(--surface)',cursor:'pointer',color:'var(--ink-2)',fontSize:16,lineHeight:1}}>✕</button>
+        </div>
+        <div style={{flex:1,minHeight:0,overflowY:'auto',padding:'14px 20px 18px',fontSize:14,lineHeight:1.8}}>
+          {renderBody(body)}
+          {hasGuide && (
+            <div style={{marginTop:18,border:'1px solid var(--border)',borderRadius:12,overflow:'hidden'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 13px',background:'var(--surface-muted)',borderBottom:'1px solid var(--border)'}}>
+                <Icon name="book" size={14}/>
+                <span style={{fontSize:13,fontWeight:700}}>{tr('ការណែនាំបង្រៀន','Teaching guide')}</span>
+                <span style={{fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>· {tr('សម្រាប់គ្រូ','Instructor')}</span>
+                {item.guideLoc && <span style={{marginLeft:'auto',fontSize:11,color:'var(--ink-3)',background:'var(--surface)',border:'1px solid var(--border)',padding:'2px 9px',borderRadius:99,whiteSpace:'nowrap'}}>📍 {item.guideLoc}</span>}
+              </div>
+              <div style={{padding:'12px 13px',display:'flex',flexDirection:'column',gap:13}}>
+                {gp.filter(p=>Array.isArray(p.items)&&p.items.length).map((p,pi)=>(
+                  <div key={pi}>
+                    <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:6}}>
+                      <span style={{width:8,height:8,borderRadius:2,background:p.c,flexShrink:0}}/>
+                      <span style={{fontSize:12.5,fontWeight:700,color:p.c}}>{p.km}</span>
+                      <span style={{fontSize:9.5,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{p.jp}</span>
+                    </div>
+                    <div style={{display:'flex',flexDirection:'column',gap:4,paddingLeft:2}}>
+                      {p.items.map((it,i)=>(
+                        <div key={i} style={{display:'flex',gap:7,fontSize:13,color:'var(--ink-2)',lineHeight:1.55}}>
+                          <span style={{color:p.c,flexShrink:0}}>•</span><span>{it}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <div style={{flexShrink:0,position:'sticky',bottom:0,background:'var(--surface)',borderTop:'1px solid var(--border)',padding:'12px 20px',display:'flex',justifyContent:'flex-end',gap:8}}>
+          <Btn kind="primary" size="md" icon={<Icon name="edit" size={14}/>} onClick={onEdit}>{tr('កែ','Edit')}</Btn>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
+const TextLessonRow = ({ item, onEdit, onDelete, onPreview, tr, mobile }) => {
   const iconBox = (
     <div style={{width:38,height:38,borderRadius:8,flexShrink:0,background:'var(--surface-muted)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--ink-2)'}}>
       <Icon name="book" size={16}/>
@@ -1164,7 +1242,7 @@ const TextLessonRow = ({ item, onEdit, onDelete, tr, mobile }) => {
   );
   if (mobile) return (
     <div style={{display:'flex',flexDirection:'column',gap:10,padding:'12px 14px',border:'1px solid var(--border)',borderRadius:10,background:'var(--surface)'}}>
-      <div style={{display:'flex',gap:12,alignItems:'flex-start'}}>{iconBox}{title}</div>
+      <div onClick={onPreview} style={{display:'flex',gap:12,alignItems:'flex-start',cursor:onPreview?'pointer':'default'}}>{iconBox}{title}</div>
       <div style={{display:'flex',alignItems:'center',justifyContent:'flex-end',gap:8}}>
         <span style={{fontFamily:'"JetBrains Mono",monospace',fontSize:11,color:'var(--ink-3)',marginRight:'auto'}}>{item.id}</span>
         <Btn kind="ghost" size="sm" onClick={onEdit}>{tr('កែ','Edit')}</Btn>
@@ -1174,7 +1252,7 @@ const TextLessonRow = ({ item, onEdit, onDelete, tr, mobile }) => {
   );
   return (
     <div style={{display:'grid',gridTemplateColumns:'auto 1fr auto auto',gap:14,alignItems:'center',padding:'14px 16px',border:'1px solid var(--border)',borderRadius:10,background:'var(--surface)'}}>
-      {iconBox}{title}
+      <div onClick={onPreview} style={{display:'contents',cursor:onPreview?'pointer':'default'}}>{iconBox}{title}</div>
       <div style={{fontFamily:'"JetBrains Mono",monospace',fontSize:11,color:'var(--ink-3)'}}>{item.id}</div>
       <div style={{display:'flex',gap:6}}>
         <Btn kind="ghost" size="sm" onClick={onEdit}>{tr('កែ','Edit')}</Btn>
@@ -1304,6 +1382,7 @@ const AdminLessonsScreen = ({ role = 'admin' }) => {
 
   // editor state: { type: 'text'|'video'|'quiz', target: 'theoryTexts'|..., initial?: item }
   const [editor, setEditor] = React.useState(null);
+  const [preview, setPreview] = React.useState(null);   // read-only lesson preview popup
 
   React.useEffect(() => {
     window.__notifyLessonsLibChanged = () => force();
@@ -1473,6 +1552,7 @@ const AdminLessonsScreen = ({ role = 'admin' }) => {
           />
         ) : texts.map((t,i)=>(
           <TextLessonRow key={t.id||i} item={t} tr={tr} mobile={bp.mobile}
+            onPreview={()=>setPreview(t)}
             onEdit={()=>openEdit('text', t)}
             onDelete={()=>handleDelete(textsKey, t)}
           />
@@ -1549,6 +1629,12 @@ const AdminLessonsScreen = ({ role = 'admin' }) => {
           );
         })()}
       </Modal>
+
+      {/* Read-only preview popup — opened by tapping a lesson row */}
+      {preview && (
+        <LessonPreview item={preview} onClose={()=>setPreview(null)}
+          onEdit={()=>{ const it = preview; setPreview(null); openEdit('text', it); }}/>
+      )}
     </div>
   );
 };

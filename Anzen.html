@@ -28692,10 +28692,321 @@ var AlDelBtn = ({
   name: "trash",
   size: 13
 }));
+var LessonPreview = ({
+  item,
+  onClose,
+  onEdit
+}) => {
+  var {
+    tr,
+    lang
+  } = useAppActions();
+  var enMode = lang === 'en';
+  var body = enMode ? item.body_en || item.body_km : item.body_km || item.body_en;
+  var gp = [{
+    km: 'មាតិកាបង្រៀន',
+    jp: '指導内容',
+    c: 'var(--accent)',
+    items: enMode ? item.teach_en : item.teach_km
+  }, {
+    km: 'ចំណុចបង្រៀន',
+    jp: '指導事項',
+    c: '#6246C9',
+    items: enMode ? item.points_en : item.points_km
+  }, {
+    km: 'ចំណុចត្រូវប្រុងប្រយ័ត្ន',
+    jp: '留意事項',
+    c: '#C98A0A',
+    items: enMode ? item.cautions_en : item.cautions_km
+  }];
+  var hasGuide = gp.some(p => Array.isArray(p.items) && p.items.length);
+  var renderBody = text => {
+    var b = text || '';
+    if (isLessonHtml(b)) return React.createElement("div", {
+      className: "lesson-rich-body",
+      style: {
+        fontSize: 13,
+        lineHeight: 1.75
+      },
+      dangerouslySetInnerHTML: {
+        __html: sanitizeLessonHtml(b, item.images)
+      }
+    });
+    return b.split('\n').map((line, i) => {
+      if (!line.trim()) return React.createElement("div", {
+        key: i,
+        style: {
+          height: 8
+        }
+      });
+      var m = line.trim().match(/^!\[[^\]]*\]\(([^)]+)\)$/);
+      if (m) {
+        var src = m[1];
+        if (src.startsWith('img:')) src = (item.images || {})[src.slice(4)] || '';
+        return src ? React.createElement("img", {
+          key: i,
+          src: src,
+          alt: "",
+          style: {
+            maxWidth: '100%',
+            borderRadius: 8,
+            margin: '8px 0',
+            display: 'block',
+            border: '1px solid var(--border)'
+          }
+        }) : null;
+      }
+      if (line.startsWith('**') && line.endsWith('**')) return React.createElement("div", {
+        key: i,
+        style: {
+          fontWeight: 700,
+          marginTop: 12,
+          marginBottom: 4,
+          fontSize: 13
+        }
+      }, line.slice(2, -2));
+      if (line.startsWith('• ')) return React.createElement("div", {
+        key: i,
+        style: {
+          display: 'flex',
+          gap: 8,
+          color: 'var(--ink-2)',
+          marginBottom: 4,
+          paddingLeft: 4
+        }
+      }, React.createElement("span", {
+        style: {
+          color: 'var(--accent)',
+          flexShrink: 0
+        }
+      }, "\xB7"), React.createElement("span", null, line.slice(2)));
+      return React.createElement("div", {
+        key: i,
+        style: {
+          color: 'var(--ink-2)',
+          marginBottom: 3
+        }
+      }, line);
+    });
+  };
+  return React.createElement(Modal, {
+    open: true,
+    onClose: onClose,
+    width: 720
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      maxHeight: window.innerWidth < 700 ? '86vh' : '84vh'
+    }
+  }, React.createElement("div", {
+    style: {
+      flexShrink: 0,
+      position: 'sticky',
+      top: 0,
+      background: 'var(--surface)',
+      padding: '16px 20px 12px',
+      borderBottom: '1px solid var(--border)',
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: 12,
+      zIndex: 2
+    }
+  }, React.createElement("div", {
+    style: {
+      width: 38,
+      height: 38,
+      borderRadius: 10,
+      flexShrink: 0,
+      background: 'var(--surface-muted)',
+      color: 'var(--ink-3)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }
+  }, React.createElement(Icon, {
+    name: "book",
+    size: 18
+  })), React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 17,
+      fontWeight: 700,
+      lineHeight: 1.25
+    }
+  }, window.lessonInlineHtml ? window.lessonInlineHtml(tr(item.km, item.en)) : tr(item.km, item.en)), React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'var(--ink-3)',
+      marginTop: 3,
+      display: 'flex',
+      gap: 8,
+      alignItems: 'center',
+      flexWrap: 'wrap'
+    }
+  }, item.no && React.createElement("span", {
+    style: {
+      fontFamily: '"JetBrains Mono",monospace',
+      color: 'var(--accent)',
+      fontWeight: 600
+    }
+  }, item.no), item.ja && React.createElement("span", {
+    style: {
+      color: 'var(--ink-2)'
+    }
+  }, item.ja), React.createElement("span", null, "\xB7 ", item.mins, " ", tr('នាទី', 'min')))), React.createElement("button", {
+    onClick: onClose,
+    title: tr('បិទ', 'Close'),
+    style: {
+      flexShrink: 0,
+      width: 32,
+      height: 32,
+      borderRadius: 8,
+      border: '1px solid var(--border)',
+      background: 'var(--surface)',
+      cursor: 'pointer',
+      color: 'var(--ink-2)',
+      fontSize: 16,
+      lineHeight: 1
+    }
+  }, "\u2715")), React.createElement("div", {
+    style: {
+      flex: 1,
+      minHeight: 0,
+      overflowY: 'auto',
+      padding: '14px 20px 18px',
+      fontSize: 14,
+      lineHeight: 1.8
+    }
+  }, renderBody(body), hasGuide && React.createElement("div", {
+    style: {
+      marginTop: 18,
+      border: '1px solid var(--border)',
+      borderRadius: 12,
+      overflow: 'hidden'
+    }
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      padding: '10px 13px',
+      background: 'var(--surface-muted)',
+      borderBottom: '1px solid var(--border)'
+    }
+  }, React.createElement(Icon, {
+    name: "book",
+    size: 14
+  }), React.createElement("span", {
+    style: {
+      fontSize: 13,
+      fontWeight: 700
+    }
+  }, tr('ការណែនាំបង្រៀន', 'Teaching guide')), React.createElement("span", {
+    style: {
+      fontSize: 10,
+      color: 'var(--ink-3)',
+      fontFamily: '"JetBrains Mono",monospace'
+    }
+  }, "\xB7 ", tr('សម្រាប់គ្រូ', 'Instructor')), item.guideLoc && React.createElement("span", {
+    style: {
+      marginLeft: 'auto',
+      fontSize: 11,
+      color: 'var(--ink-3)',
+      background: 'var(--surface)',
+      border: '1px solid var(--border)',
+      padding: '2px 9px',
+      borderRadius: 99,
+      whiteSpace: 'nowrap'
+    }
+  }, "\uD83D\uDCCD ", item.guideLoc)), React.createElement("div", {
+    style: {
+      padding: '12px 13px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 13
+    }
+  }, gp.filter(p => Array.isArray(p.items) && p.items.length).map((p, pi) => React.createElement("div", {
+    key: pi
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 7,
+      marginBottom: 6
+    }
+  }, React.createElement("span", {
+    style: {
+      width: 8,
+      height: 8,
+      borderRadius: 2,
+      background: p.c,
+      flexShrink: 0
+    }
+  }), React.createElement("span", {
+    style: {
+      fontSize: 12.5,
+      fontWeight: 700,
+      color: p.c
+    }
+  }, p.km), React.createElement("span", {
+    style: {
+      fontSize: 9.5,
+      color: 'var(--ink-3)',
+      fontFamily: '"JetBrains Mono",monospace'
+    }
+  }, p.jp)), React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 4,
+      paddingLeft: 2
+    }
+  }, p.items.map((it, i) => React.createElement("div", {
+    key: i,
+    style: {
+      display: 'flex',
+      gap: 7,
+      fontSize: 13,
+      color: 'var(--ink-2)',
+      lineHeight: 1.55
+    }
+  }, React.createElement("span", {
+    style: {
+      color: p.c,
+      flexShrink: 0
+    }
+  }, "\u2022"), React.createElement("span", null, it))))))))), React.createElement("div", {
+    style: {
+      flexShrink: 0,
+      position: 'sticky',
+      bottom: 0,
+      background: 'var(--surface)',
+      borderTop: '1px solid var(--border)',
+      padding: '12px 20px',
+      display: 'flex',
+      justifyContent: 'flex-end',
+      gap: 8
+    }
+  }, React.createElement(Btn, {
+    kind: "primary",
+    size: "md",
+    icon: React.createElement(Icon, {
+      name: "edit",
+      size: 14
+    }),
+    onClick: onEdit
+  }, tr('កែ', 'Edit')))));
+};
 var TextLessonRow = ({
   item,
   onEdit,
   onDelete,
+  onPreview,
   tr,
   mobile
 }) => {
@@ -28744,10 +29055,12 @@ var TextLessonRow = ({
       background: 'var(--surface)'
     }
   }, React.createElement("div", {
+    onClick: onPreview,
     style: {
       display: 'flex',
       gap: 12,
-      alignItems: 'flex-start'
+      alignItems: 'flex-start',
+      cursor: onPreview ? 'pointer' : 'default'
     }
   }, iconBox, title), React.createElement("div", {
     style: {
@@ -28782,7 +29095,13 @@ var TextLessonRow = ({
       borderRadius: 10,
       background: 'var(--surface)'
     }
-  }, iconBox, title, React.createElement("div", {
+  }, React.createElement("div", {
+    onClick: onPreview,
+    style: {
+      display: 'contents',
+      cursor: onPreview ? 'pointer' : 'default'
+    }
+  }, iconBox, title), React.createElement("div", {
     style: {
       fontFamily: '"JetBrains Mono",monospace',
       fontSize: 11,
@@ -29144,6 +29463,7 @@ var AdminLessonsScreen = ({
   var [section, setSection] = React.useState('theory');
   var [, force] = React.useReducer(x => x + 1, 0);
   var [editor, setEditor] = React.useState(null);
+  var [preview, setPreview] = React.useState(null);
   React.useEffect(() => {
     window.__notifyLessonsLibChanged = () => force();
     return () => {
@@ -29407,6 +29727,7 @@ var AdminLessonsScreen = ({
     item: t,
     tr: tr,
     mobile: bp.mobile,
+    onPreview: () => setPreview(t),
     onEdit: () => openEdit('text', t),
     onDelete: () => handleDelete(textsKey, t)
   }))), React.createElement(AlSection, {
@@ -29492,7 +29813,15 @@ var AdminLessonsScreen = ({
       onSave: handleSave,
       onCancel: () => setEditor(null)
     }));
-  })()));
+  })()), preview && React.createElement(LessonPreview, {
+    item: preview,
+    onClose: () => setPreview(null),
+    onEdit: () => {
+      var it = preview;
+      setPreview(null);
+      openEdit('text', it);
+    }
+  }));
 };
 var EmptyState = ({
   km,
