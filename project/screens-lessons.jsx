@@ -508,6 +508,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-01', no:'技能1', ja:'車の乗り降りと運転姿勢', stage:1, mins:12,
     km:'ការឡើង-ចុះ និងឥរិយាបថបើកបរ', en:'Getting In/Out & Driving Posture',
+    goal_km:'ឡើង-ចុះ និងរៀបចំឥរិយាបថត្រឹមត្រូវ ដោយគិតពីសុវត្ថិភាព', goal_en:'Safe boarding and a correct driving posture',
     body_km:`មុនបើកបរ — ការរៀបចំត្រឹមត្រូវ (運転姿勢):
 
 • ឡើងឡានដោយសុវត្ថិភាព ពិនិត្យក្រោយ
@@ -524,6 +525,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-02', no:'技能2', ja:'自動車の機構と運転装置の取り扱い', stage:1, mins:16,
     km:'យន្តការ និងឧបករណ៍បញ្ជារថយន្ត', en:'Vehicle Mechanism & Controls',
+    goal_km:'យល់មុខងារឧបករណ៍បញ្ជា និងប្រើប្រាស់ត្រឹមត្រូវ', goal_en:'Understand and correctly use the driving controls',
     body_km:`ស្គាល់ឧបករណ៍បញ្ជា (運転装置):
 
 **ប្រអប់លេខ Auto (AT):**
@@ -548,6 +550,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-03', no:'技能3', ja:'発進と停止', stage:1, mins:14,
     km:'ការចេញដំណើរ និងការឈប់', en:'Starting & Stopping',
+    goal_km:'ចេញដំណើរ និងឈប់តាមលំដាប់ត្រឹមត្រូវ ដោយរលូន', goal_en:'Start and stop smoothly in the correct sequence',
     body_km:`ការចេញ-ឈប់ ដោយរលូន:
 
 • ពិនិត្យ ៣៦០° មុនចេញ (発進前の安全確認)
@@ -564,6 +567,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-04', no:'技能4', ja:'速度の調節', stage:1, mins:12,
     km:'ការគ្រប់គ្រងល្បឿន', en:'Speed Control',
+    goal_km:'បង្កើន បន្ថយ និងរក្សាល្បឿនឲ្យសមស្រប', goal_en:'Raise, lower and maintain an appropriate speed',
     body_km:`ការគ្រប់គ្រងល្បឿនរលូន (速度調節):
 
 • បង្កើនល្បឿនថ្នមៗ ដោយ accelerator
@@ -580,6 +584,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-05', no:'技能5', ja:'走行位置と進路', stage:1, mins:12,
     km:'ទីតាំង និងគន្លងធ្វើដំណើរ', en:'Road Position & Path',
+    goal_km:'រក្សាទីតាំង និងគន្លងត្រឹមត្រូវលើផ្លូវត្រង់ និងពេលបង្វិលចង្កូត', goal_en:'Keep the correct position and path on straights and when steering',
     body_km:`ការរក្សាទីតាំងត្រឹមត្រូវ (走行位置):
 
 • រក្សាក្នុងគន្លង កណ្ដាលផ្លូវ
@@ -596,6 +601,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-06', no:'技能6', ja:'カーブや曲がり角の通行', stage:1, mins:14,
     km:'ការបើកបរតាមផ្លូវកោង', en:'Driving Through Curves & Corners',
+    goal_km:'បង្កើតល្បឿន និងបង្វិលចង្កូតសមស្របនឹងកម្រិតកោង', goal_en:'Match speed and steering to the sharpness of the curve',
     body_km:`បច្ចេកទេសផ្លូវកោង (カーブ):
 
 • បន្ថយល្បឿន មុនចូលកោង ("ចូលយឺត ចេញលឿន")
@@ -612,6 +618,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-07', no:'技能7', ja:'坂道の通行', stage:1, mins:14,
     km:'ការបើកបរលើផ្លូវជម្រាល', en:'Driving on Slopes',
+    goal_km:'ជ្រើសលេខតាមជម្រាល និងចេញដំណើរដោយមិនរអិលថយ', goal_en:'Pick the gear for the slope and start without rolling back',
     body_km:`ផ្លូវឡើង-ចុះ ទីជម្រាល (坂道):
 
 • ឡើងទួល — ចេញដំណើរ ដោយមិនរអិលក្រោយ (坂道発進)
@@ -628,6 +635,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-08', no:'技能8', ja:'後退', stage:1, mins:14,
     km:'ការថយក្រោយ', en:'Reversing',
+    goal_km:'ថយក្រោយដោយល្បឿនសមស្រប និងត្រួតពិនិត្យសុវត្ថិភាព', goal_en:'Reverse at a proper speed with safety checks',
     body_km:`ការថយក្រោយ ដោយត្រឹមត្រូវ (後退):
 
 • បែរក្បាលមើលក្រោយផ្ទាល់ (目視)
@@ -644,6 +652,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-09', no:'技能9', ja:'狭路の通行（S字・クランク）', stage:1, mins:18,
     km:'ការបើកបរផ្លូវចង្អៀត (S និង Crank)', en:'Narrow Roads (S-curve & Crank)',
+    goal_km:'ឆ្លងផ្លូវចង្អៀត ដោយល្បឿន ទីតាំង និងការបកក្រោយត្រឹមត្រូវ', goal_en:'Pass narrow roads with correct speed, position and turn-around',
     body_km:`ផ្លូវចង្អៀត — ការសាកល្បងជប៉ុនល្បី (狭路):
 
 **S字 (S-curve):** ផ្លូវកោងរាង S — រក្សាកណ្ដាល
@@ -660,6 +669,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-10', no:'技能10', ja:'通行位置の選択と進路変更', stage:1, mins:13,
     km:'ការជ្រើសគន្លង និងការប្ដូរគន្លង', en:'Lane Selection & Changing',
+    goal_km:'ជ្រើសគន្លង និងប្ដូរគន្លង ជាមួយការត្រួតពិនិត្យសុវត្ថិភាព', goal_en:'Select and change lanes with proper safety checks',
     body_km:`ការប្ដូរគន្លង ដោយសុវត្ថិភាព (進路変更):
 
 • បើកសញ្ញា ៣ វិនាទីមុន (合図)
@@ -676,6 +686,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-11', no:'技能11', ja:'障害物への対応', stage:1, mins:12,
     km:'ការដោះស្រាយឧបសគ្គ', en:'Dealing with Obstacles',
+    goal_km:'អានស្ថានភាពឧបសគ្គទាន់ពេល និងឆ្លើយតបសមស្រប', goal_en:'Read obstacles early and respond appropriately',
     body_km:`ឧបសគ្គលើផ្លូវ (障害物):
 
 • បន្ថយល្បឿន មុនឆ្លងកាត់
@@ -692,6 +703,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-12', no:'技能12', ja:'信号・標識に従った走行', stage:1, mins:12,
     km:'ការបើកបរតាមភ្លើងសញ្ញា និងផ្លាក', en:'Driving by Signals & Signs',
+    goal_km:'អានភ្លើងសញ្ញា និងផ្លាកបានលឿន ហើយអនុវត្តតាម', goal_en:'Quickly read signals and signs and follow them',
     body_km:`អនុវត្តន៍ច្បាប់ផ្លូវ ក្នុងសាលា (所内):
 
 • ឈប់ត្រឹមត្រូវ ភ្លើងក្រហម និងផ្លាក STOP (一時停止)
@@ -708,6 +720,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-13', no:'技能13', ja:'交差点の通行（直進・左折・右折）', stage:1, mins:16,
     km:'ការឆ្លងប្រសព្វ (ត្រង់ · ឆ្វេង · ស្ដាំ)', en:'Intersections (Straight · Left · Right)',
+    goal_km:'ឆ្លងចំណុចប្រសព្វ (ត្រង់/ឆ្វេង/ស្ដាំ) ដោយប្រុងប្រយ័ត្ន ល្បឿន និងវិធីសុវត្ថិភាព', goal_en:'Cross intersections (straight/left/right) with care, safe speed and method',
     body_km:`ការឆ្លងប្រសព្វ (交差点通行):
 
 **ត្រង់:** ពិនិត្យ ៤ ទិស ល្បឿនសមរម្យ
@@ -722,6 +735,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-14', no:'みきわめ', ja:'第一段階みきわめ', stage:1, mins:15,
     km:'ការវាយតម្លៃបញ្ចប់ដំណាក់កាលទី១', en:'Stage 1 Assessment (Mikiwame)',
+    goal_km:'បញ្ជាក់ថាបានស្ទាត់ជំនាញទីលាន មុនឡើងដំណាក់កាលទី២', goal_en:'Confirm in-yard skills before moving to Stage 2',
     body_km:`みきわめ — ការវាយតម្លៃមុនប្រឡង修了検定:
 
 • គ្រូត្រួតពិនិត្យ ជំនាញសាលាទាំងអស់
@@ -740,6 +754,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-15', no:'技能14', ja:'路上運転の準備と注意', stage:2, mins:14,
     km:'ការរៀបចំ និងប្រុងប្រយ័ត្ន បើកបរលើផ្លូវសាធារណៈ', en:'Preparing for Public-Road Driving',
+    goal_km:'រៀបចំ និងប្រុងប្រយ័ត្នត្រឹមត្រូវ មុនចេញផ្លូវសាធារណៈ', goal_en:'Prepare and take proper precautions before public-road driving',
     body_km:`ចេញពីសាលា ទៅផ្លូវពិត (路上) ជាមួយ仮免許:
 
 • ផ្លាក "仮免許練習中" ត្រូវបិទ
@@ -756,6 +771,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-16', no:'技能15', ja:'交通の流れに合わせた走行', stage:2, mins:14,
     km:'ការបើកបរស្របតាមលំហូរចរាចរណ៍', en:'Driving with the Traffic Flow',
+    goal_km:'អានស្ថានភាពចរាចរណ៍ និងបើកបរឲ្យសមស្របនឹងលំហូរ', goal_en:'Read the traffic and drive to match its flow',
     body_km:`ស្របទៅតាមលំហូរ (交通の流れ):
 
 • រក្សាល្បឿនស្របទៅចរន្ត — មិនយឺត ឬលឿនពេក
@@ -772,6 +788,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-17', no:'技能16', ja:'適切な通行位置と進路変更', stage:2, mins:13,
     km:'ទីតាំង និងការប្ដូរគន្លងលើផ្លូវ', en:'Road Position & Lane Changes (Public Road)',
+    goal_km:'ជ្រើសទីតាំងសមស្រប និងប្ដូរគន្លងទាន់ពេលដោយសុវត្ថិភាព', goal_en:'Choose a suitable position and change lanes safely and in time',
     body_km:`ការគ្រប់គ្រងទីតាំងលើផ្លូវពិត:
 
 • ជ្រើសគន្លងត្រឹមត្រូវ មុនបត់
@@ -788,6 +805,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-18', no:'技能17', ja:'歩行者などの保護', stage:2, mins:12,
     km:'ការការពារអ្នកថ្មើរជើងលើផ្លូវ', en:'Protecting Pedestrians (Public Road)',
+    goal_km:'អានអ្នកថ្មើរជើងទាន់ពេល និងផ្ដល់សុវត្ថិភាពក្នុងការឆ្លងកាត់', goal_en:'Read pedestrians early and let them pass safely',
     body_km:`ការការពារនៅផ្លូវពិត (歩行者保護):
 
 • ឈប់ផ្ដល់ផ្លូវ កន្លែងឆ្លង横断歩道
@@ -804,6 +822,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-19', no:'技能18', ja:'道路・交通状況に合わせた運転', stage:2, mins:14,
     km:'ការបើកបរស្របតាមស្ថានភាពផ្លូវ', en:'Adapting to Road & Traffic Conditions',
+    goal_km:'អានស្ថានភាពផ្លូវ និងចរាចរណ៍ ហើយបើកបរឲ្យសមស្រប', goal_en:'Read road and traffic conditions and drive accordingly',
     body_km:`សម្របខ្លួនទៅតាមស្ថានភាព (状況判断):
 
 • ផ្លូវចង្អៀត ផ្លូវកកស្ទះ ផ្លូវការសង់
@@ -820,6 +839,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-20', no:'技能19', ja:'方向変換と縦列駐車', stage:2, mins:18,
     km:'ការបង្វិលទិស និងការចតឆ្នាស (Parallel)', en:'Turning Around & Parallel Parking',
+    goal_km:'ចតឆ្នាស និងបង្វិលទិស ដោយត្រឹមត្រូវ', goal_en:'Parallel park and change direction correctly',
     body_km:`បច្ចេកទេសចត ល្បីក្នុងការប្រឡង (駐車):
 
 **方向変換:** ថយចូលកន្លែង បង្វិលទិស ១៨០°
@@ -838,6 +858,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-21', no:'技能20', ja:'急ブレーキ', stage:2, mins:10,
     km:'ការហ្វ្រាំងបន្ទាន់', en:'Emergency Braking',
+    goal_km:'ហ្វ្រាំងបន្ទាន់ឲ្យបានប្រកបដោយសុវត្ថិភាព និងគ្រប់គ្រងបាន', goal_en:'Perform a safe, controlled emergency stop',
     body_km:`ការហ្វ្រាំងបន្ទាន់ (急ブレーキ):
 
 • ចុចហ្វ្រាំងខ្លាំង និងម៉ឺងម៉ាត់
@@ -854,6 +875,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-22', no:'技能21', ja:'自主経路設定', stage:2, mins:14,
     km:'ការកំណត់ផ្លូវ ដោយខ្លួនឯង', en:'Independent Route Driving',
+    goal_km:'កំណត់ផ្លូវ ដោយខ្លួនឯង និងបើកបរដោយប្រុងចរាចរណ៍ផ្សេង', goal_en:'Set your own route and drive aware of others',
     body_km:`បើកបរ ដោយខ្លួនឯង (自主経路):
 
 • គ្រូឱ្យគោលដៅ — សិស្សរកផ្លូវផ្ទាល់
@@ -870,6 +892,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-23', no:'技能22', ja:'高速教習', stage:2, mins:20,
     km:'ការបង្រៀនលើផ្លូវល្បឿនលឿន', en:'Expressway Lesson',
+    goal_km:'បើកបរលើផ្លូវល្បឿនលឿន ដោយរក្សាចម្ងាយ និងល្បឿនសុវត្ថិភាព', goal_en:'Drive on expressways keeping safe speed and distance',
     body_km:`បទពិសោធផ្លូវល្បឿនលឿន (高速教習):
 
 • ការចូល (合流) ល្បឿនខ្ពស់
@@ -888,6 +911,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-24', no:'技能23', ja:'危険を予測した運転', stage:2, mins:14,
     km:'ការបើកបរ ទស្សន៍ទាយគ្រោះថ្នាក់ (អនុវត្ត)', en:'Hazard-Prediction Driving (Practice)',
+    goal_km:'ទស្សន៍ទាយគ្រោះថ្នាក់ទាន់ពេល និងជ្រើសសកម្មភាពចៀសវាង', goal_en:'Predict hazards in time and choose avoiding actions',
     body_km:`អនុវត្តន៍ការទស្សន៍ទាយ (危険予測運転):
 
 • មើលឆ្ងាយ ស្វែងរកគ្រោះថ្នាក់លាក់
@@ -904,6 +928,7 @@ const PRACTICAL_TEXTS = [
   {
     id:'pt-25', no:'みきわめ', ja:'第二段階みきわめ', stage:2, mins:15,
     km:'ការវាយតម្លៃបញ្ចប់ដំណាក់កាលទី២', en:'Stage 2 Assessment (Mikiwame)',
+    goal_km:'បញ្ជាក់ថាបានស្ទាត់ជំនាញផ្លូវពិត មុនប្រឡងបញ្ចប់', goal_en:'Confirm public-road skills before the graduation exam',
     body_km:`みきわめ — ការវាយតម្លៃ មុនប្រឡង卒業検定:
 
 • គ្រូត្រួតពិនិត្យ ជំនាញផ្លូវពិតទាំងអស់
