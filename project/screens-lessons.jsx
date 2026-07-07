@@ -509,6 +509,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-01', no:'技能1', ja:'車の乗り降りと運転姿勢', stage:1, mins:12,
     km:'ការឡើង-ចុះ និងឥរិយាបថបើកបរ', en:'Getting In/Out & Driving Posture',
     goal_km:'ឡើង-ចុះ និងរៀបចំឥរិយាបថត្រឹមត្រូវ ដោយគិតពីសុវត្ថិភាព', goal_en:'Safe boarding and a correct driving posture',
+    teach_km:['វិធីឡើងជិះ · ចេញដំណើរ · ឈប់','វិធីលៃកៅអី · បញ្ឆេះម៉ាស៊ីន','ការប្ដូរលេខ · បង្វិលចង្កូត','វិធីរំលត់ម៉ាស៊ីន · ចុះពីរថយន្ត'], teach_en:['Boarding, starting and stopping','Adjusting the seat, starting the engine','Gear changing and steering','Switching off and getting out'],
+    points_km:['ពិនិត្យជុំវិញរថយន្តមុនឡើង','ឥរិយាបថត្រឹមត្រូវ៖ កៅអី · កញ្ចក់ · ខ្សែក្រវាត់ · លេខ N','បញ្ឆេះ៖ ហ្វ្រាំង/ឃ្លាច់ → N → បញ្ឆេះ','ចេញ៖ ហ្គាស + ឃ្លាច់ពាក់កណ្ដាល · សញ្ញា · ត្រួតពិនិត្យ','រំលត់៖ ហ្វ្រាំងដៃ → N → បិទសញ្ញា → រំលត់ → R'], points_en:['Walk-around check before boarding','Correct posture: seat, mirrors, seatbelt, N','Start: brake/clutch to N then ignition','Move off: gas + half-clutch, signal, check','Stop engine: handbrake to N, signal off, off, R'],
+    cautions_km:['ធ្វើឲ្យសិស្សយល់ថា "ហេតុអ្វីត្រូវពិនិត្យ?"','ឈប់៖ លឿន ហ្វ្រាំង→ឃ្លាច់→ហ្វ្រាំង · យឺត ឃ្លាច់→ហ្វ្រាំង','ប្ដូរលេខ៖ ត្រួតពិនិត្យពេលឈប់ រួចអនុវត្តលើផ្លូវត្រង់','ចុះ៖ ដោះខ្សែក្រវាត់ → មើលក្រោយ → បើកទ្វារបន្តិច → មើលម្ដងទៀត'], cautions_en:['Make the learner understand WHY we check','Stop: fast brake-clutch-brake, slow clutch-brake','Gears: check when stopped, practise on straights','Exit: unbelt, look back, crack door, check again'],
+    guideLoc:'TH',
     body_km:`មុនបើកបរ — ការរៀបចំត្រឹមត្រូវ (運転姿勢):
 
 • ឡើងឡានដោយសុវត្ថិភាព ពិនិត្យក្រោយ
@@ -568,6 +572,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-04', no:'技能4', ja:'速度の調節', stage:1, mins:12,
     km:'ការគ្រប់គ្រងល្បឿន', en:'Speed Control',
     goal_km:'បង្កើន បន្ថយ និងរក្សាល្បឿនឲ្យសមស្រប', goal_en:'Raise, lower and maintain an appropriate speed',
+    teach_km:['ប្រតិបត្តិមូលដ្ឋាន លើផ្លូវត្រង់','ការប្ដូរលេខ (ដល់លេខ ៤)','ការរក្សា និងលៃល្បឿន','ការបង្វិលចង្កូត'], teach_en:['Basic operation on the straight','Gear changing (up to 4th)','Maintaining and adjusting speed','Steering'],
+    points_km:['បង្កើន-បន្ថយល្បឿនលើផ្លូវត្រង់ (ប្រើហ្វ្រាំងឲ្យច្បាស់)','ហ្គាស ON / OFF','បត់ស្ដាំ-ឆ្វេង (ចង្កូត + ទិសមើល)','Uturn (ចង្កូត និងការនាំទិសមើល)'], points_en:['Accelerate/brake on the straight (use brakes firmly)','Accelerator ON / OFF','Left/right turns (steering + eyes)','U-turn (steering, eye guidance)'],
+    cautions_km:['បើមានញាប់ញ័រ ត្រូវរកមូលហេតុ និងកែ','បន្ថយល្បឿនឲ្យបានមុនបត់'], cautions_en:['If wobbly, find the cause and correct it','Slow down well before turning'],
+    guideLoc:'ផ្លូវហាណូយ / ផ្លូវរុស្ស៊ី',
     body_km:`ការគ្រប់គ្រងល្បឿនរលូន (速度調節):
 
 • បង្កើនល្បឿនថ្នមៗ ដោយ accelerator
@@ -602,6 +610,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-06', no:'技能6', ja:'カーブや曲がり角の通行', stage:1, mins:14,
     km:'ការបើកបរតាមផ្លូវកោង', en:'Driving Through Curves & Corners',
     goal_km:'បង្កើតល្បឿន និងបង្វិលចង្កូតសមស្របនឹងកម្រិតកោង', goal_en:'Match speed and steering to the sharpness of the curve',
+    teach_km:['អារម្មណ៍ទំហំរថយន្ត និងចម្ងាយ','ចំណុចងងឹត (死角) របស់រថយន្ត','ភាពខុសគ្នាកង់ក្នុង (内輪差)','ការបើកបរតាមកោង · ការឈប់បណ្ដោះអាសន្ន'], teach_en:['Sense of the car size and distance','The vehicle blind spots','Inner-wheel difference (uchiwasa)','Cornering and the temporary stop'],
+    points_km:['ទីតាំងកង់ · ការវាស់ទទឹងរថយន្ត','គម្លាតចំហៀង៖ ចូលជិត ~៧០ ស.ម','ល្បឿន និងបរិមាណបង្វិលចង្កូតសមស្រប','ហ្វ្រាំងជាដំណាក់ៗ (断続)'], points_en:['Tyre position, judging the width','Side clearance: edge in to ~70cm','Right speed and steering amount','Intermittent braking'],
+    cautions_km:['ឲ្យសិស្សគិត៖ ពេលណាត្រូវប្រុងកង់ក្នុង?','ឈប់បណ្ដោះអាសន្ន៖ ក្នុង ១ ម៉ែត្រមុនបន្ទាត់ឈប់','មិនត្រួតពិនិត្យពេលកំពុងផ្លាស់ទី'], cautions_en:['Ask when to watch the inner wheel','Temporary stop: within 1m before the line','Do not check while still moving'],
+    guideLoc:'裏 (ផ្លូវក្រោយ)',
     body_km:`បច្ចេកទេសផ្លូវកោង (カーブ):
 
 • បន្ថយល្បឿន មុនចូលកោង ("ចូលយឺត ចេញលឿន")
@@ -619,6 +631,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-07', no:'技能7', ja:'坂道の通行', stage:1, mins:14,
     km:'ការបើកបរលើផ្លូវជម្រាល', en:'Driving on Slopes',
     goal_km:'ជ្រើសលេខតាមជម្រាល និងចេញដំណើរដោយមិនរអិលថយ', goal_en:'Pick the gear for the slope and start without rolling back',
+    teach_km:['ការចេញដំណើរលើផ្លូវឡើងទ្រេត','ការបើកបរលើផ្លូវចុះទ្រេត'], teach_en:['Uphill hill-start','Driving downhill'],
+    points_km:['ចេញលើផ្លូវទ្រេតដោយមិនរអិលថយ','ការសម្រេចប្រើហ្វ្រាំងដៃ','ចុះ៖ ប្រើ Engine brake'], points_en:['Start on a slope without rolling back','Judging when to use the handbrake','Downhill: use engine braking'],
+    cautions_km:['ចុះទ្រេត៖ មិនប្រើឃ្លាច់ (ប្រើ Engine brake)'], cautions_en:['Downhill: no clutch, rely on engine braking'],
+    guideLoc:'HIKARI',
     body_km:`ផ្លូវឡើង-ចុះ ទីជម្រាល (坂道):
 
 • ឡើងទួល — ចេញដំណើរ ដោយមិនរអិលក្រោយ (坂道発進)
@@ -636,6 +652,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-08', no:'技能8', ja:'後退', stage:1, mins:14,
     km:'ការថយក្រោយ', en:'Reversing',
     goal_km:'ថយក្រោយដោយល្បឿនសមស្រប និងត្រួតពិនិត្យសុវត្ថិភាព', goal_en:'Reverse at a proper speed with safety checks',
+    teach_km:['អារម្មណ៍រថយន្តពេលថយក្រោយ','ចតឆ្នាស (縦列) · បង្វិលទិស','ចេញ-ចូលពីគែមផ្លូវ'], teach_en:['Feel of the car when reversing','Parallel park and direction change','Leaving and stopping at the kerb'],
+    points_km:['ថយក្រោយ៖ ត្រួតពិនិត្យ + ភាពខុសកង់ក្រៅ (外輪差)','ចេញ៖ ត្រៀម → ហ្វ្រាំងដៃ → សញ្ញាស្ដាំ → ពិនិត្យ → ចេញ → បិទសញ្ញា','ឈប់នៅគែម៖ សញ្ញាឆ្វេង → ចូលជិត (ក្នុង ៣០ ស.ម ពីបន្ទាត់ស)','រំលត់៖ ហ្វ្រាំងដៃ → N → បិទសញ្ញា → រំលត់ → R'], points_en:['Reverse: check + outer-wheel difference','Depart: ready, handbrake, right signal, check, go','Kerb stop: left signal, edge in within 30cm','Off: handbrake to N, signal off, off, R'],
+    cautions_km:['ពិនិត្យ​ភាព​ខុស​កង់​ក្រៅ​ឡើងវិញ','ចង្អុលចុងរថយន្តឲ្យត្រូវនឹងបង្គោល'], cautions_en:['Review the outer-wheel difference','Line the nose up with the pole'],
+    guideLoc:'',
     body_km:`ការថយក្រោយ ដោយត្រឹមត្រូវ (後退):
 
 • បែរក្បាលមើលក្រោយផ្ទាល់ (目視)
@@ -653,6 +673,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-09', no:'技能9', ja:'狭路の通行（S字・クランク）', stage:1, mins:18,
     km:'ការបើកបរផ្លូវចង្អៀត (S និង Crank)', en:'Narrow Roads (S-curve & Crank)',
     goal_km:'ឆ្លងផ្លូវចង្អៀត ដោយល្បឿន ទីតាំង និងការបកក្រោយត្រឹមត្រូវ', goal_en:'Pass narrow roads with correct speed, position and turn-around',
+    teach_km:['ការបើកបរល្បឿនយឺត','ការបង្កើតល្បឿនតិចតួច','ការថយក្រោយ (មូលដ្ឋាន)'], teach_en:['Low-speed driving','Making a very low creep speed','Reversing (basics)'],
+    points_km:['រក្សាឃ្លាច់ពាក់កណ្ដាល · ឃ្លាច់ជាដំណាក់ៗ (~2-3 គម/ម)','វិនិច្ឆ័យ៖ ឆ្លងបាន ឬមិនបាន (បើគ្មានគម្លាត ៥០ ស.ម → ឈប់)','ឥរិយាបថពេលថយ៖ មើលពីបង្អួចក្រោយ និងកៅអីបើកបរ'], points_en:['Hold half-clutch, feathered clutch (~2-3 km/h)','Judge if it fits (no 50cm gap then stop)','Reverse posture: rear window vs seat view'],
+    cautions_km:['ល្បឿនលឿនពេក = មិនល្អ','យល់ភាពខុសកង់ក្រៅ (外輪差)'], cautions_en:['Too fast is not acceptable','Understand the outer-wheel difference'],
+    guideLoc:'TH',
     body_km:`ផ្លូវចង្អៀត — ការសាកល្បងជប៉ុនល្បី (狭路):
 
 **S字 (S-curve):** ផ្លូវកោងរាង S — រក្សាកណ្ដាល
@@ -670,6 +694,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-10', no:'技能10', ja:'通行位置の選択と進路変更', stage:1, mins:13,
     km:'ការជ្រើសគន្លង និងការប្ដូរគន្លង', en:'Lane Selection & Changing',
     goal_km:'ជ្រើសគន្លង និងប្ដូរគន្លង ជាមួយការត្រួតពិនិត្យសុវត្ថិភាព', goal_en:'Select and change lanes with proper safety checks',
+    teach_km:['ការផ្លាស់ប្ដូរផ្លូវ','ការឆ្លងចំណុចប្រសព្វ','ចំណុចប្រសព្វមើលមិនច្បាស់'], teach_en:['Changing course','Passing intersections','Poor-visibility intersections'],
+    points_km:['ផ្លាស់ផ្លូវ៖ សកម្មភាពក្រោយត្រួតពិនិត្យ','ឆ្លងប្រសព្វ៖ ត្រៀមហ្វ្រាំង · ពេលវេលាត្រួតពិនិត្យ','ចូលផ្លូវអាទិភាព៖ វិធីត្រួតពិនិត្យ'], points_en:['Change: act after checking','Intersection: cover brake, timing of checks','Entering a priority road: how to check'],
+    cautions_km:['កុំត្រួតពិនិត្យ និងបញ្ជាព្រមគ្នា','ប្រសព្វមើលមិនច្បាស់៖ ទោនមុខ ពង្រីករង្វង់ត្រួតពិនិត្យ'], cautions_en:['Do not check and steer at the same moment','Poor visibility: lean forward, widen the scan'],
+    guideLoc:'裏道 / Aeon 2',
     body_km:`ការប្ដូរគន្លង ដោយសុវត្ថិភាព (進路変更):
 
 • បើកសញ្ញា ៣ វិនាទីមុន (合図)
@@ -687,6 +715,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-11', no:'技能11', ja:'障害物への対応', stage:1, mins:12,
     km:'ការដោះស្រាយឧបសគ្គ', en:'Dealing with Obstacles',
     goal_km:'អានស្ថានភាពឧបសគ្គទាន់ពេល និងឆ្លើយតបសមស្រប', goal_en:'Read obstacles early and respond appropriately',
+    teach_km:['វិធីចៀសឧបសគ្គ','ការការពារអ្នកថ្មើរជើង','ការវិនិច្ឆ័យ និងលំដាប់'], teach_en:['How to avoid obstacles','Protecting pedestrians','Judgement and sequence'],
+    points_km:['លំដាប់៖ មើលរថយន្តផ្ទុយ → សញ្ញា → ត្រួតពិនិត្យ → សញ្ញា → ត្រួតពិនិត្យ','គម្លាតឧបសគ្គ៖ ៥០ ស.ម – ១ ម','គម្លាតអ្នកថ្មើរជើង៖ ១ – ១.៥ ម'], points_en:['Sequence: oncoming, signal, check, signal, check','Obstacle clearance: 50cm to 1m','Pedestrian clearance: 1 to 1.5m'],
+    cautions_km:['ពេលទៅមិនបាន៖ ឈប់ឲ្យមានចន្លោះ ~២ ដងប្រវែងរថយន្ត','គម្លាតប្រែប្រួលតាមទិសអ្នកថ្មើរជើង'], cautions_en:['If blocked, stop leaving ~2 car-lengths','Clearance varies with pedestrian facing'],
+    guideLoc:'TH',
     body_km:`ឧបសគ្គលើផ្លូវ (障害物):
 
 • បន្ថយល្បឿន មុនឆ្លងកាត់
@@ -704,6 +736,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-12', no:'技能12', ja:'信号・標識に従った走行', stage:1, mins:12,
     km:'ការបើកបរតាមភ្លើងសញ្ញា និងផ្លាក', en:'Driving by Signals & Signs',
     goal_km:'អានភ្លើងសញ្ញា និងផ្លាកបានលឿន ហើយអនុវត្តតាម', goal_en:'Quickly read signals and signs and follow them',
+    teach_km:['ការយល់ភ្លើងសញ្ញា','ការត្រួតពិនិត្យសុវត្ថិភាព'], teach_en:['Reading traffic signals','Safety confirmation'],
+    points_km:['ស្គាល់ប្រភេទ៖ ពណ៌ · ព្រួញ','ទស្សន៍ទាយពេលប្ដូរ៖ ភ្លើងអ្នកថ្មើរជើង · រយៈពេលភ្លើងបៃតង','ការប្រើកញ្ចក់ · មើលផ្ទាល់ (目視)'], points_en:['Know the types: colours, arrows','Predict changes: pedestrian light, green length','Using mirrors and direct eye check'],
+    cautions_km:['យល់ថា កញ្ចក់ឃើញអ្វី និងត្រូវមើលអ្វី','ចេះមើលក្រោយពេលបើកបរធម្មតា (ទម្លាប់)'], cautions_en:['Understand what mirrors show and what to look for','Build the habit of rear checks while driving'],
+    guideLoc:'ជុំវិញ',
     body_km:`អនុវត្តន៍ច្បាប់ផ្លូវ ក្នុងសាលា (所内):
 
 • ឈប់ត្រឹមត្រូវ ភ្លើងក្រហម និងផ្លាក STOP (一時停止)
@@ -721,6 +757,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-13', no:'技能13', ja:'交差点の通行（直進・左折・右折）', stage:1, mins:16,
     km:'ការឆ្លងប្រសព្វ (ត្រង់ · ឆ្វេង · ស្ដាំ)', en:'Intersections (Straight · Left · Right)',
     goal_km:'ឆ្លងចំណុចប្រសព្វ (ត្រង់/ឆ្វេង/ស្ដាំ) ដោយប្រុងប្រយ័ត្ន ល្បឿន និងវិធីសុវត្ថិភាព', goal_en:'Cross intersections (straight/left/right) with care, safe speed and method',
+    teach_km:['វិធីបត់ស្ដាំ','វិធីបត់ឆ្វេង','ការឆ្លងចំណុចប្រសព្វ'], teach_en:['How to turn right','How to turn left','Passing through intersections'],
+    points_km:['បត់ស្ដាំ៖ ចូលជិតបន្ទាត់កណ្ដាល','បត់ឆ្វេង៖ ចូលជិត ~៧០ ស.ម · បត់តូច','លំដាប់៖ ត្រួតពិនិត្យ → សញ្ញា → ត្រួតពិនិត្យ → ផ្លាស់ផ្លូវ → ពិនិត្យ (巻き込み)','ត្រួតពិនិត្យ៖ កញ្ចក់ + មើលផ្ទាល់ (ចំណុចងងឹត)'], points_en:['Right: move in near the centre line','Left: edge in to ~70cm, tight turn','Seq: check, signal, check, change, blind-spot check','Check: mirrors + direct eye (blind spots)'],
+    cautions_km:['ការមើលផ្ទាល់ច្រើនតែធូររលុង → ត្រូវធ្វើឲ្យម៉ត់ចត់','យល់ន័យ និងសារៈសំខាន់នៃការពិនិត្យ 巻き込み (កិនកង់)'], cautions_en:['Direct checks tend to get lazy, keep them strict','Understand the meaning of the blind-spot (makikomi) check'],
+    guideLoc:'裏',
     body_km:`ការឆ្លងប្រសព្វ (交差点通行):
 
 **ត្រង់:** ពិនិត្យ ៤ ទិស ល្បឿនសមរម្យ
@@ -912,6 +952,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-24', no:'技能23', ja:'危険を予測した運転', stage:2, mins:14,
     km:'ការបើកបរ ទស្សន៍ទាយគ្រោះថ្នាក់ (អនុវត្ត)', en:'Hazard-Prediction Driving (Practice)',
     goal_km:'ទស្សន៍ទាយគ្រោះថ្នាក់ទាន់ពេល និងជ្រើសសកម្មភាពចៀសវាង', goal_en:'Predict hazards in time and choose avoiding actions',
+    teach_km:['ការទស្សន៍ទាយគ្រោះថ្នាក់','ការទស្សន៍ទាយសកម្មភាពអ្នកដទៃ','សកម្មភាពសុវត្ថិភាពផ្អែកលើការទស្សន៍ទាយ'], teach_en:['Predicting hazards','Predicting others actions','Safe action based on prediction'],
+    points_km:['រកគ្រោះថ្នាក់ដែលមើលមិនឃើញ (潜在的)','ដកហ្គាស · ត្រៀមហ្វ្រាំង','កុំចៀសគ្រោះថ្នាក់ដោយចង្កូតតែម្យ៉ាង'], points_en:['Find hidden, potential hazards','Ease off gas, cover the brake','Do not dodge danger by steering alone'],
+    cautions_km:['ភ្ជាប់ជាមួយមេរៀនទ្រឹស្ដី (学科)','មើលឆ្ងាយ ទស្សន៍ទាយជានិច្ច'], cautions_en:['Links to the theory (gakka) lessons','Look far ahead and always anticipate'],
+    guideLoc:'',
     body_km:`អនុវត្តន៍ការទស្សន៍ទាយ (危険予測運転):
 
 • មើលឆ្ងាយ ស្វែងរកគ្រោះថ្នាក់លាក់
@@ -1383,7 +1427,61 @@ const VideoCard = ({ video, state = {}, onUpdate }) => {
 // ── TextCard (with Japanese unit name + stage badge) ─────────────────────────
 const TextCard = ({ lesson, done, onToggle }) => {
   const [open, setOpen] = React.useState(false);
-  const { tr, lang } = useAppActions();
+  const { tr, lang, role } = useAppActions();
+  const [, forceG] = React.useReducer(x => x + 1, 0);
+
+  // Instructor teaching guide (指導内容 / 指導事項 / 留意事項). Instructor-facing by
+  // default; the instructor can tick "allow students to view" per lesson.
+  const isStaff = role === 'admin' || role === 'instructor';
+  const guideParts = [
+    { key:'teach',    km:'មាតិកាបង្រៀន',            jp:'指導内容', c:'var(--accent)', items: tr(lesson.teach_km,    lesson.teach_en) },
+    { key:'points',   km:'ចំណុចបង្រៀន',             jp:'指導事項', c:'#6246C9',       items: tr(lesson.points_km,   lesson.points_en) },
+    { key:'cautions', km:'ចំណុចត្រូវប្រុងប្រយ័ត្ន', jp:'留意事項', c:'#C98A0A',       items: tr(lesson.cautions_km, lesson.cautions_en) },
+  ];
+  const hasGuide = guideParts.some(p => Array.isArray(p.items) && p.items.length);
+  const guideVisible = isStaff || lesson.guideStudent;
+  const toggleGuideStudent = () => {
+    lesson.guideStudent = !lesson.guideStudent;
+    if (window.__persistLessonsLib) window.__persistLessonsLib();
+    forceG();
+  };
+  const renderGuide = () => {
+    if (!hasGuide || !guideVisible) return null;
+    return (
+      <div style={{ marginTop:18, border:'1px solid var(--border)', borderRadius:12, overflow:'hidden' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 13px', background:'var(--surface-muted)', borderBottom:'1px solid var(--border)' }}>
+          <Icon name="book" size={14}/>
+          <span style={{ fontSize:13, fontWeight:700 }}>{tr('ការណែនាំបង្រៀន','Teaching guide')}</span>
+          <span style={{ fontSize:10, color:'var(--ink-3)', fontFamily:'"JetBrains Mono",monospace' }}>· {tr('សម្រាប់គ្រូ','Instructor')}</span>
+          {lesson.guideLoc && <span style={{ marginLeft:'auto', fontSize:11, color:'var(--ink-3)', background:'var(--surface)', border:'1px solid var(--border)', padding:'2px 9px', borderRadius:99, whiteSpace:'nowrap' }}>📍 {lesson.guideLoc}</span>}
+        </div>
+        {isStaff && (
+          <label style={{ display:'flex', alignItems:'center', gap:9, padding:'9px 13px', borderBottom:'1px solid var(--border)', cursor:'pointer', fontSize:12.5 }}>
+            <input type="checkbox" checked={!!lesson.guideStudent} onChange={toggleGuideStudent} style={{ width:16, height:16, accentColor:'var(--accent)', cursor:'pointer' }}/>
+            <span style={{ color:'var(--ink-2)' }}>{tr('អនុញ្ញាតឲ្យសិស្សមើលឃើញ','Allow students to view')}</span>
+          </label>
+        )}
+        <div style={{ padding:'12px 13px', display:'flex', flexDirection:'column', gap:13 }}>
+          {guideParts.filter(p => Array.isArray(p.items) && p.items.length).map(p => (
+            <div key={p.key}>
+              <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:6 }}>
+                <span style={{ width:8, height:8, borderRadius:2, background:p.c, flexShrink:0 }}/>
+                <span style={{ fontSize:12.5, fontWeight:700, color:p.c }}>{p.km}</span>
+                <span style={{ fontSize:9.5, color:'var(--ink-3)', fontFamily:'"JetBrains Mono",monospace' }}>{p.jp}</span>
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', gap:4, paddingLeft:2 }}>
+                {p.items.map((it,i)=>(
+                  <div key={i} style={{ display:'flex', gap:7, fontSize:13, color:'var(--ink-2)', lineHeight:1.55 }}>
+                    <span style={{ color:p.c, flexShrink:0 }}>•</span><span>{it}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   const renderBody = (text) => {
     const body = text || '';
@@ -1470,6 +1568,7 @@ const TextCard = ({ lesson, done, onToggle }) => {
           </div>
           <div style={{ flex:1, minHeight:0, overflowY:'auto', padding:'14px 20px 18px', fontSize:14, lineHeight:1.8 }}>
             {renderBody(tr(lesson.body_km, lesson.body_en))}
+            {renderGuide()}
           </div>
           <div style={{ flexShrink:0, position:'sticky', bottom:0, background:'var(--surface)', borderTop:'1px solid var(--border)', padding:'12px 20px', display:'flex', justifyContent:'flex-end', gap:8 }}>
             <Btn kind={done ? 'ghost' : 'primary'} onClick={() => { onToggle(lesson.id); setOpen(false); }}>
@@ -1906,8 +2005,11 @@ if (!window.__lessonsSeed) {
 // shipped lessons (e.g. the Stage 3 / AI course) or lack fields added later
 // (e.g. goal_km/goal_en). Merge the seed in WITHOUT discarding user edits:
 //   • a seed lesson whose id is absent  → appended
-//   • a seed lesson already present      → only fills goal_km/goal_en if missing
+//   • a seed lesson already present      → fills any missing content field
 // Idempotent; safe to run after every load.
+// NOT filled: guideStudent — that is instructor-toggled state, never overwritten.
+const SEED_FILL_FIELDS = ['goal_km','goal_en','teach_km','teach_en',
+  'points_km','points_en','cautions_km','cautions_en','guideLoc'];
 window.__mergeSeedLessons = function () {
   const lib = window.__lessonsLib, seed = window.__lessonsSeed;
   if (!lib || !seed) return;
@@ -1919,8 +2021,7 @@ window.__mergeSeedLessons = function () {
       if (!item || !item.id) return;
       const existing = byId.get(item.id);
       if (!existing) { arr.push(item); return; }
-      if (item.goal_km && !existing.goal_km) existing.goal_km = item.goal_km;
-      if (item.goal_en && !existing.goal_en) existing.goal_en = item.goal_en;
+      SEED_FILL_FIELDS.forEach(k => { if (item[k] != null && existing[k] == null) existing[k] = item[k]; });
     });
   });
 };
