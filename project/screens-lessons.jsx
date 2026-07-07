@@ -530,6 +530,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-02', no:'技能2', ja:'自動車の機構と運転装置の取り扱い', stage:1, mins:16,
     km:'យន្តការ និងឧបករណ៍បញ្ជារថយន្ត', en:'Vehicle Mechanism & Controls',
     goal_km:'យល់មុខងារឧបករណ៍បញ្ជា និងប្រើប្រាស់ត្រឹមត្រូវ', goal_en:'Understand and correctly use the driving controls',
+    teach_km:['យន្តការរថយន្ត និងឧបករណ៍បញ្ជា','វិធីបញ្ឆេះម៉ាស៊ីន','ការប្ដូរលេខ · បង្វិលចង្កូត'], teach_en:['Vehicle mechanism and controls','Starting the engine','Gear change and steering'],
+    points_km:['បញ្ឆេះ៖ ហ្វ្រាំង/ឃ្លាច់ → N → បញ្ឆេះ','ការប្ដូរលេខត្រឹមត្រូវ','រំលត់៖ ហ្វ្រាំងដៃ → N → បិទសញ្ញា → រំលត់ → R'], points_en:['Start: brake/clutch to N then ignition','Correct gear changing','Off: handbrake to N, signal off, off, R'],
+    cautions_km:['ប្ដូរលេខ៖ ត្រួតពិនិត្យពេលឈប់ រួចអនុវត្តលើផ្លូវត្រង់','យល់ AT (P·R·N·D) និង MT (ឃ្លាច់ + លេខ)'], cautions_en:['Gears: check when stopped, practise on straights','Know AT (P/R/N/D) and MT (clutch + gears)'],
+    guideLoc:'TH',
     body_km:`ស្គាល់ឧបករណ៍បញ្ជា (運転装置):
 
 **ប្រអប់លេខ Auto (AT):**
@@ -807,6 +811,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-15', no:'技能14', ja:'路上運転の準備と注意', stage:2, mins:14,
     km:'ការរៀបចំ និងប្រុងប្រយ័ត្ន បើកបរលើផ្លូវសាធារណៈ', en:'Preparing for Public-Road Driving',
     goal_km:'រៀបចំ និងប្រុងប្រយ័ត្នត្រឹមត្រូវ មុនចេញផ្លូវសាធារណៈ', goal_en:'Prepare and take proper precautions before public-road driving',
+    teach_km:['ការរៀបចំ និងប្រុងប្រយ័ត្ន មុនចេញផ្លូវសាធារណៈ'], teach_en:['Preparation and care before public-road driving'],
+    points_km:['ពិនិត្យរថយន្ត និងឯកសារមុនចេញ','យល់ភាពខុសរវាងទីលាន និងផ្លូវពិត','រក្សាចម្ងាយ និងល្បឿនសុវត្ថិភាព'], points_en:['Check the car and documents before leaving','Know the difference between yard and real road','Keep safe distance and speed'],
+    cautions_km:['ប្រុងចរាចរណ៍ច្រើនជាងក្នុងទីលាន','ត្រៀមខ្លួនផ្លូវចិត្ត'], cautions_en:['More traffic awareness than in the yard','Be mentally prepared'],
+    guideLoc:'ផ្លូវសាធារណៈ',
     body_km:`ចេញពីសាលា ទៅផ្លូវពិត (路上) ជាមួយ仮免許:
 
 • ផ្លាក "仮免許練習中" ត្រូវបិទ
@@ -887,6 +895,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-19', no:'技能18', ja:'道路・交通状況に合わせた運転', stage:2, mins:14,
     km:'ការបើកបរស្របតាមស្ថានភាពផ្លូវ', en:'Adapting to Road & Traffic Conditions',
     goal_km:'អានស្ថានភាពផ្លូវ និងចរាចរណ៍ ហើយបើកបរឲ្យសមស្រប', goal_en:'Read road and traffic conditions and drive accordingly',
+    teach_km:['ការបើកបរស្របតាមស្ថានភាពផ្លូវ និងចរាចរណ៍'], teach_en:['Driving adapted to road and traffic conditions'],
+    points_km:['អានស្ថានភាព (រាងផ្លូវ · ចរាចរណ៍ · អាកាសធាតុ)','សម្របល្បឿន និងទីតាំង','ទស្សន៍ទាយ និងឆ្លើយតប'], points_en:['Read conditions (road shape, traffic, weather)','Adapt speed and position','Anticipate and respond'],
+    cautions_km:['ផ្លាស់ប្ដូរតាមស្ថានភាពពិត មិនតឹងរ៉ឹង'], cautions_en:['Adjust to the real situation, not rigidly'],
+    guideLoc:'ផ្លូវសាធារណៈ',
     body_km:`សម្របខ្លួនទៅតាមស្ថានភាព (状況判断):
 
 • ផ្លូវចង្អៀត ផ្លូវកកស្ទះ ផ្លូវការសង់
@@ -1109,6 +1121,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-26', no:'AI1', ja:'コース概要', stage:3, mins:12,
     km:'ទិដ្ឋភាពទូទៅនៃវគ្គ', en:'Course Overview',
     goal_km:'យល់ពីទីលានហ្វឹកហ្វឺនទាំងមូល', goal_en:'Understand the whole in-yard course',
+    teach_km:['ទិដ្ឋភាពទូទៅនៃទីលានហ្វឹកហ្វឺន'], teach_en:['Overview of the practice yard'],
+    points_km:['ស្គាល់ផ្លូវ ចំណុចចេញ-ចូល','ស្គាល់ផ្នែកសំខាន់ៗ (ចង្អៀត · ជម្រាល · រថភ្លើង)'], points_en:['Learn the route and entry/exit points','Learn key sections (narrow, slope, crossing)'],
+    cautions_km:['យល់លំដាប់វគ្គ មុនប្រឡងប្ដូរប័ណ្ណ'], cautions_en:['Understand the flow before the conversion exam'],
+    guideLoc:'TH',
     body_km:`ស្គាល់ទីលានហ្វឹកហ្វឺន (ដំណាក់កាលទី៣ · AI):
 
 • ស្គាល់ផ្លូវ ចំណុចចេញ-ចូល និងទិសដៅ
@@ -1124,6 +1140,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-27', no:'AI2', ja:'加減速', stage:3, mins:12,
     km:'ការបង្កើន និងបន្ថយល្បឿន', en:'Acceleration & Deceleration',
     goal_km:'បើកបរមានចង្វាក់ បង្កើន-បន្ថយច្បាស់លាស់', goal_en:'Crisp, well-timed speed changes',
+    teach_km:['ការបង្កើន និងបន្ថយល្បឿន មានចង្វាក់'], teach_en:['Crisp acceleration and deceleration'],
+    points_km:['បង្កើនម៉ឺងម៉ាត់ · បន្ថយទាន់ពេល','រក្សាល្បឿនស្មើ'], points_en:['Accelerate firmly, slow in time','Keep a steady speed'],
+    cautions_km:['បើមានញាប់ញ័រ ត្រូវរកមូលហេតុ និងកែ'], cautions_en:['If wobbly, find the cause and correct it'],
+    guideLoc:'裏',
     body_km:`បង្កើន-បន្ថយល្បឿនឲ្យមានចង្វាក់:
 
 • បង្កើនល្បឿនម៉ឺងម៉ាត់នៅកន្លែងត្រូវ
@@ -1139,6 +1159,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-28', no:'AI3', ja:'踏切', stage:3, mins:12,
     km:'ការឆ្លងកាត់ផ្លូវរថភ្លើង', en:'Railway Level Crossing',
     goal_km:'វិធីឆ្លងកាត់ផ្លូវរថភ្លើងត្រឹមត្រូវ', goal_en:'Correct method to cross a railway',
+    teach_km:['ការឆ្លងផ្លូវរថភ្លើង'], teach_en:['Railway level crossing'],
+    points_km:['ឈប់ពេញមុនផ្លូវរថភ្លើង','បើកកញ្ចក់ ស្ដាប់-មើល ឆ្វេង-ស្ដាំ','ឆ្លងម្ដងទៅ មិនឈប់ពាក់កណ្ដាល'], points_en:['Full stop before the crossing','Open window, look and listen both ways','Cross in one go, never stop halfway'],
+    cautions_km:['កុំប្ដូរលេខពេលកំពុងឆ្លង'], cautions_en:['Do not change gear while crossing'],
+    guideLoc:'',
     body_km:`ការឆ្លងផ្លូវរថភ្លើងឲ្យបានត្រឹមត្រូវ:
 
 • ឈប់ពេញមុនផ្លូវរថភ្លើង
@@ -1154,6 +1178,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-29', no:'AI4', ja:'坂道', stage:3, mins:13,
     km:'ការបើកបរលើជម្រាល', en:'Slope Driving',
     goal_km:'វិធីចេញដំណើរលើផ្លូវទ្រេត ដោយមិនរអិលថយ', goal_en:'Hill start without rolling back',
+    teach_km:['ការចេញដំណើរលើផ្លូវឡើងទ្រេត','ការបើកបរលើផ្លូវចុះទ្រេត'], teach_en:['Uphill hill-start','Driving downhill'],
+    points_km:['ចេញលើផ្លូវទ្រេតដោយមិនរអិលថយ','ការសម្រេចប្រើហ្វ្រាំងដៃ'], points_en:['Start on a slope without rolling back','Judge when to use the handbrake'],
+    cautions_km:['ចុះទ្រេត៖ ប្រើ Engine brake'], cautions_en:['Downhill: use engine braking'],
+    guideLoc:'HIKARI',
     body_km:`ការចេញដំណើរលើជម្រាល:
 
 • ឈប់ត្រង់ចំណុច ទប់ដោយហ្វ្រាំង
@@ -1169,6 +1197,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-30', no:'AI5', ja:'狭路', stage:3, mins:14,
     km:'ការឆ្លងកាត់ផ្លូវតូចចង្អៀត', en:'Narrow Road',
     goal_km:'ល្បឿន ទីតាំង និងការបកក្រោយសមស្រប', goal_en:'Proper speed, position & turn-around',
+    teach_km:['ការឆ្លងផ្លូវចង្អៀត','ការថយក្រោយ (មូលដ្ឋាន)'], teach_en:['Passing narrow roads','Reversing (basics)'],
+    points_km:['រក្សាឃ្លាច់ពាក់កណ្ដាល (~2-3 គម/ម)','វិនិច្ឆ័យ ឆ្លងបាន/មិនបាន (គ្មាន ៥០ ស.ម → ឈប់)'], points_en:['Hold half-clutch (~2-3 km/h)','Judge if it fits (no 50cm gap then stop)'],
+    cautions_km:['ល្បឿនលឿនពេក = មិនល្អ','យល់ភាពខុសកង់ក្រៅ'], cautions_en:['Too fast is not acceptable','Understand the outer-wheel difference'],
+    guideLoc:'TH',
     body_km:`ការឆ្លងផ្លូវតូចចង្អៀត (S / クランク):
 
 • ល្បឿនយឺត គ្រប់គ្រងចង្កូតម៉ត់ចត់
@@ -1184,6 +1216,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-31', no:'AI6', ja:'確認', stage:3, mins:11,
     km:'ការត្រួតពិនិត្យសុវត្ថិភាព', en:'Safety Confirmation',
     goal_km:'ត្រួតពិនិត្យ ៣៦០° ពេលផ្លាស់ប្ដូរផ្លូវ', goal_en:'360° checks when changing course',
+    teach_km:['ការត្រួតពិនិត្យសុវត្ថិភាព'], teach_en:['Safety confirmation'],
+    points_km:['មើលកញ្ចក់ + បែរមើលចំណុចងងឹត (死角)','បើកសញ្ញាមុនរាល់ការផ្លាស់ប្ដូរ','ត្រួតពិនិត្យមុន-ក្រោយ គ្រប់ជំហាន'], points_en:['Mirrors + turn to see blind spots','Signal before every change','Confirm front and rear at each step'],
+    cautions_km:['យល់ថា កញ្ចក់ឃើញអ្វី និងត្រូវមើលអ្វី','ការមើលផ្ទាល់ត្រូវម៉ត់ចត់'], cautions_en:['Know what mirrors show and what to look for','Keep direct checks strict'],
+    guideLoc:'ជុំវិញ',
     body_km:`ការត្រួតពិនិត្យសុវត្ថិភាព:
 
 • មើលកញ្ចក់ + បែរមើលចំណុចងងឹត (死角)
@@ -1199,6 +1235,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-32', no:'AI7', ja:'右折', stage:3, mins:13,
     km:'ការបត់ស្ដាំ', en:'Turning Right',
     goal_km:'ប្រុងប្រយ័ត្ន ល្បឿន និងវិធីត្រឹមត្រូវនៅចំណុចប្រសព្វ', goal_en:'Care, speed & method at intersections',
+    teach_km:['វិធីបត់ស្ដាំ'], teach_en:['How to turn right'],
+    points_km:['ចូលជិតបន្ទាត់កណ្ដាល','លំដាប់៖ ត្រួតពិនិត្យ → សញ្ញា → ត្រួតពិនិត្យ → ផ្លាស់ → ពិនិត្យអាទិភាព','កញ្ចក់ + មើលផ្ទាល់ (ចំណុចងងឹត)'], points_en:['Move in near the centre line','Seq: check, signal, check, change, priority check','Mirrors + direct eye (blind spots)'],
+    cautions_km:['ប្រុងចរាចរណ៍ផ្ទុយ និងអ្នកថ្មើរជើង'], cautions_en:['Watch oncoming traffic and pedestrians'],
+    guideLoc:'裏',
     body_km:`ការបត់ស្ដាំនៅចំណុចប្រសព្វ:
 
 • បើកសញ្ញាមុន ចូលទីតាំងបត់ស្ដាំ
@@ -1214,6 +1254,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-33', no:'AI8', ja:'左折', stage:3, mins:13,
     km:'ការបត់ឆ្វេង', en:'Turning Left',
     goal_km:'ប្រុងប្រយ័ត្ន ល្បឿន និងវិធីត្រឹមត្រូវនៅចំណុចប្រសព្វ', goal_en:'Care, speed & method at intersections',
+    teach_km:['វិធីបត់ឆ្វេង'], teach_en:['How to turn left'],
+    points_km:['ចូលជិត ~៧០ ស.ម · បត់តូច','លំដាប់៖ ត្រួតពិនិត្យ → សញ្ញា → ត្រួតពិនិត្យ → ផ្លាស់ → ពិនិត្យ 巻き込み'], points_en:['Edge in ~70cm, tight turn','Seq: check, signal, check, change, blind-spot check'],
+    cautions_km:['ប្រុងម៉ូតូ/កង់ខាងឆ្វេង (巻き込み)'], cautions_en:['Watch bikes on the left (makikomi)'],
+    guideLoc:'裏',
     body_km:`ការបត់ឆ្វេងនៅចំណុចប្រសព្វ:
 
 • ចូលជិតគែមឆ្វេង បើកសញ្ញាមុន
@@ -1229,6 +1273,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-34', no:'AI9', ja:'進路変更', stage:3, mins:12,
     km:'ការផ្លាស់ប្ដូរផ្លូវ', en:'Lane / Course Change',
     goal_km:'វិធីត្រួតពិនិត្យសុវត្ថិភាពពេលផ្លាស់ប្ដូរ និងបត់', goal_en:'Safety checks when changing/turning',
+    teach_km:['ការផ្លាស់ប្ដូរផ្លូវ'], teach_en:['Changing course'],
+    points_km:['បើកសញ្ញា → មើលកញ្ចក់ → ចំណុចងងឹត','ផ្លាស់ពេលមានចន្លោះសុវត្ថិភាព'], points_en:['Signal, check mirror, blind spot','Change only when the gap is safe'],
+    cautions_km:['កុំត្រួតពិនិត្យ និងបញ្ជាព្រមគ្នា'], cautions_en:['Do not check and steer at the same moment'],
+    guideLoc:'裏',
     body_km:`ការផ្លាស់ប្ដូរផ្លូវ ដោយសុវត្ថិភាព:
 
 • បើកសញ្ញា → មើលកញ្ចក់ → ចំណុចងងឹត
@@ -1244,6 +1292,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-35', no:'AI10', ja:'障害物', stage:3, mins:12,
     km:'ការដោះស្រាយឧបសគ្គ', en:'Dealing with Obstacles',
     goal_km:'អានស្ថានភាពមុន និងឆ្លើយតបសមស្រប', goal_en:'Read the situation early and respond',
+    teach_km:['ការចៀសឧបសគ្គ'], teach_en:['Avoiding obstacles'],
+    points_km:['លំដាប់៖ រថយន្តផ្ទុយ → សញ្ញា → ត្រួតពិនិត្យ → សញ្ញា → ត្រួតពិនិត្យ','គម្លាតឧបសគ្គ៖ ៥០ ស.ម – ១ ម'], points_en:['Seq: oncoming, signal, check, signal, check','Obstacle clearance: 50cm to 1m'],
+    cautions_km:['ពេលទៅមិនបាន៖ ឈប់ឲ្យមានចន្លោះ'], cautions_en:['If blocked, stop leaving room'],
+    guideLoc:'TH',
     body_km:`ការឆ្លងកាត់ឧបសគ្គ:
 
 • អានឧបសគ្គពីចម្ងាយ ទស្សន៍ទាយ
@@ -1259,6 +1311,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-36', no:'AI11', ja:'バック（後退）', stage:3, mins:15,
     km:'ការដកថយ (ចត និងប្ដូរទិស)', en:'Reversing (Park & Turn-around)',
     goal_km:'ចតស្របគ្នា ប្ដូរទិស ចូលយានដ្ឋាន និងបកក្រោយ', goal_en:'Parallel, direction change, garaging, turn-around',
+    teach_km:['ការដកថយ · ចតឆ្នាស · បង្វិលទិស'], teach_en:['Reversing, parallel park, direction change'],
+    points_km:['ថយក្រោយ៖ ត្រួតពិនិត្យ + ភាពខុសកង់ក្រៅ','ចង្អុលចុងរថយន្តឲ្យត្រូវនឹងបង្គោល'], points_en:['Reverse: check + outer-wheel difference','Line the nose up with the pole'],
+    cautions_km:['ថយយឺតៗ ត្រួតពិនិត្យជុំវិញ'], cautions_en:['Reverse slowly, check all around'],
+    guideLoc:'',
     body_km:`ការដកថយ ដោយត្រឹមត្រូវ:
 
 • បង្កើតល្បឿនយឺត ត្រួតពិនិត្យក្រោយ
@@ -1274,6 +1330,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-37', no:'AI12', ja:'コース走行', stage:3, mins:16,
     km:'ការបើកបរពេញវគ្គ', en:'Full Course Driving',
     goal_km:'បើកបរពេញទីលានតាមផ្លូវកំណត់ ដោយរលូន', goal_en:'Drive the full course smoothly',
+    teach_km:['ការបើកបរពេញទីលាន'], teach_en:['Driving the full course'],
+    points_km:['ភ្ជាប់គ្រប់ជំនាញ','រក្សាទីតាំង ល្បឿន និងការត្រួតពិនិត្យ'], points_en:['Combine all skills','Keep position, speed and checks'],
+    cautions_km:['អនុវត្តដូចប្រឡងពិត'], cautions_en:['Practise as in the real exam'],
+    guideLoc:'TH',
     body_km:`ការបើកបរពេញវគ្គ:
 
 • ភ្ជាប់គ្រប់ជំនាញ បើកបរពេញទីលាន
@@ -1289,6 +1349,10 @@ const PRACTICAL_TEXTS = [
     id:'pt-38', no:'AI13', ja:'教習効果の確認（みきわめ）', stage:3, mins:15,
     km:'ការវាយតម្លៃប្រសិទ្ធភាព (បញ្ចប់វគ្គ AI)', en:'Effectiveness Check (AI Stage Assessment)',
     goal_km:'បញ្ជាក់ថាបានស្ទាត់ មុនប្រឡងប្ដូរប័ណ្ណបរទេស', goal_en:'Confirm readiness before the conversion exam',
+    teach_km:['ការវាយតម្លៃ មុនប្រឡងប្ដូរប័ណ្ណ (外免切替)'], teach_en:['Assessment before the conversion exam'],
+    points_km:['គ្រូត្រួតពិនិត្យជំនាញទីលានទាំងអស់','ត្រូវដល់កម្រិត "ល្អ" ទើបប្រឡង'], points_en:['Instructor checks all in-yard skills','Must reach a good level to take the exam'],
+    cautions_km:['បើមិនទាន់ → ហ្វឹកហាត់បន្ថែម'], cautions_en:['If not ready, extra practice'],
+    guideLoc:'TH',
     body_km:`ការវាយតម្លៃ មុនប្រឡងប្ដូរប័ណ្ណបរទេស (外免切替):
 
 • គ្រូត្រួតពិនិត្យជំនាញទីលានទាំងអស់
