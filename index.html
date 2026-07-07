@@ -384,7 +384,7 @@ window.__trRegistry = {
   "Done ✓": "រួច​រាល់",
   "Cancelled": "លុប",
   "Theory": "ទ្រឹស្ដី",
-  "Practical": "អនុវត្តន៍",
+  "Practical": "ការ​អនុ​វត្ត​ន៍",
   "Change this lesson\\'s day?": "ប្ដូរ​ថ្ងៃ​មេរៀន​នេះ?",
   "The lesson will be struck through and greyed in the schedule, but the data is kept (reversible).": "មេរៀន​នឹង​ត្រូវ​ឆូត​បន្ទាត់ និង​ប្រែ​ជា​ពណ៌​ប្រផេះ​ក្នុង​កាលវិភាគ តែ​ទិន្នន័យ​នៅ​ដដែល (អាច​ស្ដារ​មក​វិញ)។",
   "Change day": "ប្ដូរ​ថ្ងៃ",
@@ -1058,8 +1058,9 @@ window.__trRegistry = {
   "Khmer": "ខ្មែរ",
   "Enroll student": "ចុះឈ្មោះ​សិស្ស",
   "Filter": "តម្រង",
+  "AT": "អូ",
+  "MT": "ដៃ",
   "Th": "ទ្រ",
-  "Pr": "អ",
   "Enroll": "ចុះ​ឈ្មោះ​",
   "Avg mock": "មធ្យម",
   "In progress": "កំពុង​រៀន",
@@ -1243,6 +1244,8 @@ window.__trRegistry = {
   "AT · Auto": "AT · លេខ​អូតូ",
   "MT · Manual": "MT · លេខ​ដៃ",
   "PROGRAM HOURS · KH / JP / AI": "ម៉ោង​គោលដៅ​តាម​វគ្គ · KH / JP / AI",
+  "Practical · Auto (AT)": "អនុវត្តន៍ · អូតូ (AT)",
+  "Practical · Manual (MT)": "អនុវត្តន៍ · លេខដៃ (MT)",
   "Theory & practical target hours per phase. The student card shows the hours of the phase the student is currently doing.": "ម៉ោង​គោលដៅ ទ្រឹស្ដី និង​អនុវត្តន៍ សម្រាប់​វគ្គ​នីមួយៗ។ កាត​សិស្ស​បង្ហាញ​ម៉ោង​តាម​វគ្គ​ដែល​សិស្ស​កំពុង​រៀន។",
   "COURSE PRICING": "វគ្គ​សិក្សា & តម្លៃ",
   "Add pricing plan": "បន្ថែម​​ផែន​ការ",
@@ -1759,8 +1762,9 @@ window.__trGroups = {
     "Khmer": "ខ្មែរ",
     "Enroll student": "ចុះឈ្មោះ​សិស្ស",
     "Filter": "តម្រង",
+    "AT": "អូ",
+    "MT": "ដៃ",
     "Th": "ទ្រ",
-    "Pr": "អ",
     "Enroll": "ចុះឈ្មោះ​សិស្ស",
     "Avg mock": "មធ្យម",
     "In progress": "កំពុង​បន្ត",
@@ -2523,6 +2527,8 @@ window.__trGroups = {
     "AT · Auto": "AT · លេខ​អូតូ",
     "MT · Manual": "MT · លេខ​ដៃ",
     "PROGRAM HOURS · KH / JP / AI": "ម៉ោង​គោលដៅ​តាម​វគ្គ · KH / JP / AI",
+    "Practical · Auto (AT)": "អនុវត្តន៍ · អូតូ (AT)",
+    "Practical · Manual (MT)": "អនុវត្តន៍ · លេខដៃ (MT)",
     "Theory & practical target hours per phase. The student card shows the hours of the phase the student is currently doing.": "ម៉ោង​គោលដៅ ទ្រឹស្ដី និង​អនុវត្តន៍ សម្រាប់​វគ្គ​នីមួយៗ។ កាត​សិស្ស​បង្ហាញ​ម៉ោង​តាម​វគ្គ​ដែល​សិស្ស​កំពុង​រៀន។",
     "COURSE PRICING": "វគ្គ​សិក្សា & តម្លៃ",
     "Add pricing plan": "បន្ថែម​​ផែន​ការ",
@@ -45792,22 +45798,65 @@ var StudentsScreenV2 = () => {
       var activePhase = phases.find(p => phSt(p.k) === 'starting') || [...phases].reverse().find(p => phSt(p.k) === 'finished') || phases[0];
       var progHours = window.__schoolSettings && window.__schoolSettings.programHours || {};
       var rawH = progHours[activePhase.k];
-      var cfgH = rawH && typeof rawH === 'object' ? {
-        th: Number(rawH.th) || 0,
-        pr: Number(rawH.pr) || 0
-      } : typeof rawH === 'number' ? {
-        th: 0,
-        pr: rawH
-      } : {
-        th: 10,
-        pr: 15
-      };
+      var cfgH = (() => {
+        if (rawH && typeof rawH === 'object') {
+          if ('prAT' in rawH || 'prMT' in rawH) return {
+            th: Number(rawH.th) || 0,
+            prAT: Number(rawH.prAT) || 0,
+            prMT: Number(rawH.prMT) || 0
+          };
+          var pr = Number(rawH.pr) || 0;
+          return {
+            th: Number(rawH.th) || 0,
+            prAT: pr,
+            prMT: pr
+          };
+        }
+        if (typeof rawH === 'number') return {
+          th: 0,
+          prAT: rawH,
+          prMT: rawH
+        };
+        return {
+          th: 10,
+          prAT: 12,
+          prMT: 15
+        };
+      })();
       var isTheoryLn = l => l.color === 'c' || l.color === 'e';
+      var lessonIsAT = l => {
+        var v = (VEHICLES || []).find(x => x.id === l.veh || x.plate === l.veh);
+        return !!(v && (v.trans === 'AT' || v.trans === 'CVT'));
+      };
       var phaseDone = LESSONS.filter(l => l.studentId === s.id && l.status === 'done' && (l.phase || 'KH') === activePhase.k);
       var thDone = phaseDone.filter(isTheoryLn).reduce((a, l) => a + (l.len || 1), 0);
-      var prDone = phaseDone.filter(l => !isTheoryLn(l)).reduce((a, l) => a + (l.len || 1), 0);
-      var learned = thDone + prDone;
-      var target = Math.max(1, cfgH.th + cfgH.pr);
+      var prAll = phaseDone.filter(l => !isTheoryLn(l));
+      var prATDone = prAll.filter(lessonIsAT).reduce((a, l) => a + (l.len || 1), 0);
+      var prMTDone = prAll.filter(l => !lessonIsAT(l)).reduce((a, l) => a + (l.len || 1), 0);
+      var prShown = [];
+      if (prATDone > 0) prShown.push({
+        label: tr('អូ', 'AT'),
+        done: prATDone,
+        target: cfgH.prAT
+      });
+      if (prMTDone > 0) prShown.push({
+        label: tr('ដៃ', 'MT'),
+        done: prMTDone,
+        target: cfgH.prMT
+      });
+      if (!prShown.length) {
+        if (cfgH.prMT > 0) prShown.push({
+          label: tr('ដៃ', 'MT'),
+          done: 0,
+          target: cfgH.prMT
+        });else if (cfgH.prAT > 0) prShown.push({
+          label: tr('អូ', 'AT'),
+          done: 0,
+          target: cfgH.prAT
+        });
+      }
+      var learned = thDone + prShown.reduce((a, p) => a + p.done, 0);
+      var target = Math.max(1, cfgH.th + prShown.reduce((a, p) => a + p.target, 0));
       var pct = Math.min(1, learned / target);
       var grad = isGraduated(s);
       var ringCol = grad ? '#2E9E5B' : activePhase.color;
@@ -45937,7 +45986,9 @@ var StudentsScreenV2 = () => {
           color: activePhase.color,
           fontWeight: 700
         }
-      }, activePhase.label), " \xB7 ", tr('ទ្រ', 'Th'), " ", thDone, "/", cfgH.th, " \xB7 ", tr('អ', 'Pr'), " ", prDone, "/", cfgH.pr), React.createElement("div", {
+      }, activePhase.label), " \xB7 ", tr('ទ្រ', 'Th'), " ", thDone, "/", cfgH.th, prShown.map((p, i) => React.createElement(React.Fragment, {
+        key: i
+      }, " \xB7 ", p.label, " ", p.done, "/", p.target))), React.createElement("div", {
         style: {
           display: 'flex',
           gap: 5,
@@ -57096,32 +57147,42 @@ if (!window.__schoolSettings.addons) {
 }
 if (window.__schoolSettings.price_AT == null) window.__schoolSettings.price_AT = 200;
 if (window.__schoolSettings.price_MT == null) window.__schoolSettings.price_MT = 230;
-if (!window.__schoolSettings.programHours) {
-  window.__schoolSettings.programHours = {
-    KH: {
-      th: 10,
-      pr: 15
-    },
-    JP: {
-      th: 10,
-      pr: 15
-    },
-    AI: {
-      th: 10,
-      pr: 15
-    }
-  };
-} else {
-  var _ph = window.__schoolSettings.programHours;
-  ['KH', 'JP', 'AI'].forEach(k => {
-    if (typeof _ph[k] === 'number') _ph[k] = {
-      th: 0,
-      pr: _ph[k]
-    };else if (!_ph[k] || typeof _ph[k] !== 'object') _ph[k] = {
-      th: 10,
-      pr: 15
-    };
+{
+  var _DEF = () => ({
+    th: 10,
+    prAT: 12,
+    prMT: 15
   });
+  if (!window.__schoolSettings.programHours) {
+    window.__schoolSettings.programHours = {
+      KH: _DEF(),
+      JP: _DEF(),
+      AI: _DEF()
+    };
+  } else {
+    var _ph = window.__schoolSettings.programHours;
+    ['KH', 'JP', 'AI'].forEach(k => {
+      var v = _ph[k];
+      if (typeof v === 'number') _ph[k] = {
+        th: 0,
+        prAT: v,
+        prMT: v
+      };else if (v && typeof v === 'object') {
+        if (!('prAT' in v) && !('prMT' in v)) {
+          var pr = Number(v.pr) || 0;
+          _ph[k] = {
+            th: Number(v.th) || 0,
+            prAT: pr,
+            prMT: pr
+          };
+        } else _ph[k] = {
+          th: Number(v.th) || 0,
+          prAT: Number(v.prAT) || 0,
+          prMT: Number(v.prMT) || 0
+        };
+      } else _ph[k] = _DEF();
+    });
+  }
 }
 if (!window.__schoolSettings.studentForm) {
   window.__schoolSettings.studentForm = {
@@ -59637,15 +59698,18 @@ var PricingSettings = ({
       kind: 'th',
       l: tr('ទ្រឹស្ដី', 'Theory')
     }, {
-      kind: 'pr',
-      l: tr('អនុវត្តន៍', 'Practical')
+      kind: 'prAT',
+      l: tr('អនុវត្តន៍ · អូតូ (AT)', 'Practical · Auto (AT)')
+    }, {
+      kind: 'prMT',
+      l: tr('អនុវត្តន៍ · លេខដៃ (MT)', 'Practical · Manual (MT)')
     }].map(({
       kind,
       l
-    }) => React.createElement("div", {
+    }, ki) => React.createElement("div", {
       key: kind,
       style: {
-        marginBottom: kind === 'th' ? 9 : 0
+        marginBottom: ki < 2 ? 9 : 0
       }
     }, React.createElement("div", {
       style: {

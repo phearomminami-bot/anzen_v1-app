@@ -78,15 +78,22 @@ if (window.__schoolSettings.price_MT == null) window.__schoolSettings.price_MT =
 // Target training hours per tracking phase (KH / JP / AI), split into theory and
 // practical. The student card shows the hours of whichever phase the student is
 // currently doing.
-if (!window.__schoolSettings.programHours) {
-  window.__schoolSettings.programHours = { KH:{th:10,pr:15}, JP:{th:10,pr:15}, AI:{th:10,pr:15} };
-} else {
-  // Migrate legacy flat numbers ({KH:15}) → {th,pr}. Old value = practical.
-  const _ph = window.__schoolSettings.programHours;
-  ['KH','JP','AI'].forEach(k => {
-    if (typeof _ph[k] === 'number') _ph[k] = { th:0, pr:_ph[k] };
-    else if (!_ph[k] || typeof _ph[k] !== 'object') _ph[k] = { th:10, pr:15 };
-  });
+// Each phase holds { th (theory), prAT (practical · auto), prMT (practical · manual) }.
+{
+  const _DEF = () => ({ th:10, prAT:12, prMT:15 });
+  if (!window.__schoolSettings.programHours) {
+    window.__schoolSettings.programHours = { KH:_DEF(), JP:_DEF(), AI:_DEF() };
+  } else {
+    const _ph = window.__schoolSettings.programHours;
+    ['KH','JP','AI'].forEach(k => {
+      const v = _ph[k];
+      if (typeof v === 'number') _ph[k] = { th:0, prAT:v, prMT:v };                       // legacy flat → practical
+      else if (v && typeof v === 'object') {
+        if (!('prAT' in v) && !('prMT' in v)) { const pr = Number(v.pr)||0; _ph[k] = { th:Number(v.th)||0, prAT:pr, prMT:pr }; }  // {th,pr} → split
+        else _ph[k] = { th:Number(v.th)||0, prAT:Number(v.prAT)||0, prMT:Number(v.prMT)||0 };
+      } else _ph[k] = _DEF();
+    });
+  }
 }
 if (!window.__schoolSettings.studentForm) {
   window.__schoolSettings.studentForm = {
@@ -1130,8 +1137,10 @@ const PricingSettings = ({ onDirty }) => {
             return (
             <div key={p.k} style={{padding:14,border:'1px solid var(--border)',borderRadius:8,background:'var(--surface-muted)'}}>
               <div style={{fontSize:12,marginBottom:9,fontWeight:800,color:p.color}}>{p.label}</div>
-              {[{kind:'th',l:tr('ទ្រឹស្ដី','Theory')},{kind:'pr',l:tr('អនុវត្តន៍','Practical')}].map(({kind,l}) => (
-                <div key={kind} style={{marginBottom:kind==='th'?9:0}}>
+              {[{kind:'th',l:tr('ទ្រឹស្ដី','Theory')},
+                {kind:'prAT',l:tr('អនុវត្តន៍ · អូតូ (AT)','Practical · Auto (AT)')},
+                {kind:'prMT',l:tr('អនុវត្តន៍ · លេខដៃ (MT)','Practical · Manual (MT)')}].map(({kind,l},ki) => (
+                <div key={kind} style={{marginBottom:ki<2?9:0}}>
                   <div style={{fontSize:10,color:'var(--ink-3)',marginBottom:3,fontWeight:500}}>{l}</div>
                   <div style={{display:'flex',alignItems:'center',gap:6}}>
                     <input type="number" min="0" value={h[kind] ?? 0}
