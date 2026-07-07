@@ -29,21 +29,21 @@ const lessonShort = (l) => {
 const isSunday = (dateStr) => !!dateStr && new Date(dateStr + 'T00:00:00').getDay() === 0;
 
 // ── Per-student schedule colours (auto-assigned, recycled on graduation) ─────
+// Per-student palette. Deliberately excludes green and amber/yellow so student
+// colours never clash with the schedule's Exam (green) and Application (amber).
 const STUDENT_PALETTE = [
   { bg:'#D6E4F5', fg:'#1A4F96', bd:'#9FC0E8' }, // blue
-  { bg:'#D4F0E4', fg:'#1A6B3C', bd:'#96D9B8' }, // green
-  { bg:'#FAE8CC', fg:'#9B4D10', bd:'#F0C88A' }, // amber
   { bg:'#E5DAF5', fg:'#5B2EA0', bd:'#C8ADED' }, // purple
   { bg:'#F4DEDD', fg:'#B0413E', bd:'#E8B4B2' }, // red
   { bg:'#D3EDF5', fg:'#0E6B8A', bd:'#A5D8E8' }, // cyan
   { bg:'#F5D9E8', fg:'#A02060', bd:'#EBADC9' }, // pink
-  { bg:'#E2EFD9', fg:'#4A7A1A', bd:'#C2DBA8' }, // lime
-  { bg:'#F0E2D0', fg:'#7A5A2E', bd:'#DCC4A0' }, // brown
   { bg:'#DCE0F5', fg:'#3A3EA0', bd:'#B5BCEC' }, // indigo
-  { bg:'#F5E6CC', fg:'#8A6A10', bd:'#E8D29A' }, // gold
-  { bg:'#D9F0EC', fg:'#1A7A6B', bd:'#A8DDD4' }, // teal
+  { bg:'#D9F0EC', fg:'#12786B', bd:'#A8DDD4' }, // teal (blue-green)
   { bg:'#EFD9F0', fg:'#8A2E8A', bd:'#DCABDD' }, // magenta
   { bg:'#E0E4E8', fg:'#4A5560', bd:'#C0C8D0' }, // slate
+  { bg:'#F7D9DF', fg:'#A0203E', bd:'#EDABB8' }, // crimson
+  { bg:'#DAD9F5', fg:'#3E2EA0', bd:'#B5B2EC' }, // royal
+  { bg:'#ECD9F0', fg:'#6A2E7A', bd:'#D4ABDD' }, // plum
 ];
 const FINISHED_STUDENT_COLOR = { bg:'#EDEDEA', fg:'#9A9A93', bd:'#D8D8D2' }; // graduated → muted
 const isStudentFinished = (s) => !!s && (s.status === 'Cleared' || s.exam_result === 'pass');
@@ -92,15 +92,14 @@ const _lum = (h) => { const [r,g,b]=_hexRgb(h).map(v=>v/255); return 0.2126*r+0.
 const _autoText = (bg) => _lum(bg) > 0.55 ? '#16181d' : '#ffffff';   // guarantee legible text
 const isTheoryLesson = (l) => l && (l.color === 'c' || l.color === 'e');
 
-// Returns {bg, bd, accent, text} for a lesson block, coloured by LESSON TYPE:
-// Practical (អនុវត្តន៍) = green, Theory (ទ្រឹស្ដី) = violet. Vehicle AT/MT badges
-// keep their own blue/red elsewhere. Solid light grounds read on light + dark.
-const LESSON_TYPE_COLORS = {
-  practical: { bg:'#E4F3EA', bd:'#B6DEC5', accent:'#2E9E5B', text:'#1E6E3E' },
-  theory:    { bg:'#ECE8FA', bd:'#CFC4F0', accent:'#6246C9', text:'#432B96' },
+// Returns {bg, bd, accent, text} for a lesson block, coloured PER STUDENT (each
+// student has a distinct hue from STUDENT_PALETTE, which avoids exam-green and
+// apply-amber). Within a student: Theory = darker ground, Practical = lighter.
+const lessonBlockColor = (l, studentMode) => {
+  const base = studentColor(l && l.studentId) || { bg:'#E8EAED', fg:'#4A5560', bd:'#CBD0D6' };
+  const bg = isTheoryLesson(l) ? _mix(base.bg, base.fg, 0.30) : base.bg;
+  return { bg, bd: base.bd, accent: base.fg, text: _autoText(bg) };
 };
-const lessonBlockColor = (l, studentMode) =>
-  isTheoryLesson(l) ? LESSON_TYPE_COLORS.theory : LESSON_TYPE_COLORS.practical;
 
 
 // ── Availability helper ────────────────────────────────────────────────────
@@ -1265,9 +1264,11 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
         </div>
       ) : (
         <div style={{display:'flex',gap:14,padding:'8px 4px',fontSize:11,color:'var(--ink-3)',flexWrap:'wrap',alignItems:'center'}}>
-          <span style={{fontWeight:600,color:'var(--ink-2)'}}>{tr('ប្រភេទ​មេរៀន','Lesson type')}:</span>
-          <span style={{display:'flex',alignItems:'center',gap:5}}><span style={{width:13,height:13,borderRadius:3,background:'#E4F3EA',borderLeft:'3px solid #2E9E5B'}}/>{tr('អនុវត្តន៍','Practical')}</span>
-          <span style={{display:'flex',alignItems:'center',gap:5}}><span style={{width:13,height:13,borderRadius:3,background:'#ECE8FA',borderLeft:'3px solid #6246C9'}}/>{tr('ទ្រឹស្ដី','Theory')}</span>
+          <span style={{fontWeight:600,color:'var(--ink-2)'}}>{tr('ពណ៌​មេរៀន','Lesson colour')}:</span>
+          <span>{tr('តាម​សិស្ស​ម្នាក់ៗ · ស្រាល=អនុវត្តន៍ · ចាស់=ទ្រឹស្ដី','per student · light=practical · dark=theory')}</span>
+          <span style={{width:1,height:14,background:'var(--border)'}}/>
+          <span style={{display:'flex',alignItems:'center',gap:5}}><span style={{width:13,height:13,borderRadius:3,background:'rgba(18,163,2,.14)',borderLeft:'3px solid #12A302'}}/>{tr('ប្រឡង','Exam')}</span>
+          <span style={{display:'flex',alignItems:'center',gap:5}}><span style={{width:13,height:13,borderRadius:3,background:'rgba(202,138,4,.18)',borderLeft:'3px solid #CA8A04'}}/>{tr('ដាក់ពាក្យ','Apply')}</span>
           <span style={{width:1,height:14,background:'var(--border)'}}/>
           <span style={{fontWeight:600,color:'var(--ink-2)'}}>{tr('ឡាន','Vehicle')}:</span>
           <span style={{display:'flex',alignItems:'center',gap:5}}><span style={{fontSize:8,fontWeight:700,padding:'1px 5px',borderRadius:3,background:'#2A5DB0',color:'#fff'}}>AT</span>{tr('អូតូ','Auto')}</span>
