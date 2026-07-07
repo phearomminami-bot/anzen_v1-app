@@ -178,28 +178,50 @@ const CvLessonRow = ({ l, offset = 0, h, total = 1, cumNo, tr, onSave, readOnly 
 
             <div style={lbl}>{tr('មេរៀន (ពី Tab Lessons)','Lessons (from Tab Lessons)')}</div>
             {lessonIds.length > 0 && (
-              <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:8}}>
-                {allLib.filter(u=>lessonIds.includes(u.id)).map(u=>(
-                  <div key={u.id} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'4px 9px',
-                    background:'var(--accent-soft)',border:'1px solid var(--accent)',borderRadius:6,
-                    fontSize:12,fontWeight:500,color:'var(--accent)'}}>
-                    {u.no ? lessonNumOf(u.no)+' · ' : ''}{tr(u.km,u.en)}
-                    <button onClick={()=>setLessonIds(prev=>prev.filter(x=>x!==u.id))} style={{
-                      border:'none',background:'none',cursor:'pointer',color:'var(--accent)',
-                      fontSize:14,lineHeight:1,padding:0,display:'flex',alignItems:'center'}}>×</button>
+              <div style={{display:'flex',flexDirection:'column',gap:6,marginBottom:8}}>
+                {allLib.filter(u=>lessonIds.includes(u.id)).map(u=>{
+                  const goal = tr(u.goal_km||'', u.goal_en||'');
+                  return (
+                  <div key={u.id}>
+                    <div style={{display:'inline-flex',alignItems:'center',gap:5,padding:'4px 9px',
+                      background:'var(--accent-soft)',border:'1px solid var(--accent)',borderRadius:6,
+                      fontSize:12,fontWeight:500,color:'var(--accent)'}}>
+                      {u.no ? lessonNumOf(u.no)+' · ' : ''}{tr(u.km,u.en)}
+                      <button onClick={()=>setLessonIds(prev=>prev.filter(x=>x!==u.id))} style={{
+                        border:'none',background:'none',cursor:'pointer',color:'var(--accent)',
+                        fontSize:14,lineHeight:1,padding:0,display:'flex',alignItems:'center'}}>×</button>
+                    </div>
+                    {goal && (
+                      <div style={{marginTop:4,padding:'6px 10px',background:'rgba(46,158,91,.10)',
+                        borderLeft:'3px solid var(--good)',borderRadius:'0 6px 6px 0',fontSize:11.5,color:'var(--ink-2)',lineHeight:1.5}}>
+                        <span style={{fontSize:9,color:'var(--good)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.05em',marginRight:6}}>{tr('គោលដៅ','GOAL')}</span>{goal}
+                      </div>
+                    )}
                   </div>
-                ))}
+                );})}
               </div>
             )}
             {allLib.length === 0 ? (
               <div style={{fontSize:12,color:'var(--ink-3)'}}>{tr('មិនទាន់មានមេរៀននៅ Tab Lessons','No lessons defined in Tab Lessons')}</div>
             ) : (
               <select value="" onChange={e=>{ const id=e.target.value; if(id && !lessonIds.includes(id)) setLessonIds(prev=>[...prev,id]); }} style={fieldStyle}>
-                {/* Only offer curriculum matching this lesson's type: theory→theory, practical→practical. */}
+                {/* Only offer curriculum matching this lesson's type: theory→theory, practical→practical. Grouped by stage. */}
                 <option value="">+ {tr('បន្ថែម​មេរៀន','Add lesson')}</option>
-                {(isTheory ? groups.theory : groups.practical).filter(u=>!lessonIds.includes(u.id)).map(u=>(
-                  <option key={u.id} value={u.id}>{u.no?lessonNumOf(u.no)+' · ':''}{tr(u.km,u.en)}</option>
-                ))}
+                {(() => {
+                  const pool = (isTheory ? groups.theory : groups.practical).filter(u=>!lessonIds.includes(u.id));
+                  const STG = [
+                    {s:1, km:'ដំណាក់កាលទី១ · មូលដ្ឋាន', en:'Stage 1 · Basics'},
+                    {s:2, km:'ដំណាក់កាលទី២ · កម្រិតខ្ពស់', en:'Stage 2 · Applied'},
+                    {s:3, km:'ដំណាក់កាលទី៣ · AI', en:'Stage 3 · AI'},
+                  ];
+                  const known = STG.map(g=>g.s);
+                  const optOf = (u)=><option key={u.id} value={u.id}>{u.no?lessonNumOf(u.no)+' · ':''}{tr(u.km,u.en)}</option>;
+                  const other = pool.filter(u=>!known.includes(u.stage));
+                  return [
+                    ...STG.map(g=>{ const list=pool.filter(u=>u.stage===g.s); return list.length ? <optgroup key={g.s} label={tr(g.km,g.en)}>{list.map(optOf)}</optgroup> : null; }),
+                    other.length ? <optgroup key="other" label={tr('ផ្សេងៗ','Other')}>{other.map(optOf)}</optgroup> : null,
+                  ];
+                })()}
               </select>
             )}
 
@@ -332,7 +354,7 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
     const all = [...(lib.theoryTexts||[]), ...(lib.practicalTexts||[]), ...(lib.theoryVideos||[]), ...(lib.practicalVideos||[])];
     const num = (no)=>{ const m=String(no||'').match(/\d+/); return m?m[0]:String(no||'').trim(); };
     if (Array.isArray(lessonIds) && lessonIds.length) {
-      return lessonIds.map(id=>{ const u=all.find(x=>x.id===id); if(!u) return null; const name = lang==='en' ? (u.en||u.km||'') : (u.km||u.en||''); return {no:num(u.no), name}; }).filter(Boolean);
+      return lessonIds.map(id=>{ const u=all.find(x=>x.id===id); if(!u) return null; const name = lang==='en' ? (u.en||u.km||'') : (u.km||u.en||''); const goal = lang==='en' ? (u.goal_en||u.goal_km||'') : (u.goal_km||u.goal_en||''); return {no:num(u.no), name, goal}; }).filter(Boolean);
     }
     if (lessonNo) return String(lessonNo).split(',').map(x=>({no:num(x),name:''})).filter(c=>c.no);
     return [];
@@ -369,8 +391,12 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
   const lessonRowHtml = (l, o, phaseHourMap) => {
     const f = hourFbOf(l, o);
     const it = instById(l.instId); const inst = it ? esc(it.en||it.name) : '—';
-    const coveredArr = coveredFor(f.lessonIds, f.lessonNo).map(c => esc(c.no + (c.name ? ' '+c.name : '')));
-    const coveredHtml = coveredArr.length ? '<div style="color:#1A4F96;margin-top:2px">' + coveredArr.map(c=>'<div>'+c+'</div>').join('') + '</div>' : '';
+    const coveredArr = coveredFor(f.lessonIds, f.lessonNo);
+    const coveredHtml = coveredArr.length ? '<div style="color:#1A4F96;margin-top:2px">' + coveredArr.map(c=>{
+      const line = esc(c.no + (c.name ? ' '+c.name : ''));
+      const goal = c.goal ? '<div style="color:#1a7a44;font-style:italic;font-size:10px">'+L('គោលដៅ','Goal')+': '+esc(c.goal)+'</div>' : '';
+      return '<div>'+line+goal+'</div>';
+    }).join('') + '</div>' : '';
     const fb = [];
     if (f.rating)     fb.push('<div>'+stars(f.rating)+'</div>');
     if (f.didWell)    fb.push('<div><b>'+L('ធ្វើបានល្អ','Did well')+':</b> '+esc(T(f.didWell))+'</div>');

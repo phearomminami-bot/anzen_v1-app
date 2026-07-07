@@ -917,6 +917,206 @@ const PRACTICAL_TEXTS = [
 • If not ready → extra lessons (補習)
 • Next → 卒業検定 → final written test (本免)`,
   },
+
+  // ───────── 第3段階 · AI（外免切替） · in-yard course (Stage 3) ─────────
+  // Foreign-licence conversion (外免切替) practical course — 13 items.
+  // Each carries a short goal_km/goal_en (指導内容と習得目標) shown in the
+  // lesson picker and the PDF record book.
+  {
+    id:'pt-26', no:'AI1', ja:'コース概要', stage:3, mins:12,
+    km:'ទិដ្ឋភាពទូទៅនៃវគ្គ', en:'Course Overview',
+    goal_km:'យល់ពីទីលានហ្វឹកហ្វឺនទាំងមូល', goal_en:'Understand the whole in-yard course',
+    body_km:`ស្គាល់ទីលានហ្វឹកហ្វឺន (ដំណាក់កាលទី៣ · AI):
+
+• ស្គាល់ផ្លូវ ចំណុចចេញ-ចូល និងទិសដៅ
+• ស្គាល់ផ្នែកសំខាន់ៗ (ផ្លូវចង្អៀត ជម្រាល ផ្លូវរថភ្លើង)
+• យល់លំដាប់វគ្គ មុនប្រឡងប្ដូរប័ណ្ណបរទេស`,
+    body_en:`Get to know the practice course (Stage 3 · AI):
+
+• Learn the route, entry/exit points and direction
+• Learn key sections (narrow road, slope, crossing)
+• Understand the test flow before the licence-conversion exam`,
+  },
+  {
+    id:'pt-27', no:'AI2', ja:'加減速', stage:3, mins:12,
+    km:'ការបង្កើន និងបន្ថយល្បឿន', en:'Acceleration & Deceleration',
+    goal_km:'បើកបរមានចង្វាក់ បង្កើន-បន្ថយច្បាស់លាស់', goal_en:'Crisp, well-timed speed changes',
+    body_km:`បង្កើន-បន្ថយល្បឿនឲ្យមានចង្វាក់:
+
+• បង្កើនល្បឿនម៉ឺងម៉ាត់នៅកន្លែងត្រូវ
+• បន្ថយល្បឿនទាន់ពេលមុនផ្លូវកោង/ចំណុច
+• រក្សាល្បឿនស្មើ មិនញាប់ញ័រ`,
+    body_en:`Crisp acceleration and deceleration:
+
+• Accelerate firmly where appropriate
+• Slow down in time before curves / points
+• Keep a steady speed, no jerky changes`,
+  },
+  {
+    id:'pt-28', no:'AI3', ja:'踏切', stage:3, mins:12,
+    km:'ការឆ្លងកាត់ផ្លូវរថភ្លើង', en:'Railway Level Crossing',
+    goal_km:'វិធីឆ្លងកាត់ផ្លូវរថភ្លើងត្រឹមត្រូវ', goal_en:'Correct method to cross a railway',
+    body_km:`ការឆ្លងផ្លូវរថភ្លើងឲ្យបានត្រឹមត្រូវ:
+
+• ឈប់ពេញមុនផ្លូវរថភ្លើង
+• បើកកញ្ចក់ ស្ដាប់-មើល ឆ្វេង-ស្ដាំ
+• ឆ្លងម្ដងទៅមិនឈប់ពាក់កណ្ដាល`,
+    body_en:`Cross a railway correctly:
+
+• Make a full stop before the crossing
+• Open the window, look and listen both ways
+• Cross in one go — never stop halfway`,
+  },
+  {
+    id:'pt-29', no:'AI4', ja:'坂道', stage:3, mins:13,
+    km:'ការបើកបរលើជម្រាល', en:'Slope Driving',
+    goal_km:'វិធីចេញដំណើរលើផ្លូវទ្រេត ដោយមិនរអិលថយ', goal_en:'Hill start without rolling back',
+    body_km:`ការចេញដំណើរលើជម្រាល:
+
+• ឈប់ត្រង់ចំណុច ទប់ដោយហ្វ្រាំង
+• សម្របហ្វ្រាំង-ហ្គាស ចេញឡើងដោយមិនរអិលថយ
+• រក្សាល្បឿននឹងនរលើផ្លូវទ្រេត`,
+    body_en:`Starting on a slope:
+
+• Stop at the mark, hold with the brake
+• Balance brake/throttle, move off without rolling back
+• Keep a steady speed on the incline`,
+  },
+  {
+    id:'pt-30', no:'AI5', ja:'狭路', stage:3, mins:14,
+    km:'ការឆ្លងកាត់ផ្លូវតូចចង្អៀត', en:'Narrow Road',
+    goal_km:'ល្បឿន ទីតាំង និងការបកក្រោយសមស្រប', goal_en:'Proper speed, position & turn-around',
+    body_km:`ការឆ្លងផ្លូវតូចចង្អៀត (S / クランク):
+
+• ល្បឿនយឺត គ្រប់គ្រងចង្កូតម៉ត់ចត់
+• រក្សាទីតាំងកណ្ដាលផ្លូវ
+• បើកាំបិទ → បកក្រោយ (切り返し) ដោយសុវត្ថិភាព`,
+    body_en:`Passing narrow roads (S-curve / crank):
+
+• Slow speed, precise steering control
+• Keep a central road position
+• If blocked → reverse-adjust (切り返し) safely`,
+  },
+  {
+    id:'pt-31', no:'AI6', ja:'確認', stage:3, mins:11,
+    km:'ការត្រួតពិនិត្យសុវត្ថិភាព', en:'Safety Confirmation',
+    goal_km:'ត្រួតពិនិត្យ ៣៦០° ពេលផ្លាស់ប្ដូរផ្លូវ', goal_en:'360° checks when changing course',
+    body_km:`ការត្រួតពិនិត្យសុវត្ថិភាព:
+
+• មើលកញ្ចក់ + បែរមើលចំណុចងងឹត (死角)
+• បើកសញ្ញាមុនរាល់ការផ្លាស់ប្ដូរ
+• ត្រួតពិនិត្យមុន-ក្រោយ គ្រប់ជំហាន`,
+    body_en:`Safety confirmation:
+
+• Check mirrors + turn to see blind spots (死角)
+• Signal before every change
+• Confirm front and rear at each step`,
+  },
+  {
+    id:'pt-32', no:'AI7', ja:'右折', stage:3, mins:13,
+    km:'ការបត់ស្ដាំ', en:'Turning Right',
+    goal_km:'ប្រុងប្រយ័ត្ន ល្បឿន និងវិធីត្រឹមត្រូវនៅចំណុចប្រសព្វ', goal_en:'Care, speed & method at intersections',
+    body_km:`ការបត់ស្ដាំនៅចំណុចប្រសព្វ:
+
+• បើកសញ្ញាមុន ចូលទីតាំងបត់ស្ដាំ
+• ប្រុងចរាចរណ៍ផ្ទុយ និងអ្នកថ្មើរជើង
+• បត់ដោយល្បឿនសមស្រប តាមផ្លូវត្រឹមត្រូវ`,
+    body_en:`Turning right at an intersection:
+
+• Signal early, move to the right-turn position
+• Watch oncoming traffic and pedestrians
+• Turn at a safe speed on the correct path`,
+  },
+  {
+    id:'pt-33', no:'AI8', ja:'左折', stage:3, mins:13,
+    km:'ការបត់ឆ្វេង', en:'Turning Left',
+    goal_km:'ប្រុងប្រយ័ត្ន ល្បឿន និងវិធីត្រឹមត្រូវនៅចំណុចប្រសព្វ', goal_en:'Care, speed & method at intersections',
+    body_km:`ការបត់ឆ្វេងនៅចំណុចប្រសព្វ:
+
+• ចូលជិតគែមឆ្វេង បើកសញ្ញាមុន
+• ប្រុងម៉ូតូ/កង់ និងអ្នកថ្មើរជើងខាងឆ្វេង (巻き込み)
+• បត់តូច ជិតគែម ដោយល្បឿនយឺត`,
+    body_en:`Turning left at an intersection:
+
+• Move close to the left edge, signal early
+• Watch for bikes/pedestrians on the left (巻き込み)
+• Take a tight line near the edge at low speed`,
+  },
+  {
+    id:'pt-34', no:'AI9', ja:'進路変更', stage:3, mins:12,
+    km:'ការផ្លាស់ប្ដូរផ្លូវ', en:'Lane / Course Change',
+    goal_km:'វិធីត្រួតពិនិត្យសុវត្ថិភាពពេលផ្លាស់ប្ដូរ និងបត់', goal_en:'Safety checks when changing/turning',
+    body_km:`ការផ្លាស់ប្ដូរផ្លូវ ដោយសុវត្ថិភាព:
+
+• បើកសញ្ញា → មើលកញ្ចក់ → ចំណុចងងឹត
+• ផ្លាស់ថ្នមៗ ពេលមានចន្លោះសុវត្ថិភាព
+• បញ្ចប់សញ្ញា ក្រោយផ្លាស់រួច`,
+    body_en:`Changing course safely:
+
+• Signal → check mirror → blind spot
+• Move gently only when the gap is safe
+• Cancel the signal after completing`,
+  },
+  {
+    id:'pt-35', no:'AI10', ja:'障害物', stage:3, mins:12,
+    km:'ការដោះស្រាយឧបសគ្គ', en:'Dealing with Obstacles',
+    goal_km:'អានស្ថានភាពមុន និងឆ្លើយតបសមស្រប', goal_en:'Read the situation early and respond',
+    body_km:`ការឆ្លងកាត់ឧបសគ្គ:
+
+• អានឧបសគ្គពីចម្ងាយ ទស្សន៍ទាយ
+• បើកសញ្ញា ចៀសដោយរក្សាចម្ងាយសុវត្ថិភាព
+• ប្រុងចរាចរណ៍ផ្ទុយ មុនចៀស`,
+    body_en:`Passing obstacles:
+
+• Read obstacles from afar, anticipate
+• Signal and go around keeping safe clearance
+• Check oncoming traffic before pulling out`,
+  },
+  {
+    id:'pt-36', no:'AI11', ja:'バック（後退）', stage:3, mins:15,
+    km:'ការដកថយ (ចត និងប្ដូរទិស)', en:'Reversing (Park & Turn-around)',
+    goal_km:'ចតស្របគ្នា ប្ដូរទិស ចូលយានដ្ឋាន និងបកក្រោយ', goal_en:'Parallel, direction change, garaging, turn-around',
+    body_km:`ការដកថយ ដោយត្រឹមត្រូវ:
+
+• បង្កើតល្បឿនយឺត ត្រួតពិនិត្យក្រោយ
+• ចតស្របគ្នា (縦列) និងចូលយានដ្ឋាន (車庫入れ)
+• ប្ដូរទិស (方向変換) + បកក្រោយ (切り返し)`,
+    body_en:`Reversing correctly:
+
+• Keep a slow speed, check behind
+• Parallel park (縦列) and garage the car (車庫入れ)
+• Direction change (方向変換) + reverse-adjust (切り返し)`,
+  },
+  {
+    id:'pt-37', no:'AI12', ja:'コース走行', stage:3, mins:16,
+    km:'ការបើកបរពេញវគ្គ', en:'Full Course Driving',
+    goal_km:'បើកបរពេញទីលានតាមផ្លូវកំណត់ ដោយរលូន', goal_en:'Drive the full course smoothly',
+    body_km:`ការបើកបរពេញវគ្គ:
+
+• ភ្ជាប់គ្រប់ជំនាញ បើកបរពេញទីលាន
+• រក្សាទីតាំង ល្បឿន និងការត្រួតពិនិត្យ
+• អនុវត្តដូចប្រឡងពិត`,
+    body_en:`Driving the full course:
+
+• Combine all skills across the whole course
+• Keep position, speed and safety checks
+• Practise as if in the real exam`,
+  },
+  {
+    id:'pt-38', no:'AI13', ja:'教習効果の確認（みきわめ）', stage:3, mins:15,
+    km:'ការវាយតម្លៃប្រសិទ្ធភាព (បញ្ចប់វគ្គ AI)', en:'Effectiveness Check (AI Stage Assessment)',
+    goal_km:'បញ្ជាក់ថាបានស្ទាត់ មុនប្រឡងប្ដូរប័ណ្ណបរទេស', goal_en:'Confirm readiness before the conversion exam',
+    body_km:`ការវាយតម្លៃ មុនប្រឡងប្ដូរប័ណ្ណបរទេស (外免切替):
+
+• គ្រូត្រួតពិនិត្យជំនាញទីលានទាំងអស់
+• ត្រូវដល់កម្រិត "ល្អ" ទើបអាចប្រឡង
+• បើមិនទាន់ → ហ្វឹកហាត់បន្ថែម`,
+    body_en:`Assessment before the licence-conversion exam (外免切替):
+
+• Instructor checks all in-yard skills
+• Must reach "good" level to take the exam
+• If not ready → extra practice`,
+  },
 ];
 
 // ── EXAM MILESTONES 検定・試験 ─────────────────────────────────────────────────
