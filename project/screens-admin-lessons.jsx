@@ -745,9 +745,12 @@ const TextLessonForm = ({ initial, crumb, headerTitle, onSave, onCancel }) => {
           </div>
         </div>
 
-        {/* Instructor teaching guide (read-only) + student-visibility toggle */}
+        {/* Instructor teaching guide (read-only) + student-visibility toggle.
+            flexShrink:0 — this box uses overflow:hidden (for the rounded corners),
+            which makes its flex min-height resolve to 0; without this the flex
+            column would shrink it away and its content would overflow unreachably. */}
         {hasGuide && (
-          <div style={{border:'1px solid var(--border)',borderRadius:12,overflow:'hidden'}}>
+          <div style={{flexShrink:0,border:'1px solid var(--border)',borderRadius:12,overflow:'hidden'}}>
             <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 13px',background:'var(--surface-muted)',borderBottom:'1px solid var(--border)'}}>
               <Icon name="book" size={14}/>
               <span style={{fontSize:13,fontWeight:700}}>{tr('ការណែនាំបង្រៀន','Teaching guide')}</span>
