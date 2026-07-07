@@ -729,8 +729,10 @@ window.__trRegistry = {
   "Content · English": "ខ្លឹមសារ · អង់គ្លេស",
   "Content · Khmer": "ខ្លឹមសារ · ខ្មែរ",
   "Put the cursor in the title or content, then use the toolbar above · click an image to resize": "ដាក់ Cursor ក្នុងចំណងជើង ឬ ខ្លឹមសារ រួចប្រើ Tool ខាងលើ · ចុចលើរូបដើម្បីប្ដូរទំហំ",
+  "Location": "ទីតាំង",
   "Visible": "សិស្សឃើញ",
   "Instructor only": "គ្រូតែប៉ុណ្ណោះ",
+  "Add item": "បន្ថែមការពិនិត្យ",
   "Saving…": "កំពុង​រក្សាទុក…",
   "Enter a YouTube ID to preview": "វាយ YouTube ID ដើម្បីមើល",
   "Add video": "បន្ថែម​វីដេអូ",
@@ -906,7 +908,6 @@ window.__trRegistry = {
   "By": "ពិនិត្យដោយ",
   "FUEL": "កំរិតសាំ",
   "INSPECTION ITEMS": "ការពិនិត្យ",
-  "Add item": "បន្ថែមការពិនិត្យ",
   "DAILY EXPENSES": "ចំណាយប្រចាំថ្ងៃ",
   "Note…": "កំណត់សម្គាល់…",
   "Tap a type above to add an expense": "ចុចប្រភេទខាងលើ ដើម្បីបន្ថែមចំណាយ",
@@ -2014,8 +2015,10 @@ window.__trGroups = {
     "Content · English": "ខ្លឹមសារ · អង់គ្លេស",
     "Content · Khmer": "ខ្លឹមសារ · ខ្មែរ",
     "Put the cursor in the title or content, then use the toolbar above · click an image to resize": "ដាក់ Cursor ក្នុងចំណងជើង ឬ ខ្លឹមសារ រួចប្រើ Tool ខាងលើ · ចុចលើរូបដើម្បីប្ដូរទំហំ",
+    "Location": "ទីតាំង",
     "Visible": "សិស្សឃើញ",
     "Instructor only": "គ្រូតែប៉ុណ្ណោះ",
+    "Add item": "បន្ថែមចំណុច",
     "Saving…": "កំពុង​រក្សាទុក…",
     "Enter a YouTube ID to preview": "វាយ YouTube ID ដើម្បីមើល",
     "Add video": "បន្ថែម",
@@ -2064,7 +2067,6 @@ window.__trGroups = {
     "By": "ពិនិត្យដោយ",
     "FUEL": "កំរិតសាំ",
     "INSPECTION ITEMS": "ការពិនិត្យ",
-    "Add item": "បន្ថែមការពិនិត្យ",
     "DAILY EXPENSES": "ចំណាយប្រចាំថ្ងៃ",
     "Note…": "កំណត់សម្គាល់…",
     "Tap a type above to add an expense": "ចុចប្រភេទខាងលើ ដើម្បីបន្ថែមចំណាយ",
@@ -27703,6 +27705,14 @@ var TextLessonForm = ({
   });
   var [saving, setSaving] = React.useState(false);
   var [guideStudent, setGuideStudent] = React.useState(!!initial?.guideStudent);
+  var arr = v => Array.isArray(v) ? [...v] : [];
+  var [teachKm, setTeachKm] = React.useState(arr(initial?.teach_km));
+  var [teachEn, setTeachEn] = React.useState(arr(initial?.teach_en));
+  var [pointsKm, setPointsKm] = React.useState(arr(initial?.points_km));
+  var [pointsEn, setPointsEn] = React.useState(arr(initial?.points_en));
+  var [cautionsKm, setCautionsKm] = React.useState(arr(initial?.cautions_km));
+  var [cautionsEn, setCautionsEn] = React.useState(arr(initial?.cautions_en));
+  var [guideLoc, setGuideLoc] = React.useState(initial?.guideLoc || '');
   var enMode = lang === 'en';
   var curTitle = enMode ? en : km;
   var setCurTitle = enMode ? setEn : setKm;
@@ -27727,6 +27737,11 @@ var TextLessonForm = ({
       }
     } catch (e) {}
     setSaving(false);
+    var clean = a => a.map(x => (x || '').trim()).filter(Boolean);
+    var orKm = (en2, km2) => {
+      var e = clean(en2);
+      return e.length ? e : clean(km2);
+    };
     onSave({
       ...(initial || {}),
       km: (km || '').trim(),
@@ -27735,26 +27750,38 @@ var TextLessonForm = ({
       body_km: bodyKm,
       body_en: plain(outBodyEn) ? outBodyEn : bodyKm,
       guideStudent,
+      teach_km: clean(teachKm),
+      teach_en: orKm(teachEn, teachKm),
+      points_km: clean(pointsKm),
+      points_en: orKm(pointsEn, pointsKm),
+      cautions_km: clean(cautionsKm),
+      cautions_en: orKm(cautionsEn, cautionsKm),
+      guideLoc: (guideLoc || '').trim(),
       images: {}
     });
   };
-  var guideParts = [{
+  var gSections = [{
     km: 'មាតិកាបង្រៀន',
     jp: '指導内容',
     c: 'var(--accent)',
-    items: enMode ? initial?.teach_en : initial?.teach_km
+    ph: 'ឧ. វិធីឡើងជិះ · ចេញដំណើរ',
+    items: enMode ? teachEn : teachKm,
+    set: enMode ? setTeachEn : setTeachKm
   }, {
     km: 'ចំណុចបង្រៀន',
     jp: '指導事項',
     c: '#6246C9',
-    items: enMode ? initial?.points_en : initial?.points_km
+    ph: 'ឧ. ពិនិត្យជុំវិញរថយន្ត',
+    items: enMode ? pointsEn : pointsKm,
+    set: enMode ? setPointsEn : setPointsKm
   }, {
     km: 'ចំណុចត្រូវប្រុងប្រយ័ត្ន',
     jp: '留意事項',
     c: '#C98A0A',
-    items: enMode ? initial?.cautions_en : initial?.cautions_km
+    ph: 'ឧ. ធ្វើឲ្យសិស្សយល់ថា…',
+    items: enMode ? cautionsEn : cautionsKm,
+    set: enMode ? setCautionsEn : setCautionsKm
   }];
-  var hasGuide = guideParts.some(p => Array.isArray(p.items) && p.items.length);
   var fieldLabel = {
     fontSize: 11,
     fontWeight: 600,
@@ -27837,7 +27864,7 @@ var TextLessonForm = ({
       fontSize: 11,
       color: 'var(--ink-3)'
     }
-  }, "\uD83D\uDDBC ", tr('ដាក់ Cursor ក្នុងចំណងជើង ឬ ខ្លឹមសារ រួចប្រើ Tool ខាងលើ · ចុចលើរូបដើម្បីប្ដូរទំហំ', 'Put the cursor in the title or content, then use the toolbar above · click an image to resize'))), hasGuide && React.createElement("div", {
+  }, "\uD83D\uDDBC ", tr('ដាក់ Cursor ក្នុងចំណងជើង ឬ ខ្លឹមសារ រួចប្រើ Tool ខាងលើ · ចុចលើរូបដើម្បីប្ដូរទំហំ', 'Put the cursor in the title or content, then use the toolbar above · click an image to resize'))), React.createElement("div", {
     style: {
       flexShrink: 0,
       border: '1px solid var(--border)',
@@ -27867,18 +27894,33 @@ var TextLessonForm = ({
       color: 'var(--ink-3)',
       fontFamily: '"JetBrains Mono",monospace'
     }
-  }, "\xB7 ", tr('សម្រាប់គ្រូ', 'Instructor')), initial?.guideLoc && React.createElement("span", {
+  }, "\xB7 ", tr('សម្រាប់គ្រូ', 'Instructor')), React.createElement("div", {
     style: {
       marginLeft: 'auto',
-      fontSize: 11,
-      color: 'var(--ink-3)',
-      background: 'var(--surface)',
-      border: '1px solid var(--border)',
-      padding: '2px 9px',
-      borderRadius: 99,
-      whiteSpace: 'nowrap'
+      display: 'flex',
+      alignItems: 'center',
+      gap: 5
     }
-  }, "\uD83D\uDCCD ", initial.guideLoc)), React.createElement("label", {
+  }, React.createElement("span", {
+    style: {
+      fontSize: 11
+    }
+  }, "\uD83D\uDCCD"), React.createElement("input", {
+    value: guideLoc,
+    onChange: e => setGuideLoc(e.target.value),
+    placeholder: tr('ទីតាំង', 'Location'),
+    style: {
+      width: 90,
+      fontSize: 11,
+      padding: '3px 8px',
+      border: '1px solid var(--border)',
+      borderRadius: 99,
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      fontFamily: 'inherit',
+      boxSizing: 'border-box'
+    }
+  }))), React.createElement("label", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -27913,59 +27955,104 @@ var TextLessonForm = ({
       padding: '12px 13px',
       display: 'flex',
       flexDirection: 'column',
-      gap: 13
+      gap: 14
     }
-  }, guideParts.filter(p => Array.isArray(p.items) && p.items.length).map((p, pi) => React.createElement("div", {
-    key: pi
+  }, gSections.map((s, si) => React.createElement("div", {
+    key: si
   }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 7,
-      marginBottom: 6
+      marginBottom: 7
     }
   }, React.createElement("span", {
     style: {
       width: 8,
       height: 8,
       borderRadius: 2,
-      background: p.c,
+      background: s.c,
       flexShrink: 0
     }
   }), React.createElement("span", {
     style: {
       fontSize: 12.5,
       fontWeight: 700,
-      color: p.c
+      color: s.c
     }
-  }, p.km), React.createElement("span", {
+  }, s.km), React.createElement("span", {
     style: {
       fontSize: 9.5,
       color: 'var(--ink-3)',
       fontFamily: '"JetBrains Mono",monospace'
     }
-  }, p.jp)), React.createElement("div", {
+  }, s.jp)), React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
-      gap: 4,
-      paddingLeft: 2
+      gap: 6
     }
-  }, p.items.map((it, i) => React.createElement("div", {
+  }, s.items.map((it, i) => React.createElement("div", {
     key: i,
     style: {
       display: 'flex',
-      gap: 7,
-      fontSize: 13,
-      color: 'var(--ink-2)',
-      lineHeight: 1.55
+      gap: 6,
+      alignItems: 'center'
     }
   }, React.createElement("span", {
     style: {
-      color: p.c,
+      color: s.c,
       flexShrink: 0
     }
-  }, "\u2022"), React.createElement("span", null, it))))))))), React.createElement("div", {
+  }, "\u2022"), React.createElement("input", {
+    value: it,
+    placeholder: s.ph,
+    onChange: e => {
+      var n = [...s.items];
+      n[i] = e.target.value;
+      s.set(n);
+    },
+    style: {
+      flex: 1,
+      fontSize: 13,
+      padding: '6px 9px',
+      border: '1px solid var(--border)',
+      borderRadius: 7,
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      fontFamily: 'inherit',
+      boxSizing: 'border-box'
+    }
+  }), React.createElement("button", {
+    onClick: () => s.set(s.items.filter((_, j) => j !== i)),
+    title: tr('លុប', 'Remove'),
+    style: {
+      flexShrink: 0,
+      width: 26,
+      height: 26,
+      borderRadius: 7,
+      border: '1px solid var(--border)',
+      background: 'var(--surface)',
+      color: 'var(--ink-3)',
+      cursor: 'pointer',
+      fontSize: 14,
+      lineHeight: 1
+    }
+  }, "\xD7"))), React.createElement("button", {
+    onClick: () => s.set([...s.items, '']),
+    style: {
+      alignSelf: 'flex-start',
+      fontSize: 11.5,
+      fontWeight: 600,
+      color: s.c,
+      background: 'transparent',
+      border: '1px dashed var(--border-strong)',
+      borderRadius: 7,
+      padding: '5px 11px',
+      cursor: 'pointer',
+      fontFamily: 'inherit'
+    }
+  }, "+ ", tr('បន្ថែមចំណុច', 'Add item')))))))), React.createElement("div", {
     style: {
       flexShrink: 0,
       position: 'sticky',

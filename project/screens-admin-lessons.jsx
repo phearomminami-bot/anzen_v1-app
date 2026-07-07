@@ -666,9 +666,17 @@ const TextLessonForm = ({ initial, crumb, headerTitle, onSave, onCancel }) => {
   const [bodyKm, setBodyKm] = React.useState(() => { const b = initial?.body_km || ''; return isLessonHtml(b) ? b : lessonMdToHtml(b, initial?.images); });
   const [bodyEn, setBodyEn] = React.useState(() => { const b = initial?.body_en || ''; return isLessonHtml(b) ? b : lessonMdToHtml(b, initial?.images); });
   const [saving, setSaving] = React.useState(false);
-  // Instructor teaching guide (指導内容/指導事項/留意事項) ships with the lesson.
-  // Instructor-facing; this toggle lets students see it too.
+  // Instructor teaching guide (指導内容/指導事項/留意事項) — editable, ships with the
+  // lesson. Instructor-facing; the toggle lets students see it too.
   const [guideStudent, setGuideStudent] = React.useState(!!initial?.guideStudent);
+  const arr = (v) => Array.isArray(v) ? [...v] : [];
+  const [teachKm,    setTeachKm]    = React.useState(arr(initial?.teach_km));
+  const [teachEn,    setTeachEn]    = React.useState(arr(initial?.teach_en));
+  const [pointsKm,   setPointsKm]   = React.useState(arr(initial?.points_km));
+  const [pointsEn,   setPointsEn]   = React.useState(arr(initial?.points_en));
+  const [cautionsKm, setCautionsKm] = React.useState(arr(initial?.cautions_km));
+  const [cautionsEn, setCautionsEn] = React.useState(arr(initial?.cautions_en));
+  const [guideLoc,   setGuideLoc]   = React.useState(initial?.guideLoc || '');
 
   // Everything is authored in Khmer; when the whole UI is in English we edit /
   // show the English variant, auto-translated from Khmer (needs an API key).
@@ -694,6 +702,9 @@ const TextLessonForm = ({ initial, crumb, headerTitle, onSave, onCancel }) => {
       if (!plain(bodyEn) && plain(bodyKm)) { const t = await aiTranslateHtmlKmToEn(bodyKm); if (t) outBodyEn = t; }
     } catch (e) {}
     setSaving(false);
+    // Clean the guide arrays; fall back EN→KH so English viewers still see content.
+    const clean = (a) => a.map(x => (x||'').trim()).filter(Boolean);
+    const orKm = (en2, km2) => { const e = clean(en2); return e.length ? e : clean(km2); };
     onSave({
       ...(initial || {}),
       km: (km||'').trim(), en: (outEn||'').trim(),
@@ -701,17 +712,20 @@ const TextLessonForm = ({ initial, crumb, headerTitle, onSave, onCancel }) => {
       body_km: bodyKm,
       body_en: plain(outBodyEn) ? outBodyEn : bodyKm,   // fall back to KH so EN viewers still see content
       guideStudent,   // instructor's "let students see the teaching guide" choice
+      teach_km: clean(teachKm),       teach_en: orKm(teachEn, teachKm),
+      points_km: clean(pointsKm),     points_en: orKm(pointsEn, pointsKm),
+      cautions_km: clean(cautionsKm), cautions_en: orKm(cautionsEn, cautionsKm),
+      guideLoc: (guideLoc||'').trim(),
       images: {},   // images are embedded inline in the HTML body now
     });
   };
 
-  // Read-only teaching-guide sections (content ships with the lesson seed).
-  const guideParts = [
-    { km:'មាតិកាបង្រៀន',            jp:'指導内容', c:'var(--accent)', items: enMode ? initial?.teach_en    : initial?.teach_km },
-    { km:'ចំណុចបង្រៀន',             jp:'指導事項', c:'#6246C9',       items: enMode ? initial?.points_en   : initial?.points_km },
-    { km:'ចំណុចត្រូវប្រុងប្រយ័ត្ន', jp:'留意事項', c:'#C98A0A',       items: enMode ? initial?.cautions_en : initial?.cautions_km },
+  // Editable teaching-guide sections (language-aware, like the title/body).
+  const gSections = [
+    { km:'មាតិកាបង្រៀន',            jp:'指導内容', c:'var(--accent)', ph:'ឧ. វិធីឡើងជិះ · ចេញដំណើរ', items: enMode?teachEn:teachKm,       set: enMode?setTeachEn:setTeachKm },
+    { km:'ចំណុចបង្រៀន',             jp:'指導事項', c:'#6246C9',       ph:'ឧ. ពិនិត្យជុំវិញរថយន្ត',   items: enMode?pointsEn:pointsKm,     set: enMode?setPointsEn:setPointsKm },
+    { km:'ចំណុចត្រូវប្រុងប្រយ័ត្ន', jp:'留意事項', c:'#C98A0A',       ph:'ឧ. ធ្វើឲ្យសិស្សយល់ថា…',     items: enMode?cautionsEn:cautionsKm, set: enMode?setCautionsEn:setCautionsKm },
   ];
-  const hasGuide = guideParts.some(p => Array.isArray(p.items) && p.items.length);
 
   const fieldLabel = { fontSize:11, fontWeight:600, color:'var(--ink-3)', letterSpacing:'.02em', margin:'0 0 6px' };
 
@@ -745,43 +759,54 @@ const TextLessonForm = ({ initial, crumb, headerTitle, onSave, onCancel }) => {
           </div>
         </div>
 
-        {/* Instructor teaching guide (read-only) + student-visibility toggle.
-            flexShrink:0 — this box uses overflow:hidden (for the rounded corners),
-            which makes its flex min-height resolve to 0; without this the flex
-            column would shrink it away and its content would overflow unreachably. */}
-        {hasGuide && (
-          <div style={{flexShrink:0,border:'1px solid var(--border)',borderRadius:12,overflow:'hidden'}}>
-            <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 13px',background:'var(--surface-muted)',borderBottom:'1px solid var(--border)'}}>
-              <Icon name="book" size={14}/>
-              <span style={{fontSize:13,fontWeight:700}}>{tr('ការណែនាំបង្រៀន','Teaching guide')}</span>
-              <span style={{fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>· {tr('សម្រាប់គ្រូ','Instructor')}</span>
-              {initial?.guideLoc && <span style={{marginLeft:'auto',fontSize:11,color:'var(--ink-3)',background:'var(--surface)',border:'1px solid var(--border)',padding:'2px 9px',borderRadius:99,whiteSpace:'nowrap'}}>📍 {initial.guideLoc}</span>}
-            </div>
-            <label style={{display:'flex',alignItems:'center',gap:9,padding:'9px 13px',borderBottom:'1px solid var(--border)',cursor:'pointer',fontSize:12.5}}>
-              <input type="checkbox" checked={guideStudent} onChange={()=>setGuideStudent(v=>!v)} style={{width:16,height:16,accentColor:'var(--accent)',cursor:'pointer'}}/>
-              <span style={{color:'var(--ink-2)'}}>{tr('អនុញ្ញាតឲ្យសិស្សមើលឃើញ','Allow students to view')}</span>
-              <span style={{marginLeft:'auto',fontSize:10,color:'var(--ink-3)'}}>{guideStudent ? tr('សិស្សឃើញ','Visible') : tr('គ្រូតែប៉ុណ្ណោះ','Instructor only')}</span>
-            </label>
-            <div style={{padding:'12px 13px',display:'flex',flexDirection:'column',gap:13}}>
-              {guideParts.filter(p=>Array.isArray(p.items)&&p.items.length).map((p,pi)=>(
-                <div key={pi}>
-                  <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:6}}>
-                    <span style={{width:8,height:8,borderRadius:2,background:p.c,flexShrink:0}}/>
-                    <span style={{fontSize:12.5,fontWeight:700,color:p.c}}>{p.km}</span>
-                    <span style={{fontSize:9.5,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{p.jp}</span>
-                  </div>
-                  <div style={{display:'flex',flexDirection:'column',gap:4,paddingLeft:2}}>
-                    {p.items.map((it,i)=>(
-                      <div key={i} style={{display:'flex',gap:7,fontSize:13,color:'var(--ink-2)',lineHeight:1.55}}>
-                        <span style={{color:p.c,flexShrink:0}}>•</span><span>{it}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+        {/* Instructor teaching guide — EDITABLE + student-visibility toggle.
+            flexShrink:0 — this box uses overflow:hidden (rounded corners), which
+            makes its flex min-height resolve to 0; without this the flex column
+            shrinks it away and its content overflows unreachably. */}
+        <div style={{flexShrink:0,border:'1px solid var(--border)',borderRadius:12,overflow:'hidden'}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 13px',background:'var(--surface-muted)',borderBottom:'1px solid var(--border)'}}>
+            <Icon name="book" size={14}/>
+            <span style={{fontSize:13,fontWeight:700}}>{tr('ការណែនាំបង្រៀន','Teaching guide')}</span>
+            <span style={{fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>· {tr('សម្រាប់គ្រូ','Instructor')}</span>
+            <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:5}}>
+              <span style={{fontSize:11}}>📍</span>
+              <input value={guideLoc} onChange={e=>setGuideLoc(e.target.value)} placeholder={tr('ទីតាំង','Location')}
+                style={{width:90,fontSize:11,padding:'3px 8px',border:'1px solid var(--border)',borderRadius:99,background:'var(--surface)',color:'var(--ink)',fontFamily:'inherit',boxSizing:'border-box'}}/>
             </div>
           </div>
-        )}
+          <label style={{display:'flex',alignItems:'center',gap:9,padding:'9px 13px',borderBottom:'1px solid var(--border)',cursor:'pointer',fontSize:12.5}}>
+            <input type="checkbox" checked={guideStudent} onChange={()=>setGuideStudent(v=>!v)} style={{width:16,height:16,accentColor:'var(--accent)',cursor:'pointer'}}/>
+            <span style={{color:'var(--ink-2)'}}>{tr('អនុញ្ញាតឲ្យសិស្សមើលឃើញ','Allow students to view')}</span>
+            <span style={{marginLeft:'auto',fontSize:10,color:'var(--ink-3)'}}>{guideStudent ? tr('សិស្សឃើញ','Visible') : tr('គ្រូតែប៉ុណ្ណោះ','Instructor only')}</span>
+          </label>
+          <div style={{padding:'12px 13px',display:'flex',flexDirection:'column',gap:14}}>
+            {gSections.map((s,si)=>(
+              <div key={si}>
+                <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:7}}>
+                  <span style={{width:8,height:8,borderRadius:2,background:s.c,flexShrink:0}}/>
+                  <span style={{fontSize:12.5,fontWeight:700,color:s.c}}>{s.km}</span>
+                  <span style={{fontSize:9.5,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{s.jp}</span>
+                </div>
+                <div style={{display:'flex',flexDirection:'column',gap:6}}>
+                  {s.items.map((it,i)=>(
+                    <div key={i} style={{display:'flex',gap:6,alignItems:'center'}}>
+                      <span style={{color:s.c,flexShrink:0}}>•</span>
+                      <input value={it} placeholder={s.ph}
+                        onChange={e=>{ const n=[...s.items]; n[i]=e.target.value; s.set(n); }}
+                        style={{flex:1,fontSize:13,padding:'6px 9px',border:'1px solid var(--border)',borderRadius:7,background:'var(--surface)',color:'var(--ink)',fontFamily:'inherit',boxSizing:'border-box'}}/>
+                      <button onClick={()=>s.set(s.items.filter((_,j)=>j!==i))} title={tr('លុប','Remove')}
+                        style={{flexShrink:0,width:26,height:26,borderRadius:7,border:'1px solid var(--border)',background:'var(--surface)',color:'var(--ink-3)',cursor:'pointer',fontSize:14,lineHeight:1}}>×</button>
+                    </div>
+                  ))}
+                  <button onClick={()=>s.set([...s.items,''])}
+                    style={{alignSelf:'flex-start',fontSize:11.5,fontWeight:600,color:s.c,background:'transparent',border:'1px dashed var(--border-strong)',borderRadius:7,padding:'5px 11px',cursor:'pointer',fontFamily:'inherit'}}>
+                    + {tr('បន្ថែមចំណុច','Add item')}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Sticky footer */}
