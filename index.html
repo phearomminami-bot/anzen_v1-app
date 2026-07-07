@@ -1240,6 +1240,8 @@ window.__trRegistry = {
   "BASE TUITION": "ថ្លៃ​សិក្សា​មូលដ្ឋាន",
   "AT · Auto": "AT · លេខ​អូតូ",
   "MT · Manual": "MT · លេខ​ដៃ",
+  "PROGRAM HOURS · KH / JP / AI": "ម៉ោង​គោលដៅ​តាម​វគ្គ · KH / JP / AI",
+  "Target hours per phase. The student card shows the hours of the phase the student is currently doing (KH → JP → AI).": "ម៉ោង​គោលដៅ​សម្រាប់​វគ្គ​នីមួយៗ។ កាត​សិស្ស​បង្ហាញ​ម៉ោង​តាម​វគ្គ​ដែល​សិស្ស​កំពុង​រៀន (KH → JP → AI)។",
   "COURSE PRICING": "វគ្គ​សិក្សា & តម្លៃ",
   "Add pricing plan": "បន្ថែម​​ផែន​ការ",
   "ADD-ONS PRICING": "Add-ons & ថ្លៃ​បន្ថែម",
@@ -2516,6 +2518,8 @@ window.__trGroups = {
     "BASE TUITION": "ថ្លៃ​សិក្សា​មូលដ្ឋាន",
     "AT · Auto": "AT · លេខ​អូតូ",
     "MT · Manual": "MT · លេខ​ដៃ",
+    "PROGRAM HOURS · KH / JP / AI": "ម៉ោង​គោលដៅ​តាម​វគ្គ · KH / JP / AI",
+    "Target hours per phase. The student card shows the hours of the phase the student is currently doing (KH → JP → AI).": "ម៉ោង​គោលដៅ​សម្រាប់​វគ្គ​នីមួយៗ។ កាត​សិស្ស​បង្ហាញ​ម៉ោង​តាម​វគ្គ​ដែល​សិស្ស​កំពុង​រៀន (KH → JP → AI)។",
     "COURSE PRICING": "វគ្គ​សិក្សា & តម្លៃ",
     "Add pricing plan": "បន្ថែម​​ផែន​ការ",
     "ADD-ONS PRICING": "Add-ons & ថ្លៃ​បន្ថែម",
@@ -45767,15 +45771,6 @@ var StudentsScreenV2 = () => {
       }
     }, tr('គ្មាន​សិស្ស', 'No students')), filtered.map(s => {
       var tMeta = ST_TYPE_META[s.studentType] || ST_TYPE_META['ធម្មតា'];
-      var doneH = LESSONS.filter(l => l.studentId === s.id && l.status === 'done').reduce((a, l) => a + (l.len || 1), 0);
-      var learned = Math.max(Number(s.hours) || 0, doneH);
-      var target = Math.max(1, Number(s.target) || 30);
-      var pct = Math.min(1, learned / target);
-      var grad = isGraduated(s);
-      var ringCol = grad ? '#2E9E5B' : s.status === 'Road exam soon' ? '#E07B39' : 'var(--accent)';
-      var R = 23,
-        C = 2 * Math.PI * R,
-        off = C * (1 - pct);
       var phases = window.STUDENT_PHASES || [{
         k: 'KH',
         label: 'KH',
@@ -45789,6 +45784,17 @@ var StudentsScreenV2 = () => {
         label: 'AI',
         color: '#12A302'
       }];
+      var phSt = k => typeof phaseStatusOf === 'function' ? phaseStatusOf(s, k) : (s.phaseStatus || {})[k] || '';
+      var activePhase = phases.find(p => phSt(p.k) === 'starting') || [...phases].reverse().find(p => phSt(p.k) === 'finished') || phases[0];
+      var progHours = window.__schoolSettings && window.__schoolSettings.programHours || {};
+      var learned = LESSONS.filter(l => l.studentId === s.id && l.status === 'done' && (l.phase || 'KH') === activePhase.k).reduce((a, l) => a + (l.len || 1), 0);
+      var target = Math.max(1, Number(progHours[activePhase.k]) || Number(s.target) || 15);
+      var pct = Math.min(1, learned / target);
+      var grad = isGraduated(s);
+      var ringCol = grad ? '#2E9E5B' : activePhase.color;
+      var R = 23,
+        C = 2 * Math.PI * R,
+        off = C * (1 - pct);
       return React.createElement("div", {
         key: s.id,
         style: {
@@ -45900,7 +45906,12 @@ var StudentsScreenV2 = () => {
           marginTop: 2,
           fontFamily: '"JetBrains Mono",monospace'
         }
-      }, s.id, " \xB7 ", clsKm(s.cls), " \xB7 ", learned, "/", target, "h"), React.createElement("div", {
+      }, s.id, " \xB7 ", clsKm(s.cls), " \xB7 ", React.createElement("span", {
+        style: {
+          color: activePhase.color,
+          fontWeight: 700
+        }
+      }, activePhase.label), " ", learned, "/", target, "h"), React.createElement("div", {
         style: {
           display: 'flex',
           gap: 5,
@@ -57059,6 +57070,11 @@ if (!window.__schoolSettings.addons) {
 }
 if (window.__schoolSettings.price_AT == null) window.__schoolSettings.price_AT = 200;
 if (window.__schoolSettings.price_MT == null) window.__schoolSettings.price_MT = 230;
+if (!window.__schoolSettings.programHours) window.__schoolSettings.programHours = {
+  KH: 15,
+  JP: 15,
+  AI: 15
+};
 if (!window.__schoolSettings.studentForm) {
   window.__schoolSettings.studentForm = {
     shifts: ['ព្រឹក', 'ថ្ងៃ​ត្រង់', 'រសៀល', 'យប់'],
@@ -59436,6 +59452,23 @@ var PricingSettings = ({
     onDirty();
     if (window.__notifySettingsChanged) window.__notifySettingsChanged();
   };
+  var [progHours, setProgHours] = React.useState({
+    ...(ss.programHours || {
+      KH: 15,
+      JP: 15,
+      AI: 15
+    })
+  });
+  var savePhaseHours = (k, val) => {
+    var next = {
+      ...progHours,
+      [k]: val
+    };
+    setProgHours(next);
+    ss.programHours = next;
+    onDirty();
+    if (window.__notifySettingsChanged) window.__notifySettingsChanged();
+  };
   return React.createElement(React.Fragment, null, React.createElement(Card, {
     label: tr('ថ្លៃ​សិក្សា​មូលដ្ឋាន', 'BASE TUITION')
   }, React.createElement("div", {
@@ -59512,6 +59545,77 @@ var PricingSettings = ({
       color: 'var(--ink-3)'
     }
   }, "\u1790\u17D2\u179B\u17C3\u1791\u17B6\u17C6\u1784\u1793\u17C1\u17C7\u178F\u17D2\u179A\u17BC\u179C\u1794\u17B6\u1793\u1794\u17D2\u179A\u17BE\u1794\u17D2\u179A\u17B6\u179F\u17CB\u1780\u17D2\u1793\u17BB\u1784 Payment card \u179A\u1794\u179F\u17CB\u179F\u17B7\u179F\u17D2\u179F")), React.createElement(Card, {
+    label: tr('ម៉ោង​គោលដៅ​តាម​វគ្គ · KH / JP / AI', 'PROGRAM HOURS · KH / JP / AI')
+  }, React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr 1fr',
+      gap: 12
+    }
+  }, (window.STUDENT_PHASES || [{
+    k: 'KH',
+    label: 'KH',
+    color: '#2A5DB0'
+  }, {
+    k: 'JP',
+    label: 'JP',
+    color: '#B0413E'
+  }, {
+    k: 'AI',
+    label: 'AI',
+    color: '#12A302'
+  }]).map(p => React.createElement("div", {
+    key: p.k,
+    style: {
+      padding: 14,
+      border: '1px solid var(--border)',
+      borderRadius: 8,
+      background: 'var(--surface-muted)'
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 12,
+      marginBottom: 6,
+      fontWeight: 800,
+      color: p.color
+    }
+  }, p.label), React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8
+    }
+  }, React.createElement("input", {
+    type: "number",
+    min: "0",
+    value: progHours[p.k] ?? 15,
+    onChange: e => {
+      var v = parseInt(e.target.value) || 0;
+      savePhaseHours(p.k, v);
+    },
+    style: {
+      width: '100%',
+      padding: '6px 10px',
+      border: '1px solid var(--border)',
+      borderRadius: 6,
+      fontSize: 16,
+      fontWeight: 600,
+      fontFamily: 'var(--font-display)',
+      background: 'var(--surface)',
+      color: 'var(--ink)'
+    }
+  }), React.createElement("span", {
+    style: {
+      fontSize: 13,
+      color: 'var(--ink-3)'
+    }
+  }, "h"))))), React.createElement("div", {
+    style: {
+      marginTop: 8,
+      fontSize: 11,
+      color: 'var(--ink-3)'
+    }
+  }, tr('ម៉ោង​គោលដៅ​សម្រាប់​វគ្គ​នីមួយៗ។ កាត​សិស្ស​បង្ហាញ​ម៉ោង​តាម​វគ្គ​ដែល​សិស្ស​កំពុង​រៀន (KH → JP → AI)។', 'Target hours per phase. The student card shows the hours of the phase the student is currently doing (KH → JP → AI).'))), React.createElement(Card, {
     label: tr('វគ្គ​សិក្សា & តម្លៃ', 'COURSE PRICING')
   }, React.createElement("div", {
     style: {

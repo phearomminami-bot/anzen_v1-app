@@ -1389,15 +1389,20 @@ const StudentsScreenV2 = () => {
           )}
           {filtered.map(s => {
             const tMeta = ST_TYPE_META[s.studentType] || ST_TYPE_META['ធម្មតា'];
-            // Real progress: logged practical hours vs the target.
-            const doneH   = LESSONS.filter(l => l.studentId === s.id && l.status === 'done').reduce((a,l)=>a+(l.len||1),0);
-            const learned = Math.max(Number(s.hours)||0, doneH);
-            const target  = Math.max(1, Number(s.target)||30);
+            const phases = window.STUDENT_PHASES || [{k:'KH',label:'KH',color:'#2A5DB0'},{k:'JP',label:'JP',color:'#B0413E'},{k:'AI',label:'AI',color:'#12A302'}];
+            const phSt = (k) => (typeof phaseStatusOf==='function' ? phaseStatusOf(s,k) : ((s.phaseStatus||{})[k]||''));
+            // Show the hours of whichever phase the student is currently doing:
+            // a "starting" phase first (KH→JP→AI), else the last finished one, else KH.
+            const activePhase = phases.find(p=>phSt(p.k)==='starting')
+              || [...phases].reverse().find(p=>phSt(p.k)==='finished')
+              || phases[0];
+            const progHours = (window.__schoolSettings && window.__schoolSettings.programHours) || {};
+            const learned = LESSONS.filter(l => l.studentId===s.id && l.status==='done' && (l.phase||'KH')===activePhase.k).reduce((a,l)=>a+(l.len||1),0);
+            const target  = Math.max(1, Number(progHours[activePhase.k]) || Number(s.target) || 15);
             const pct     = Math.min(1, learned/target);
             const grad    = isGraduated(s);
-            const ringCol = grad ? '#2E9E5B' : s.status==='Road exam soon' ? '#E07B39' : 'var(--accent)';
+            const ringCol = grad ? '#2E9E5B' : activePhase.color;
             const R = 23, C = 2*Math.PI*R, off = C*(1-pct);
-            const phases = window.STUDENT_PHASES || [{k:'KH',label:'KH',color:'#2A5DB0'},{k:'JP',label:'JP',color:'#B0413E'},{k:'AI',label:'AI',color:'#12A302'}];
             return (
               <div key={s.id} style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:16,boxShadow:'0 4px 14px rgba(20,30,60,.05)',overflow:'hidden'}}>
                 <button onClick={()=>{ setMobileProfileId(s.id); setOpenSections({bio:true}); }} style={{
@@ -1417,7 +1422,7 @@ const StudentsScreenV2 = () => {
                       <span style={{fontSize:14.5,fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.en || s.name}</span>
                       <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:20,flexShrink:0,background:tMeta.bg,color:tMeta.color,border:`1px solid ${tMeta.color}33`}}>{stTypeEn(s.studentType)}</span>
                     </div>
-                    <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2,fontFamily:'"JetBrains Mono",monospace'}}>{s.id} · {clsKm(s.cls)} · {learned}/{target}h</div>
+                    <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2,fontFamily:'"JetBrains Mono",monospace'}}>{s.id} · {clsKm(s.cls)} · <span style={{color:activePhase.color,fontWeight:700}}>{activePhase.label}</span> {learned}/{target}h</div>
                     <div style={{display:'flex',gap:5,marginTop:7,flexWrap:'wrap'}}>
                       {phases.map(p => {
                         const st = (typeof phaseStatusOf==='function' ? phaseStatusOf(s,p.k) : ((s.phaseStatus||{})[p.k]||''));

@@ -75,6 +75,9 @@ if (!window.__schoolSettings.addons) {
 }
 if (window.__schoolSettings.price_AT == null) window.__schoolSettings.price_AT = 200;
 if (window.__schoolSettings.price_MT == null) window.__schoolSettings.price_MT = 230;
+// Target training hours per tracking phase (KH / JP / AI). The student card shows
+// the hours of whichever phase the student is currently doing.
+if (!window.__schoolSettings.programHours) window.__schoolSettings.programHours = { KH: 15, JP: 15, AI: 15 };
 if (!window.__schoolSettings.studentForm) {
   window.__schoolSettings.studentForm = {
     shifts: ['ព្រឹក', 'ថ្ងៃ​ត្រង់', 'រសៀល', 'យប់'],
@@ -1076,6 +1079,15 @@ const PricingSettings = ({ onDirty }) => {
     if (window.__notifySettingsChanged) window.__notifySettingsChanged();   // Billing reflects the base tuition live
   };
 
+  const [progHours, setProgHours] = React.useState({ ...(ss.programHours || { KH:15, JP:15, AI:15 }) });
+  const savePhaseHours = (k, val) => {
+    const next = { ...progHours, [k]: val };
+    setProgHours(next);
+    ss.programHours = next;
+    onDirty();
+    if (window.__notifySettingsChanged) window.__notifySettingsChanged();
+  };
+
   return (
     <>
       <Card label={tr('ថ្លៃ​សិក្សា​មូលដ្ឋាន','BASE TUITION')}>
@@ -1097,6 +1109,27 @@ const PricingSettings = ({ onDirty }) => {
         </div>
         <div style={{marginTop:8,fontSize:11,color:'var(--ink-3)'}}>
           ថ្លៃទាំងនេះត្រូវបានប្រើប្រាស់ក្នុង Payment card របស់សិស្ស
+        </div>
+      </Card>
+
+      <Card label={tr('ម៉ោង​គោលដៅ​តាម​វគ្គ · KH / JP / AI','PROGRAM HOURS · KH / JP / AI')}>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12}}>
+          {(window.STUDENT_PHASES || [{k:'KH',label:'KH',color:'#2A5DB0'},{k:'JP',label:'JP',color:'#B0413E'},{k:'AI',label:'AI',color:'#12A302'}]).map(p => (
+            <div key={p.k} style={{padding:14,border:'1px solid var(--border)',borderRadius:8,background:'var(--surface-muted)'}}>
+              <div style={{fontSize:12,marginBottom:6,fontWeight:800,color:p.color}}>{p.label}</div>
+              <div style={{display:'flex',alignItems:'center',gap:8}}>
+                <input type="number" min="0" value={progHours[p.k] ?? 15}
+                  onChange={e=>{ const v=parseInt(e.target.value)||0; savePhaseHours(p.k, v); }}
+                  style={{width:'100%',padding:'6px 10px',border:'1px solid var(--border)',borderRadius:6,
+                    fontSize:16,fontWeight:600,fontFamily:'var(--font-display)',background:'var(--surface)',color:'var(--ink)'}}/>
+                <span style={{fontSize:13,color:'var(--ink-3)'}}>h</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{marginTop:8,fontSize:11,color:'var(--ink-3)'}}>
+          {tr('ម៉ោង​គោលដៅ​សម្រាប់​វគ្គ​នីមួយៗ។ កាត​សិស្ស​បង្ហាញ​ម៉ោង​តាម​វគ្គ​ដែល​សិស្ស​កំពុង​រៀន (KH → JP → AI)។',
+              'Target hours per phase. The student card shows the hours of the phase the student is currently doing (KH → JP → AI).')}
         </div>
       </Card>
 
