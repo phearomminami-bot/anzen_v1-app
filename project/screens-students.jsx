@@ -1391,43 +1391,44 @@ const StudentsScreenV2 = () => {
             const tMeta = ST_TYPE_META[s.studentType] || ST_TYPE_META['ធម្មតា'];
             const phases = window.STUDENT_PHASES || [{k:'KH',label:'KH',color:'#2A5DB0'},{k:'JP',label:'JP',color:'#B0413E'},{k:'AI',label:'AI',color:'#12A302'}];
             const phSt = (k) => (typeof phaseStatusOf==='function' ? phaseStatusOf(s,k) : ((s.phaseStatus||{})[k]||''));
-            // Show the hours of whichever phase the student is currently doing:
-            // a "starting" phase first (KH→JP→AI), else the last finished one, else KH.
-            const activePhase = phases.find(p=>phSt(p.k)==='starting')
-              || [...phases].reverse().find(p=>phSt(p.k)==='finished')
-              || phases[0];
+            // Phases the student is currently doing (ALL "starting" — so JP + AI can
+            // both show); else the last finished one; else KH.
+            const activePhases = phases.filter(p=>phSt(p.k)==='starting');
+            const displayPhases = activePhases.length ? activePhases
+              : [ [...phases].reverse().find(p=>phSt(p.k)==='finished') || phases[0] ];
             const progHours = (window.__schoolSettings && window.__schoolSettings.programHours) || {};
-            // Per-phase targets: theory + practical split into auto (AT) / manual (MT),
-            // with fallback for legacy shapes ({th,pr} or a flat number).
-            const rawH = progHours[activePhase.k];
-            const cfgH = (() => {
-              if (rawH && typeof rawH==='object') {
-                if ('prAT' in rawH || 'prMT' in rawH) return { th:Number(rawH.th)||0, prAT:Number(rawH.prAT)||0, prMT:Number(rawH.prMT)||0 };
-                const pr = Number(rawH.pr)||0; return { th:Number(rawH.th)||0, prAT:pr, prMT:pr };
+            const cfgOf = (k) => {
+              const v = progHours[k];
+              if (v && typeof v==='object') {
+                if ('prAT' in v || 'prMT' in v) return { th:Number(v.th)||0, prAT:Number(v.prAT)||0, prMT:Number(v.prMT)||0 };
+                const pr = Number(v.pr)||0; return { th:Number(v.th)||0, prAT:pr, prMT:pr };
               }
-              if (typeof rawH==='number') return { th:0, prAT:rawH, prMT:rawH };
+              if (typeof v==='number') return { th:0, prAT:v, prMT:v };
               return { th:10, prAT:12, prMT:15 };
-            })();
+            };
             const isTheoryLn = (l) => l.color==='c' || l.color==='e';
-            const lessonIsAT = (l) => { const v=(VEHICLES||[]).find(x=>x.id===l.veh||x.plate===l.veh); return !!(v && (v.trans==='AT'||v.trans==='CVT')); };
-            const phaseDone = LESSONS.filter(l => l.studentId===s.id && l.status==='done' && (l.phase||'KH')===activePhase.k);
-            const thDone   = phaseDone.filter(isTheoryLn).reduce((a,l)=>a+(l.len||1),0);
-            const prAll    = phaseDone.filter(l=>!isTheoryLn(l));
-            const prATDone = prAll.filter(lessonIsAT).reduce((a,l)=>a+(l.len||1),0);
-            const prMTDone = prAll.filter(l=>!lessonIsAT(l)).reduce((a,l)=>a+(l.len||1),0);
-            // Show practical types with done hours; else the offered type (MT then AT).
-            const prShown = [];
-            if (prATDone>0) prShown.push({ label:tr('អូ','AT'), done:prATDone, target:cfgH.prAT });
-            if (prMTDone>0) prShown.push({ label:tr('ដៃ','MT'), done:prMTDone, target:cfgH.prMT });
-            if (!prShown.length) {
-              if (cfgH.prMT>0) prShown.push({ label:tr('ដៃ','MT'), done:0, target:cfgH.prMT });
-              else if (cfgH.prAT>0) prShown.push({ label:tr('អូ','AT'), done:0, target:cfgH.prAT });
-            }
-            const learned = thDone + prShown.reduce((a,p)=>a+p.done,0);
-            const target  = Math.max(1, cfgH.th + prShown.reduce((a,p)=>a+p.target,0));
+            // The student's single transmission: explicit field, else dominant by hours, else MT.
+            const isATVeh = (l) => { const v=(VEHICLES||[]).find(x=>x.id===l.veh||x.plate===l.veh); return !!(v && (v.trans==='AT'||v.trans==='CVT')); };
+            const studentIsAT = s.trans==='AT' ? true : s.trans==='MT' ? false : (() => {
+              const pr = LESSONS.filter(l=>l.studentId===s.id && l.status==='done' && !isTheoryLn(l));
+              const at = pr.filter(isATVeh).reduce((a,l)=>a+(l.len||1),0), mt = pr.filter(l=>!isATVeh(l)).reduce((a,l)=>a+(l.len||1),0);
+              return at > mt;
+            })();
+            const transLabel = studentIsAT ? tr('អូ','AT') : tr('ដៃ','MT');
+            const transKey   = studentIsAT ? 'prAT' : 'prMT';
+            // One row per displayed phase: theory + the student's transmission practical.
+            const phaseRows = displayPhases.map(ph => {
+              const cfgH = cfgOf(ph.k);
+              const pDone = LESSONS.filter(l => l.studentId===s.id && l.status==='done' && (l.phase||'KH')===ph.k);
+              const thDone = pDone.filter(isTheoryLn).reduce((a,l)=>a+(l.len||1),0);
+              const prDone = pDone.filter(l=>!isTheoryLn(l)).reduce((a,l)=>a+(l.len||1),0);
+              return { ph, thDone, thTarget:cfgH.th, prDone, prTarget:cfgH[transKey] };
+            });
+            const learned = phaseRows.reduce((a,r)=>a+r.thDone+r.prDone,0);
+            const target  = Math.max(1, phaseRows.reduce((a,r)=>a+r.thTarget+r.prTarget,0));
             const pct     = Math.min(1, learned/target);
             const grad    = isGraduated(s);
-            const ringCol = grad ? '#2E9E5B' : activePhase.color;
+            const ringCol = grad ? '#2E9E5B' : displayPhases[0].color;
             const R = 23, C = 2*Math.PI*R, off = C*(1-pct);
             return (
               <div key={s.id} style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:16,boxShadow:'0 4px 14px rgba(20,30,60,.05)',overflow:'hidden'}}>
@@ -1449,9 +1450,11 @@ const StudentsScreenV2 = () => {
                       <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:20,flexShrink:0,background:tMeta.bg,color:tMeta.color,border:`1px solid ${tMeta.color}33`}}>{stTypeEn(s.studentType)}</span>
                     </div>
                     <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2,fontFamily:'"JetBrains Mono",monospace'}}>{s.id} · {clsKm(s.cls)}</div>
-                    <div style={{fontSize:11,marginTop:2,fontFamily:'"JetBrains Mono",monospace',color:'var(--ink-3)'}}>
-                      <span style={{color:activePhase.color,fontWeight:700}}>{activePhase.label}</span> · {tr('ទ្រ','Th')} {thDone}/{cfgH.th}{prShown.map((p,i)=>(<React.Fragment key={i}> · {p.label} {p.done}/{p.target}</React.Fragment>))}
-                    </div>
+                    {phaseRows.map((r,i)=>(
+                      <div key={i} style={{fontSize:11,marginTop:2,fontFamily:'"JetBrains Mono",monospace',color:'var(--ink-3)'}}>
+                        <span style={{color:r.ph.color,fontWeight:700}}>{r.ph.label}</span> · {tr('ទ្រ','Th')} {r.thDone}/{r.thTarget} · {transLabel} {r.prDone}/{r.prTarget}
+                      </div>
+                    ))}
                     <div style={{display:'flex',gap:5,marginTop:7,flexWrap:'wrap'}}>
                       {phases.map(p => {
                         const st = (typeof phaseStatusOf==='function' ? phaseStatusOf(s,p.k) : ((s.phaseStatus||{})[p.k]||''));

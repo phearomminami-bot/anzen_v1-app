@@ -45795,71 +45795,66 @@ var StudentsScreenV2 = () => {
         color: '#12A302'
       }];
       var phSt = k => typeof phaseStatusOf === 'function' ? phaseStatusOf(s, k) : (s.phaseStatus || {})[k] || '';
-      var activePhase = phases.find(p => phSt(p.k) === 'starting') || [...phases].reverse().find(p => phSt(p.k) === 'finished') || phases[0];
+      var activePhases = phases.filter(p => phSt(p.k) === 'starting');
+      var displayPhases = activePhases.length ? activePhases : [[...phases].reverse().find(p => phSt(p.k) === 'finished') || phases[0]];
       var progHours = window.__schoolSettings && window.__schoolSettings.programHours || {};
-      var rawH = progHours[activePhase.k];
-      var cfgH = (() => {
-        if (rawH && typeof rawH === 'object') {
-          if ('prAT' in rawH || 'prMT' in rawH) return {
-            th: Number(rawH.th) || 0,
-            prAT: Number(rawH.prAT) || 0,
-            prMT: Number(rawH.prMT) || 0
+      var cfgOf = k => {
+        var v = progHours[k];
+        if (v && typeof v === 'object') {
+          if ('prAT' in v || 'prMT' in v) return {
+            th: Number(v.th) || 0,
+            prAT: Number(v.prAT) || 0,
+            prMT: Number(v.prMT) || 0
           };
-          var pr = Number(rawH.pr) || 0;
+          var pr = Number(v.pr) || 0;
           return {
-            th: Number(rawH.th) || 0,
+            th: Number(v.th) || 0,
             prAT: pr,
             prMT: pr
           };
         }
-        if (typeof rawH === 'number') return {
+        if (typeof v === 'number') return {
           th: 0,
-          prAT: rawH,
-          prMT: rawH
+          prAT: v,
+          prMT: v
         };
         return {
           th: 10,
           prAT: 12,
           prMT: 15
         };
-      })();
+      };
       var isTheoryLn = l => l.color === 'c' || l.color === 'e';
-      var lessonIsAT = l => {
+      var isATVeh = l => {
         var v = (VEHICLES || []).find(x => x.id === l.veh || x.plate === l.veh);
         return !!(v && (v.trans === 'AT' || v.trans === 'CVT'));
       };
-      var phaseDone = LESSONS.filter(l => l.studentId === s.id && l.status === 'done' && (l.phase || 'KH') === activePhase.k);
-      var thDone = phaseDone.filter(isTheoryLn).reduce((a, l) => a + (l.len || 1), 0);
-      var prAll = phaseDone.filter(l => !isTheoryLn(l));
-      var prATDone = prAll.filter(lessonIsAT).reduce((a, l) => a + (l.len || 1), 0);
-      var prMTDone = prAll.filter(l => !lessonIsAT(l)).reduce((a, l) => a + (l.len || 1), 0);
-      var prShown = [];
-      if (prATDone > 0) prShown.push({
-        label: tr('អូ', 'AT'),
-        done: prATDone,
-        target: cfgH.prAT
+      var studentIsAT = s.trans === 'AT' ? true : s.trans === 'MT' ? false : (() => {
+        var pr = LESSONS.filter(l => l.studentId === s.id && l.status === 'done' && !isTheoryLn(l));
+        var at = pr.filter(isATVeh).reduce((a, l) => a + (l.len || 1), 0),
+          mt = pr.filter(l => !isATVeh(l)).reduce((a, l) => a + (l.len || 1), 0);
+        return at > mt;
+      })();
+      var transLabel = studentIsAT ? tr('អូ', 'AT') : tr('ដៃ', 'MT');
+      var transKey = studentIsAT ? 'prAT' : 'prMT';
+      var phaseRows = displayPhases.map(ph => {
+        var cfgH = cfgOf(ph.k);
+        var pDone = LESSONS.filter(l => l.studentId === s.id && l.status === 'done' && (l.phase || 'KH') === ph.k);
+        var thDone = pDone.filter(isTheoryLn).reduce((a, l) => a + (l.len || 1), 0);
+        var prDone = pDone.filter(l => !isTheoryLn(l)).reduce((a, l) => a + (l.len || 1), 0);
+        return {
+          ph,
+          thDone,
+          thTarget: cfgH.th,
+          prDone,
+          prTarget: cfgH[transKey]
+        };
       });
-      if (prMTDone > 0) prShown.push({
-        label: tr('ដៃ', 'MT'),
-        done: prMTDone,
-        target: cfgH.prMT
-      });
-      if (!prShown.length) {
-        if (cfgH.prMT > 0) prShown.push({
-          label: tr('ដៃ', 'MT'),
-          done: 0,
-          target: cfgH.prMT
-        });else if (cfgH.prAT > 0) prShown.push({
-          label: tr('អូ', 'AT'),
-          done: 0,
-          target: cfgH.prAT
-        });
-      }
-      var learned = thDone + prShown.reduce((a, p) => a + p.done, 0);
-      var target = Math.max(1, cfgH.th + prShown.reduce((a, p) => a + p.target, 0));
+      var learned = phaseRows.reduce((a, r) => a + r.thDone + r.prDone, 0);
+      var target = Math.max(1, phaseRows.reduce((a, r) => a + r.thTarget + r.prTarget, 0));
       var pct = Math.min(1, learned / target);
       var grad = isGraduated(s);
-      var ringCol = grad ? '#2E9E5B' : activePhase.color;
+      var ringCol = grad ? '#2E9E5B' : displayPhases[0].color;
       var R = 23,
         C = 2 * Math.PI * R,
         off = C * (1 - pct);
@@ -45974,7 +45969,8 @@ var StudentsScreenV2 = () => {
           marginTop: 2,
           fontFamily: '"JetBrains Mono",monospace'
         }
-      }, s.id, " \xB7 ", clsKm(s.cls)), React.createElement("div", {
+      }, s.id, " \xB7 ", clsKm(s.cls)), phaseRows.map((r, i) => React.createElement("div", {
+        key: i,
         style: {
           fontSize: 11,
           marginTop: 2,
@@ -45983,12 +45979,10 @@ var StudentsScreenV2 = () => {
         }
       }, React.createElement("span", {
         style: {
-          color: activePhase.color,
+          color: r.ph.color,
           fontWeight: 700
         }
-      }, activePhase.label), " \xB7 ", tr('ទ្រ', 'Th'), " ", thDone, "/", cfgH.th, prShown.map((p, i) => React.createElement(React.Fragment, {
-        key: i
-      }, " \xB7 ", p.label, " ", p.done, "/", p.target))), React.createElement("div", {
+      }, r.ph.label), " \xB7 ", tr('ទ្រ', 'Th'), " ", r.thDone, "/", r.thTarget, " \xB7 ", transLabel, " ", r.prDone, "/", r.prTarget)), React.createElement("div", {
         style: {
           display: 'flex',
           gap: 5,
