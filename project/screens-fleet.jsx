@@ -3190,6 +3190,7 @@ const VehicleScreen = () => {
   const [selectedId, setSelectedId] = React.useState(null);
   const [sortBy,  setSortBy]  = React.useState('id');
   const [sortAsc, setSortAsc] = React.useState(true);
+  const [sortMenuOpen, setSortMenuOpen] = React.useState(false);
   React.useEffect(() => {
     const prev = window.__notifyVehiclesChanged;
     window.__notifyVehiclesChanged = () => forceUpdate();
@@ -3287,6 +3288,8 @@ const VehicleScreen = () => {
     const stat = { flex:1, background:'rgba(255,255,255,.13)', borderRadius:12, padding:'9px 11px' };
     const statNum = { fontFamily:'"JetBrains Mono",monospace', fontSize:18, fontWeight:800, lineHeight:1 };
     const statLbl = { fontSize:10, opacity:.85, marginTop:3 };
+    const heroIconBtn = { width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center',
+      border:'none', borderRadius:10, cursor:'pointer', background:'rgba(255,255,255,.18)', color:'#fff', flexShrink:0 };
     return (
       <>
         {selected && (
@@ -3296,22 +3299,64 @@ const VehicleScreen = () => {
 
           {/* Gradient summary hero */}
           <div style={{
-            position:'relative', overflow:'hidden', borderRadius:20, padding:'15px 16px', color:'#fff',
+            position:'relative', borderRadius:20, padding:'15px 16px', color:'#fff',
             background:'linear-gradient(135deg,#243a66,#365a9c 60%,#4f7bc0)',
             boxShadow:'0 12px 28px rgba(36,58,102,.30)',
           }}>
-            <div style={{position:'absolute',right:-8,bottom:-14,opacity:.14,color:'#fff'}}>
-              <Icon name="car" size={104} stroke={1.4}/>
+            {/* watermark, clipped to the card without clipping the sort menu below */}
+            <div style={{position:'absolute',inset:0,overflow:'hidden',borderRadius:20,pointerEvents:'none'}}>
+              <div style={{position:'absolute',right:-8,bottom:-14,opacity:.14,color:'#fff'}}>
+                <Icon name="car" size={104} stroke={1.4}/>
+              </div>
             </div>
             <div style={{position:'relative',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
               <div style={{fontSize:17,fontWeight:800}}>{tr('យានយន្ត','Vehicles')}</div>
-              <button onClick={() => openForm('newVehicle')} style={{
-                display:'inline-flex',alignItems:'center',gap:5,height:30,padding:'0 12px',
-                border:'none',borderRadius:999,cursor:'pointer',
-                background:'rgba(255,255,255,.18)',color:'#fff',fontSize:12,fontWeight:700,fontFamily:'inherit',
-              }}>
-                <Icon name="plus" size={14}/>{tr('បន្ថែម','Add')}
-              </button>
+              <div style={{display:'flex',alignItems:'center',gap:7}}>
+                {/* sort — icon + dropdown */}
+                <div style={{position:'relative'}}>
+                  <button title={tr('តម្រៀប','Sort')} onClick={()=>setSortMenuOpen(o=>!o)} style={heroIconBtn}>
+                    <Icon name="filter" size={15}/>
+                  </button>
+                  {sortMenuOpen && (<>
+                    <div onClick={()=>setSortMenuOpen(false)} style={{position:'fixed',inset:0,zIndex:40}}/>
+                    <div style={{
+                      position:'absolute', top:'calc(100% + 8px)', right:0, zIndex:50, minWidth:172,
+                      background:'var(--surface)', color:'var(--ink)', border:'1px solid var(--border)',
+                      borderRadius:12, boxShadow:'0 14px 32px rgba(20,30,55,.24)', padding:6,
+                    }}>
+                      <div style={{fontSize:10,letterSpacing:'.06em',textTransform:'uppercase',color:'var(--ink-3)',padding:'4px 8px 6px',fontFamily:'"JetBrains Mono",monospace'}}>{tr('តម្រៀបតាម','Sort by')}</div>
+                      {SORT_OPTS.map(s => {
+                        const active = sortBy === s.id;
+                        return (
+                          <button key={s.id} onClick={()=> active ? setSortAsc(x=>!x) : (setSortBy(s.id), setSortAsc(true))}
+                            style={{
+                              display:'flex',alignItems:'center',gap:8,width:'100%',textAlign:'left',
+                              padding:'8px 8px',border:'none',borderRadius:8,cursor:'pointer',fontFamily:'inherit',
+                              fontSize:13,fontWeight:active?700:500,
+                              background:active?'var(--accent-soft)':'transparent',
+                              color:active?'var(--accent)':'var(--ink-2)',
+                            }}>
+                            <span style={{flex:1}}>{tr(s.km,s.en)}</span>
+                            {active && <span style={{fontSize:12,opacity:.9}}>{sortAsc?'↑':'↓'}</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>)}
+                </div>
+                {/* CSV export — icon */}
+                <button title={tr('នាំចេញ CSV','Export CSV')} onClick={exportVehiclesCSV} style={heroIconBtn}>
+                  <Icon name="download" size={15}/>
+                </button>
+                {/* Add */}
+                <button onClick={() => openForm('newVehicle')} style={{
+                  display:'inline-flex',alignItems:'center',gap:5,height:32,padding:'0 13px',
+                  border:'none',borderRadius:999,cursor:'pointer',
+                  background:'rgba(255,255,255,.18)',color:'#fff',fontSize:12,fontWeight:700,fontFamily:'inherit',
+                }}>
+                  <Icon name="plus" size={14}/>{tr('បន្ថែម','Add')}
+                </button>
+              </div>
             </div>
             <div style={{position:'relative',display:'flex',gap:8,marginTop:14}}>
               <div style={stat}>
@@ -3327,20 +3372,6 @@ const VehicleScreen = () => {
                 <div style={statLbl}>{tr('ថែទាំ','Service')}</div>
               </div>
             </div>
-          </div>
-
-          {/* Compact controls */}
-          <div style={{display:'flex',alignItems:'center',gap:8}}>
-            <select value={sortBy} onChange={e=>setSortBy(e.target.value)} style={{
-              padding:'8px 11px',borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)',
-              color:'var(--ink)',fontSize:12.5,fontFamily:'inherit',cursor:'pointer',minWidth:150}}>
-              {SORT_OPTS.map(s => <option key={s.id} value={s.id}>{tr('តម្រៀប៖ ','Sort: ')}{tr(s.km,s.en)}</option>)}
-            </select>
-            <button onClick={()=>setSortAsc(x=>!x)} title={tr('លំដាប់','Order')} style={{
-              width:38,height:36,borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)',
-              color:'var(--ink-2)',cursor:'pointer',fontSize:15,flexShrink:0}}>{sortAsc?'↑':'↓'}</button>
-            <div style={{flex:1}}/>
-            <Btn kind="ghost" size="sm" icon={<Icon name="download" size={13}/>} onClick={exportVehiclesCSV}>{tr('CSV','CSV')}</Btn>
           </div>
 
           {visible.length === 0 ? (
