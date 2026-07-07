@@ -1887,3 +1887,40 @@ if (!window.__lessonsLib) {
     examMilestones:     EXAM_MILESTONES,
   };
 }
+
+// Immutable snapshot of the shipped seed library, kept so a saved/cloud copy
+// (which fully replaces __lessonsLib on load) can be reconciled with newly
+// shipped lessons instead of hiding them.
+if (!window.__lessonsSeed) {
+  window.__lessonsSeed = {
+    theoryTexts:        [...THEORY_TEXTS],
+    theoryVideos:       [...THEORY_VIDEOS],
+    theoryExercises:    [...THEORY_EXERCISES],
+    practicalTexts:     [...PRACTICAL_TEXTS],
+    practicalVideos:    [...PRACTICAL_VIDEOS],
+    practicalExercises: [...PRACTICAL_EXERCISES],
+  };
+}
+
+// Additive migration: after a saved/cloud library is loaded it may predate newly
+// shipped lessons (e.g. the Stage 3 / AI course) or lack fields added later
+// (e.g. goal_km/goal_en). Merge the seed in WITHOUT discarding user edits:
+//   • a seed lesson whose id is absent  → appended
+//   • a seed lesson already present      → only fills goal_km/goal_en if missing
+// Idempotent; safe to run after every load.
+window.__mergeSeedLessons = function () {
+  const lib = window.__lessonsLib, seed = window.__lessonsSeed;
+  if (!lib || !seed) return;
+  Object.keys(seed).forEach(key => {
+    const arr = lib[key], seedArr = seed[key];
+    if (!Array.isArray(arr) || !Array.isArray(seedArr)) return;
+    const byId = new Map(arr.map(x => [x && x.id, x]));
+    seedArr.forEach(item => {
+      if (!item || !item.id) return;
+      const existing = byId.get(item.id);
+      if (!existing) { arr.push(item); return; }
+      if (item.goal_km && !existing.goal_km) existing.goal_km = item.goal_km;
+      if (item.goal_en && !existing.goal_en) existing.goal_en = item.goal_en;
+    });
+  });
+};

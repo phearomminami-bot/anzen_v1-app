@@ -214,6 +214,9 @@
       const key = map[r.track] && map[r.track][r.kind];
       if (key && lib[key]) lib[key].push(rowObj(r));
     });
+    // Cloud copy may predate newly shipped lessons/fields — merge the seed back
+    // in (adds missing lessons + backfills goals) without losing cloud edits.
+    if (window.__mergeSeedLessons) window.__mergeSeedLessons();
   }
 
   // ── Realtime ──────────────────────────────────────────────────────────────

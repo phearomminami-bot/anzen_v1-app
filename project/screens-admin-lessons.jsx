@@ -42,6 +42,9 @@ const ADMIN_LESSONS_STORE = 'anzen_lessons_v1';
     replace(window.__lessonsLib.practicalTexts,     saved.practicalTexts);
     replace(window.__lessonsLib.practicalVideos,    saved.practicalVideos);
     replace(window.__lessonsLib.practicalExercises, saved.practicalExercises);
+    // The saved copy may predate newly shipped lessons/fields — merge the seed
+    // back in (adds missing lessons + backfills goals) without losing edits.
+    if (window.__mergeSeedLessons) window.__mergeSeedLessons();
   } catch(e) {}
 })();
 
