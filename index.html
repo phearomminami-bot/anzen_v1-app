@@ -1198,6 +1198,7 @@ window.__trRegistry = {
   "Changes saved ✓": "បានរក្សាទុករួចហើយ ✓",
   "Changes discarded": "បានបោះបង់ការ​កែ​ប្រែ",
   "Discard": "បោះបង់",
+  "Settings": "ការកំណត់",
   "Backup started…": "ការ​បម្រុង​ទុក​​ចាប់​ផ្ដើម…",
   "IDENTITY": "អត្តសញ្ញាណ",
   "CONTACT": "ការ​ទាក់​ទង​សាធារណៈ",
@@ -2484,6 +2485,7 @@ window.__trGroups = {
     "Changes saved ✓": "បានរក្សាទុករួចហើយ ✓",
     "Changes discarded": "បានបោះបង់ការ​កែ​ប្រែ",
     "Discard": "បោះបង់",
+    "Settings": "ការកំណត់",
     "Backup started…": "ការ​បម្រុង​ទុក​​ចាប់​ផ្ដើម…",
     "IDENTITY": "អត្តសញ្ញាណ",
     "CONTACT": "ការ​ទាក់​ទង​សាធារណៈ",
@@ -57318,6 +57320,32 @@ if (!window.__schoolSettings.rolePermissions) {
     student: {}
   };
 }
+var SETTINGS_GROUPS = [{
+  km: 'សាលា',
+  en: 'School',
+  ids: ['school', 'locations', 'roles', 'accounts']
+}, {
+  km: 'ប្រតិបត្តិការ',
+  en: 'Operations',
+  ids: ['pricing', 'notify', 'integ', 'ai']
+}, {
+  km: 'ប្រព័ន្ធ',
+  en: 'System',
+  ids: ['appear', 'audit', 'data']
+}];
+var SETTINGS_TAB_COLOR = {
+  school: '#2A5DB0',
+  locations: '#12786B',
+  roles: '#6246C9',
+  accounts: '#3A3EA0',
+  pricing: '#B5650E',
+  notify: '#E07B39',
+  integ: '#0E6B8A',
+  ai: '#8A2E8A',
+  appear: '#E8A317',
+  audit: '#4A5560',
+  data: '#2A5DB0'
+};
 var SettingsScreen = ({
   role,
   fontSize = 'md',
@@ -57334,6 +57362,7 @@ var SettingsScreen = ({
   var bp = useBreakpoint();
   var isAdmin = role === 'admin';
   var [tab, setTab] = React.useState(isAdmin ? 'school' : 'appear');
+  var [mobileNav, setMobileNav] = React.useState(true);
   var [dirty, setDirty] = React.useState(false);
   var [version, setVersion] = React.useState(0);
   var origRef = React.useRef(JSON.parse(JSON.stringify(window.__schoolSettings)));
@@ -57477,163 +57506,251 @@ var SettingsScreen = ({
         pointerEvents: 'none'
       }
     }, tr('រក្សាទុក', 'Save')))
-  }), isAdmin && (bp.tablet || bp.mobile) && React.createElement("div", {
-    style: {
-      overflowX: 'auto',
-      marginBottom: 4,
-      paddingBottom: 4
-    }
-  }, React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 6,
-      minWidth: 'max-content'
-    }
-  }, tabs.map(t => React.createElement("button", {
-    key: t.id,
-    onClick: () => setTab(t.id),
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: 7,
-      padding: '8px 14px',
-      border: '1px solid',
-      borderColor: tab === t.id ? 'var(--accent)' : 'var(--border)',
-      background: tab === t.id ? 'var(--accent-soft)' : 'var(--surface)',
-      color: tab === t.id ? 'var(--accent)' : 'var(--ink-2)',
-      borderRadius: 20,
-      fontSize: 12,
-      fontWeight: tab === t.id ? 600 : 400,
-      cursor: 'pointer',
-      whiteSpace: 'nowrap',
-      flexShrink: 0
-    }
-  }, React.createElement(Icon, {
-    name: t.icon,
-    size: 13
-  }), t.km)))), React.createElement("div", {
-    style: {
-      display: 'grid',
-      gridTemplateColumns: isAdmin && !bp.tablet && !bp.mobile ? '220px 1fr' : '1fr',
-      gap: 14,
-      alignItems: 'start'
-    }
-  }, isAdmin && !bp.tablet && !bp.mobile && React.createElement(Card, {
-    pad: 8
-  }, React.createElement("div", {
-    style: {
-      padding: '6px 8px',
-      fontSize: 10,
-      letterSpacing: '.08em',
-      color: 'var(--ink-3)',
-      fontFamily: '"JetBrains Mono",monospace',
-      textTransform: 'uppercase',
-      marginBottom: 4
-    }
-  }, "SECTIONS"), tabs.map(t => React.createElement("button", {
-    key: t.id,
-    onClick: () => setTab(t.id),
-    style: {
-      width: '100%',
-      display: 'flex',
-      alignItems: 'center',
-      gap: 10,
-      padding: '10px 10px',
-      border: 'none',
-      background: tab === t.id ? 'var(--surface-muted)' : 'transparent',
-      color: tab === t.id ? 'var(--ink)' : 'var(--ink-2)',
-      borderRadius: 8,
-      fontSize: 13,
-      fontWeight: tab === t.id ? 600 : 400,
-      cursor: 'pointer',
-      textAlign: 'left',
-      marginBottom: 2
-    }
-  }, React.createElement(Icon, {
-    name: t.icon,
-    size: 14,
-    stroke: tab === t.id ? 2 : 1.5
-  }), React.createElement("div", {
-    style: {
-      flex: 1,
-      minWidth: 0
-    }
-  }, React.createElement("div", null, t.km), React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: 'var(--ink-3)',
-      marginTop: 1,
-      fontFamily: '"JetBrains Mono",monospace',
-      letterSpacing: '.04em'
-    }
-  }, t.en.toUpperCase())))), React.createElement(Divider, null), React.createElement("div", {
-    style: {
-      padding: 10,
-      marginTop: 6
-    }
-  }, React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: 'var(--ink-3)',
-      letterSpacing: '.06em',
-      fontFamily: '"JetBrains Mono",monospace',
-      textTransform: 'uppercase'
-    }
-  }, "SYSTEM"), React.createElement("div", {
-    style: {
-      fontSize: 12,
-      marginTop: 6,
-      color: 'var(--ink-2)'
-    }
-  }, "v0.4 \xB7 \u1798\u17B7\u1790\u17BB\u1793\u17B6 2026"), React.createElement("div", {
-    style: {
-      fontSize: 11,
-      color: 'var(--ink-3)',
-      marginTop: 2
-    }
-  }, "Last backup \xB7 2h ago"), React.createElement(Btn, {
-    kind: "ghost",
-    size: "sm",
-    style: {
-      marginTop: 10,
-      width: '100%',
-      justifyContent: 'center'
-    },
-    onClick: () => toast(tr('ការ​បម្រុង​ទុក​​ចាប់​ផ្ដើម…', 'Backup started…'), 'neutral')
-  }, "Backup now"))), React.createElement("div", {
-    key: version,
-    style: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 14,
-      minWidth: 0
-    }
-  }, tab === 'school' && React.createElement(SchoolInfo, {
-    onDirty: markDirty
-  }), tab === 'locations' && React.createElement(Locations, {
-    onDirty: markDirty
-  }), tab === 'roles' && React.createElement(RolesPermissions, {
-    onDirty: markDirty
-  }), tab === 'accounts' && React.createElement(AccountsSettings, null), tab === 'pricing' && React.createElement(PricingSettings, {
-    onDirty: markDirty
-  }), tab === 'notify' && React.createElement(NotifSettings, {
-    onDirty: markDirty
-  }), tab === 'integ' && React.createElement(Integrations, null), tab === 'ai' && React.createElement(AiSettings, {
-    onDirty: markDirty
-  }), tab === 'appear' && React.createElement(AppearanceSettings, {
-    lang: lang,
-    setLang: setLang,
-    tr: tr,
-    toast: toast,
-    fontSize: fontSize,
-    setFontSize: setFontSize,
-    role: role,
-    dark: dark,
-    toggleDark: toggleDark
-  }), tab === 'audit' && React.createElement(AuditLog, null), tab === 'data' && React.createElement(DataBackup, {
-    toast: toast,
-    tr: tr
-  }))));
+  }), (() => {
+    var tabContent = React.createElement("div", {
+      key: version,
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 14,
+        minWidth: 0
+      }
+    }, tab === 'school' && React.createElement(SchoolInfo, {
+      onDirty: markDirty
+    }), tab === 'locations' && React.createElement(Locations, {
+      onDirty: markDirty
+    }), tab === 'roles' && React.createElement(RolesPermissions, {
+      onDirty: markDirty
+    }), tab === 'accounts' && React.createElement(AccountsSettings, null), tab === 'pricing' && React.createElement(PricingSettings, {
+      onDirty: markDirty
+    }), tab === 'notify' && React.createElement(NotifSettings, {
+      onDirty: markDirty
+    }), tab === 'integ' && React.createElement(Integrations, null), tab === 'ai' && React.createElement(AiSettings, {
+      onDirty: markDirty
+    }), tab === 'appear' && React.createElement(AppearanceSettings, {
+      lang: lang,
+      setLang: setLang,
+      tr: tr,
+      toast: toast,
+      fontSize: fontSize,
+      setFontSize: setFontSize,
+      role: role,
+      dark: dark,
+      toggleDark: toggleDark
+    }), tab === 'audit' && React.createElement(AuditLog, null), tab === 'data' && React.createElement(DataBackup, {
+      toast: toast,
+      tr: tr
+    }));
+    var mobile = bp.tablet || bp.mobile;
+    if (isAdmin && mobile && mobileNav) return React.createElement("div", {
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 16
+      }
+    }, SETTINGS_GROUPS.map(g => {
+      var rows = tabs.filter(t => g.ids.includes(t.id));
+      if (!rows.length) return null;
+      return React.createElement("div", {
+        key: g.km
+      }, React.createElement("div", {
+        style: {
+          fontSize: 10.5,
+          fontFamily: '"JetBrains Mono",monospace',
+          letterSpacing: '.09em',
+          textTransform: 'uppercase',
+          color: 'var(--ink-3)',
+          fontWeight: 600,
+          padding: '0 6px 7px'
+        }
+      }, tr(g.km, g.en)), React.createElement(Card, {
+        pad: 0
+      }, rows.map((t, i) => React.createElement("button", {
+        key: t.id,
+        onClick: () => {
+          setTab(t.id);
+          setMobileNav(false);
+        },
+        style: {
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          padding: '12px 13px',
+          border: 'none',
+          borderTop: i ? '1px solid var(--border)' : 'none',
+          background: 'transparent',
+          cursor: 'pointer',
+          textAlign: 'left',
+          font: 'inherit',
+          color: 'var(--ink)'
+        }
+      }, React.createElement("div", {
+        style: {
+          width: 34,
+          height: 34,
+          borderRadius: 10,
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: SETTINGS_TAB_COLOR[t.id] || 'var(--accent)',
+          color: '#fff'
+        }
+      }, React.createElement(Icon, {
+        name: t.icon,
+        size: 16
+      })), React.createElement("div", {
+        style: {
+          flex: 1,
+          minWidth: 0
+        }
+      }, React.createElement("div", {
+        style: {
+          fontSize: 14,
+          fontWeight: 600
+        }
+      }, t.km), React.createElement("div", {
+        style: {
+          fontSize: 10,
+          color: 'var(--ink-3)',
+          fontFamily: '"JetBrains Mono",monospace',
+          letterSpacing: '.03em'
+        }
+      }, t.en.toUpperCase())), React.createElement("span", {
+        style: {
+          display: 'flex',
+          color: 'var(--ink-3)',
+          flexShrink: 0
+        }
+      }, React.createElement(Icon, {
+        name: "chev",
+        size: 16
+      }))))));
+    }));
+    if (isAdmin && mobile && !mobileNav) return React.createElement("div", {
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 14,
+        minWidth: 0
+      }
+    }, React.createElement("button", {
+      onClick: () => setMobileNav(true),
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '9px 4px',
+        background: 'transparent',
+        border: 'none',
+        cursor: 'pointer',
+        color: 'var(--accent)',
+        fontSize: 14,
+        fontWeight: 600,
+        fontFamily: 'inherit',
+        alignSelf: 'flex-start'
+      }
+    }, React.createElement("span", {
+      style: {
+        display: 'flex',
+        transform: 'scaleX(-1)'
+      }
+    }, React.createElement(Icon, {
+      name: "chev",
+      size: 16
+    })), tr('ការកំណត់', 'Settings')), tabContent);
+    return React.createElement("div", {
+      style: {
+        display: 'grid',
+        gridTemplateColumns: isAdmin && !bp.tablet && !bp.mobile ? '220px 1fr' : '1fr',
+        gap: 14,
+        alignItems: 'start'
+      }
+    }, isAdmin && !bp.tablet && !bp.mobile && React.createElement(Card, {
+      pad: 8
+    }, React.createElement("div", {
+      style: {
+        padding: '6px 8px',
+        fontSize: 10,
+        letterSpacing: '.08em',
+        color: 'var(--ink-3)',
+        fontFamily: '"JetBrains Mono",monospace',
+        textTransform: 'uppercase',
+        marginBottom: 4
+      }
+    }, "SECTIONS"), tabs.map(t => React.createElement("button", {
+      key: t.id,
+      onClick: () => setTab(t.id),
+      style: {
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: '10px 10px',
+        border: 'none',
+        background: tab === t.id ? 'var(--surface-muted)' : 'transparent',
+        color: tab === t.id ? 'var(--ink)' : 'var(--ink-2)',
+        borderRadius: 8,
+        fontSize: 13,
+        fontWeight: tab === t.id ? 600 : 400,
+        cursor: 'pointer',
+        textAlign: 'left',
+        marginBottom: 2
+      }
+    }, React.createElement(Icon, {
+      name: t.icon,
+      size: 14,
+      stroke: tab === t.id ? 2 : 1.5
+    }), React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, React.createElement("div", null, t.km), React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: 'var(--ink-3)',
+        marginTop: 1,
+        fontFamily: '"JetBrains Mono",monospace',
+        letterSpacing: '.04em'
+      }
+    }, t.en.toUpperCase())))), React.createElement(Divider, null), React.createElement("div", {
+      style: {
+        padding: 10,
+        marginTop: 6
+      }
+    }, React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: 'var(--ink-3)',
+        letterSpacing: '.06em',
+        fontFamily: '"JetBrains Mono",monospace',
+        textTransform: 'uppercase'
+      }
+    }, "SYSTEM"), React.createElement("div", {
+      style: {
+        fontSize: 12,
+        marginTop: 6,
+        color: 'var(--ink-2)'
+      }
+    }, "v0.4 \xB7 \u1798\u17B7\u1790\u17BB\u1793\u17B6 2026"), React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: 'var(--ink-3)',
+        marginTop: 2
+      }
+    }, "Last backup \xB7 2h ago"), React.createElement(Btn, {
+      kind: "ghost",
+      size: "sm",
+      style: {
+        marginTop: 10,
+        width: '100%',
+        justifyContent: 'center'
+      },
+      onClick: () => toast(tr('ការ​បម្រុង​ទុក​​ចាប់​ផ្ដើម…', 'Backup started…'), 'neutral')
+    }, "Backup now"))), tabContent);
+  })());
 };
 var SchoolInfo = ({
   onDirty

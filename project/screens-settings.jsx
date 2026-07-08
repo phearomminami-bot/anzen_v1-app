@@ -152,11 +152,24 @@ if (!window.__schoolSettings.rolePermissions) {
 }
 
 // ── Main settings screen ──────────────────────────────────────────────────
+// Mobile settings menu — sections grouped into a vertical list (iOS-style).
+const SETTINGS_GROUPS = [
+  { km:'សាលា',         en:'School',     ids:['school','locations','roles','accounts'] },
+  { km:'ប្រតិបត្តិការ', en:'Operations', ids:['pricing','notify','integ','ai'] },
+  { km:'ប្រព័ន្ធ',      en:'System',     ids:['appear','audit','data'] },
+];
+const SETTINGS_TAB_COLOR = {
+  school:'#2A5DB0', locations:'#12786B', roles:'#6246C9', accounts:'#3A3EA0',
+  pricing:'#B5650E', notify:'#E07B39', integ:'#0E6B8A', ai:'#8A2E8A',
+  appear:'#E8A317', audit:'#4A5560', data:'#2A5DB0',
+};
+
 const SettingsScreen = ({ role, fontSize = 'md', setFontSize }) => {
   const { lang, setLang, tr, toast, dark, toggleDark } = useAppActions();
   const bp = useBreakpoint();
   const isAdmin = role === 'admin';
   const [tab, setTab]       = React.useState(isAdmin ? 'school' : 'appear');
+  const [mobileNav, setMobileNav] = React.useState(true);   // mobile: show the grouped section menu vs a section
   const [dirty, setDirty]   = React.useState(false);
   const [version, setVersion] = React.useState(0); // bump to re-mount sub-tabs on discard
 
@@ -241,30 +254,74 @@ const SettingsScreen = ({ role, fontSize = 'md', setFontSize }) => {
         )}
       />
 
-      {/* horizontal tab pills — tablet/mobile only */}
-      {isAdmin && (bp.tablet || bp.mobile) && (
-        <div style={{overflowX:'auto',marginBottom:4,paddingBottom:4}}>
-          <div style={{display:'flex',gap:6,minWidth:'max-content'}}>
-            {tabs.map(t => (
-              <button key={t.id} onClick={()=>setTab(t.id)} style={{
-                display:'flex',alignItems:'center',gap:7,
-                padding:'8px 14px',border:'1px solid',
-                borderColor: tab===t.id ? 'var(--accent)' : 'var(--border)',
-                background: tab===t.id ? 'var(--accent-soft)' : 'var(--surface)',
-                color: tab===t.id ? 'var(--accent)' : 'var(--ink-2)',
-                borderRadius:20, fontSize:12, fontWeight: tab===t.id ? 600 : 400,
-                cursor:'pointer', whiteSpace:'nowrap', flexShrink:0,
-              }}>
-                <Icon name={t.icon} size={13}/>
-                {t.km}
-              </button>
-            ))}
-          </div>
+      {(() => {
+      const tabContent = (
+        <div key={version} style={{display:'flex',flexDirection:'column',gap:14,minWidth:0}}>
+          {tab==='school'    && <SchoolInfo    onDirty={markDirty}/>}
+          {tab==='locations' && <Locations     onDirty={markDirty}/>}
+          {tab==='roles'     && <RolesPermissions onDirty={markDirty}/>}
+          {tab==='accounts'  && <AccountsSettings/>}
+          {tab==='pricing'   && <PricingSettings onDirty={markDirty}/>}
+          {tab==='notify'    && <NotifSettings  onDirty={markDirty}/>}
+          {tab==='integ'     && <Integrations/>}
+          {tab==='ai'        && <AiSettings    onDirty={markDirty}/>}
+          {tab==='appear'    && <AppearanceSettings lang={lang} setLang={setLang} tr={tr} toast={toast} fontSize={fontSize} setFontSize={setFontSize} role={role} dark={dark} toggleDark={toggleDark}/>}
+          {tab==='audit'     && <AuditLog/>}
+          {tab==='data'      && <DataBackup toast={toast} tr={tr}/>}
         </div>
-      )}
+      );
+      const mobile = bp.tablet || bp.mobile;
 
+      // ── MOBILE / TABLET · grouped section menu (vertical list) ──────────────
+      if (isAdmin && mobile && mobileNav) return (
+        <div style={{display:'flex',flexDirection:'column',gap:16}}>
+          {SETTINGS_GROUPS.map(g => {
+            const rows = tabs.filter(t => g.ids.includes(t.id));
+            if (!rows.length) return null;
+            return (
+              <div key={g.km}>
+                <div style={{fontSize:10.5,fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.09em',textTransform:'uppercase',color:'var(--ink-3)',fontWeight:600,padding:'0 6px 7px'}}>{tr(g.km,g.en)}</div>
+                <Card pad={0}>
+                  {rows.map((t,i) => (
+                    <button key={t.id} onClick={()=>{ setTab(t.id); setMobileNav(false); }} style={{
+                      width:'100%',display:'flex',alignItems:'center',gap:12,padding:'12px 13px',
+                      border:'none',borderTop:i?'1px solid var(--border)':'none',
+                      background:'transparent',cursor:'pointer',textAlign:'left',font:'inherit',color:'var(--ink)',
+                    }}>
+                      <div style={{width:34,height:34,borderRadius:10,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',background:SETTINGS_TAB_COLOR[t.id]||'var(--accent)',color:'#fff'}}>
+                        <Icon name={t.icon} size={16}/>
+                      </div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:14,fontWeight:600}}>{t.km}</div>
+                        <div style={{fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.03em'}}>{t.en.toUpperCase()}</div>
+                      </div>
+                      <span style={{display:'flex',color:'var(--ink-3)',flexShrink:0}}><Icon name="chev" size={16}/></span>
+                    </button>
+                  ))}
+                </Card>
+              </div>
+            );
+          })}
+        </div>
+      );
+
+      // ── MOBILE / TABLET · a section is open — back button + content ─────────
+      if (isAdmin && mobile && !mobileNav) return (
+        <div style={{display:'flex',flexDirection:'column',gap:14,minWidth:0}}>
+          <button onClick={()=>setMobileNav(true)} style={{
+            display:'flex',alignItems:'center',gap:8,padding:'9px 4px',background:'transparent',border:'none',
+            cursor:'pointer',color:'var(--accent)',fontSize:14,fontWeight:600,fontFamily:'inherit',alignSelf:'flex-start',
+          }}>
+            <span style={{display:'flex',transform:'scaleX(-1)'}}><Icon name="chev" size={16}/></span>
+            {tr('ការកំណត់','Settings')}
+          </button>
+          {tabContent}
+        </div>
+      );
+
+      // ── DESKTOP (or non-admin) · left rail + content ───────────────────────
+      return (
       <div style={{display:'grid',gridTemplateColumns: (isAdmin && !bp.tablet && !bp.mobile) ? '220px 1fr' : '1fr',gap:14,alignItems:'start'}}>
-        {/* left rail — admin only, desktop only */}
         {isAdmin && !bp.tablet && !bp.mobile && <Card pad={8}>
           <div style={{padding:'6px 8px',fontSize:10,letterSpacing:'.08em',color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',textTransform:'uppercase',marginBottom:4}}>SECTIONS</div>
           {tabs.map(t => (
@@ -296,21 +353,10 @@ const SettingsScreen = ({ role, fontSize = 'md', setFontSize }) => {
           </div>
         </Card>}
 
-        {/* main content — key=version remounts sub-tabs on discard */}
-        <div key={version} style={{display:'flex',flexDirection:'column',gap:14,minWidth:0}}>
-          {tab==='school'    && <SchoolInfo    onDirty={markDirty}/>}
-          {tab==='locations' && <Locations     onDirty={markDirty}/>}
-          {tab==='roles'     && <RolesPermissions onDirty={markDirty}/>}
-          {tab==='accounts'  && <AccountsSettings/>}
-          {tab==='pricing'   && <PricingSettings onDirty={markDirty}/>}
-          {tab==='notify'    && <NotifSettings  onDirty={markDirty}/>}
-          {tab==='integ'     && <Integrations/>}
-          {tab==='ai'        && <AiSettings    onDirty={markDirty}/>}
-          {tab==='appear'    && <AppearanceSettings lang={lang} setLang={setLang} tr={tr} toast={toast} fontSize={fontSize} setFontSize={setFontSize} role={role} dark={dark} toggleDark={toggleDark}/>}
-          {tab==='audit'     && <AuditLog/>}
-          {tab==='data'      && <DataBackup toast={toast} tr={tr}/>}
-        </div>
+        {tabContent}
       </div>
+      );
+      })()}
     </div>
   );
 };
