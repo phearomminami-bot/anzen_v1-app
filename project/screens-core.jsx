@@ -60,6 +60,9 @@ const DashboardAdmin = () => {
   // Exams are scheduled separately from lessons (green); surface today's here too.
   const allExams        = (window.__schoolSettings && window.__schoolSettings.scheduleExams) || [];
   const todayExams      = allExams.filter(e => e.date === today).sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
+  // Schedule notes for today — shown next to exams/applications on the dashboard.
+  const allNotes        = (window.__schoolSettings && window.__schoolSettings.scheduleNotes) || [];
+  const todayNotes      = allNotes.filter(n => n.date === today).sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
 
   const activeVeh     = VEHICLES.filter(v => v.status === 'Active').length;
   const serviceVeh    = VEHICLES.filter(v => v.status === 'Service due' || v.status === 'Workshop');
@@ -329,9 +332,9 @@ const DashboardAdmin = () => {
               </div>
             </div>
 
-            {/* Exams / applications today */}
-            {todayExams.length>0 && (
-              <AuCard title={<>🏁 {tr('ប្រឡង / ដាក់​ពាក្យ​ថ្ងៃ​នេះ','Exams / applications today')}</>}>
+            {/* Exams / applications / notes today */}
+            {(todayExams.length>0 || todayNotes.length>0) && (
+              <AuCard title={<>🏁 {tr('ប្រឡង / ដាក់​ពាក្យ / ចំណាំ​ថ្ងៃ​នេះ','Exams / applications / notes today')}</>}>
                 {todayExams.map((e,i)=>{
                   const stu=(e.studentIds||[]).map(id=>{const s=studentById(id);return s?(s.en||s.name):null;}).filter(Boolean);
                   const ins=(e.instIds||[]).map(id=>{const it=instById(id);return it?(it.en||it.name):null;}).filter(Boolean);
@@ -346,6 +349,15 @@ const DashboardAdmin = () => {
                     </button>
                   );
                 })}
+                {todayNotes.map((n,i)=>(
+                  <div key={n.id||('n'+i)} style={{display:'flex',gap:10,alignItems:'flex-start',padding:'8px 0',borderTop:(i||todayExams.length)?'1px dashed var(--border)':'none'}}>
+                    <div style={{fontSize:12.5,fontWeight:700,fontFamily:'"JetBrains Mono",monospace',color:'#B5650E',minWidth:44}}>{n.time?String(n.time).slice(0,5):'—'}</div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:13,fontWeight:600,color:'var(--ink)'}}>📌 {n.title || tr('ចំណាំ','Note')}</div>
+                      {n.description && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:1}}>{n.description}</div>}
+                    </div>
+                  </div>
+                ))}
               </AuCard>
             )}
 
@@ -394,8 +406,8 @@ const DashboardAdmin = () => {
             const half = Math.ceil(sorted.length / 2);
             return (
               <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                {todayExams.length > 0 && (
-                  <Card bar label={tr('ប្រឡង / ដាក់ពាក្យ ថ្ងៃ​នេះ','TODAY\'S EXAMS / APPLICATIONS')}>
+                {(todayExams.length > 0 || todayNotes.length > 0) && (
+                  <Card bar label={tr('ប្រឡង / ដាក់ពាក្យ / ចំណាំ ថ្ងៃ​នេះ','TODAY\'S EXAMS / APPLICATIONS / NOTES')}>
                     {todayExams.map((e,i) => {
                       const stu = (e.studentIds||[]).map(id=>{const s=studentById(id);return s?(s.en||s.name):null;}).filter(Boolean);
                       const ins = (e.instIds||[]).map(id=>{const it=instById(id);return it?(it.en||it.name):null;}).filter(Boolean);
@@ -410,6 +422,15 @@ const DashboardAdmin = () => {
                         </button>
                       );
                     })}
+                    {todayNotes.map((n,i) => (
+                      <div key={n.id||('n'+i)} style={{display:'flex',gap:10,alignItems:'flex-start',padding:'9px 0',borderTop:(i||todayExams.length)?'1px solid var(--border)':'none'}}>
+                        <div style={{fontSize:12,fontWeight:700,fontFamily:'"JetBrains Mono",monospace',color:'#B5650E',minWidth:42}}>{n.time?String(n.time).slice(0,5):'—'}</div>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:13,fontWeight:600,color:'var(--ink)'}}>📌 {n.title || tr('ចំណាំ','Note')}</div>
+                          {n.description && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:1}}>{n.description}</div>}
+                        </div>
+                      </div>
+                    ))}
                   </Card>
                 )}
                 <Card bar label={tr('មេរៀន​ថ្ងៃ​នេះ','TODAY\'S LESSONS')}>

@@ -499,14 +499,14 @@ window.__trRegistry = {
   "Good evening": "សាយ័ណ្ហ​សួស្ដី",
   "Exams / apps": "ប្រឡង/ដាក់ពាក្យ",
   "New students": "សិស្ស​ថ្មី",
-  "Exams / applications today": "ប្រឡង / ដាក់​ពាក្យ​ថ្ងៃ​នេះ",
+  "Exams / applications / notes today": "ប្រឡង / ដាក់​ពាក្យ / ចំណាំ​ថ្ងៃ​នេះ",
   "Today's lessons": "មេរៀន​ថ្ងៃ​នេះ",
   "No lessons today": "គ្មាន​មេរៀន​ថ្ងៃ​នេះ",
   "Tomorrow's lessons": "មេរៀន​ថ្ងៃ​ស្អែក",
   "No lessons tomorrow": "គ្មាន​មេរៀន​ថ្ងៃ​ស្អែក",
   "Alerts": "ការ​ជូន​ដំណឹង",
   "No alerts — all good": "គ្មាន​ការ​ជូន​ដំណឹង",
-  "TODAY\\'S EXAMS / APPLICATIONS": "ប្រឡង / ដាក់ពាក្យ ថ្ងៃ​នេះ",
+  "TODAY\\'S EXAMS / APPLICATIONS / NOTES": "ប្រឡង / ដាក់ពាក្យ / ចំណាំ ថ្ងៃ​នេះ",
   "TODAY\\'S LESSONS": "មេរៀន​ថ្ងៃ​នេះ",
   "No lessons scheduled today": "គ្មាន​មេរៀន​ថ្ងៃ​នេះ",
   "TOMORROW\\'S LESSONS": "មេរៀន​ថ្ងៃ​ស្អែក",
@@ -1641,14 +1641,14 @@ window.__trGroups = {
     "Good evening": "សាយ័ណ្ហ​សួស្ដី",
     "Exams / apps": "ប្រឡង/ដាក់ពាក្យ",
     "New students": "សិស្ស​ថ្មី",
-    "Exams / applications today": "ប្រឡង / ដាក់​ពាក្យ​ថ្ងៃ​នេះ",
+    "Exams / applications / notes today": "ប្រឡង / ដាក់​ពាក្យ / ចំណាំ​ថ្ងៃ​នេះ",
     "Today's lessons": "មេរៀន​ថ្ងៃ​នេះ",
     "No lessons today": "គ្មាន​មេរៀន​ថ្ងៃ​នេះ",
     "Tomorrow's lessons": "មេរៀន​ថ្ងៃ​ស្អែក",
     "No lessons tomorrow": "គ្មាន​មេរៀន​ថ្ងៃ​ស្អែក",
     "Alerts": "ការ​ជូន​ដំណឹង",
     "No alerts — all good": "គ្មាន​ការ​ជូន​ដំណឹង",
-    "TODAY\\'S EXAMS / APPLICATIONS": "ប្រឡង / ដាក់ពាក្យ ថ្ងៃ​នេះ",
+    "TODAY\\'S EXAMS / APPLICATIONS / NOTES": "ប្រឡង / ដាក់ពាក្យ / ចំណាំ ថ្ងៃ​នេះ",
     "TODAY\\'S LESSONS": "មេរៀន​ថ្ងៃ​នេះ",
     "No lessons scheduled today": "គ្មាន​មេរៀន​ថ្ងៃ​នេះ",
     "TOMORROW\\'S LESSONS": "មេរៀន​ថ្ងៃ​ស្អែក",
@@ -15299,6 +15299,8 @@ var DashboardAdmin = () => {
   var tomorrowLessons = LESSONS.filter(l => l.date === tomorrowStr && l.status !== 'cancelled');
   var allExams = window.__schoolSettings && window.__schoolSettings.scheduleExams || [];
   var todayExams = allExams.filter(e => e.date === today).sort((a, b) => String(a.time || '').localeCompare(String(b.time || '')));
+  var allNotes = window.__schoolSettings && window.__schoolSettings.scheduleNotes || [];
+  var todayNotes = allNotes.filter(n => n.date === today).sort((a, b) => String(a.time || '').localeCompare(String(b.time || '')));
   var activeVeh = VEHICLES.filter(v => v.status === 'Active').length;
   var serviceVeh = VEHICLES.filter(v => v.status === 'Service due' || v.status === 'Workshop');
   var clsB = STUDENTS.filter(s => s.cls && s.cls.startsWith('B')).length;
@@ -15909,8 +15911,8 @@ var DashboardAdmin = () => {
           fontFamily: 'var(--font-km),sans-serif',
           lineHeight: 1.2
         }
-      }, lab))))), todayExams.length > 0 && React.createElement(AuCard, {
-        title: React.createElement(React.Fragment, null, "\uD83C\uDFC1 ", tr('ប្រឡង / ដាក់​ពាក្យ​ថ្ងៃ​នេះ', 'Exams / applications today'))
+      }, lab))))), (todayExams.length > 0 || todayNotes.length > 0) && React.createElement(AuCard, {
+        title: React.createElement(React.Fragment, null, "\uD83C\uDFC1 ", tr('ប្រឡង / ដាក់​ពាក្យ / ចំណាំ​ថ្ងៃ​នេះ', 'Exams / applications / notes today'))
       }, todayExams.map((e, i) => {
         var stu = (e.studentIds || []).map(id => {
           var s = studentById(id);
@@ -15963,7 +15965,41 @@ var DashboardAdmin = () => {
             marginTop: 1
           }
         }, "\uD83D\uDC68\u200D\uD83C\uDFEB ", ins.join(' · '))));
-      })), React.createElement(AuCard, {
+      }), todayNotes.map((n, i) => React.createElement("div", {
+        key: n.id || 'n' + i,
+        style: {
+          display: 'flex',
+          gap: 10,
+          alignItems: 'flex-start',
+          padding: '8px 0',
+          borderTop: i || todayExams.length ? '1px dashed var(--border)' : 'none'
+        }
+      }, React.createElement("div", {
+        style: {
+          fontSize: 12.5,
+          fontWeight: 700,
+          fontFamily: '"JetBrains Mono",monospace',
+          color: '#B5650E',
+          minWidth: 44
+        }
+      }, n.time ? String(n.time).slice(0, 5) : '—'), React.createElement("div", {
+        style: {
+          flex: 1,
+          minWidth: 0
+        }
+      }, React.createElement("div", {
+        style: {
+          fontSize: 13,
+          fontWeight: 600,
+          color: 'var(--ink)'
+        }
+      }, "\uD83D\uDCCC ", n.title || tr('ចំណាំ', 'Note')), n.description && React.createElement("div", {
+        style: {
+          fontSize: 11,
+          color: 'var(--ink-3)',
+          marginTop: 1
+        }
+      }, n.description))))), React.createElement(AuCard, {
         title: React.createElement(React.Fragment, null, "\uD83D\uDCD8 ", tr('មេរៀន​ថ្ងៃ​នេះ', "Today's lessons"))
       }, sortedToday.length === 0 ? React.createElement("div", {
         style: {
@@ -16097,9 +16133,9 @@ var DashboardAdmin = () => {
           flexDirection: 'column',
           gap: 8
         }
-      }, todayExams.length > 0 && React.createElement(Card, {
+      }, (todayExams.length > 0 || todayNotes.length > 0) && React.createElement(Card, {
         bar: true,
-        label: tr('ប្រឡង / ដាក់ពាក្យ ថ្ងៃ​នេះ', 'TODAY\'S EXAMS / APPLICATIONS')
+        label: tr('ប្រឡង / ដាក់ពាក្យ / ចំណាំ ថ្ងៃ​នេះ', 'TODAY\'S EXAMS / APPLICATIONS / NOTES')
       }, todayExams.map((e, i) => {
         var stu = (e.studentIds || []).map(id => {
           var s = studentById(id);
@@ -16152,7 +16188,41 @@ var DashboardAdmin = () => {
             marginTop: 1
           }
         }, "\uD83D\uDC68\u200D\uD83C\uDFEB ", ins.join(' · '))));
-      })), React.createElement(Card, {
+      }), todayNotes.map((n, i) => React.createElement("div", {
+        key: n.id || 'n' + i,
+        style: {
+          display: 'flex',
+          gap: 10,
+          alignItems: 'flex-start',
+          padding: '9px 0',
+          borderTop: i || todayExams.length ? '1px solid var(--border)' : 'none'
+        }
+      }, React.createElement("div", {
+        style: {
+          fontSize: 12,
+          fontWeight: 700,
+          fontFamily: '"JetBrains Mono",monospace',
+          color: '#B5650E',
+          minWidth: 42
+        }
+      }, n.time ? String(n.time).slice(0, 5) : '—'), React.createElement("div", {
+        style: {
+          flex: 1,
+          minWidth: 0
+        }
+      }, React.createElement("div", {
+        style: {
+          fontSize: 13,
+          fontWeight: 600,
+          color: 'var(--ink)'
+        }
+      }, "\uD83D\uDCCC ", n.title || tr('ចំណាំ', 'Note')), n.description && React.createElement("div", {
+        style: {
+          fontSize: 11,
+          color: 'var(--ink-3)',
+          marginTop: 1
+        }
+      }, n.description))))), React.createElement(Card, {
         bar: true,
         label: tr('មេរៀន​ថ្ងៃ​នេះ', 'TODAY\'S LESSONS')
       }, sorted.length === 0 ? React.createElement("div", {
