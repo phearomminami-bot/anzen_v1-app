@@ -1061,9 +1061,6 @@ window.__trRegistry = {
   "Khmer": "ខ្មែរ",
   "Enroll student": "ចុះឈ្មោះ​សិស្ស",
   "Filter": "តម្រង",
-  "AT": "អូ",
-  "MT": "ដៃ",
-  "Th": "ទ្រ",
   "Enroll": "ចុះ​ឈ្មោះ​",
   "Avg mock": "មធ្យម",
   "In progress": "កំពុង​រៀន",
@@ -1766,9 +1763,6 @@ window.__trGroups = {
     "Khmer": "ខ្មែរ",
     "Enroll student": "ចុះឈ្មោះ​សិស្ស",
     "Filter": "តម្រង",
-    "AT": "អូ",
-    "MT": "ដៃ",
-    "Th": "ទ្រ",
     "Enroll": "ចុះឈ្មោះ​សិស្ស",
     "Avg mock": "មធ្យម",
     "In progress": "កំពុង​បន្ត",
@@ -45840,7 +45834,7 @@ var StudentsScreenV2 = () => {
           mt = pr.filter(l => !isATVeh(l)).reduce((a, l) => a + (l.len || 1), 0);
         return at > mt;
       })();
-      var transLabel = studentIsAT ? tr('អូ', 'AT') : tr('ដៃ', 'MT');
+      var transLabel = 'pt';
       var transKey = studentIsAT ? 'prAT' : 'prMT';
       var phaseRows = displayPhases.map(ph => {
         var cfgH = cfgOf(ph.k);
@@ -45974,7 +45968,7 @@ var StudentsScreenV2 = () => {
           marginTop: 2,
           fontFamily: '"JetBrains Mono",monospace'
         }
-      }, s.id, " \xB7 ", clsKm(s.cls)), phaseRows.map((r, i) => React.createElement("div", {
+      }, s.id, " \xB7 ", clsLetter(s.cls)), phaseRows.map((r, i) => React.createElement("div", {
         key: i,
         style: {
           fontSize: 11,
@@ -45987,7 +45981,7 @@ var StudentsScreenV2 = () => {
           color: r.ph.color,
           fontWeight: 700
         }
-      }, r.ph.label), " \xB7 ", tr('ទ្រ', 'Th'), " ", r.thDone, "/", r.thTarget, " \xB7 ", transLabel, " ", r.prDone, "/", r.prTarget)), React.createElement("div", {
+      }, r.ph.label), " \xB7 tt ", r.thDone, "/", r.thTarget, " \xB7 ", transLabel, " ", r.prDone, "/", r.prTarget)), React.createElement("div", {
         style: {
           display: 'flex',
           gap: 5,

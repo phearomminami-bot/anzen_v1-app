@@ -1414,7 +1414,7 @@ const StudentsScreenV2 = () => {
               const at = pr.filter(isATVeh).reduce((a,l)=>a+(l.len||1),0), mt = pr.filter(l=>!isATVeh(l)).reduce((a,l)=>a+(l.len||1),0);
               return at > mt;
             })();
-            const transLabel = studentIsAT ? tr('អូ','AT') : tr('ដៃ','MT');
+            const transLabel = 'pt';   // practical (matches pt- lesson ids)
             const transKey   = studentIsAT ? 'prAT' : 'prMT';
             // One row per displayed phase: theory + the student's transmission practical.
             const phaseRows = displayPhases.map(ph => {
@@ -1449,10 +1449,10 @@ const StudentsScreenV2 = () => {
                       <span style={{fontSize:14.5,fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.en || s.name}</span>
                       <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:20,flexShrink:0,background:tMeta.bg,color:tMeta.color,border:`1px solid ${tMeta.color}33`}}>{stTypeEn(s.studentType)}</span>
                     </div>
-                    <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2,fontFamily:'"JetBrains Mono",monospace'}}>{s.id} · {clsKm(s.cls)}</div>
+                    <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2,fontFamily:'"JetBrains Mono",monospace'}}>{s.id} · {clsLetter(s.cls)}</div>
                     {phaseRows.map((r,i)=>(
                       <div key={i} style={{fontSize:11,marginTop:2,fontFamily:'"JetBrains Mono",monospace',color:'var(--ink-3)'}}>
-                        <span style={{color:r.ph.color,fontWeight:700}}>{r.ph.label}</span> · {tr('ទ្រ','Th')} {r.thDone}/{r.thTarget} · {transLabel} {r.prDone}/{r.prTarget}
+                        <span style={{color:r.ph.color,fontWeight:700}}>{r.ph.label}</span> · tt {r.thDone}/{r.thTarget} · {transLabel} {r.prDone}/{r.prTarget}
                       </div>
                     ))}
                     <div style={{display:'flex',gap:5,marginTop:7,flexWrap:'wrap'}}>
