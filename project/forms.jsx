@@ -1871,18 +1871,29 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
   // ── Conflict checks (first date only, as a proxy) ─────────────────────────
   const firstDate = dates[0] || defaultDate;
   const slotBusy = (l) => l.status !== 'cancelled' && (!editLesson || l.id !== editLesson.id) && dates.includes(l.date) && l.h < parseInt(hour) + parseFloat(len) && l.h + l.len > parseInt(hour);
+  // For classroom theory (color 'c') one instructor can teach many students at
+  // once, so a theory-vs-theory time overlap is NOT a hard clash — it's allowed
+  // (the instructor stays selectable) but flagged so the user knows.
+  const newIsTheory = catObj.color === 'c';
+  const lIsTheory   = (l) => l.color === 'c';
+  const softBusy    = (l) => slotBusy(l) && newIsTheory && lIsTheory(l);   // allowed overlap
+  const hardBusy    = (l) => slotBusy(l) && !softBusy(l);                  // real clash
   const hasConflict = React.useMemo(() => {
     if (!instId || !dates.length) return false;
-    return LESSONS.some(l => (l.instId === instId || (l.guests||[]).includes(instId)) && slotBusy(l));
-  }, [instId, dates, hour, len]);
+    return LESSONS.some(l => (l.instId === instId || (l.guests||[]).includes(instId)) && hardBusy(l));
+  }, [instId, dates, hour, len, cat]);
+  const instSoftBusy = React.useMemo(() => {
+    if (!instId || !dates.length || !newIsTheory) return false;
+    return LESSONS.some(l => (l.instId === instId || (l.guests||[]).includes(instId)) && softBusy(l));
+  }, [instId, dates, hour, len, cat]);
   const guestConflicts = React.useMemo(() => {
     if (!guests.length || !dates.length) return {};
     const conflicts = {};
     guests.forEach(gid => {
-      conflicts[gid] = LESSONS.some(l => (l.instId === gid || (l.guests||[]).includes(gid)) && slotBusy(l));
+      conflicts[gid] = LESSONS.some(l => (l.instId === gid || (l.guests||[]).includes(gid)) && hardBusy(l));
     });
     return conflicts;
-  }, [guests, dates, hour, len]);
+  }, [guests, dates, hour, len, cat]);
   const vehConflict = React.useMemo(() => {
     if (!vehId || !dates.length) return false;
     return LESSONS.some(l => l.veh === vehId && slotBusy(l));
@@ -2171,13 +2182,20 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
             </Select>
           </Field>
           <Field full label={tr('គ្រូ *','Instructor *')}
-            sub={touched.instId&&!instId ? tr('ទាមទារ','Required') : hasConflict ? tr('⚠ គ្រូ​នេះ​រវល់​ម៉ោង​នេះ','⚠ Instructor busy') : ''}>
+            sub={touched.instId&&!instId ? tr('ទាមទារ','Required')
+               : hasConflict ? tr('⚠ គ្រូ​នេះ​រវល់​ម៉ោង​នេះ','⚠ Instructor busy')
+               : instSoftBusy ? tr('📘 គ្រូ​នេះ​មាន​ម៉ោង​ទ្រឹស្ដី​ពី​មុន — អាច​បង្រៀន​ច្រើន​សិស្ស','📘 Already has a theory hour here — can teach several students')
+               : ''}>
             <Select value={instId} onChange={e=>setInstId(e.target.value)}
               style={hasConflict?{borderColor:'var(--warn)'}:touched.instId&&!instId?{borderColor:'var(--danger)'}:{}}>
               <option value="">{tr('--- ជ្រើស​គ្រូ ---','--- Select instructor ---')}</option>
               {INSTRUCTORS.map(i=>{
-                const busy = LESSONS.some(l=>l.instId===i.id && slotBusy(l));
-                return <option key={i.id} value={i.id} disabled={busy}>{busy?'🔴 ':''}{i.en || i.name}{busy?tr(' (រវល់)',' (busy)'):''}</option>;
+                const clashes = LESSONS.filter(l=>l.instId===i.id && slotBusy(l));
+                const hard = clashes.some(l=>hardBusy(l));
+                const soft = !hard && clashes.length>0;   // theory-vs-theory only
+                const pre  = hard ? '🔴 ' : soft ? '📘 ' : '';
+                const suf  = hard ? tr(' (រវល់)',' (busy)') : soft ? tr(' (មាន​ទ្រឹស្ដី)',' (has theory)') : '';
+                return <option key={i.id} value={i.id} disabled={hard}>{pre}{i.en || i.name}{suf}</option>;
               })}
             </Select>
           </Field>

@@ -314,7 +314,9 @@ window.__trRegistry = {
   "Group / not individual": "ក្រុម / មិន​ផ្ទាល់​ខ្លួន",
   "Instructor *": "គ្រូ *",
   "⚠ Instructor busy": "⚠ គ្រូ​នេះ​រវល់​ម៉ោង​នេះ",
+  "📘 Already has a theory hour here — can teach several students": "📘 គ្រូ​នេះ​មាន​ម៉ោង​ទ្រឹស្ដី​ពី​មុន — អាច​បង្រៀន​ច្រើន​សិស្ស",
   "(busy)": "(រវល់)",
+  "(has theory)": "(មាន​ទ្រឹស្ដី)",
   "Vehicle": "យានយន្ត",
   "No vehicles — add in Fleet tab": "គ្មាន​ឡាន​ ← បន្ថែម​ក្នុង Tab Fleet",
   "⚠ Vehicle busy": "⚠ ឡាន​ជាន់​ម៉ោង​គ្នា",
@@ -2762,7 +2764,9 @@ window.__trGroups = {
     "Group / not individual": "ក្រុម / មិន​ផ្ទាល់​ខ្លួន",
     "Instructor *": "គ្រូ *",
     "⚠ Instructor busy": "⚠ គ្រូ​នេះ​រវល់​ម៉ោង​នេះ",
+    "📘 Already has a theory hour here — can teach several students": "📘 គ្រូ​នេះ​មាន​ម៉ោង​ទ្រឹស្ដី​ពី​មុន — អាច​បង្រៀន​ច្រើន​សិស្ស",
     "(busy)": "(រវល់)",
+    "(has theory)": "(មាន​ទ្រឹស្ដី)",
     "Vehicle": "យានយន្ត",
     "No vehicles — add in Fleet tab": "គ្មាន​ឡាន​ ← បន្ថែម​ក្នុង Tab Fleet",
     "⚠ Vehicle busy": "⚠ ឡាន​ជាន់​ម៉ោង​គ្នា",
@@ -3054,7 +3058,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v173";</script>
+<script>window.__ANZEN_VERSION="v174";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -7348,18 +7352,26 @@ var NewLessonForm = ({
   }];
   var firstDate = dates[0] || defaultDate;
   var slotBusy = l => l.status !== 'cancelled' && (!editLesson || l.id !== editLesson.id) && dates.includes(l.date) && l.h < parseInt(hour) + parseFloat(len) && l.h + l.len > parseInt(hour);
+  var newIsTheory = catObj.color === 'c';
+  var lIsTheory = l => l.color === 'c';
+  var softBusy = l => slotBusy(l) && newIsTheory && lIsTheory(l);
+  var hardBusy = l => slotBusy(l) && !softBusy(l);
   var hasConflict = React.useMemo(() => {
     if (!instId || !dates.length) return false;
-    return LESSONS.some(l => (l.instId === instId || (l.guests || []).includes(instId)) && slotBusy(l));
-  }, [instId, dates, hour, len]);
+    return LESSONS.some(l => (l.instId === instId || (l.guests || []).includes(instId)) && hardBusy(l));
+  }, [instId, dates, hour, len, cat]);
+  var instSoftBusy = React.useMemo(() => {
+    if (!instId || !dates.length || !newIsTheory) return false;
+    return LESSONS.some(l => (l.instId === instId || (l.guests || []).includes(instId)) && softBusy(l));
+  }, [instId, dates, hour, len, cat]);
   var guestConflicts = React.useMemo(() => {
     if (!guests.length || !dates.length) return {};
     var conflicts = {};
     guests.forEach(gid => {
-      conflicts[gid] = LESSONS.some(l => (l.instId === gid || (l.guests || []).includes(gid)) && slotBusy(l));
+      conflicts[gid] = LESSONS.some(l => (l.instId === gid || (l.guests || []).includes(gid)) && hardBusy(l));
     });
     return conflicts;
-  }, [guests, dates, hour, len]);
+  }, [guests, dates, hour, len, cat]);
   var vehConflict = React.useMemo(() => {
     if (!vehId || !dates.length) return false;
     return LESSONS.some(l => l.veh === vehId && slotBusy(l));
@@ -7844,7 +7856,7 @@ var NewLessonForm = ({
   }, s.en || s.name)))), React.createElement(Field, {
     full: true,
     label: tr('គ្រូ *', 'Instructor *'),
-    sub: touched.instId && !instId ? tr('ទាមទារ', 'Required') : hasConflict ? tr('⚠ គ្រូ​នេះ​រវល់​ម៉ោង​នេះ', '⚠ Instructor busy') : ''
+    sub: touched.instId && !instId ? tr('ទាមទារ', 'Required') : hasConflict ? tr('⚠ គ្រូ​នេះ​រវល់​ម៉ោង​នេះ', '⚠ Instructor busy') : instSoftBusy ? tr('📘 គ្រូ​នេះ​មាន​ម៉ោង​ទ្រឹស្ដី​ពី​មុន — អាច​បង្រៀន​ច្រើន​សិស្ស', '📘 Already has a theory hour here — can teach several students') : ''
   }, React.createElement(Select, {
     value: instId,
     onChange: e => setInstId(e.target.value),
@@ -7856,12 +7868,16 @@ var NewLessonForm = ({
   }, React.createElement("option", {
     value: ""
   }, tr('--- ជ្រើស​គ្រូ ---', '--- Select instructor ---')), INSTRUCTORS.map(i => {
-    var busy = LESSONS.some(l => l.instId === i.id && slotBusy(l));
+    var clashes = LESSONS.filter(l => l.instId === i.id && slotBusy(l));
+    var hard = clashes.some(l => hardBusy(l));
+    var soft = !hard && clashes.length > 0;
+    var pre = hard ? '🔴 ' : soft ? '📘 ' : '';
+    var suf = hard ? tr(' (រវល់)', ' (busy)') : soft ? tr(' (មាន​ទ្រឹស្ដី)', ' (has theory)') : '';
     return React.createElement("option", {
       key: i.id,
       value: i.id,
-      disabled: busy
-    }, busy ? '🔴 ' : '', i.en || i.name, busy ? tr(' (រវល់)', ' (busy)') : '');
+      disabled: hard
+    }, pre, i.en || i.name, suf);
   }))), React.createElement(Field, {
     label: tr('យានយន្ត', 'Vehicle'),
     full: true,
