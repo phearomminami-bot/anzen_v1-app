@@ -2531,7 +2531,17 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
 
   const [cls,     setCls]     = React.useState(clsLetter(s.cls));
   const [trans,   setTrans]   = React.useState(s.trans   || 'AT');
-  const [instId,  setInstId]  = React.useState(s.instId  || '');
+  // One instructor per tracking phase (KH / JP / AI / SST). Legacy single
+  // s.instId is treated as the KH instructor when no per-phase map exists.
+  const PHASES_LIST = (window.STUDENT_PHASES || [{k:'KH',label:'KH',color:'#2A5DB0'}]);
+  const [instByPhase, setInstByPhase] = React.useState(() => {
+    const base = s.instByPhase || {};
+    const init = {};
+    PHASES_LIST.forEach(p => { init[p.k] = base[p.k] || (p.k === 'KH' ? (s.instId || '') : ''); });
+    return init;
+  });
+  const setPhaseInst = (k, v) => setInstByPhase(prev => ({ ...prev, [k]: v }));
+  const primaryInstId = instByPhase.KH || PHASES_LIST.map(p => instByPhase[p.k]).find(Boolean) || '';
   const [status,  setStatus]  = React.useState(s.status  || 'New');
   const [enrolled,setEnrolled]= React.useState(s.enrolled==='—'?'':s.enrolled||'');
   const [target,  setTarget]  = React.useState(String(s.target || 40));
@@ -2580,7 +2590,7 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
 
   const save = () => {
     if (!name.trim()) { toast(tr('ត្រូវការ​ឈ្មោះ','Name required'), 'warn'); return; }
-    const instObj = INSTRUCTORS.find(i => i.id === instId);
+    const instObj = INSTRUCTORS.find(i => i.id === primaryInstId);
     onSave({
       ...s,
       name:     name.trim(),
@@ -2608,7 +2618,8 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
       studentType,
       cls,
       trans,
-      instId:   instId || s.instId || '',
+      instId:   primaryInstId || s.instId || '',
+      instByPhase: { ...instByPhase },
       inst:     instObj ? instObj.en : (s.inst || ''),
       status,
       enrolled: enrolled || s.enrolled || '—',
@@ -2761,14 +2772,16 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
             <option value="Cleared">Cleared</option>
           </select>
         </SEField>
-        <SEField label={tr('គ្រូ​','Instructor')}>
-          <select {...sel} value={instId} onChange={e=>setInstId(e.target.value)}>
-            <option value="">{tr('— មិន​ទាន់​','— Not assigned')} —</option>
-            {INSTRUCTORS.map(i => (
-              <option key={i.id} value={i.id}>{i.en || i.name} ({i.cls || i.classes || 'B'})</option>
-            ))}
-          </select>
-        </SEField>
+        {PHASES_LIST.map(ph => (
+          <SEField key={ph.k} label={<span>{tr('គ្រូ​','Instructor')} · <span style={{color:ph.color,fontWeight:700}}>{ph.label}</span></span>}>
+            <select {...sel} value={instByPhase[ph.k] || ''} onChange={e=>setPhaseInst(ph.k, e.target.value)}>
+              <option value="">{tr('— មិន​ទាន់​','— Not assigned')} —</option>
+              {INSTRUCTORS.map(i => (
+                <option key={i.id} value={i.id}>{i.en || i.name} ({i.cls || i.classes || 'B'})</option>
+              ))}
+            </select>
+          </SEField>
+        ))}
       </div>
 
       {secTitle(tr('បណ្ណ​បើកបរ​ដែល​មាន​ស្រាប់','EXISTING DRIVING LICENSE'))}
@@ -2835,8 +2848,16 @@ const StudentEnrollmentDetail = ({ s, onEdit, onAddPayment, onSavePaid }) => {
             <ERow k={tr('ចុះ​ឈ្មោះ​','Enrolled')} v={s.enrolled}/>
             <ERow k={tr('ប្រភេទ','Class')}
               v={`${s.cls} · ${s.trans==='MT'?tr('លេខ​ដៃ','Manual'):tr('លេខ​អូតូ','Auto')}`}/>
-            <ERow k={tr('គ្រូ​បង្រៀន','Instructor')}
-              v={s.inst||(instObj?.name)||'—'}/>
+            {(() => {
+              const ibp = s.instByPhase || {};
+              const phases = (window.STUDENT_PHASES || []);
+              const set = phases.filter(p => ibp[p.k]);
+              if (set.length) return set.map(p => {
+                const io = INSTRUCTORS.find(i => i.id === ibp[p.k]);
+                return <ERow key={p.k} k={<span>{tr('គ្រូ​បង្រៀន','Instructor')} · <span style={{color:p.color,fontWeight:700}}>{p.label}</span></span>} v={io?(io.en||io.name):'—'}/>;
+              });
+              return <ERow k={tr('គ្រូ​បង្រៀន','Instructor')} v={s.inst||(instObj?.name)||'—'}/>;
+            })()}
             <ERow k={tr('ចាប់​ផ្ដើម','Study start')} v={s.study_start}/>
             <ERow k={tr('បញ្ចប់','Study end')} v={s.study_end}/>
             <ERow k={tr('ថ្លៃ​សិក្សា','Tuition')} v={`$${price}`}/>

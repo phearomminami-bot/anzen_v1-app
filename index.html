@@ -3058,7 +3058,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v174";</script>
+<script>window.__ANZEN_VERSION="v175";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -49186,7 +49186,24 @@ var StudentEditPanel = ({
   var [studentType, setStudentType] = React.useState(s.studentType || 'ធម្មតា');
   var [cls, setCls] = React.useState(clsLetter(s.cls));
   var [trans, setTrans] = React.useState(s.trans || 'AT');
-  var [instId, setInstId] = React.useState(s.instId || '');
+  var PHASES_LIST = window.STUDENT_PHASES || [{
+    k: 'KH',
+    label: 'KH',
+    color: '#2A5DB0'
+  }];
+  var [instByPhase, setInstByPhase] = React.useState(() => {
+    var base = s.instByPhase || {};
+    var init = {};
+    PHASES_LIST.forEach(p => {
+      init[p.k] = base[p.k] || (p.k === 'KH' ? s.instId || '' : '');
+    });
+    return init;
+  });
+  var setPhaseInst = (k, v) => setInstByPhase(prev => ({
+    ...prev,
+    [k]: v
+  }));
+  var primaryInstId = instByPhase.KH || PHASES_LIST.map(p => instByPhase[p.k]).find(Boolean) || '';
   var [status, setStatus] = React.useState(s.status || 'New');
   var [enrolled, setEnrolled] = React.useState(s.enrolled === '—' ? '' : s.enrolled || '');
   var [target, setTarget] = React.useState(String(s.target || 40));
@@ -49232,7 +49249,7 @@ var StudentEditPanel = ({
       toast(tr('ត្រូវការ​ឈ្មោះ', 'Name required'), 'warn');
       return;
     }
-    var instObj = INSTRUCTORS.find(i => i.id === instId);
+    var instObj = INSTRUCTORS.find(i => i.id === primaryInstId);
     onSave({
       ...s,
       name: name.trim(),
@@ -49260,7 +49277,10 @@ var StudentEditPanel = ({
       studentType,
       cls,
       trans,
-      instId: instId || s.instId || '',
+      instId: primaryInstId || s.instId || '',
+      instByPhase: {
+        ...instByPhase
+      },
       inst: instObj ? instObj.en : s.inst || '',
       status,
       enrolled: enrolled || s.enrolled || '—',
@@ -49576,17 +49596,23 @@ var StudentEditPanel = ({
     value: "Road exam soon"
   }, "Road exam soon"), React.createElement("option", {
     value: "Cleared"
-  }, "Cleared"))), React.createElement(SEField, {
-    label: tr('គ្រូ​', 'Instructor')
+  }, "Cleared"))), PHASES_LIST.map(ph => React.createElement(SEField, {
+    key: ph.k,
+    label: React.createElement("span", null, tr('គ្រូ​', 'Instructor'), " \xB7 ", React.createElement("span", {
+      style: {
+        color: ph.color,
+        fontWeight: 700
+      }
+    }, ph.label))
   }, React.createElement("select", _extends({}, sel, {
-    value: instId,
-    onChange: e => setInstId(e.target.value)
+    value: instByPhase[ph.k] || '',
+    onChange: e => setPhaseInst(ph.k, e.target.value)
   }), React.createElement("option", {
     value: ""
   }, tr('— មិន​ទាន់​', '— Not assigned'), " \u2014"), INSTRUCTORS.map(i => React.createElement("option", {
     key: i.id,
     value: i.id
-  }, i.en || i.name, " (", i.cls || i.classes || 'B', ")"))))), secTitle(tr('បណ្ណ​បើកបរ​ដែល​មាន​ស្រាប់', 'EXISTING DRIVING LICENSE')), React.createElement(LicensePicker, {
+  }, i.en || i.name, " (", i.cls || i.classes || 'B', ")")))))), secTitle(tr('បណ្ណ​បើកបរ​ដែល​មាន​ស្រាប់', 'EXISTING DRIVING LICENSE')), React.createElement(LicensePicker, {
     has: hasLicense,
     setHas: setHasLicense,
     classes: licenseClasses,
@@ -49748,10 +49774,28 @@ var StudentEnrollmentDetail = ({
   }), React.createElement(ERow, {
     k: tr('ប្រភេទ', 'Class'),
     v: `${s.cls} · ${s.trans === 'MT' ? tr('លេខ​ដៃ', 'Manual') : tr('លេខ​អូតូ', 'Auto')}`
-  }), React.createElement(ERow, {
-    k: tr('គ្រូ​បង្រៀន', 'Instructor'),
-    v: s.inst || instObj?.name || '—'
-  }), React.createElement(ERow, {
+  }), (() => {
+    var ibp = s.instByPhase || {};
+    var phases = window.STUDENT_PHASES || [];
+    var set = phases.filter(p => ibp[p.k]);
+    if (set.length) return set.map(p => {
+      var io = INSTRUCTORS.find(i => i.id === ibp[p.k]);
+      return React.createElement(ERow, {
+        key: p.k,
+        k: React.createElement("span", null, tr('គ្រូ​បង្រៀន', 'Instructor'), " \xB7 ", React.createElement("span", {
+          style: {
+            color: p.color,
+            fontWeight: 700
+          }
+        }, p.label)),
+        v: io ? io.en || io.name : '—'
+      });
+    });
+    return React.createElement(ERow, {
+      k: tr('គ្រូ​បង្រៀន', 'Instructor'),
+      v: s.inst || instObj?.name || '—'
+    });
+  })(), React.createElement(ERow, {
     k: tr('ចាប់​ផ្ដើម', 'Study start'),
     v: s.study_start
   }), React.createElement(ERow, {
