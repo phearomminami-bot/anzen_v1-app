@@ -4,9 +4,10 @@
 // ANY one counts as a success. Lessons are tagged with a phase so the record can
 // be grouped KH / JP / AI.
 const STUDENT_PHASES = [
-  { k:'KH', label:'KH', color:'#2A5DB0' },
-  { k:'JP', label:'JP', color:'#B0413E' },
-  { k:'AI', label:'AI', color:'#12A302' },
+  { k:'KH',  label:'KH',  color:'#2A5DB0' },
+  { k:'JP',  label:'JP',  color:'#B0413E' },
+  { k:'AI',  label:'AI',  color:'#12A302' },
+  { k:'SST', label:'SST', color:'#7A45C9' },
 ];
 const lessonPhase = (l) => (l && l.phase) || 'KH';   // legacy lessons default to KH
 const phaseMeta   = (k) => STUDENT_PHASES.find(p => p.k === k) || STUDENT_PHASES[0];

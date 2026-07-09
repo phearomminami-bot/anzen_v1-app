@@ -1244,7 +1244,7 @@ window.__trRegistry = {
   "BASE TUITION": "ថ្លៃ​សិក្សា​មូលដ្ឋាន",
   "AT · Auto": "AT · លេខ​អូតូ",
   "MT · Manual": "MT · លេខ​ដៃ",
-  "PROGRAM HOURS · KH / JP / AI": "ម៉ោង​គោលដៅ​តាម​វគ្គ · KH / JP / AI",
+  "PROGRAM HOURS · KH / JP / AI / SST": "ម៉ោង​គោលដៅ​តាម​វគ្គ · KH / JP / AI / SST",
   "Practical · Auto (AT)": "អនុវត្តន៍ · អូតូ (AT)",
   "Practical · Manual (MT)": "អនុវត្តន៍ · លេខដៃ (MT)",
   "Theory & practical target hours per phase. The student card shows the hours of the phase the student is currently doing.": "ម៉ោង​គោលដៅ ទ្រឹស្ដី និង​អនុវត្តន៍ សម្រាប់​វគ្គ​នីមួយៗ។ កាត​សិស្ស​បង្ហាញ​ម៉ោង​តាម​វគ្គ​ដែល​សិស្ស​កំពុង​រៀន។",
@@ -2528,7 +2528,7 @@ window.__trGroups = {
     "BASE TUITION": "ថ្លៃ​សិក្សា​មូលដ្ឋាន",
     "AT · Auto": "AT · លេខ​អូតូ",
     "MT · Manual": "MT · លេខ​ដៃ",
-    "PROGRAM HOURS · KH / JP / AI": "ម៉ោង​គោលដៅ​តាម​វគ្គ · KH / JP / AI",
+    "PROGRAM HOURS · KH / JP / AI / SST": "ម៉ោង​គោលដៅ​តាម​វគ្គ · KH / JP / AI / SST",
     "Practical · Auto (AT)": "អនុវត្តន៍ · អូតូ (AT)",
     "Practical · Manual (MT)": "អនុវត្តន៍ · លេខដៃ (MT)",
     "Theory & practical target hours per phase. The student card shows the hours of the phase the student is currently doing.": "ម៉ោង​គោលដៅ ទ្រឹស្ដី និង​អនុវត្តន៍ សម្រាប់​វគ្គ​នីមួយៗ។ កាត​សិស្ស​បង្ហាញ​ម៉ោង​តាម​វគ្គ​ដែល​សិស្ស​កំពុង​រៀន។",
@@ -4033,6 +4033,10 @@ var STUDENT_PHASES = [{
   k: 'AI',
   label: 'AI',
   color: '#12A302'
+}, {
+  k: 'SST',
+  label: 'SST',
+  color: '#7A45C9'
 }];
 var lessonPhase = l => l && l.phase || 'KH';
 var phaseMeta = k => STUDENT_PHASES.find(p => p.k === k) || STUDENT_PHASES[0];
@@ -57791,36 +57795,38 @@ if (window.__schoolSettings.price_MT == null) window.__schoolSettings.price_MT =
     prAT: 12,
     prMT: 15
   });
-  if (!window.__schoolSettings.programHours) {
-    window.__schoolSettings.programHours = {
-      KH: _DEF(),
-      JP: _DEF(),
-      AI: _DEF()
-    };
-  } else {
-    var _ph = window.__schoolSettings.programHours;
-    ['KH', 'JP', 'AI'].forEach(k => {
-      var v = _ph[k];
-      if (typeof v === 'number') _ph[k] = {
-        th: 0,
-        prAT: v,
-        prMT: v
-      };else if (v && typeof v === 'object') {
-        if (!('prAT' in v) && !('prMT' in v)) {
-          var pr = Number(v.pr) || 0;
-          _ph[k] = {
-            th: Number(v.th) || 0,
-            prAT: pr,
-            prMT: pr
-          };
-        } else _ph[k] = {
+  var _phaseKeys = (window.STUDENT_PHASES || [{
+    k: 'KH'
+  }, {
+    k: 'JP'
+  }, {
+    k: 'AI'
+  }, {
+    k: 'SST'
+  }]).map(p => p.k);
+  if (!window.__schoolSettings.programHours) window.__schoolSettings.programHours = {};
+  var _ph = window.__schoolSettings.programHours;
+  _phaseKeys.forEach(k => {
+    var v = _ph[k];
+    if (typeof v === 'number') _ph[k] = {
+      th: 0,
+      prAT: v,
+      prMT: v
+    };else if (v && typeof v === 'object') {
+      if (!('prAT' in v) && !('prMT' in v)) {
+        var pr = Number(v.pr) || 0;
+        _ph[k] = {
           th: Number(v.th) || 0,
-          prAT: Number(v.prAT) || 0,
-          prMT: Number(v.prMT) || 0
+          prAT: pr,
+          prMT: pr
         };
-      } else _ph[k] = _DEF();
-    });
-  }
+      } else _ph[k] = {
+        th: Number(v.th) || 0,
+        prAT: Number(v.prAT) || 0,
+        prMT: Number(v.prMT) || 0
+      };
+    } else _ph[k] = _DEF();
+  });
 }
 if (!window.__schoolSettings.studentForm) {
   window.__schoolSettings.studentForm = {
@@ -60408,11 +60414,11 @@ var PricingSettings = ({
       color: 'var(--ink-3)'
     }
   }, "\u1790\u17D2\u179B\u17C3\u1791\u17B6\u17C6\u1784\u1793\u17C1\u17C7\u178F\u17D2\u179A\u17BC\u179C\u1794\u17B6\u1793\u1794\u17D2\u179A\u17BE\u1794\u17D2\u179A\u17B6\u179F\u17CB\u1780\u17D2\u1793\u17BB\u1784 Payment card \u179A\u1794\u179F\u17CB\u179F\u17B7\u179F\u17D2\u179F")), React.createElement(Card, {
-    label: tr('ម៉ោង​គោលដៅ​តាម​វគ្គ · KH / JP / AI', 'PROGRAM HOURS · KH / JP / AI')
+    label: tr('ម៉ោង​គោលដៅ​តាម​វគ្គ · KH / JP / AI / SST', 'PROGRAM HOURS · KH / JP / AI / SST')
   }, React.createElement("div", {
     style: {
       display: 'grid',
-      gridTemplateColumns: '1fr 1fr 1fr',
+      gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))',
       gap: 12
     }
   }, (window.STUDENT_PHASES || [{
@@ -60427,6 +60433,10 @@ var PricingSettings = ({
     k: 'AI',
     label: 'AI',
     color: '#12A302'
+  }, {
+    k: 'SST',
+    label: 'SST',
+    color: '#7A45C9'
   }]).map(p => {
     var h = progHours[p.k] || {
       th: 0,

@@ -81,19 +81,17 @@ if (window.__schoolSettings.price_MT == null) window.__schoolSettings.price_MT =
 // Each phase holds { th (theory), prAT (practical · auto), prMT (practical · manual) }.
 {
   const _DEF = () => ({ th:10, prAT:12, prMT:15 });
-  if (!window.__schoolSettings.programHours) {
-    window.__schoolSettings.programHours = { KH:_DEF(), JP:_DEF(), AI:_DEF() };
-  } else {
-    const _ph = window.__schoolSettings.programHours;
-    ['KH','JP','AI'].forEach(k => {
-      const v = _ph[k];
-      if (typeof v === 'number') _ph[k] = { th:0, prAT:v, prMT:v };                       // legacy flat → practical
-      else if (v && typeof v === 'object') {
-        if (!('prAT' in v) && !('prMT' in v)) { const pr = Number(v.pr)||0; _ph[k] = { th:Number(v.th)||0, prAT:pr, prMT:pr }; }  // {th,pr} → split
-        else _ph[k] = { th:Number(v.th)||0, prAT:Number(v.prAT)||0, prMT:Number(v.prMT)||0 };
-      } else _ph[k] = _DEF();
-    });
-  }
+  const _phaseKeys = (window.STUDENT_PHASES || [{k:'KH'},{k:'JP'},{k:'AI'},{k:'SST'}]).map(p => p.k);
+  if (!window.__schoolSettings.programHours) window.__schoolSettings.programHours = {};
+  const _ph = window.__schoolSettings.programHours;
+  _phaseKeys.forEach(k => {
+    const v = _ph[k];
+    if (typeof v === 'number') _ph[k] = { th:0, prAT:v, prMT:v };                        // legacy flat → practical
+    else if (v && typeof v === 'object') {
+      if (!('prAT' in v) && !('prMT' in v)) { const pr = Number(v.pr)||0; _ph[k] = { th:Number(v.th)||0, prAT:pr, prMT:pr }; }  // {th,pr} → split
+      else _ph[k] = { th:Number(v.th)||0, prAT:Number(v.prAT)||0, prMT:Number(v.prMT)||0 };
+    } else _ph[k] = _DEF();
+  });
 }
 if (!window.__schoolSettings.studentForm) {
   window.__schoolSettings.studentForm = {
@@ -1176,9 +1174,9 @@ const PricingSettings = ({ onDirty }) => {
         </div>
       </Card>
 
-      <Card label={tr('ម៉ោង​គោលដៅ​តាម​វគ្គ · KH / JP / AI','PROGRAM HOURS · KH / JP / AI')}>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12}}>
-          {(window.STUDENT_PHASES || [{k:'KH',label:'KH',color:'#2A5DB0'},{k:'JP',label:'JP',color:'#B0413E'},{k:'AI',label:'AI',color:'#12A302'}]).map(p => {
+      <Card label={tr('ម៉ោង​គោលដៅ​តាម​វគ្គ · KH / JP / AI / SST','PROGRAM HOURS · KH / JP / AI / SST')}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(130px,1fr))',gap:12}}>
+          {(window.STUDENT_PHASES || [{k:'KH',label:'KH',color:'#2A5DB0'},{k:'JP',label:'JP',color:'#B0413E'},{k:'AI',label:'AI',color:'#12A302'},{k:'SST',label:'SST',color:'#7A45C9'}]).map(p => {
             const h = progHours[p.k] || { th:0, pr:0 };
             return (
             <div key={p.k} style={{padding:14,border:'1px solid var(--border)',borderRadius:8,background:'var(--surface-muted)'}}>
