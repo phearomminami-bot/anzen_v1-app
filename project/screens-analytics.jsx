@@ -473,9 +473,9 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
     return wi === wd && Object.values(e.results || {}).some(r => r.result === 'fail');
   }).length));
 
-  // Instructor performance table
+  // Instructor performance table (A_PHASES / A_lessonPhase defined above)
   const instRows = I.map(i => {
-    const taught = L.filter(l => l.instId === i.id);
+    const taught = L.filter(l => l.instId === i.id);   // primary instructor only
     const done = taught.filter(l => l.status === 'done');
     const canc = taught.filter(l => l.status === 'cancelled').length;
     const studs = new Set(taught.map(l => l.studentId)).size;
@@ -483,8 +483,14 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
     const f = fEX.reduce((a, e) => a + ((e.instIds || []).includes(i.id) ? Object.values(e.results || {}).filter(r => r.result === 'fail').length : 0), 0);
     const rated = done.filter(l => l.rating > 0);
     const rating = rated.length ? A_num(rated.reduce((a, l) => a + l.rating, 0) / rated.length) : 0;
-    const hours = done.reduce((a, l) => a + (l.len || 1), 0);
-    return { id: i.id, name: i.en || i.name || i.id, students: studs, pass: A_pct(p, p + f || 1), rating, hours, cancelled: canc, completion: A_pct(done.length, taught.length || 1) };
+    const hours = done.reduce((a, l) => a + (l.len || 1), 0);   // primary teaching hours
+    // Primary teaching hours split by tracking phase (KH / JP / AI / SST).
+    const hoursByPhase = {};
+    A_PHASES.forEach(ph => { hoursByPhase[ph.k] = done.filter(l => A_lessonPhase(l) === ph.k).reduce((a, l) => a + (l.len || 1), 0); });
+    // Guest hours — the instructor tagged along on someone else's lesson.
+    // Counted as a plain number only; no pass/rating/completion scoring.
+    const guestHours = L.filter(l => (l.guests || []).includes(i.id) && l.status === 'done').reduce((a, l) => a + (l.len || 1), 0);
+    return { id: i.id, name: i.en || i.name || i.id, students: studs, pass: A_pct(p, p + f || 1), rating, hours, hoursByPhase, guestHours, cancelled: canc, completion: A_pct(done.length, taught.length || 1) };
   }).sort((a, b) => b.pass - a.pass || b.hours - a.hours);
 
   // Vehicle analytics
@@ -724,6 +730,35 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
       <div style={chartGrid}>
         <ChartCard title={tr('គ្រូ​កំពូល​តាម​អត្រា​ជាប់', 'Top Instructors — Pass Rate')}><BarsH data={instRows.slice(0, 10).map(r => ({ label: r.name.split(' ')[0], value: r.pass, color: '#12A302' }))} fmt={v => v + '%'} max={100} /></ChartCard>
         <ChartCard title={tr('ម៉ោង​បង្រៀន', 'Teaching Hours')}><BarsH data={instRows.slice(0, 10).map(r => ({ label: r.name.split(' ')[0], value: r.hours, color: '#2A5DB0' }))} fmt={v => v + 'h'} /></ChartCard>
+      </div>
+
+      {/* Teaching hours by phase + guest hours (guest = count only, no scoring) */}
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 4, overflowX: 'auto', marginTop: 12 }}>
+        <div style={{ padding: '11px 12px 6px', fontSize: 13, fontWeight: 700 }}>{tr('ម៉ោង​បង្រៀន​តាម​វគ្គ', 'Teaching hours by phase')}</div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, minWidth: 560 }}>
+          <thead><tr style={{ background: 'var(--surface-muted)' }}>
+            <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: 11, color: 'var(--ink-3)', fontWeight: 700, whiteSpace: 'nowrap' }}>{tr('គ្រូ', 'Instructor')}</th>
+            {A_PHASES.map(ph => (
+              <th key={ph.k} style={{ padding: '10px 12px', textAlign: 'center', fontSize: 11, color: ph.color, fontWeight: 800, whiteSpace: 'nowrap' }}>{ph.label}</th>
+            ))}
+            <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: 11, color: 'var(--ink-2)', fontWeight: 800, whiteSpace: 'nowrap' }}>{tr('សរុប', 'Total')}</th>
+            <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: 11, color: 'var(--ink-3)', fontWeight: 700, whiteSpace: 'nowrap' }}>{tr('គ្រូ​ភ្ញៀវ', 'Guest')}</th>
+          </tr></thead>
+          <tbody>
+            {instRows.map(r => (
+              <tr key={r.id} style={{ borderTop: '1px solid var(--border)' }}>
+                <td style={{ padding: '10px 12px', fontWeight: 600 }}>{r.name}</td>
+                {A_PHASES.map(ph => (
+                  <td key={ph.k} style={{ textAlign: 'center', color: r.hoursByPhase[ph.k] ? 'var(--ink)' : 'var(--ink-3)' }}>{A_num(r.hoursByPhase[ph.k] || 0)}h</td>
+                ))}
+                <td style={{ textAlign: 'center', fontWeight: 700 }}>{A_num(r.hours)}h</td>
+                <td style={{ textAlign: 'center', color: r.guestHours ? 'var(--accent)' : 'var(--ink-3)' }}>{r.guestHours ? '+' + A_num(r.guestHours) + 'h' : '—'}</td>
+              </tr>
+            ))}
+            {instRows.length === 0 && <tr><td colSpan={A_PHASES.length + 3} style={{ textAlign: 'center', padding: 18, color: 'var(--ink-3)' }}>{tr('មិន​មាន​គ្រូ', 'No instructors')}</td></tr>}
+          </tbody>
+        </table>
+        <div style={{ padding: '6px 12px 10px', fontSize: 11, color: 'var(--ink-3)' }}>{tr('សរុប = ម៉ោង​បង្រៀន​ជា​គ្រូ​ចម្បង · គ្រូ​ភ្ញៀវ​រាប់​តែ​ចំនួន គ្មាន​ការ​ដាក់​ពិន្ទុ', 'Total = primary teaching hours · Guest hours are a plain count, no scoring')}</div>
       </div>
 
       {/* ── Section 6 — Vehicles ── */}

@@ -1529,6 +1529,9 @@ window.__trRegistry = {
   "Teaching Hrs": "ម៉ោង​បង្រៀន",
   "Top Instructors — Pass Rate": "គ្រូ​កំពូល​តាម​អត្រា​ជាប់",
   "Teaching Hours": "ម៉ោង​បង្រៀន",
+  "Teaching hours by phase": "ម៉ោង​បង្រៀន​តាម​វគ្គ",
+  "Guest": "គ្រូ​ភ្ញៀវ",
+  "Total = primary teaching hours · Guest hours are a plain count, no scoring": "សរុប = ម៉ោង​បង្រៀន​ជា​គ្រូ​ចម្បង · គ្រូ​ភ្ញៀវ​រាប់​តែ​ចំនួន គ្មាន​ការ​ដាក់​ពិន្ទុ",
   "Available": "ទំនេរ",
   "In Use Today": "កំពុង​ប្រើ​ថ្ងៃ​នេះ",
   "In Maintenance": "ជួសជុល",
@@ -3031,6 +3034,9 @@ window.__trGroups = {
     "Teaching Hrs": "ម៉ោង​បង្រៀន",
     "Top Instructors — Pass Rate": "គ្រូ​កំពូល​តាម​អត្រា​ជាប់",
     "Teaching Hours": "ម៉ោង​បង្រៀន",
+    "Teaching hours by phase": "ម៉ោង​បង្រៀន​តាម​វគ្គ",
+    "Guest": "គ្រូ​ភ្ញៀវ",
+    "Total = primary teaching hours · Guest hours are a plain count, no scoring": "សរុប = ម៉ោង​បង្រៀន​ជា​គ្រូ​ចម្បង · គ្រូ​ភ្ញៀវ​រាប់​តែ​ចំនួន គ្មាន​ការ​ដាក់​ពិន្ទុ",
     "Available": "ទំនេរ",
     "In Use Today": "កំពុង​ប្រើ​ថ្ងៃ​នេះ",
     "In Maintenance": "ជួសជុល",
@@ -3058,7 +3064,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v175";</script>
+<script>window.__ANZEN_VERSION="v176";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -67585,6 +67591,11 @@ var AnalyticsScreen = ({
     var rated = done.filter(l => l.rating > 0);
     var rating = rated.length ? A_num(rated.reduce((a, l) => a + l.rating, 0) / rated.length) : 0;
     var hours = done.reduce((a, l) => a + (l.len || 1), 0);
+    var hoursByPhase = {};
+    A_PHASES.forEach(ph => {
+      hoursByPhase[ph.k] = done.filter(l => A_lessonPhase(l) === ph.k).reduce((a, l) => a + (l.len || 1), 0);
+    });
+    var guestHours = L.filter(l => (l.guests || []).includes(i.id) && l.status === 'done').reduce((a, l) => a + (l.len || 1), 0);
     return {
       id: i.id,
       name: i.en || i.name || i.id,
@@ -67592,6 +67603,8 @@ var AnalyticsScreen = ({
       pass: A_pct(p, p + f || 1),
       rating,
       hours,
+      hoursByPhase,
+      guestHours,
       cancelled: canc,
       completion: A_pct(done.length, taught.length || 1)
     };
@@ -68300,7 +68313,109 @@ var AnalyticsScreen = ({
       color: '#2A5DB0'
     })),
     fmt: v => v + 'h'
-  }))), React.createElement(A_SectionHead, {
+  }))), React.createElement("div", {
+    style: {
+      background: 'var(--surface)',
+      border: '1px solid var(--border)',
+      borderRadius: 14,
+      padding: 4,
+      overflowX: 'auto',
+      marginTop: 12
+    }
+  }, React.createElement("div", {
+    style: {
+      padding: '11px 12px 6px',
+      fontSize: 13,
+      fontWeight: 700
+    }
+  }, tr('ម៉ោង​បង្រៀន​តាម​វគ្គ', 'Teaching hours by phase')), React.createElement("table", {
+    style: {
+      width: '100%',
+      borderCollapse: 'collapse',
+      fontSize: 12.5,
+      minWidth: 560
+    }
+  }, React.createElement("thead", null, React.createElement("tr", {
+    style: {
+      background: 'var(--surface-muted)'
+    }
+  }, React.createElement("th", {
+    style: {
+      padding: '10px 12px',
+      textAlign: 'left',
+      fontSize: 11,
+      color: 'var(--ink-3)',
+      fontWeight: 700,
+      whiteSpace: 'nowrap'
+    }
+  }, tr('គ្រូ', 'Instructor')), A_PHASES.map(ph => React.createElement("th", {
+    key: ph.k,
+    style: {
+      padding: '10px 12px',
+      textAlign: 'center',
+      fontSize: 11,
+      color: ph.color,
+      fontWeight: 800,
+      whiteSpace: 'nowrap'
+    }
+  }, ph.label)), React.createElement("th", {
+    style: {
+      padding: '10px 12px',
+      textAlign: 'center',
+      fontSize: 11,
+      color: 'var(--ink-2)',
+      fontWeight: 800,
+      whiteSpace: 'nowrap'
+    }
+  }, tr('សរុប', 'Total')), React.createElement("th", {
+    style: {
+      padding: '10px 12px',
+      textAlign: 'center',
+      fontSize: 11,
+      color: 'var(--ink-3)',
+      fontWeight: 700,
+      whiteSpace: 'nowrap'
+    }
+  }, tr('គ្រូ​ភ្ញៀវ', 'Guest')))), React.createElement("tbody", null, instRows.map(r => React.createElement("tr", {
+    key: r.id,
+    style: {
+      borderTop: '1px solid var(--border)'
+    }
+  }, React.createElement("td", {
+    style: {
+      padding: '10px 12px',
+      fontWeight: 600
+    }
+  }, r.name), A_PHASES.map(ph => React.createElement("td", {
+    key: ph.k,
+    style: {
+      textAlign: 'center',
+      color: r.hoursByPhase[ph.k] ? 'var(--ink)' : 'var(--ink-3)'
+    }
+  }, A_num(r.hoursByPhase[ph.k] || 0), "h")), React.createElement("td", {
+    style: {
+      textAlign: 'center',
+      fontWeight: 700
+    }
+  }, A_num(r.hours), "h"), React.createElement("td", {
+    style: {
+      textAlign: 'center',
+      color: r.guestHours ? 'var(--accent)' : 'var(--ink-3)'
+    }
+  }, r.guestHours ? '+' + A_num(r.guestHours) + 'h' : '—'))), instRows.length === 0 && React.createElement("tr", null, React.createElement("td", {
+    colSpan: A_PHASES.length + 3,
+    style: {
+      textAlign: 'center',
+      padding: 18,
+      color: 'var(--ink-3)'
+    }
+  }, tr('មិន​មាន​គ្រូ', 'No instructors'))))), React.createElement("div", {
+    style: {
+      padding: '6px 12px 10px',
+      fontSize: 11,
+      color: 'var(--ink-3)'
+    }
+  }, tr('សរុប = ម៉ោង​បង្រៀន​ជា​គ្រូ​ចម្បង · គ្រូ​ភ្ញៀវ​រាប់​តែ​ចំនួន គ្មាន​ការ​ដាក់​ពិន្ទុ', 'Total = primary teaching hours · Guest hours are a plain count, no scoring'))), React.createElement(A_SectionHead, {
     n: 6,
     km: "\u179C\u17B7\u1797\u17B6\u1782\u200B\u1799\u17B6\u1793\u1799\u1793\u17D2\u178F",
     en: "Vehicle Analytics",
