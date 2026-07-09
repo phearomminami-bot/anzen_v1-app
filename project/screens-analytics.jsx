@@ -757,9 +757,9 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
             <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: 11, color: 'var(--ink-3)', fontWeight: 700, whiteSpace: 'nowrap' }}>{tr('គ្រូ​ភ្ញៀវ', 'Guest')}</th>
           </tr></thead>
           <tbody>
-            {instRows.map(r => (
+            {[...instRows].sort((a, b) => b.totalHours - a.totalHours).map((r, i) => (
               <tr key={r.id} style={{ borderTop: '1px solid var(--border)' }}>
-                <td style={{ padding: '10px 12px', fontWeight: 600 }}>{r.name}</td>
+                <td style={{ padding: '10px 12px', fontWeight: 600 }}>{r.totalHours > 0 && i < 3 ? ['🥇', '🥈', '🥉'][i] + ' ' : ''}{r.name}</td>
                 {A_PHASES.map(ph => (
                   <td key={ph.k} style={{ textAlign: 'center', color: r.hoursByPhase[ph.k] ? 'var(--ink)' : 'var(--ink-3)' }}>{A_num(r.hoursByPhase[ph.k] || 0)}h</td>
                 ))}

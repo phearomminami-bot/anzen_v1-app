@@ -3066,7 +3066,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v177";</script>
+<script>window.__ANZEN_VERSION="v178";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -68393,7 +68393,7 @@ var AnalyticsScreen = ({
       fontWeight: 700,
       whiteSpace: 'nowrap'
     }
-  }, tr('គ្រូ​ភ្ញៀវ', 'Guest')))), React.createElement("tbody", null, instRows.map(r => React.createElement("tr", {
+  }, tr('គ្រូ​ភ្ញៀវ', 'Guest')))), React.createElement("tbody", null, [...instRows].sort((a, b) => b.totalHours - a.totalHours).map((r, i) => React.createElement("tr", {
     key: r.id,
     style: {
       borderTop: '1px solid var(--border)'
@@ -68403,7 +68403,7 @@ var AnalyticsScreen = ({
       padding: '10px 12px',
       fontWeight: 600
     }
-  }, r.name), A_PHASES.map(ph => React.createElement("td", {
+  }, r.totalHours > 0 && i < 3 ? ['🥇', '🥈', '🥉'][i] + ' ' : '', r.name), A_PHASES.map(ph => React.createElement("td", {
     key: ph.k,
     style: {
       textAlign: 'center',
