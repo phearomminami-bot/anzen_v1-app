@@ -1059,8 +1059,8 @@ window.__trRegistry = {
   "Tap to toggle status": "ចុច​ដើម្បី​ប្ដូរ​ស្ថានភាព",
   "Missing": "មិន​ទាន់",
   "Lessons & Comments": "បញ្ជីមេរៀន និង មតិគ្រូ",
+  "Lessons": "មេរៀន",
   "Download PDF — choose phase": "ទាញយក PDF — ជ្រើសវគ្គ",
-  "Choose language": "ជ្រើសភាសា",
   "Khmer": "ខ្មែរ",
   "Enroll student": "ចុះឈ្មោះ​សិស្ស",
   "Filter": "តម្រង",
@@ -1372,7 +1372,6 @@ window.__trRegistry = {
   "Choose folder…": "ជ្រើស​ Folder…",
   "Export data": "Export ទិន្នន័យ",
   "Download a JSON backup file": "ទាញយក​ backup ជា​ file JSON",
-  "Lessons": "មេរៀន",
   "Invoices": "វិក្កយបត្រ",
   "Download backup": "ទាញ​យក​ Backup",
   "Import data": "Import ទិន្នន័យ",
@@ -1767,8 +1766,8 @@ window.__trGroups = {
     "Tap to toggle status": "ចុច​ដើម្បី​ប្ដូរ​ស្ថានភាព",
     "Missing": "មិន​ទាន់",
     "Lessons & Comments": "បញ្ជីមេរៀន និង មតិគ្រូ",
+    "Lessons": "បញ្ជីមេរៀន",
     "Download PDF — choose phase": "ទាញយក PDF — ជ្រើសវគ្គ",
-    "Choose language": "ជ្រើសភាសា",
     "Khmer": "ខ្មែរ",
     "Enroll student": "ចុះឈ្មោះ​សិស្ស",
     "Filter": "តម្រង",
@@ -2661,7 +2660,6 @@ window.__trGroups = {
     "Choose folder…": "ជ្រើស​ Folder…",
     "Export data": "Export ទិន្នន័យ",
     "Download a JSON backup file": "ទាញយក​ backup ជា​ file JSON",
-    "Lessons": "មេរៀន",
     "Invoices": "វិក្កយបត្រ",
     "Download backup": "ទាញ​យក​ Backup",
     "Import data": "Import ទិន្នន័យ",
@@ -3070,7 +3068,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v180";</script>
+<script>window.__ANZEN_VERSION="v181";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -45619,6 +45617,8 @@ var StudentsScreenV2 = () => {
     bio: true
   });
   var [pdfPhase, setPdfPhase] = React.useState('all');
+  var [lessonsOpen, setLessonsOpen] = React.useState(false);
+  var [viewPhase, setViewPhase] = React.useState('');
   var mobileBack = React.useCallback(() => {
     if (mobileEdit) setMobileEdit(null);else if (mobileProfileId) setMobileProfileId(null);
   }, [mobileEdit, mobileProfileId]);
@@ -46217,19 +46217,7 @@ var StudentsScreenV2 = () => {
         }
       }, s[d.key] ? '✓ ' + tr('មាន', 'Done') : tr('មិន​ទាន់', 'Missing')))), React.createElement(SchoolDocs, {
         student: s
-      })), React.createElement(CvSection, {
-        label: tr('បញ្ជីមេរៀន និង មតិគ្រូ', 'Lessons & Comments'),
-        isOpen: openSections.lessons,
-        onToggle: () => toggleSection('lessons')
-      }, (() => {
-        if (studentLessons.length === 0 && studentExams.length === 0) return React.createElement("div", {
-          style: {
-            fontSize: 13,
-            color: 'var(--ink-3)',
-            textAlign: 'center',
-            padding: '12px 0'
-          }
-        }, tr('មិន​ទាន់​មាន​មេរៀន', 'No lessons yet'));
+      })), (() => {
         var examPhase = e => e.phase || 'KH';
         var groups = (window.STUDENT_PHASES || []).map(p => {
           var phaseLessons = studentLessons.filter(l => lessonPhase(l) === p.k);
@@ -46252,53 +46240,175 @@ var StudentsScreenV2 = () => {
             hourMap: buildHourNumbering(phaseLessons)
           };
         }).filter(g => g.items.length > 0);
-        var GroupHead = ({
-          bg,
-          label,
-          sub
-        }) => React.createElement("div", {
+        var totalHrs = groups.reduce((a, g) => a + g.hours, 0);
+        var curPhase = viewPhase && groups.some(g => g.p.k === viewPhase) ? viewPhase : groups[0] && groups[0].p.k || '';
+        var curGroup = groups.find(g => g.p.k === curPhase);
+        var pdfLessons = studentLessons.filter(l => pdfPhase === 'all' || lessonPhase(l) === pdfPhase);
+        var pdfExams = studentExams.filter(e => pdfPhase === 'all' || (e.phase || 'KH') === pdfPhase);
+        var PHASE_OPTS = [{
+          k: 'all',
+          label: tr('ទាំងអស់', 'All')
+        }, ...(window.STUDENT_PHASES || []).map(p => ({
+          k: p.k,
+          label: p.label,
+          color: p.color
+        }))];
+        return React.createElement(React.Fragment, null, React.createElement("button", {
+          onClick: () => {
+            setViewPhase(curPhase);
+            setLessonsOpen(true);
+          },
+          style: {
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '12px 14px',
+            marginBottom: 8,
+            borderRadius: 10,
+            border: '1px solid var(--border)',
+            background: 'var(--surface)',
+            cursor: 'pointer',
+            textAlign: 'left'
+          }
+        }, React.createElement("span", {
+          style: {
+            flex: 1,
+            minWidth: 0,
+            fontSize: 14,
+            fontWeight: 700,
+            fontFamily: 'var(--font-km)',
+            color: 'var(--ink)'
+          }
+        }, tr('បញ្ជីមេរៀន និង មតិគ្រូ', 'Lessons & Comments')), groups.length > 0 && React.createElement("span", {
+          style: {
+            fontSize: 11,
+            color: 'var(--ink-3)',
+            fontFamily: '"JetBrains Mono",monospace'
+          }
+        }, totalHrs, " ", tr('ម៉ោង', 'hrs')), React.createElement("span", {
+          style: {
+            fontSize: 15,
+            color: 'var(--ink-3)',
+            flexShrink: 0
+          }
+        }, "\u203A")), React.createElement("button", {
+          onClick: () => bookLesson(s),
+          style: {
+            width: '100%',
+            marginBottom: 8,
+            padding: '10px',
+            borderRadius: 8,
+            border: 'none',
+            background: 'var(--accent)',
+            color: '#fff',
+            cursor: 'pointer',
+            fontSize: 13,
+            fontWeight: 600
+          }
+        }, tr('ណាត់​មេរៀន​ថ្មី', 'Book new lesson')), React.createElement(Modal, {
+          open: lessonsOpen,
+          onClose: () => setLessonsOpen(false)
+        }, React.createElement("div", {
+          style: {
+            display: 'flex',
+            flexDirection: 'column'
+          }
+        }, React.createElement("div", {
+          style: {
+            position: 'sticky',
+            top: 0,
+            zIndex: 2,
+            background: 'var(--surface)',
+            borderBottom: '1px solid var(--border)',
+            padding: '4px 14px 10px'
+          }
+        }, React.createElement("div", {
           style: {
             display: 'flex',
             alignItems: 'center',
             gap: 8,
-            margin: '10px 0 8px'
+            marginBottom: 8
           }
-        }, React.createElement("span", {
-          style: {
-            background: bg,
-            color: '#fff',
-            fontSize: 11,
-            fontWeight: 800,
-            padding: '3px 10px',
-            borderRadius: 6,
-            letterSpacing: '.03em'
-          }
-        }, label), sub != null && React.createElement("span", {
-          style: {
-            fontSize: 11,
-            color: 'var(--ink-3)'
-          }
-        }, sub), React.createElement("div", {
+        }, React.createElement("div", {
           style: {
             flex: 1,
-            height: 1,
-            background: 'var(--border)'
+            minWidth: 0,
+            fontSize: 15,
+            fontWeight: 700,
+            fontFamily: 'var(--font-km)',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
           }
-        }));
-        return React.createElement(React.Fragment, null, groups.map(g => React.createElement("div", {
-          key: g.p.k
-        }, React.createElement(GroupHead, {
-          bg: g.p.color,
-          label: g.p.label,
-          sub: `${g.hours} ${tr('ម៉ោង', 'hrs')}`
-        }), g.items.map((it, i) => it.type === 'exam' ? React.createElement(ExamFeedbackRow, {
+        }, tr('បញ្ជីមេរៀន', 'Lessons'), " \xB7 ", s.en || s.name), React.createElement("button", {
+          onClick: () => setLessonsOpen(false),
+          "aria-label": tr('បិទ', 'Close'),
+          style: {
+            border: 'none',
+            background: 'var(--surface-muted)',
+            borderRadius: 8,
+            width: 30,
+            height: 30,
+            cursor: 'pointer',
+            color: 'var(--ink-2)',
+            fontSize: 15,
+            lineHeight: 1,
+            flexShrink: 0
+          }
+        }, "\u2715")), groups.length > 0 && React.createElement("div", {
+          style: {
+            display: 'flex',
+            gap: 6,
+            overflowX: 'auto',
+            paddingBottom: 2
+          }
+        }, groups.map(g => {
+          var active = g.p.k === curPhase;
+          return React.createElement("button", {
+            key: g.p.k,
+            onClick: () => setViewPhase(g.p.k),
+            style: {
+              flexShrink: 0,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 13px',
+              borderRadius: 999,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              border: '1.5px solid ' + (active ? g.p.color : 'var(--border)'),
+              background: active ? g.p.color : 'var(--surface)',
+              color: active ? '#fff' : 'var(--ink-2)',
+              fontSize: 12.5,
+              fontWeight: 700
+            }
+          }, g.p.label, " ", React.createElement("span", {
+            style: {
+              opacity: .85,
+              fontFamily: '"JetBrains Mono",monospace',
+              fontWeight: 600
+            }
+          }, g.hours));
+        }))), React.createElement("div", {
+          style: {
+            padding: '8px 14px 14px'
+          }
+        }, groups.length === 0 ? React.createElement("div", {
+          style: {
+            fontSize: 13,
+            color: 'var(--ink-3)',
+            textAlign: 'center',
+            padding: '28px 0'
+          }
+        }, tr('មិន​ទាន់​មាន​មេរៀន', 'No lessons yet')) : curGroup ? curGroup.items.map((it, i) => it.type === 'exam' ? React.createElement(ExamFeedbackRow, {
           key: it.e.id || 'ex' + i,
           e: it.e,
           sid: s.id,
           tr: tr,
           onSave: saveExamResult
         }) : (() => {
-          var cumNo = (g.hourMap[it.l.id] || [])[it.sl.offset];
+          var cumNo = (curGroup.hourMap[it.l.id] || [])[it.sl.offset];
           return React.createElement(CvLessonRow, {
             key: (it.l.id || 'ls' + i) + '-' + it.sl.offset,
             l: it.l,
@@ -46309,24 +46419,20 @@ var StudentsScreenV2 = () => {
             tr: tr,
             onSave: saveLessonFeedback
           });
-        })()))));
-      })(), (() => {
-        var pdfLessons = studentLessons.filter(l => pdfPhase === 'all' || lessonPhase(l) === pdfPhase);
-        var pdfExams = studentExams.filter(e => pdfPhase === 'all' || (e.phase || 'KH') === pdfPhase);
-        var PHASE_OPTS = [{
-          k: 'all',
-          label: tr('ទាំង៣', 'All')
-        }, ...(window.STUDENT_PHASES || []).map(p => ({
-          k: p.k,
-          label: p.label,
-          color: p.color
-        }))];
-        return React.createElement(React.Fragment, null, React.createElement("div", {
+        })()) : null), React.createElement("div", {
+          style: {
+            position: 'sticky',
+            bottom: 0,
+            zIndex: 2,
+            background: 'var(--surface)',
+            borderTop: '1px solid var(--border)',
+            padding: '10px 14px calc(12px + env(safe-area-inset-bottom,0px))'
+          }
+        }, React.createElement("div", {
           style: {
             fontSize: 11,
             color: 'var(--ink-3)',
-            marginTop: 12,
-            marginBottom: 5
+            marginBottom: 6
           }
         }, "\u2B07 ", tr('ទាញយក PDF — ជ្រើសវគ្គ', 'Download PDF — choose phase')), React.createElement("div", {
           style: {
@@ -46342,7 +46448,7 @@ var StudentsScreenV2 = () => {
             key: o.k,
             onClick: () => setPdfPhase(o.k),
             style: {
-              padding: '5px 14px',
+              padding: '5px 13px',
               borderRadius: 999,
               fontSize: 12,
               fontWeight: 700,
@@ -46354,12 +46460,6 @@ var StudentsScreenV2 = () => {
             }
           }, o.label);
         })), React.createElement("div", {
-          style: {
-            fontSize: 11,
-            color: 'var(--ink-3)',
-            marginBottom: 4
-          }
-        }, tr('ជ្រើសភាសា', 'Choose language')), React.createElement("div", {
           style: {
             display: 'flex',
             gap: 8
@@ -46398,22 +46498,8 @@ var StudentsScreenV2 = () => {
             justifyContent: 'center',
             gap: 6
           }
-        }, "\uD83C\uDDEC\uD83C\uDDE7 English")));
-      })(), React.createElement("button", {
-        onClick: () => bookLesson(s),
-        style: {
-          width: '100%',
-          marginTop: 8,
-          padding: '10px',
-          borderRadius: 8,
-          border: 'none',
-          background: 'var(--accent)',
-          color: '#fff',
-          cursor: 'pointer',
-          fontSize: 13,
-          fontWeight: 600
-        }
-      }, tr('ណាត់​មេរៀន​ថ្មី', 'Book new lesson'))));
+        }, "\uD83C\uDDEC\uD83C\uDDE7 English"))))));
+      })());
     }
     var curChip = filterChips.find(c => c.id === filter);
     return React.createElement("div", {

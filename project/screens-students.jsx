@@ -886,6 +886,8 @@ const StudentsScreenV2 = () => {
   const [mobileEdit, setMobileEdit] = React.useState(null);  // holds the section id being edited, or null
   const [openSections, setOpenSections] = React.useState({bio:true});
   const [pdfPhase, setPdfPhase] = React.useState('all');     // which phase(s) to include in the PDF export
+  const [lessonsOpen, setLessonsOpen] = React.useState(false); // lessons popup open
+  const [viewPhase, setViewPhase]     = React.useState('');    // phase tab shown inside the lessons popup
 
   // Swipe from the left edge → go back (edit → profile → list)
   const mobileBack = React.useCallback(() => {
@@ -1275,84 +1277,92 @@ const StudentsScreenV2 = () => {
           </CvSection>
 
           {/* Section 5: Lessons & comments */}
-          <CvSection label={tr('បញ្ជីមេរៀន និង មតិគ្រូ','Lessons & Comments')} isOpen={openSections.lessons} onToggle={()=>toggleSection('lessons')}>
-            {(() => {
-              // Group by tracking phase (KH / JP / AI). Within each phase, exams &
-              // applications are mixed in with the lessons in date order. Hour
-              // numbering restarts at 1 per phase (theory & practical separate).
-              if (studentLessons.length === 0 && studentExams.length === 0) return (
-                <div style={{fontSize:13,color:'var(--ink-3)',textAlign:'center',padding:'12px 0'}}>{tr('មិន​ទាន់​មាន​មេរៀន','No lessons yet')}</div>
-              );
-              const examPhase = (e) => e.phase || 'KH';
-              const groups = (window.STUDENT_PHASES || []).map(p => {
-                const phaseLessons = studentLessons.filter(l => lessonPhase(l) === p.k);
-                const lessonItems = phaseLessons
-                  .flatMap(l => lessonHourSlices(l).map(sl => ({ type:'lesson', l, sl, k:(l.date||'')+' '+String(sl.h).padStart(2,'0') })));
-                const examItems = studentExams.filter(e => examPhase(e) === p.k)
-                  .map(e => ({ type:'exam', e, k:(e.date||'')+' '+String(e.time||'').slice(0,5) }));
-                const items = [...lessonItems, ...examItems].sort((a,b)=> a.k<b.k ? -1 : a.k>b.k ? 1 : 0);
-                return { p, items, hours: lessonItems.length, hourMap: buildHourNumbering(phaseLessons) };
-              }).filter(g => g.items.length > 0);
-              const GroupHead = ({bg, label, sub}) => (
-                <div style={{display:'flex',alignItems:'center',gap:8,margin:'10px 0 8px'}}>
-                  <span style={{background:bg,color:'#fff',fontSize:11,fontWeight:800,padding:'3px 10px',borderRadius:6,letterSpacing:'.03em'}}>{label}</span>
-                  {sub!=null && <span style={{fontSize:11,color:'var(--ink-3)'}}>{sub}</span>}
-                  <div style={{flex:1,height:1,background:'var(--border)'}}/>
-                </div>
-              );
-              return (<>
-                {groups.map(g => (
-                  <div key={g.p.k}>
-                    <GroupHead bg={g.p.color} label={g.p.label} sub={`${g.hours} ${tr('ម៉ោង','hrs')}`}/>
-                    {g.items.map((it,i) => it.type === 'exam'
-                      ? <ExamFeedbackRow key={it.e.id||('ex'+i)} e={it.e} sid={s.id} tr={tr} onSave={saveExamResult}/>
-                      : (() => { const cumNo = (g.hourMap[it.l.id] || [])[it.sl.offset];
-                          return <CvLessonRow key={(it.l.id||('ls'+i))+'-'+it.sl.offset} l={it.l} offset={it.sl.offset} h={it.sl.h} total={it.sl.total} cumNo={cumNo} tr={tr} onSave={saveLessonFeedback}/>; })()
+          {(() => {
+            // Lessons grouped by tracking phase — shared by the trigger row and the
+            // popup. Hour numbering restarts at 1 per phase (theory/practical split).
+            const examPhase = (e) => e.phase || 'KH';
+            const groups = (window.STUDENT_PHASES || []).map(p => {
+              const phaseLessons = studentLessons.filter(l => lessonPhase(l) === p.k);
+              const lessonItems = phaseLessons
+                .flatMap(l => lessonHourSlices(l).map(sl => ({ type:'lesson', l, sl, k:(l.date||'')+' '+String(sl.h).padStart(2,'0') })));
+              const examItems = studentExams.filter(e => examPhase(e) === p.k)
+                .map(e => ({ type:'exam', e, k:(e.date||'')+' '+String(e.time||'').slice(0,5) }));
+              const items = [...lessonItems, ...examItems].sort((a,b)=> a.k<b.k ? -1 : a.k>b.k ? 1 : 0);
+              return { p, items, hours: lessonItems.length, hourMap: buildHourNumbering(phaseLessons) };
+            }).filter(g => g.items.length > 0);
+            const totalHrs = groups.reduce((a,g)=>a+g.hours,0);
+            const curPhase = (viewPhase && groups.some(g=>g.p.k===viewPhase)) ? viewPhase : ((groups[0] && groups[0].p.k) || '');
+            const curGroup = groups.find(g => g.p.k === curPhase);
+            const pdfLessons = studentLessons.filter(l => pdfPhase === 'all' || lessonPhase(l) === pdfPhase);
+            const pdfExams   = studentExams.filter(e => pdfPhase === 'all' || (e.phase||'KH') === pdfPhase);
+            const PHASE_OPTS = [{k:'all', label:tr('ទាំងអស់','All')}, ...(window.STUDENT_PHASES||[]).map(p=>({k:p.k,label:p.label,color:p.color}))];
+
+            return (<>
+              {/* Trigger row — looks like a section header; opens the popup */}
+              <button onClick={()=>{ setViewPhase(curPhase); setLessonsOpen(true); }} style={{
+                width:'100%',display:'flex',alignItems:'center',gap:10,padding:'12px 14px',marginBottom:8,
+                borderRadius:10,border:'1px solid var(--border)',background:'var(--surface)',cursor:'pointer',textAlign:'left'}}>
+                <span style={{flex:1,minWidth:0,fontSize:14,fontWeight:700,fontFamily:'var(--font-km)',color:'var(--ink)'}}>{tr('បញ្ជីមេរៀន និង មតិគ្រូ','Lessons & Comments')}</span>
+                {groups.length>0 && <span style={{fontSize:11,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{totalHrs} {tr('ម៉ោង','hrs')}</span>}
+                <span style={{fontSize:15,color:'var(--ink-3)',flexShrink:0}}>›</span>
+              </button>
+              <button onClick={()=>bookLesson(s)} style={{
+                width:'100%',marginBottom:8,padding:'10px',borderRadius:8,
+                border:'none',background:'var(--accent)',color:'#fff',cursor:'pointer',fontSize:13,fontWeight:600,
+              }}>{tr('ណាត់​មេរៀន​ថ្មី','Book new lesson')}</button>
+
+              <Modal open={lessonsOpen} onClose={()=>setLessonsOpen(false)}>
+                <div style={{display:'flex',flexDirection:'column'}}>
+                  {/* Header — title + phase tabs (sticky) */}
+                  <div style={{position:'sticky',top:0,zIndex:2,background:'var(--surface)',borderBottom:'1px solid var(--border)',padding:'4px 14px 10px'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+                      <div style={{flex:1,minWidth:0,fontSize:15,fontWeight:700,fontFamily:'var(--font-km)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{tr('បញ្ជីមេរៀន','Lessons')} · {s.en||s.name}</div>
+                      <button onClick={()=>setLessonsOpen(false)} aria-label={tr('បិទ','Close')} style={{border:'none',background:'var(--surface-muted)',borderRadius:8,width:30,height:30,cursor:'pointer',color:'var(--ink-2)',fontSize:15,lineHeight:1,flexShrink:0}}>✕</button>
+                    </div>
+                    {groups.length>0 && (
+                      <div style={{display:'flex',gap:6,overflowX:'auto',paddingBottom:2}}>
+                        {groups.map(g => { const active = g.p.k===curPhase; return (
+                          <button key={g.p.k} onClick={()=>setViewPhase(g.p.k)} style={{
+                            flexShrink:0,display:'inline-flex',alignItems:'center',gap:6,padding:'6px 13px',borderRadius:999,cursor:'pointer',fontFamily:'inherit',
+                            border:'1.5px solid '+(active?g.p.color:'var(--border)'),
+                            background: active?g.p.color:'var(--surface)', color: active?'#fff':'var(--ink-2)',fontSize:12.5,fontWeight:700}}>
+                            {g.p.label} <span style={{opacity:.85,fontFamily:'"JetBrains Mono",monospace',fontWeight:600}}>{g.hours}</span>
+                          </button>
+                        ); })}
+                      </div>
                     )}
                   </div>
-                ))}
-              </>);
-            })()}
-            {/* PDF export — choose which phase(s) to include, then a language */}
-            {(() => {
-              const pdfLessons = studentLessons.filter(l => pdfPhase === 'all' || lessonPhase(l) === pdfPhase);
-              const pdfExams   = studentExams.filter(e => pdfPhase === 'all' || (e.phase||'KH') === pdfPhase);
-              const PHASE_OPTS = [{k:'all', label:tr('ទាំង៣','All')}, ...(window.STUDENT_PHASES||[]).map(p=>({k:p.k,label:p.label,color:p.color}))];
-              return (<>
-                <div style={{fontSize:11,color:'var(--ink-3)',marginTop:12,marginBottom:5}}>⬇ {tr('ទាញយក PDF — ជ្រើសវគ្គ','Download PDF — choose phase')}</div>
-                <div style={{display:'flex',gap:6,marginBottom:8,flexWrap:'wrap'}}>
-                  {PHASE_OPTS.map(o => {
-                    const active = pdfPhase === o.k;
-                    const c = o.color || 'var(--accent)';
-                    return (
-                      <button key={o.k} onClick={()=>setPdfPhase(o.k)} style={{
-                        padding:'5px 14px',borderRadius:999,fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'inherit',
-                        border:'1.5px solid '+(active?c:'var(--border)'),
-                        background: active?c:'var(--surface)', color: active?'#fff':'var(--ink-2)'}}>{o.label}</button>
-                    );
-                  })}
+
+                  {/* Body — the selected phase's lessons */}
+                  <div style={{padding:'8px 14px 14px'}}>
+                    {groups.length===0 ? (
+                      <div style={{fontSize:13,color:'var(--ink-3)',textAlign:'center',padding:'28px 0'}}>{tr('មិន​ទាន់​មាន​មេរៀន','No lessons yet')}</div>
+                    ) : curGroup ? curGroup.items.map((it,i) => it.type === 'exam'
+                      ? <ExamFeedbackRow key={it.e.id||('ex'+i)} e={it.e} sid={s.id} tr={tr} onSave={saveExamResult}/>
+                      : (() => { const cumNo = (curGroup.hourMap[it.l.id] || [])[it.sl.offset];
+                          return <CvLessonRow key={(it.l.id||('ls'+i))+'-'+it.sl.offset} l={it.l} offset={it.sl.offset} h={it.sl.h} total={it.sl.total} cumNo={cumNo} tr={tr} onSave={saveLessonFeedback}/>; })()
+                    ) : null}
+                  </div>
+
+                  {/* Footer — PDF download phase picker + language (sticky) */}
+                  <div style={{position:'sticky',bottom:0,zIndex:2,background:'var(--surface)',borderTop:'1px solid var(--border)',padding:'10px 14px calc(12px + env(safe-area-inset-bottom,0px))'}}>
+                    <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:6}}>⬇ {tr('ទាញយក PDF — ជ្រើសវគ្គ','Download PDF — choose phase')}</div>
+                    <div style={{display:'flex',gap:6,marginBottom:8,flexWrap:'wrap'}}>
+                      {PHASE_OPTS.map(o => { const active = pdfPhase === o.k; const c = o.color || 'var(--accent)';
+                        return <button key={o.k} onClick={()=>setPdfPhase(o.k)} style={{
+                          padding:'5px 13px',borderRadius:999,fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'inherit',
+                          border:'1.5px solid '+(active?c:'var(--border)'), background: active?c:'var(--surface)', color: active?'#fff':'var(--ink-2)'}}>{o.label}</button>;
+                      })}
+                    </div>
+                    <div style={{display:'flex',gap:8}}>
+                      <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, pdfExams, 'km')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>🇰🇭 {tr('ខ្មែរ','Khmer')}</button>
+                      <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, pdfExams, 'en')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>🇬🇧 English</button>
+                    </div>
+                  </div>
                 </div>
-                <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:4}}>{tr('ជ្រើសភាសា','Choose language')}</div>
-                <div style={{display:'flex',gap:8}}>
-                  <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, pdfExams, 'km')} style={{
-                    flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',
-                    background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,
-                    display:'flex',alignItems:'center',justifyContent:'center',gap:6,
-                  }}>🇰🇭 {tr('ខ្មែរ','Khmer')}</button>
-                  <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, pdfExams, 'en')} style={{
-                    flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',
-                    background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,
-                    display:'flex',alignItems:'center',justifyContent:'center',gap:6,
-                  }}>🇬🇧 English</button>
-                </div>
-              </>);
-            })()}
-            <button onClick={()=>bookLesson(s)} style={{
-              width:'100%',marginTop:8,padding:'10px',borderRadius:8,
-              border:'none',background:'var(--accent)',color:'#fff',
-              cursor:'pointer',fontSize:13,fontWeight:600,
-            }}>{tr('ណាត់​មេរៀន​ថ្មី','Book new lesson')}</button>
-          </CvSection>
+              </Modal>
+            </>);
+          })()}
         </div>
       );
     }
