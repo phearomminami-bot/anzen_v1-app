@@ -477,9 +477,13 @@ window.__trRegistry = {
   "Apply": "ដាក់ពាក្យ",
   "Exam": "ប្រឡង",
   "Low stock": "ស្តុក​ជិត​អស់",
+  "Message copied ✓": "បាន​ចម្លង​សារ ✓",
   "Notifications": "ការ​ជូន​ដំណឹង",
   "No new notifications": "គ្មាន​ការ​ជូន​ដំណឹង​ថ្មី",
+  "Press & hold to copy": "ចុច​ជាប់​ដើម្បី​ចម្លង",
+  "Copied": "បាន​ចម្លង",
   "Dismiss": "បិទ",
+  "Press & hold a message to copy it": "ចុច​ជាប់​លើ​សារ​ដើម្បី​ចម្លង",
   "Theme": "ផ្ទៃ​ខ្នង",
   "Switch to light": "ប្ដូរ​ទៅ​ភ្លឺ",
   "Switch to dark": "ប្ដូរ​ទៅ​ងងឹត",
@@ -2981,9 +2985,13 @@ window.__trGroups = {
     "Apply": "ដាក់​ពាក្យ",
     "Exam": "ប្រឡង",
     "Low stock": "ស្តុក​ជិត​អស់",
+    "Message copied ✓": "បាន​ចម្លង​សារ ✓",
     "Notifications": "ការ​ជូន​ដំណឹង",
     "No new notifications": "គ្មាន​ការ​ជូន​ដំណឹង​ថ្មី",
+    "Press & hold to copy": "ចុច​ជាប់​ដើម្បី​ចម្លង",
+    "Copied": "បាន​ចម្លង",
     "Dismiss": "បិទ",
+    "Press & hold a message to copy it": "ចុច​ជាប់​លើ​សារ​ដើម្បី​ចម្លង",
     "Theme": "ផ្ទៃ​ខ្នង",
     "Switch to light": "ប្ដូរ​ទៅ​ភ្លឺ",
     "Switch to dark": "ប្ដូរ​ទៅ​ងងឹត",
@@ -3164,7 +3172,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v183";</script>
+<script>window.__ANZEN_VERSION="v184";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -14568,10 +14576,13 @@ var computeAlerts = (lang, tr) => {
 var NotificationBell = () => {
   var {
     tr,
-    lang
+    lang,
+    toast
   } = useAppActions();
   var [open, setOpen] = React.useState(false);
   var [tick, setTick] = React.useState(0);
+  var [copiedId, setCopiedId] = React.useState(null);
+  var pressRef = React.useRef(null);
   var readDismissed = () => {
     try {
       var o = JSON.parse(localStorage.getItem(NOTIF_DISMISS_KEY) || '{}');
@@ -14592,6 +14603,44 @@ var NotificationBell = () => {
       localStorage.setItem(NOTIF_DISMISS_KEY, JSON.stringify(c));
     } catch (e) {}
     setTick(t => t + 1);
+  };
+  var copyText = (text, id) => {
+    var done = () => {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(c => c === id ? null : c), 1400);
+      toast && toast(tr('បាន​ចម្លង​សារ ✓', 'Message copied ✓'), 'good');
+    };
+    var fallback = () => {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        done();
+      } catch (e) {}
+    };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(fallback);else fallback();
+    } catch (e) {
+      fallback();
+    }
+  };
+  var startPress = (text, id) => {
+    if (pressRef.current) clearTimeout(pressRef.current);
+    pressRef.current = setTimeout(() => {
+      copyText(text, id);
+      pressRef.current = null;
+    }, 420);
+  };
+  var cancelPress = () => {
+    if (pressRef.current) {
+      clearTimeout(pressRef.current);
+      pressRef.current = null;
+    }
   };
   var dismissed = readDismissed();
   var alerts = computeAlerts(lang, tr).filter(a => !dismissed[a.id]);
@@ -14714,7 +14763,9 @@ var NotificationBell = () => {
       gap: 10,
       padding: '11px 13px',
       borderBottom: '1px solid var(--border)',
-      borderLeft: `3px solid ${sevColor[a.severity]}`
+      borderLeft: `3px solid ${sevColor[a.severity]}`,
+      background: copiedId === a.id ? 'var(--accent-soft)' : 'transparent',
+      transition: 'background .2s'
     }
   }, React.createElement("span", {
     style: {
@@ -14723,9 +14774,22 @@ var NotificationBell = () => {
       lineHeight: 1.3
     }
   }, a.icon), React.createElement("div", {
+    onMouseDown: () => startPress(a.body, a.id),
+    onMouseUp: cancelPress,
+    onMouseLeave: cancelPress,
+    onTouchStart: () => startPress(a.body, a.id),
+    onTouchEnd: cancelPress,
+    onTouchMove: cancelPress,
+    onTouchCancel: cancelPress,
+    onContextMenu: e => e.preventDefault(),
+    title: tr('ចុច​ជាប់​ដើម្បី​ចម្លង', 'Press & hold to copy'),
     style: {
       flex: 1,
-      minWidth: 0
+      minWidth: 0,
+      cursor: 'pointer',
+      userSelect: 'none',
+      WebkitUserSelect: 'none',
+      WebkitTouchCallout: 'none'
     }
   }, React.createElement("div", {
     style: {
@@ -14741,7 +14805,14 @@ var NotificationBell = () => {
       lineHeight: 1.45,
       fontFamily: 'var(--font-km)'
     }
-  }, a.body)), React.createElement("button", {
+  }, a.body), copiedId === a.id && React.createElement("div", {
+    style: {
+      fontSize: 10.5,
+      color: 'var(--accent)',
+      fontWeight: 700,
+      marginTop: 3
+    }
+  }, "\u2713 ", tr('បាន​ចម្លង', 'Copied'))), React.createElement("button", {
     onClick: () => dismiss(a.id),
     "aria-label": tr('បិទ', 'Dismiss'),
     title: tr('បិទ', 'Dismiss'),
@@ -14755,7 +14826,15 @@ var NotificationBell = () => {
       padding: '0 2px',
       alignSelf: 'flex-start'
     }
-  }, "\u2715")))))));
+  }, "\u2715")))), n > 0 && React.createElement("div", {
+    style: {
+      padding: '8px 14px',
+      borderTop: '1px solid var(--border)',
+      fontSize: 10.5,
+      color: 'var(--ink-3)',
+      textAlign: 'center'
+    }
+  }, "\uD83D\uDCA1 ", tr('ចុច​ជាប់​លើ​សារ​ដើម្បី​ចម្លង', 'Press & hold a message to copy it')))));
 };
 var MobileAppHeader = ({
   title,

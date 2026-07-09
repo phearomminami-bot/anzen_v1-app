@@ -340,11 +340,22 @@ const computeAlerts = (lang, tr) => {
 };
 
 const NotificationBell = () => {
-  const { tr, lang } = useAppActions();
+  const { tr, lang, toast } = useAppActions();
   const [open, setOpen] = React.useState(false);
   const [tick, setTick] = React.useState(0);   // re-render on dismiss
+  const [copiedId, setCopiedId] = React.useState(null);
+  const pressRef = React.useRef(null);
   const readDismissed = () => { try { const o = JSON.parse(localStorage.getItem(NOTIF_DISMISS_KEY)||'{}'); const now=Date.now(); const c={}; Object.entries(o).forEach(([k,v])=>{ if(v>now) c[k]=v; }); return c; } catch(e){ return {}; } };
   const dismiss = (id) => { const c = readDismissed(); c[id] = Date.now()+24*3600*1000; try { localStorage.setItem(NOTIF_DISMISS_KEY, JSON.stringify(c)); } catch(e){} setTick(t=>t+1); };
+  // Long-press (or click-hold) a message to copy it to the clipboard.
+  const copyText = (text, id) => {
+    const done = () => { setCopiedId(id); setTimeout(()=>setCopiedId(c=>c===id?null:c), 1400); toast && toast(tr('បាន​ចម្លង​សារ ✓','Message copied ✓'),'good'); };
+    const fallback = () => { try { const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done(); } catch(e){} };
+    try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(fallback); else fallback(); }
+    catch(e) { fallback(); }
+  };
+  const startPress = (text, id) => { if (pressRef.current) clearTimeout(pressRef.current); pressRef.current = setTimeout(()=>{ copyText(text, id); pressRef.current=null; }, 420); };
+  const cancelPress = () => { if (pressRef.current) { clearTimeout(pressRef.current); pressRef.current=null; } };
   const dismissed = readDismissed();
   const alerts = computeAlerts(lang, tr).filter(a => !dismissed[a.id]);
   const n = alerts.length;
@@ -371,16 +382,23 @@ const NotificationBell = () => {
                 <div style={{ fontSize:26, marginBottom:8 }}>🔔</div>{tr('គ្មាន​ការ​ជូន​ដំណឹង​ថ្មី','No new notifications')}
               </div>
             ) : alerts.map(a => (
-              <div key={a.id} style={{ display:'flex', gap:10, padding:'11px 13px', borderBottom:'1px solid var(--border)', borderLeft:`3px solid ${sevColor[a.severity]}` }}>
+              <div key={a.id} style={{ display:'flex', gap:10, padding:'11px 13px', borderBottom:'1px solid var(--border)', borderLeft:`3px solid ${sevColor[a.severity]}`, background: copiedId===a.id ? 'var(--accent-soft)' : 'transparent', transition:'background .2s' }}>
                 <span style={{ fontSize:17, flexShrink:0, lineHeight:1.3 }}>{a.icon}</span>
-                <div style={{ flex:1, minWidth:0 }}>
+                <div
+                  onMouseDown={()=>startPress(a.body, a.id)} onMouseUp={cancelPress} onMouseLeave={cancelPress}
+                  onTouchStart={()=>startPress(a.body, a.id)} onTouchEnd={cancelPress} onTouchMove={cancelPress} onTouchCancel={cancelPress}
+                  onContextMenu={(e)=>e.preventDefault()}
+                  title={tr('ចុច​ជាប់​ដើម្បី​ចម្លង','Press & hold to copy')}
+                  style={{ flex:1, minWidth:0, cursor:'pointer', userSelect:'none', WebkitUserSelect:'none', WebkitTouchCallout:'none' }}>
                   <div style={{ fontSize:12.5, fontWeight:700, color:'var(--ink)' }}>{a.title}</div>
                   <div style={{ fontSize:12, color:'var(--ink-2)', marginTop:2, lineHeight:1.45, fontFamily:'var(--font-km)' }}>{a.body}</div>
+                  {copiedId===a.id && <div style={{ fontSize:10.5, color:'var(--accent)', fontWeight:700, marginTop:3 }}>✓ {tr('បាន​ចម្លង','Copied')}</div>}
                 </div>
                 <button onClick={()=>dismiss(a.id)} aria-label={tr('បិទ','Dismiss')} title={tr('បិទ','Dismiss')} style={{ border:'none', background:'transparent', color:'var(--ink-3)', cursor:'pointer', fontSize:14, flexShrink:0, padding:'0 2px', alignSelf:'flex-start' }}>✕</button>
               </div>
             ))}
           </div>
+          {n > 0 && <div style={{ padding:'8px 14px', borderTop:'1px solid var(--border)', fontSize:10.5, color:'var(--ink-3)', textAlign:'center' }}>💡 {tr('ចុច​ជាប់​លើ​សារ​ដើម្បី​ចម្លង','Press & hold a message to copy it')}</div>}
         </div>
       </>)}
     </div>
