@@ -1525,6 +1525,7 @@ window.__trRegistry = {
   "attempts / student": "ប្រឡង/សិស្ស",
   "Failure Reasons": "មូលហេតុ​ធ្លាក់",
   "Failure Heatmap (month × weekday)": "តំបន់​ធ្លាក់​ញឹកញាប់ (ខែ × ថ្ងៃ)",
+  "KH journey only · Students = those with this KH instructor · Pass % = their KH students\\' exam results": "គិត​តាម​វគ្គ KH ប៉ុណ្ណោះ · សិស្ស = អ្នក​ដែល​កំណត់​គ្រូ​នេះ​ជា​គ្រូ KH · អត្រា​ជាប់ = លទ្ធផល​ប្រឡង​សិស្ស KH របស់​គាត់",
   "Pass %": "អត្រា​ជាប់",
   "Teaching Hrs": "ម៉ោង​បង្រៀន",
   "Top Instructors — Pass Rate": "គ្រូ​កំពូល​តាម​អត្រា​ជាប់",
@@ -3030,6 +3031,7 @@ window.__trGroups = {
     "attempts / student": "ប្រឡង/សិស្ស",
     "Failure Reasons": "មូលហេតុ​ធ្លាក់",
     "Failure Heatmap (month × weekday)": "តំបន់​ធ្លាក់​ញឹកញាប់ (ខែ × ថ្ងៃ)",
+    "KH journey only · Students = those with this KH instructor · Pass % = their KH students\\' exam results": "គិត​តាម​វគ្គ KH ប៉ុណ្ណោះ · សិស្ស = អ្នក​ដែល​កំណត់​គ្រូ​នេះ​ជា​គ្រូ KH · អត្រា​ជាប់ = លទ្ធផល​ប្រឡង​សិស្ស KH របស់​គាត់",
     "Pass %": "អត្រា​ជាប់",
     "Teaching Hrs": "ម៉ោង​បង្រៀន",
     "Top Instructors — Pass Rate": "គ្រូ​កំពូល​តាម​អត្រា​ជាប់",
@@ -3064,7 +3066,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v176";</script>
+<script>window.__ANZEN_VERSION="v177";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -67581,32 +67583,41 @@ var AnalyticsScreen = ({
     var wi = (d.getDay() + 6) % 7;
     return wi === wd && Object.values(e.results || {}).some(r => r.result === 'fail');
   }).length));
+  var khInstOf = s => s.instByPhase && s.instByPhase.KH ? s.instByPhase.KH : s.instId || '';
   var instRows = I.map(i => {
-    var taught = L.filter(l => l.instId === i.id);
-    var done = taught.filter(l => l.status === 'done');
-    var canc = taught.filter(l => l.status === 'cancelled').length;
-    var studs = new Set(taught.map(l => l.studentId)).size;
-    var p = fEX.reduce((a, e) => a + ((e.instIds || []).includes(i.id) ? Object.values(e.results || {}).filter(r => r.result === 'pass').length : 0), 0);
-    var f = fEX.reduce((a, e) => a + ((e.instIds || []).includes(i.id) ? Object.values(e.results || {}).filter(r => r.result === 'fail').length : 0), 0);
+    var myStuIds = new Set(S.filter(s => khInstOf(s) === i.id).map(s => s.id));
+    var studs = myStuIds.size;
+    var taughtKH = L.filter(l => l.instId === i.id && A_lessonPhase(l) === 'KH');
+    var done = taughtKH.filter(l => l.status === 'done');
+    var canc = taughtKH.filter(l => l.status === 'cancelled').length;
+    var p = 0,
+      f = 0;
+    fEX.forEach(e => Object.entries(e.results || {}).forEach(([sid, r]) => {
+      if (myStuIds.has(sid)) {
+        if (r.result === 'pass') p++;else if (r.result === 'fail') f++;
+      }
+    }));
     var rated = done.filter(l => l.rating > 0);
     var rating = rated.length ? A_num(rated.reduce((a, l) => a + l.rating, 0) / rated.length) : 0;
     var hours = done.reduce((a, l) => a + (l.len || 1), 0);
     var hoursByPhase = {};
     A_PHASES.forEach(ph => {
-      hoursByPhase[ph.k] = done.filter(l => A_lessonPhase(l) === ph.k).reduce((a, l) => a + (l.len || 1), 0);
+      hoursByPhase[ph.k] = L.filter(l => l.instId === i.id && A_lessonPhase(l) === ph.k && l.status === 'done').reduce((a, l) => a + (l.len || 1), 0);
     });
+    var totalHours = A_PHASES.reduce((a, ph) => a + hoursByPhase[ph.k], 0);
     var guestHours = L.filter(l => (l.guests || []).includes(i.id) && l.status === 'done').reduce((a, l) => a + (l.len || 1), 0);
     return {
       id: i.id,
       name: i.en || i.name || i.id,
       students: studs,
-      pass: A_pct(p, p + f || 1),
+      pass: A_pct(p, p + f),
       rating,
       hours,
       hoursByPhase,
+      totalHours,
       guestHours,
       cancelled: canc,
-      completion: A_pct(done.length, taught.length || 1)
+      completion: A_pct(done.length, taughtKH.length)
     };
   }).sort((a, b) => b.pass - a.pass || b.hours - a.hours);
   var vehWorkshop = V.filter(v => v.status === 'Workshop').length;
@@ -68217,6 +68228,12 @@ var AnalyticsScreen = ({
     lang: lang
   }), React.createElement("div", {
     style: {
+      fontSize: 11.5,
+      color: 'var(--ink-3)',
+      margin: '-4px 2px 8px'
+    }
+  }, tr('គិត​តាម​វគ្គ KH ប៉ុណ្ណោះ · សិស្ស = អ្នក​ដែល​កំណត់​គ្រូ​នេះ​ជា​គ្រូ KH · អត្រា​ជាប់ = លទ្ធផល​ប្រឡង​សិស្ស KH របស់​គាត់', 'KH journey only · Students = those with this KH instructor · Pass % = their KH students\' exam results')), React.createElement("div", {
+    style: {
       background: 'var(--surface)',
       border: '1px solid var(--border)',
       borderRadius: 14,
@@ -68397,7 +68414,7 @@ var AnalyticsScreen = ({
       textAlign: 'center',
       fontWeight: 700
     }
-  }, A_num(r.hours), "h"), React.createElement("td", {
+  }, A_num(r.totalHours), "h"), React.createElement("td", {
     style: {
       textAlign: 'center',
       color: r.guestHours ? 'var(--accent)' : 'var(--ink-3)'

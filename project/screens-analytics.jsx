@@ -473,24 +473,35 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
     return wi === wd && Object.values(e.results || {}).some(r => r.result === 'fail');
   }).length));
 
-  // Instructor performance table (A_PHASES / A_lessonPhase defined above)
+  // Instructor performance table — the KH (licence) journey only. The exam
+  // instructor assignment is unreliable (whoever is on the exam slot ≠ who
+  // taught), so Students / Pass % / Rating / Hours / Completion / Cancelled are
+  // all tied to the instructor's OWN KH students and KH lessons. The phase
+  // breakdown table below still covers every phase.
+  const khInstOf = (s) => (s.instByPhase && s.instByPhase.KH) ? s.instByPhase.KH : (s.instId || '');
   const instRows = I.map(i => {
-    const taught = L.filter(l => l.instId === i.id);   // primary instructor only
-    const done = taught.filter(l => l.status === 'done');
-    const canc = taught.filter(l => l.status === 'cancelled').length;
-    const studs = new Set(taught.map(l => l.studentId)).size;
-    const p = fEX.reduce((a, e) => a + ((e.instIds || []).includes(i.id) ? Object.values(e.results || {}).filter(r => r.result === 'pass').length : 0), 0);
-    const f = fEX.reduce((a, e) => a + ((e.instIds || []).includes(i.id) ? Object.values(e.results || {}).filter(r => r.result === 'fail').length : 0), 0);
+    // KH students = students who have this instructor set as their KH instructor.
+    const myStuIds = new Set(S.filter(s => khInstOf(s) === i.id).map(s => s.id));
+    const studs = myStuIds.size;
+    // KH lessons taught by this instructor (as primary).
+    const taughtKH = L.filter(l => l.instId === i.id && A_lessonPhase(l) === 'KH');
+    const done = taughtKH.filter(l => l.status === 'done');
+    const canc = taughtKH.filter(l => l.status === 'cancelled').length;
+    // Pass % from this instructor's KH students' own exam results.
+    let p = 0, f = 0;
+    fEX.forEach(e => Object.entries(e.results || {}).forEach(([sid, r]) => {
+      if (myStuIds.has(sid)) { if (r.result === 'pass') p++; else if (r.result === 'fail') f++; }
+    }));
     const rated = done.filter(l => l.rating > 0);
     const rating = rated.length ? A_num(rated.reduce((a, l) => a + l.rating, 0) / rated.length) : 0;
-    const hours = done.reduce((a, l) => a + (l.len || 1), 0);   // primary teaching hours
-    // Primary teaching hours split by tracking phase (KH / JP / AI / SST).
+    const hours = done.reduce((a, l) => a + (l.len || 1), 0);   // KH teaching hours
+    // Per-phase primary teaching hours (ALL phases) for the breakdown table below.
     const hoursByPhase = {};
-    A_PHASES.forEach(ph => { hoursByPhase[ph.k] = done.filter(l => A_lessonPhase(l) === ph.k).reduce((a, l) => a + (l.len || 1), 0); });
-    // Guest hours — the instructor tagged along on someone else's lesson.
-    // Counted as a plain number only; no pass/rating/completion scoring.
+    A_PHASES.forEach(ph => { hoursByPhase[ph.k] = L.filter(l => l.instId === i.id && A_lessonPhase(l) === ph.k && l.status === 'done').reduce((a, l) => a + (l.len || 1), 0); });
+    const totalHours = A_PHASES.reduce((a, ph) => a + hoursByPhase[ph.k], 0);
+    // Guest hours — tagged along on someone else's lesson; plain count, no scoring.
     const guestHours = L.filter(l => (l.guests || []).includes(i.id) && l.status === 'done').reduce((a, l) => a + (l.len || 1), 0);
-    return { id: i.id, name: i.en || i.name || i.id, students: studs, pass: A_pct(p, p + f || 1), rating, hours, hoursByPhase, guestHours, cancelled: canc, completion: A_pct(done.length, taught.length || 1) };
+    return { id: i.id, name: i.en || i.name || i.id, students: studs, pass: A_pct(p, p + f), rating, hours, hoursByPhase, totalHours, guestHours, cancelled: canc, completion: A_pct(done.length, taughtKH.length) };
   }).sort((a, b) => b.pass - a.pass || b.hours - a.hours);
 
   // Vehicle analytics
@@ -702,8 +713,9 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
         </ChartCard>
       </div>
 
-      {/* ── Section 5 — Instructor performance ── */}
+      {/* ── Section 5 — Instructor performance (KH licence journey only) ── */}
       <A_SectionHead n={5} km="សមិទ្ធផល​គ្រូ" en="Instructor Performance" lang={lang} />
+      <div style={{ fontSize: 11.5, color: 'var(--ink-3)', margin: '-4px 2px 8px' }}>{tr('គិត​តាម​វគ្គ KH ប៉ុណ្ណោះ · សិស្ស = អ្នក​ដែល​កំណត់​គ្រូ​នេះ​ជា​គ្រូ KH · អត្រា​ជាប់ = លទ្ធផល​ប្រឡង​សិស្ស KH របស់​គាត់', 'KH journey only · Students = those with this KH instructor · Pass % = their KH students\' exam results')}</div>
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 4, overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, minWidth: 640 }}>
           <thead><tr style={{ background: 'var(--surface-muted)' }}>
@@ -751,7 +763,7 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
                 {A_PHASES.map(ph => (
                   <td key={ph.k} style={{ textAlign: 'center', color: r.hoursByPhase[ph.k] ? 'var(--ink)' : 'var(--ink-3)' }}>{A_num(r.hoursByPhase[ph.k] || 0)}h</td>
                 ))}
-                <td style={{ textAlign: 'center', fontWeight: 700 }}>{A_num(r.hours)}h</td>
+                <td style={{ textAlign: 'center', fontWeight: 700 }}>{A_num(r.totalHours)}h</td>
                 <td style={{ textAlign: 'center', color: r.guestHours ? 'var(--accent)' : 'var(--ink-3)' }}>{r.guestHours ? '+' + A_num(r.guestHours) + 'h' : '—'}</td>
               </tr>
             ))}
