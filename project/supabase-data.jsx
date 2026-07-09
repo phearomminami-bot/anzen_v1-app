@@ -208,6 +208,7 @@
     const map = {
       theory:    { text: 'theoryTexts',    video: 'theoryVideos',    exercise: 'theoryExercises' },
       practical: { text: 'practicalTexts', video: 'practicalVideos', exercise: 'practicalExercises' },
+      sst:       { text: 'sstTexts',       video: 'sstVideos',       exercise: 'sstExercises' },
     };
     Object.values(map).forEach(k => Object.values(k).forEach(key => { if (lib[key]) lib[key].length = 0; }));
     rows.sort((a, b) => (a.sort || 0) - (b.sort || 0)).forEach(r => {

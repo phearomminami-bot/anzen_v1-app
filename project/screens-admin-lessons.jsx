@@ -42,6 +42,9 @@ const ADMIN_LESSONS_STORE = 'anzen_lessons_v1';
     replace(window.__lessonsLib.practicalTexts,     saved.practicalTexts);
     replace(window.__lessonsLib.practicalVideos,    saved.practicalVideos);
     replace(window.__lessonsLib.practicalExercises, saved.practicalExercises);
+    if (Array.isArray(saved.sstTexts))     { if(!window.__lessonsLib.sstTexts)     window.__lessonsLib.sstTexts=[];     replace(window.__lessonsLib.sstTexts,     saved.sstTexts); }
+    if (Array.isArray(saved.sstVideos))    { if(!window.__lessonsLib.sstVideos)    window.__lessonsLib.sstVideos=[];    replace(window.__lessonsLib.sstVideos,    saved.sstVideos); }
+    if (Array.isArray(saved.sstExercises)) { if(!window.__lessonsLib.sstExercises) window.__lessonsLib.sstExercises=[]; replace(window.__lessonsLib.sstExercises, saved.sstExercises); }
     // The saved copy may predate newly shipped lessons/fields — merge the seed
     // back in (adds missing lessons + backfills goals) without losing edits.
     if (window.__mergeSeedLessons) window.__mergeSeedLessons();
@@ -1391,18 +1394,20 @@ const AdminLessonsScreen = ({ role = 'admin' }) => {
 
   const lib = window.__lessonsLib;
   const isTheory = section === 'theory';
-  const textsKey   = isTheory ? 'theoryTexts'     : 'practicalTexts';
-  const videosKey  = isTheory ? 'theoryVideos'    : 'practicalVideos';
-  const quizzesKey = isTheory ? 'theoryExercises' : 'practicalExercises';
-  const texts   = lib[textsKey];
-  const videos  = lib[videosKey];
-  const quizzes = lib[quizzesKey];
-
-  const idPrefixFor = (type) => {
-    if (type === 'text')  return isTheory ? 'tt' : 'pt';
-    if (type === 'video') return isTheory ? 'tv' : 'pv';
-    return isTheory ? 'te' : 'pe';
+  const SECTION_KEYS = {
+    theory:    { t:'theoryTexts',    v:'theoryVideos',    q:'theoryExercises',    pfx:{text:'tt',video:'tv',quiz:'te'} },
+    practical: { t:'practicalTexts', v:'practicalVideos', q:'practicalExercises', pfx:{text:'pt',video:'pv',quiz:'pe'} },
+    sst:       { t:'sstTexts',       v:'sstVideos',       q:'sstExercises',       pfx:{text:'st',video:'sv',quiz:'se'} },
   };
+  const sk = SECTION_KEYS[section] || SECTION_KEYS.theory;
+  const textsKey   = sk.t;
+  const videosKey  = sk.v;
+  const quizzesKey = sk.q;
+  const texts   = lib[textsKey]   || (lib[textsKey]   = []);
+  const videos  = lib[videosKey]  || (lib[videosKey]  = []);
+  const quizzes = lib[quizzesKey] || (lib[quizzesKey] = []);
+
+  const idPrefixFor = (type) => sk.pfx[type] || 'tt';
 
   const openNew = (type) => {
     const key = type === 'text' ? textsKey : type === 'video' ? videosKey : quizzesKey;
@@ -1493,9 +1498,10 @@ const AdminLessonsScreen = ({ role = 'admin' }) => {
           {[
             { id:'theory',    km:'មេរៀន​ទ្រឹស្ដី',  en:'Theory',    icon:'book' },
             { id:'practical', km:'មេរៀន​អនុវត្ត',    en:'Practical', icon:'car'  },
+            { id:'sst',       km:'មេរៀន​ជំនាញ',      en:'SST',       icon:'star' },
           ].map(s => (
             <button key={s.id} onClick={()=>setSection(s.id)} style={{
-              padding:'8px 18px', borderRadius:999, cursor:'pointer',
+              padding:'8px 14px', borderRadius:999, cursor:'pointer',
               border:`1.5px solid ${section===s.id?'var(--ink)':'var(--border)'}`,
               background:section===s.id?'var(--ink)':'var(--surface)',
               color:section===s.id?'var(--bg)':'var(--ink-2)',
