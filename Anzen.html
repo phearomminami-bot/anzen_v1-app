@@ -326,7 +326,7 @@ window.__trRegistry = {
   "+ Add guest instructor": "+ Add guest instructor",
   "LOCATION": "ទីតាំង",
   "Meeting location": "ទីតាំង​ជួប",
-  "Note": "កំណត់ចំណាំ",
+  "Note": "ចំណាំ",
   "Extra note...": "ចំណាំ​បន្ថែម...",
   "Instructor \"'+INSTRUCTORS.find(i=>i.id===instId)?.en+'\" is busy '+String(hour).padStart(2,'0": "គ្រូ​​ \"'+INSTRUCTORS.find(i=>i.id===instId)?.name+'\" រវល់​ម៉ោង​' + String(hour).padStart(2,'0') + ':00–' + String(parseInt(hour)+parseFloat(len)).padStart(2,'0') + ':00",
   "Please enter the English name": "សូម​បំពេញ​ឈ្មោះ​ជា​អក្សរ​ឡាតាំង",
@@ -371,7 +371,7 @@ window.__trRegistry = {
   "Select vehicle": "ជ្រើស​យានយន្ត",
   "No vehicles": "គ្មាន​យានយន្ត",
   "Type": "ប្រភេទ",
-  "Date": "ថ្ងៃខែ",
+  "Date": "ថ្ងៃ",
   "Workshop": "ហាង",
   "Additional notes...": "សំគាល់​ផ្សេង​ៗ​...",
   "Copy the ID & Password and give it to the staff member": "ចម្លងយក ID + Password ផ្ដល់ជូន",
@@ -738,7 +738,7 @@ window.__trRegistry = {
   "Location": "ទីតាំង",
   "Visible": "សិស្សឃើញ",
   "Instructor only": "គ្រូតែប៉ុណ្ណោះ",
-  "Add item": "បន្ថែមការពិនិត្យ",
+  "Add item": "បន្ថែម",
   "Saving…": "កំពុង​រក្សាទុក…",
   "Enter a YouTube ID to preview": "វាយ YouTube ID ដើម្បីមើល",
   "Add video": "បន្ថែម​វីដេអូ",
@@ -754,9 +754,9 @@ window.__trRegistry = {
   "Add quiz": "បន្ថែម​លំហាត់",
   "Google Form exercise": "លំហាត់ Google Form",
   "question' + (qCount===1?'':'s": "សំណួរ",
-  "Saved": "បានរក្សាទុក",
+  "Saved": "បាន​រក្សាទុក",
   "Added": "បានបន្ថែម",
-  "Delete this item?": "លុប​មេរៀន?",
+  "Delete this item?": "លុប​ទំនិញ​នេះ?",
   "Removed": "បានលុប",
   "LESSON LIBRARY": "បណ្ណាល័យ​មេរៀន",
   "Driving Lessons": "មេរៀន​បើក​បរ",
@@ -885,7 +885,7 @@ window.__trRegistry = {
   "View monthly attendance": "មើល​វត្តមាន​ប្រចាំ​ខែ",
   "Edit times / status": "កែ​ម៉ោង / ស្ថានភាព",
   "Policy": "គោល​នយោបាយ",
-  "Pending": "កំពុង",
+  "Pending": "រង់ចាំ",
   "Deny": "បដិសេធ",
   "Approve": "អនុម័ត",
   "Approved": "បានអនុម័ត",
@@ -1557,6 +1557,50 @@ window.__trRegistry = {
   "Rank": "ចំណាត់​ថ្នាក់",
   "Branch": "សាខា",
   "Figures derived from live system data · auto-refreshes": "ទិន្នន័យ​ផ្អែក​លើ​ព័ត៌មាន​ក្នុង​ប្រព័ន្ធ · ធ្វើ​បច្ចុប្បន្ន​ភាព​ស្វ័យ​ប្រវត្តិ",
+  "Opening stock": "ស្តុក​ដើម",
+  "Edit item": "កែ​ព័ត៌មាន",
+  "New item": "បន្ថែម​ទំនិញ​ថ្មី",
+  "Item name *": "ឈ្មោះ​ទំនិញ *",
+  "e.g. Traffic law book": "ឧ. សៀវភៅ​ច្បាប់​ចរាចរណ៍",
+  "Unit": "ឯកតា",
+  "pcs": "ក្បាល / សន្លឹក",
+  "Price ($)": "តម្លៃ ($)",
+  "Low-stock alert": "ស្តុក​អប្បបរមា",
+  "Distributor / Supplier": "អ្នក​ចែកចាយ / អ្នក​ផ្គត់ផ្គង់",
+  "Supplier name": "ឈ្មោះ​អ្នក​ចែកចាយ",
+  "Opening stock (qty)": "ស្តុក​ដើម (ចំនួន)",
+  "Extra details...": "ព័ត៌មាន​បន្ថែម...",
+  "Supplier": "អ្នក​ចែកចាយ",
+  "Recipient": "អ្នក​ទទួល",
+  "Quantity *": "ចំនួន *",
+  "Low stock": "ស្តុក​ជិត​អស់",
+  "On hand": "ស្តុក​ក្នុង​ដៃ",
+  "On order": "កំពុង​កម្មង់",
+  "Value": "តម្លៃ",
+  "Stock in": "ដាក់​ចូល",
+  "Stock out": "ដក​ចេញ",
+  "Order": "ដាក់​កម្មង់",
+  "Movement history": "ចលនា​ស្តុក",
+  "No movements yet": "គ្មាន​ចលនា​ស្តុក​នៅ​ឡើយ",
+  "Received": "បាន​ទទួល",
+  "Receive": "ទទួល",
+  "Delete this movement?": "លុប​ចលនា​នេះ?",
+  "All its stock data will be removed.": "ទិន្នន័យ​ស្តុក​ទាំងអស់​នឹង​បាត់​បង់។",
+  "Item deleted": "បាន​លុប​ទំនិញ",
+  "Stock management": "គ្រប់គ្រង​ស្តុក",
+  "Items": "ប្រភេទ​ទំនិញ",
+  "Total units": "ចំនួន​សរុប",
+  "Search items...": "ស្វែងរក​ទំនិញ...",
+  "No items yet": "មិន​ទាន់​មាន​ទំនិញ",
+  "No matches": "គ្មាន​លទ្ធផល",
+  "Add first item": "បន្ថែម​ទំនិញ​ដំបូង",
+  "Low": "ជិត​អស់",
+  "on hand": "ក្នុង​ដៃ",
+  "Received into stock": "បាន​ទទួល​ចូល​ស្តុក",
+  "Item added": "បាន​បន្ថែម​ទំនិញ",
+  "Stocked in": "បាន​ដាក់​ចូល​ស្តុក",
+  "Stocked out": "បាន​ដក​ចេញ",
+  "Order placed": "បាន​ដាក់​កម្មង់",
   "Write a message first": "សូមសរសេរសារជាមុនសិន",
   "Template name": "ឈ្មោះគំរូ",
   "Template saved ✓": "បានរក្សាគំរូ ✓",
@@ -3064,11 +3108,57 @@ window.__trGroups = {
     "Rank": "ចំណាត់​ថ្នាក់",
     "Branch": "សាខា",
     "Figures derived from live system data · auto-refreshes": "ទិន្នន័យ​ផ្អែក​លើ​ព័ត៌មាន​ក្នុង​ប្រព័ន្ធ · ធ្វើ​បច្ចុប្បន្ន​ភាព​ស្វ័យ​ប្រវត្តិ"
+  },
+  "ស្តុក · Stock": {
+    "Opening stock": "ស្តុក​ដើម",
+    "Edit item": "កែ​ទំនិញ",
+    "New item": "បន្ថែម​ទំនិញ​ថ្មី",
+    "Item name *": "ឈ្មោះ​ទំនិញ *",
+    "e.g. Traffic law book": "ឧ. សៀវភៅ​ច្បាប់​ចរាចរណ៍",
+    "Unit": "ឯកតា",
+    "pcs": "ក្បាល / សន្លឹក",
+    "Price ($)": "តម្លៃ ($)",
+    "Low-stock alert": "ស្តុក​អប្បបរមា",
+    "Distributor / Supplier": "អ្នក​ចែកចាយ / អ្នក​ផ្គត់ផ្គង់",
+    "Supplier name": "ឈ្មោះ​អ្នក​ចែកចាយ",
+    "Opening stock (qty)": "ស្តុក​ដើម (ចំនួន)",
+    "Extra details...": "ព័ត៌មាន​បន្ថែម...",
+    "Supplier": "អ្នក​ផ្គត់ផ្គង់",
+    "Recipient": "អ្នក​ទទួល",
+    "Quantity *": "ចំនួន *",
+    "Low stock": "ស្តុក​ជិត​អស់",
+    "On hand": "ស្តុក​ក្នុង​ដៃ",
+    "On order": "កំពុង​កម្មង់",
+    "Value": "តម្លៃ​សរុប",
+    "Stock in": "ដាក់​ចូល",
+    "Stock out": "ដក​ចេញ",
+    "Order": "ដាក់​កម្មង់",
+    "Movement history": "ចលនា​ស្តុក",
+    "No movements yet": "គ្មាន​ចលនា​ស្តុក​នៅ​ឡើយ",
+    "Received": "បាន​ទទួល",
+    "Receive": "ទទួល",
+    "Delete this movement?": "លុប​ចលនា​នេះ?",
+    "All its stock data will be removed.": "ទិន្នន័យ​ស្តុក​ទាំងអស់​នឹង​បាត់​បង់។",
+    "Item deleted": "បាន​លុប​ទំនិញ",
+    "Stock management": "គ្រប់គ្រង​ស្តុក",
+    "Items": "ប្រភេទ​ទំនិញ",
+    "Total units": "ចំនួន​សរុប",
+    "Search items...": "ស្វែងរក​ទំនិញ...",
+    "No items yet": "មិន​ទាន់​មាន​ទំនិញ",
+    "No matches": "គ្មាន​លទ្ធផល",
+    "Add first item": "បន្ថែម​ទំនិញ​ដំបូង",
+    "Low": "ជិត​អស់",
+    "on hand": "ក្នុង​ដៃ",
+    "Received into stock": "បាន​ទទួល​ចូល​ស្តុក",
+    "Item added": "បាន​បន្ថែម​ទំនិញ",
+    "Stocked in": "បាន​ដាក់​ចូល​ស្តុក",
+    "Stocked out": "បាន​ដក​ចេញ",
+    "Order placed": "បាន​ដាក់​កម្មង់"
   }
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v181";</script>
+<script>window.__ANZEN_VERSION="v182";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -3625,7 +3715,9 @@ var Icon = ({
     eye: 'M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z M15 12a3 3 0 11-6 0 3 3 0 016 0z',
     x: 'M6 6l12 12M6 18L18 6',
     edit: 'M12 20h9 M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z',
-    filter: 'M4 6h16M7 12h10M10 18h4'
+    filter: 'M4 6h16M7 12h10M10 18h4',
+    box: 'M21 8l-9-5-9 5v8l9 5 9-5V8zM3 8l9 5 9-5M12 13v8',
+    tag: 'M20 12l-8 8-9-9V4h7l10 8zM7.5 7.5h.01'
   };
   return React.createElement("svg", {
     width: size,
@@ -13730,6 +13822,12 @@ var NAV_ITEMS = {
     en: 'Analytics',
     jp: '分析',
     icon: 'chart'
+  }, {
+    id: 'stock',
+    km: 'គ្រប់គ្រងស្តុក',
+    en: 'Stock',
+    jp: '在庫管理',
+    icon: 'box'
   }, {
     id: 'staff',
     km: 'គ្រប់​គ្រង​បុគ្គលិក',
@@ -69564,6 +69662,1195 @@ Object.assign(window, {
 </script>
 
 <script>
+var INV_CATS = [{
+  k: 'book',
+  km: 'សៀវភៅ',
+  en: 'Books',
+  color: '#2A5DB0'
+}, {
+  k: 'jacket',
+  km: 'អាវសិស្ស',
+  en: 'Student jackets',
+  color: '#B0413E'
+}, {
+  k: 'material',
+  km: 'មេរៀនចែកសិស្ស',
+  en: 'Lesson materials',
+  color: '#12A302'
+}, {
+  k: 'other',
+  km: 'ផ្សេងៗ',
+  en: 'Other',
+  color: '#7A45C9'
+}];
+var invCatOf = k => INV_CATS.find(c => c.k === k) || INV_CATS[3];
+var invList = () => window.__schoolSettings && window.__schoolSettings.inventory || [];
+var invPersist = list => {
+  if (!window.__schoolSettings) window.__schoolSettings = {};
+  window.__schoolSettings.inventory = list;
+  if (window.saveAllData) window.saveAllData();
+};
+var invUid = () => 'INV' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+var invStock = it => (it.moves || []).reduce((a, m) => a + (m.type === 'in' ? m.qty : m.type === 'order' && m.received ? m.qty : m.type === 'out' ? -m.qty : 0), 0);
+var invOnOrder = it => (it.moves || []).filter(m => m.type === 'order' && !m.received).reduce((a, m) => a + m.qty, 0);
+var StockItemForm = ({
+  item,
+  onSave,
+  onCancel,
+  tr
+}) => {
+  var editing = !!(item && item.id);
+  var [name, setName] = React.useState(item?.name || '');
+  var [category, setCategory] = React.useState(item?.category || 'book');
+  var [unit, setUnit] = React.useState(item?.unit || '');
+  var [price, setPrice] = React.useState(item?.price != null ? String(item.price) : '');
+  var [supplier, setSupplier] = React.useState(item?.supplier || '');
+  var [minStock, setMinStock] = React.useState(item?.minStock != null ? String(item.minStock) : '');
+  var [notes, setNotes] = React.useState(item?.notes || '');
+  var [initQty, setInitQty] = React.useState('');
+  var fld = {
+    width: '100%',
+    padding: '10px 12px',
+    border: '1px solid var(--border)',
+    borderRadius: 9,
+    fontSize: 14,
+    fontFamily: 'inherit',
+    background: 'var(--surface)',
+    color: 'var(--ink)',
+    boxSizing: 'border-box'
+  };
+  var lbl = {
+    fontSize: 11,
+    fontWeight: 600,
+    color: 'var(--ink-3)',
+    margin: '0 0 4px'
+  };
+  var save = () => {
+    if (!name.trim()) return;
+    var base = editing ? {
+      ...item
+    } : {
+      id: invUid(),
+      moves: [],
+      createdAt: typeof todayStr === 'function' ? todayStr() : ''
+    };
+    base.name = name.trim();
+    base.category = category;
+    base.unit = unit.trim();
+    base.price = parseFloat(price) || 0;
+    base.supplier = supplier.trim();
+    base.minStock = parseInt(minStock) || 0;
+    base.notes = notes.trim();
+    if (!editing && (parseInt(initQty) || 0) > 0) {
+      base.moves = [{
+        id: invUid(),
+        type: 'in',
+        qty: parseInt(initQty),
+        date: typeof todayStr === 'function' ? todayStr() : '',
+        party: supplier.trim(),
+        note: tr('ស្តុក​ដើម', 'Opening stock')
+      }];
+    }
+    onSave(base);
+  };
+  return React.createElement("div", {
+    style: {
+      padding: '6px 16px 16px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 12
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700,
+      fontFamily: 'var(--font-km)'
+    }
+  }, editing ? tr('កែ​ទំនិញ', 'Edit item') : tr('បន្ថែម​ទំនិញ​ថ្មី', 'New item')), React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('ឈ្មោះ​ទំនិញ *', 'Item name *')), React.createElement("input", {
+    value: name,
+    onChange: e => setName(e.target.value),
+    style: fld,
+    placeholder: tr('ឧ. សៀវភៅ​ច្បាប់​ចរាចរណ៍', 'e.g. Traffic law book')
+  })), React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 10
+    }
+  }, React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('ប្រភេទ', 'Category')), React.createElement("select", {
+    value: category,
+    onChange: e => setCategory(e.target.value),
+    style: fld
+  }, INV_CATS.map(c => React.createElement("option", {
+    key: c.k,
+    value: c.k
+  }, tr(c.km, c.en))))), React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('ឯកតា', 'Unit')), React.createElement("input", {
+    value: unit,
+    onChange: e => setUnit(e.target.value),
+    style: fld,
+    placeholder: tr('ក្បាល / សន្លឹក', 'pcs')
+  })), React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('តម្លៃ ($)', 'Price ($)')), React.createElement("input", {
+    value: price,
+    onChange: e => setPrice(e.target.value),
+    style: fld,
+    inputMode: "decimal",
+    placeholder: "0.00"
+  })), React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('ស្តុក​អប្បបរមា', 'Low-stock alert')), React.createElement("input", {
+    value: minStock,
+    onChange: e => setMinStock(e.target.value),
+    style: fld,
+    inputMode: "numeric",
+    placeholder: "0"
+  }))), React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('អ្នក​ចែកចាយ / អ្នក​ផ្គត់ផ្គង់', 'Distributor / Supplier')), React.createElement("input", {
+    value: supplier,
+    onChange: e => setSupplier(e.target.value),
+    style: fld,
+    placeholder: tr('ឈ្មោះ​អ្នក​ចែកចាយ', 'Supplier name')
+  })), !editing && React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('ស្តុក​ដើម (ចំនួន)', 'Opening stock (qty)')), React.createElement("input", {
+    value: initQty,
+    onChange: e => setInitQty(e.target.value),
+    style: fld,
+    inputMode: "numeric",
+    placeholder: "0"
+  })), React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('ចំណាំ', 'Notes')), React.createElement("textarea", {
+    value: notes,
+    onChange: e => setNotes(e.target.value),
+    rows: 2,
+    style: {
+      ...fld,
+      resize: 'vertical'
+    },
+    placeholder: tr('ព័ត៌មាន​បន្ថែម...', 'Extra details...')
+  })), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      marginTop: 2
+    }
+  }, React.createElement("button", {
+    onClick: onCancel,
+    style: {
+      flex: 1,
+      padding: '11px',
+      borderRadius: 9,
+      border: '1px solid var(--border-strong)',
+      background: 'var(--surface)',
+      color: 'var(--ink-2)',
+      cursor: 'pointer',
+      fontSize: 14,
+      fontWeight: 600
+    }
+  }, tr('បោះបង់', 'Cancel')), React.createElement("button", {
+    onClick: save,
+    disabled: !name.trim(),
+    style: {
+      flex: 2,
+      padding: '11px',
+      borderRadius: 9,
+      border: 'none',
+      background: name.trim() ? 'var(--accent)' : 'var(--border-strong)',
+      color: '#fff',
+      cursor: name.trim() ? 'pointer' : 'not-allowed',
+      fontSize: 14,
+      fontWeight: 700
+    }
+  }, editing ? tr('រក្សាទុក', 'Save') : tr('បន្ថែម', 'Add item'))));
+};
+var StockMoveForm = ({
+  item,
+  type,
+  onSave,
+  onCancel,
+  tr
+}) => {
+  var [qty, setQty] = React.useState('');
+  var [date, setDate] = React.useState(typeof todayStr === 'function' ? todayStr() : '');
+  var [party, setParty] = React.useState(type === 'out' ? '' : item.supplier || '');
+  var [note, setNote] = React.useState('');
+  var meta = {
+    in: {
+      km: 'ដាក់​ចូល​ស្តុក',
+      en: 'Stock in',
+      color: '#12873f',
+      party: tr('អ្នក​ផ្គត់ផ្គង់', 'Supplier')
+    },
+    out: {
+      km: 'ដក​ចេញ​ស្តុក',
+      en: 'Stock out',
+      color: '#B0413E',
+      party: tr('អ្នក​ទទួល', 'Recipient')
+    },
+    order: {
+      km: 'ដាក់​កម្មង់',
+      en: 'Place order',
+      color: '#C98A12',
+      party: tr('អ្នក​ចែកចាយ', 'Supplier')
+    }
+  }[type];
+  var fld = {
+    width: '100%',
+    padding: '10px 12px',
+    border: '1px solid var(--border)',
+    borderRadius: 9,
+    fontSize: 14,
+    fontFamily: 'inherit',
+    background: 'var(--surface)',
+    color: 'var(--ink)',
+    boxSizing: 'border-box'
+  };
+  var lbl = {
+    fontSize: 11,
+    fontWeight: 600,
+    color: 'var(--ink-3)',
+    margin: '0 0 4px'
+  };
+  var save = () => {
+    var n = parseInt(qty);
+    if (!n || n <= 0) return;
+    onSave({
+      id: invUid(),
+      type,
+      qty: n,
+      date,
+      party: party.trim(),
+      note: note.trim(),
+      received: type === 'order' ? false : undefined
+    });
+  };
+  return React.createElement("div", {
+    style: {
+      padding: '6px 16px 16px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 12
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700,
+      fontFamily: 'var(--font-km)',
+      color: meta.color
+    }
+  }, tr(meta.km, meta.en), " \xB7 ", item.name), React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 10
+    }
+  }, React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('ចំនួន *', 'Quantity *')), React.createElement("input", {
+    value: qty,
+    onChange: e => setQty(e.target.value),
+    style: fld,
+    inputMode: "numeric",
+    placeholder: "0",
+    autoFocus: true
+  })), React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('ថ្ងៃ', 'Date')), React.createElement("input", {
+    type: "date",
+    value: date,
+    onChange: e => setDate(e.target.value),
+    style: fld
+  }))), React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, meta.party), React.createElement("input", {
+    value: party,
+    onChange: e => setParty(e.target.value),
+    style: fld,
+    placeholder: meta.party
+  })), React.createElement("div", null, React.createElement("div", {
+    style: lbl
+  }, tr('ចំណាំ', 'Note')), React.createElement("input", {
+    value: note,
+    onChange: e => setNote(e.target.value),
+    style: fld,
+    placeholder: tr('ចំណាំ...', 'Note...')
+  })), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      marginTop: 2
+    }
+  }, React.createElement("button", {
+    onClick: onCancel,
+    style: {
+      flex: 1,
+      padding: '11px',
+      borderRadius: 9,
+      border: '1px solid var(--border-strong)',
+      background: 'var(--surface)',
+      color: 'var(--ink-2)',
+      cursor: 'pointer',
+      fontSize: 14,
+      fontWeight: 600
+    }
+  }, tr('បោះបង់', 'Cancel')), React.createElement("button", {
+    onClick: save,
+    disabled: !(parseInt(qty) > 0),
+    style: {
+      flex: 2,
+      padding: '11px',
+      borderRadius: 9,
+      border: 'none',
+      background: parseInt(qty) > 0 ? meta.color : 'var(--border-strong)',
+      color: '#fff',
+      cursor: parseInt(qty) > 0 ? 'pointer' : 'not-allowed',
+      fontSize: 14,
+      fontWeight: 700
+    }
+  }, tr('រក្សាទុក', 'Save'))));
+};
+var StockItemDetail = ({
+  item,
+  onClose,
+  onEdit,
+  onMove,
+  onReceive,
+  onDeleteMove,
+  onDelete,
+  tr,
+  confirm
+}) => {
+  var cat = invCatOf(item.category);
+  var stock = invStock(item);
+  var onOrder = invOnOrder(item);
+  var low = item.minStock > 0 && stock <= item.minStock;
+  var moves = [...(item.moves || [])].sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+  var MTYPE = {
+    in: {
+      km: 'ដាក់​ចូល',
+      en: 'In',
+      sign: '+',
+      color: '#12873f'
+    },
+    out: {
+      km: 'ដក​ចេញ',
+      en: 'Out',
+      sign: '−',
+      color: '#B0413E'
+    },
+    order: {
+      km: 'កម្មង់',
+      en: 'Order',
+      sign: '⌛',
+      color: '#C98A12'
+    }
+  };
+  var actBtn = (bg, icon, label, onClick) => React.createElement("button", {
+    onClick: onClick,
+    style: {
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 4,
+      padding: '11px 4px',
+      borderRadius: 11,
+      border: 'none',
+      background: bg + '18',
+      color: bg,
+      cursor: 'pointer',
+      fontFamily: 'inherit',
+      fontWeight: 700,
+      fontSize: 11.5
+    }
+  }, React.createElement("span", {
+    style: {
+      fontSize: 17,
+      lineHeight: 1
+    }
+  }, icon), label);
+  return React.createElement("div", {
+    style: {
+      padding: '4px 16px 18px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 14
+    }
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: 10
+    }
+  }, React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 7,
+      alignItems: 'center',
+      marginBottom: 4
+    }
+  }, React.createElement("span", {
+    style: {
+      background: cat.color,
+      color: '#fff',
+      fontSize: 10,
+      fontWeight: 800,
+      padding: '2px 9px',
+      borderRadius: 6
+    }
+  }, tr(cat.km, cat.en)), low && React.createElement("span", {
+    style: {
+      background: 'rgba(176,65,62,.14)',
+      color: '#B0413E',
+      fontSize: 10,
+      fontWeight: 800,
+      padding: '2px 9px',
+      borderRadius: 6
+    }
+  }, "\u26A0 ", tr('ស្តុក​ជិត​អស់', 'Low stock'))), React.createElement("div", {
+    style: {
+      fontSize: 19,
+      fontWeight: 700,
+      fontFamily: 'var(--font-km)',
+      lineHeight: 1.25
+    }
+  }, item.name)), React.createElement("button", {
+    onClick: onClose,
+    "aria-label": tr('បិទ', 'Close'),
+    style: {
+      border: 'none',
+      background: 'var(--surface-muted)',
+      borderRadius: 8,
+      width: 30,
+      height: 30,
+      cursor: 'pointer',
+      color: 'var(--ink-2)',
+      fontSize: 15,
+      flexShrink: 0
+    }
+  }, "\u2715")), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8
+    }
+  }, React.createElement("div", {
+    style: {
+      flex: 1,
+      background: 'var(--surface-muted)',
+      borderRadius: 12,
+      padding: '11px 12px'
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 24,
+      fontWeight: 800,
+      fontFamily: '"JetBrains Mono",monospace',
+      color: low ? '#B0413E' : 'var(--ink)',
+      lineHeight: 1
+    }
+  }, stock), React.createElement("div", {
+    style: {
+      fontSize: 10.5,
+      color: 'var(--ink-3)',
+      marginTop: 3
+    }
+  }, tr('ស្តុក​ក្នុង​ដៃ', 'On hand'), item.unit ? ` · ${item.unit}` : '')), React.createElement("div", {
+    style: {
+      flex: 1,
+      background: 'var(--surface-muted)',
+      borderRadius: 12,
+      padding: '11px 12px'
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 24,
+      fontWeight: 800,
+      fontFamily: '"JetBrains Mono",monospace',
+      color: '#C98A12',
+      lineHeight: 1
+    }
+  }, onOrder), React.createElement("div", {
+    style: {
+      fontSize: 10.5,
+      color: 'var(--ink-3)',
+      marginTop: 3
+    }
+  }, tr('កំពុង​កម្មង់', 'On order'))), React.createElement("div", {
+    style: {
+      flex: 1,
+      background: 'var(--surface-muted)',
+      borderRadius: 12,
+      padding: '11px 12px'
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 24,
+      fontWeight: 800,
+      fontFamily: '"JetBrains Mono",monospace',
+      lineHeight: 1
+    }
+  }, "$", (stock * (item.price || 0)).toFixed(0)), React.createElement("div", {
+    style: {
+      fontSize: 10.5,
+      color: 'var(--ink-3)',
+      marginTop: 3
+    }
+  }, tr('តម្លៃ​សរុប', 'Value'), " \xB7 $", item.price || 0))), item.supplier && React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'var(--ink-2)'
+    }
+  }, "\uD83D\uDE9A ", tr('អ្នក​ចែកចាយ', 'Supplier'), ": ", React.createElement("b", null, item.supplier)), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8
+    }
+  }, actBtn('#12873f', '＋', tr('ដាក់​ចូល', 'Stock in'), () => onMove('in')), actBtn('#B0413E', '－', tr('ដក​ចេញ', 'Stock out'), () => onMove('out')), actBtn('#C98A12', '🛒', tr('ដាក់​កម្មង់', 'Order'), () => onMove('order'))), React.createElement("div", null, React.createElement("div", {
+    style: {
+      fontSize: 11,
+      letterSpacing: '.05em',
+      textTransform: 'uppercase',
+      color: 'var(--ink-3)',
+      fontWeight: 700,
+      margin: '2px 0 8px',
+      fontFamily: '"JetBrains Mono",monospace'
+    }
+  }, tr('ចលនា​ស្តុក', 'Movement history')), moves.length === 0 ? React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: 'var(--ink-3)',
+      textAlign: 'center',
+      padding: '14px 0'
+    }
+  }, tr('គ្មាន​ចលនា​ស្តុក​នៅ​ឡើយ', 'No movements yet')) : React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 6
+    }
+  }, moves.map(m => {
+    var mt = MTYPE[m.type] || MTYPE.in;
+    var pending = m.type === 'order' && !m.received;
+    return React.createElement("div", {
+      key: m.id,
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: '9px 11px',
+        background: 'var(--surface-muted)',
+        borderRadius: 10
+      }
+    }, React.createElement("span", {
+      style: {
+        width: 26,
+        height: 26,
+        borderRadius: 7,
+        background: mt.color + '22',
+        color: mt.color,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontWeight: 800,
+        fontSize: 13,
+        flexShrink: 0
+      }
+    }, mt.sign), React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, React.createElement("div", {
+      style: {
+        fontSize: 13,
+        fontWeight: 700
+      }
+    }, React.createElement("span", {
+      style: {
+        color: mt.color
+      }
+    }, m.type === 'out' ? '−' : '+', m.qty), " \xB7 ", tr(mt.km, mt.en), pending && React.createElement("span", {
+      style: {
+        fontSize: 10,
+        marginLeft: 6,
+        background: 'rgba(201,138,18,.16)',
+        color: '#C98A12',
+        padding: '1px 7px',
+        borderRadius: 5,
+        fontWeight: 800
+      }
+    }, tr('រង់ចាំ', 'Pending')), m.type === 'order' && m.received && React.createElement("span", {
+      style: {
+        fontSize: 10,
+        marginLeft: 6,
+        color: '#12873f',
+        fontWeight: 800
+      }
+    }, "\u2713 ", tr('បាន​ទទួល', 'Received'))), React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: 'var(--ink-3)',
+        fontFamily: '"JetBrains Mono",monospace',
+        marginTop: 1
+      }
+    }, m.date, m.party ? ` · ${m.party}` : '', m.note ? ` · ${m.note}` : '')), pending && React.createElement("button", {
+      onClick: () => onReceive(m.id),
+      style: {
+        border: 'none',
+        background: '#12873f',
+        color: '#fff',
+        borderRadius: 7,
+        padding: '6px 10px',
+        fontSize: 11,
+        fontWeight: 700,
+        cursor: 'pointer',
+        flexShrink: 0,
+        fontFamily: 'inherit'
+      }
+    }, tr('ទទួល', 'Receive')), React.createElement("button", {
+      onClick: () => confirm?.({
+        title: tr('លុប​ចលនា​នេះ?', 'Delete this movement?'),
+        confirmText: tr('លុប', 'Delete'),
+        danger: true,
+        onConfirm: () => onDeleteMove(m.id)
+      }),
+      "aria-label": tr('លុប', 'Delete'),
+      style: {
+        border: 'none',
+        background: 'transparent',
+        color: 'var(--ink-3)',
+        cursor: 'pointer',
+        fontSize: 14,
+        flexShrink: 0,
+        padding: 2
+      }
+    }, "\uD83D\uDDD1"));
+  }))), item.notes && React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'var(--ink-2)',
+      background: 'var(--surface-muted)',
+      borderRadius: 9,
+      padding: '9px 11px'
+    }
+  }, "\uD83D\uDCDD ", item.notes), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      borderTop: '1px solid var(--border)',
+      paddingTop: 12
+    }
+  }, React.createElement("button", {
+    onClick: onEdit,
+    style: {
+      flex: 1,
+      padding: '10px',
+      borderRadius: 9,
+      border: '1px solid var(--border-strong)',
+      background: 'var(--surface)',
+      color: 'var(--ink-2)',
+      cursor: 'pointer',
+      fontSize: 13,
+      fontWeight: 600
+    }
+  }, tr('កែ​ព័ត៌មាន', 'Edit item')), React.createElement("button", {
+    onClick: () => confirm?.({
+      title: tr('លុប​ទំនិញ​នេះ?', 'Delete this item?'),
+      body: tr('ទិន្នន័យ​ស្តុក​ទាំងអស់​នឹង​បាត់​បង់។', 'All its stock data will be removed.'),
+      confirmText: tr('លុប', 'Delete'),
+      danger: true,
+      onConfirm: onDelete
+    }),
+    style: {
+      padding: '10px 16px',
+      borderRadius: 9,
+      border: '1px solid rgba(176,65,62,.4)',
+      background: 'transparent',
+      color: '#B0413E',
+      cursor: 'pointer',
+      fontSize: 13,
+      fontWeight: 600
+    }
+  }, tr('លុប', 'Delete'))));
+};
+var StockScreen = ({
+  role
+}) => {
+  var {
+    tr,
+    toast,
+    confirm
+  } = useAppActions();
+  var bp = useBreakpoint();
+  var [, force] = React.useReducer(n => n + 1, 0);
+  var [filter, setFilter] = React.useState('all');
+  var [query, setQuery] = React.useState('');
+  var [formItem, setFormItem] = React.useState(null);
+  var [detailId, setDetailId] = React.useState(null);
+  var [move, setMove] = React.useState(null);
+  var items = invList();
+  var detailItem = items.find(i => i.id === detailId) || null;
+  var mutate = fn => {
+    var next = fn(items.slice());
+    invPersist(next);
+    force();
+  };
+  var upsertItem = it => mutate(list => {
+    var i = list.findIndex(x => x.id === it.id);
+    if (i === -1) list.push(it);else list[i] = it;
+    return list;
+  });
+  var addMove = (itemId, m) => mutate(list => list.map(x => x.id === itemId ? {
+    ...x,
+    moves: [...(x.moves || []), m]
+  } : x));
+  var receiveMove = (itemId, moveId) => mutate(list => list.map(x => x.id === itemId ? {
+    ...x,
+    moves: (x.moves || []).map(m => m.id === moveId ? {
+      ...m,
+      received: true,
+      receivedDate: typeof todayStr === 'function' ? todayStr() : ''
+    } : m)
+  } : x));
+  var deleteMove = (itemId, moveId) => mutate(list => list.map(x => x.id === itemId ? {
+    ...x,
+    moves: (x.moves || []).filter(m => m.id !== moveId)
+  } : x));
+  var deleteItem = itemId => {
+    mutate(list => list.filter(x => x.id !== itemId));
+    setDetailId(null);
+    toast(tr('បាន​លុប​ទំនិញ', 'Item deleted'), 'neutral');
+  };
+  var q = query.trim().toLowerCase();
+  var filtered = items.filter(it => (filter === 'all' || it.category === filter) && (!q || (it.name || '').toLowerCase().includes(q) || (it.supplier || '').toLowerCase().includes(q)));
+  var totalItems = items.length;
+  var totalUnits = items.reduce((a, it) => a + invStock(it), 0);
+  var lowCount = items.filter(it => it.minStock > 0 && invStock(it) <= it.minStock).length;
+  var totalValue = items.reduce((a, it) => a + invStock(it) * (it.price || 0), 0);
+  var stat = {
+    flex: 1,
+    background: 'rgba(255,255,255,.13)',
+    borderRadius: 12,
+    padding: '9px 11px'
+  };
+  var statNum = {
+    fontFamily: '"JetBrains Mono",monospace',
+    fontSize: 18,
+    fontWeight: 800,
+    lineHeight: 1
+  };
+  var statLbl = {
+    fontSize: 10,
+    opacity: .85,
+    marginTop: 3
+  };
+  var CHIPS = [{
+    k: 'all',
+    label: tr('ទាំងអស់', 'All'),
+    color: 'var(--accent)'
+  }, ...INV_CATS.map(c => ({
+    k: c.k,
+    label: tr(c.km, c.en),
+    color: c.color
+  }))];
+  return React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 12
+    }
+  }, React.createElement("div", {
+    style: {
+      position: 'relative',
+      borderRadius: 20,
+      padding: '15px 16px',
+      color: '#fff',
+      background: 'linear-gradient(135deg,#243a66,#365a9c 60%,#4f7bc0)',
+      boxShadow: '0 12px 28px rgba(36,58,102,.30)'
+    }
+  }, React.createElement("div", {
+    style: {
+      position: 'absolute',
+      inset: 0,
+      overflow: 'hidden',
+      borderRadius: 20,
+      pointerEvents: 'none'
+    }
+  }, React.createElement("div", {
+    style: {
+      position: 'absolute',
+      right: -6,
+      bottom: -16,
+      opacity: .14,
+      color: '#fff'
+    }
+  }, React.createElement(Icon, {
+    name: "box",
+    size: 104,
+    stroke: 1.4
+  }))), React.createElement("div", {
+    style: {
+      position: 'relative',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 17,
+      fontWeight: 800
+    }
+  }, tr('គ្រប់គ្រង​ស្តុក', 'Stock management')), React.createElement("button", {
+    onClick: () => setFormItem({}),
+    style: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 5,
+      height: 32,
+      padding: '0 13px',
+      border: 'none',
+      borderRadius: 999,
+      cursor: 'pointer',
+      background: 'rgba(255,255,255,.18)',
+      color: '#fff',
+      fontSize: 12,
+      fontWeight: 700,
+      fontFamily: 'inherit'
+    }
+  }, React.createElement(Icon, {
+    name: "plus",
+    size: 14
+  }), tr('បន្ថែម', 'Add'))), React.createElement("div", {
+    style: {
+      position: 'relative',
+      display: 'flex',
+      gap: 8,
+      marginTop: 14
+    }
+  }, React.createElement("div", {
+    style: stat
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6
+    }
+  }, React.createElement(Icon, {
+    name: "box",
+    size: 14
+  }), React.createElement("span", {
+    style: statNum
+  }, totalItems)), React.createElement("div", {
+    style: statLbl
+  }, tr('ប្រភេទ​ទំនិញ', 'Items'))), React.createElement("div", {
+    style: stat
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6
+    }
+  }, React.createElement("span", {
+    style: statNum
+  }, totalUnits)), React.createElement("div", {
+    style: statLbl
+  }, tr('ចំនួន​សរុប', 'Total units'))), React.createElement("div", {
+    style: stat
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6
+    }
+  }, React.createElement("span", {
+    style: {
+      width: 8,
+      height: 8,
+      borderRadius: '50%',
+      background: lowCount ? '#F0A93B' : '#6BE39A'
+    }
+  }), React.createElement("span", {
+    style: statNum
+  }, lowCount)), React.createElement("div", {
+    style: statLbl
+  }, tr('ស្តុក​ជិត​អស់', 'Low stock'))), React.createElement("div", {
+    style: stat
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6
+    }
+  }, React.createElement("span", {
+    style: statNum
+  }, "$", totalValue.toFixed(0))), React.createElement("div", {
+    style: statLbl
+  }, tr('តម្លៃ', 'Value'))))), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      flexWrap: 'wrap',
+      alignItems: 'center'
+    }
+  }, React.createElement("input", {
+    value: query,
+    onChange: e => setQuery(e.target.value),
+    placeholder: tr('ស្វែងរក​ទំនិញ...', 'Search items...'),
+    style: {
+      flex: '1 1 180px',
+      minWidth: 0,
+      padding: '9px 12px',
+      border: '1px solid var(--border)',
+      borderRadius: 9,
+      fontSize: 13,
+      fontFamily: 'inherit',
+      background: 'var(--surface)',
+      color: 'var(--ink)'
+    }
+  })), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 6,
+      flexWrap: 'wrap'
+    }
+  }, CHIPS.map(c => {
+    var active = filter === c.k;
+    var n = c.k === 'all' ? items.length : items.filter(i => i.category === c.k).length;
+    return React.createElement("button", {
+      key: c.k,
+      onClick: () => setFilter(c.k),
+      style: {
+        padding: '5px 12px',
+        borderRadius: 999,
+        fontSize: 12,
+        fontWeight: 700,
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+        border: '1.5px solid ' + (active ? c.color : 'var(--border)'),
+        background: active ? c.color : 'var(--surface)',
+        color: active ? '#fff' : 'var(--ink-2)',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6
+      }
+    }, c.label, " ", React.createElement("span", {
+      style: {
+        opacity: .7,
+        fontFamily: '"JetBrains Mono",monospace'
+      }
+    }, n));
+  })), filtered.length === 0 ? React.createElement("div", {
+    style: {
+      textAlign: 'center',
+      padding: '48px 20px',
+      color: 'var(--ink-3)'
+    }
+  }, React.createElement("div", {
+    style: {
+      opacity: .5,
+      marginBottom: 10,
+      display: 'flex',
+      justifyContent: 'center'
+    }
+  }, React.createElement(Icon, {
+    name: "box",
+    size: 40
+  })), React.createElement("div", {
+    style: {
+      fontSize: 14,
+      fontWeight: 600,
+      color: 'var(--ink)',
+      marginBottom: 5
+    }
+  }, items.length === 0 ? tr('មិន​ទាន់​មាន​ទំនិញ', 'No items yet') : tr('គ្មាន​លទ្ធផល', 'No matches')), items.length === 0 && React.createElement("button", {
+    onClick: () => setFormItem({}),
+    style: {
+      marginTop: 10,
+      padding: '9px 18px',
+      borderRadius: 9,
+      border: 'none',
+      background: 'var(--accent)',
+      color: '#fff',
+      cursor: 'pointer',
+      fontSize: 13,
+      fontWeight: 700,
+      fontFamily: 'inherit'
+    }
+  }, tr('បន្ថែម​ទំនិញ​ដំបូង', 'Add first item'))) : React.createElement("div", {
+    style: {
+      display: bp.mobile ? 'flex' : 'grid',
+      flexDirection: 'column',
+      gridTemplateColumns: bp.mobile ? undefined : '1fr 1fr',
+      gap: 8
+    }
+  }, filtered.map(it => {
+    var cat = invCatOf(it.category);
+    var stock = invStock(it);
+    var onOrder = invOnOrder(it);
+    var low = it.minStock > 0 && stock <= it.minStock;
+    return React.createElement("button", {
+      key: it.id,
+      onClick: () => setDetailId(it.id),
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        padding: '13px 14px',
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderLeft: `3px solid ${cat.color}`,
+        borderRadius: 14,
+        boxShadow: '0 4px 14px rgba(20,30,60,.05)',
+        cursor: 'pointer',
+        textAlign: 'left',
+        width: '100%'
+      }
+    }, React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 7
+      }
+    }, React.createElement("span", {
+      style: {
+        fontSize: 14.5,
+        fontWeight: 700,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      }
+    }, it.name), low && React.createElement("span", {
+      style: {
+        fontSize: 9,
+        fontWeight: 800,
+        color: '#B0413E',
+        background: 'rgba(176,65,62,.13)',
+        padding: '1px 6px',
+        borderRadius: 5,
+        flexShrink: 0
+      }
+    }, "\u26A0 ", tr('ជិត​អស់', 'Low'))), React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: 'var(--ink-3)',
+        marginTop: 2
+      }
+    }, React.createElement("span", {
+      style: {
+        color: cat.color,
+        fontWeight: 700
+      }
+    }, tr(cat.km, cat.en)), it.price ? React.createElement("span", {
+      style: {
+        fontFamily: '"JetBrains Mono",monospace'
+      }
+    }, " \xB7 $", it.price) : null, it.supplier ? ` · ${it.supplier}` : '', onOrder ? React.createElement("span", {
+      style: {
+        color: '#C98A12',
+        fontWeight: 700
+      }
+    }, " \xB7 \uD83D\uDED2 ", onOrder) : null)), React.createElement("div", {
+      style: {
+        textAlign: 'right',
+        flexShrink: 0
+      }
+    }, React.createElement("div", {
+      style: {
+        fontSize: 20,
+        fontWeight: 800,
+        fontFamily: '"JetBrains Mono",monospace',
+        color: low ? '#B0413E' : 'var(--ink)',
+        lineHeight: 1
+      }
+    }, stock), React.createElement("div", {
+      style: {
+        fontSize: 9.5,
+        color: 'var(--ink-3)',
+        marginTop: 2
+      }
+    }, it.unit || tr('ក្នុង​ដៃ', 'on hand'))), React.createElement("span", {
+      style: {
+        fontSize: 15,
+        color: 'var(--ink-3)',
+        flexShrink: 0
+      }
+    }, "\u203A"));
+  })), React.createElement(Modal, {
+    open: !!detailItem,
+    onClose: () => setDetailId(null)
+  }, detailItem && React.createElement(StockItemDetail, {
+    item: detailItem,
+    tr: tr,
+    confirm: confirm,
+    onClose: () => setDetailId(null),
+    onEdit: () => {
+      setFormItem(detailItem);
+      setDetailId(null);
+    },
+    onMove: type => setMove({
+      itemId: detailItem.id,
+      type
+    }),
+    onReceive: mid => {
+      receiveMove(detailItem.id, mid);
+      toast(tr('បាន​ទទួល​ចូល​ស្តុក', 'Received into stock'), 'good');
+    },
+    onDeleteMove: mid => deleteMove(detailItem.id, mid),
+    onDelete: () => deleteItem(detailItem.id)
+  })), React.createElement(Modal, {
+    open: !!formItem,
+    onClose: () => setFormItem(null)
+  }, formItem && React.createElement(StockItemForm, {
+    item: formItem.id ? formItem : null,
+    tr: tr,
+    onCancel: () => setFormItem(null),
+    onSave: it => {
+      upsertItem(it);
+      setFormItem(null);
+      toast(it.id && items.some(x => x.id === it.id) ? tr('បាន​រក្សាទុក', 'Saved') : tr('បាន​បន្ថែម​ទំនិញ', 'Item added'), 'good');
+    }
+  })), React.createElement(Modal, {
+    open: !!move,
+    onClose: () => setMove(null)
+  }, move && (() => {
+    var it = items.find(x => x.id === move.itemId);
+    if (!it) return null;
+    return React.createElement(StockMoveForm, {
+      item: it,
+      type: move.type,
+      tr: tr,
+      onCancel: () => setMove(null),
+      onSave: m => {
+        addMove(it.id, m);
+        setMove(null);
+        toast(m.type === 'in' ? tr('បាន​ដាក់​ចូល​ស្តុក', 'Stocked in') : m.type === 'out' ? tr('បាន​ដក​ចេញ', 'Stocked out') : tr('បាន​ដាក់​កម្មង់', 'Order placed'), 'good');
+      }
+    });
+  })()));
+};
+</script>
+
+<script>
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 var normPhone = (p = '') => {
   var d = String(p).replace(/\D/g, '');
@@ -71680,6 +72967,9 @@ function App() {
       role: role
     }),
     analytics: React.createElement(AnalyticsScreen, {
+      role: role
+    }),
+    stock: React.createElement(StockScreen, {
       role: role
     }),
     announce: React.createElement(AnnounceScreen, {

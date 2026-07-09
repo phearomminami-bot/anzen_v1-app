@@ -279,6 +279,8 @@ const Icon = ({ name, size = 16, stroke = 1.6 }) => {
     x:'M6 6l12 12M6 18L18 6',
     edit:'M12 20h9 M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z',
     filter:'M4 6h16M7 12h10M10 18h4',
+    box:'M21 8l-9-5-9 5v8l9 5 9-5V8zM3 8l9 5 9-5M12 13v8',
+    tag:'M20 12l-8 8-9-9V4h7l10 8zM7.5 7.5h.01',
   };
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none"

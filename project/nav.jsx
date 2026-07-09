@@ -48,6 +48,7 @@ const NAV_ITEMS = {
     { id:'billing',     km:'វិក្កយបត្រ',             en:'Billing',            jp:'請求管理',         icon:'cash' },
     { id:'finance',     km:'គ្រប់គ្រងហិរញ្ញវត្ថុ',   en:'Finance',            jp:'財務管理',         icon:'chart' },
     { id:'analytics',   km:'ការវិភាគ',              en:'Analytics',          jp:'分析',             icon:'chart' },
+    { id:'stock',       km:'គ្រប់គ្រងស្តុក',         en:'Stock',              jp:'在庫管理',         icon:'box' },
     { id:'staff',       km:'គ្រប់​គ្រង​បុគ្គលិក',    en:'Staff',              jp:'スタッフ管理',     icon:'users' },
     { id:'announce',    km:'ការជូនដំណឹង',           en:'Announcements',      jp:'お知らせ',         icon:'bell' },
     { id:'booking',     km:'ការកក់',                en:'Booking flow',       jp:'予約',             icon:'book' },
