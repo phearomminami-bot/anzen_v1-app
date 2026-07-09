@@ -309,6 +309,8 @@ window.__trRegistry = {
   "Duration": "រយៈ​ពេល",
   "PEOPLE": "អ្នក​ពាក់​ព័ន្ធ",
   "Student": "សិស្ស",
+  "You can pick multiple students": "អាច​ជ្រើស​សិស្ស​ច្រើន​នាក់",
+  "+ Add student": "+ ជ្រើស​សិស្ស",
   "Group / not individual": "ក្រុម / មិន​ផ្ទាល់​ខ្លួន",
   "Instructor *": "គ្រូ *",
   "⚠ Instructor busy": "⚠ គ្រូ​នេះ​រវល់​ម៉ោង​នេះ",
@@ -627,7 +629,6 @@ window.__trRegistry = {
   "New '+window.__SCHED_KIND(examModal.kind).en.toLowerCase())}\n            </div>\n            <div style={{fontSize:11,color:'var(--ink-3)": "កែ '+window.__SCHED_KIND(examModal.kind).km, 'Edit '+window.__SCHED_KIND(examModal.kind).en.toLowerCase()) : tr(window.__SCHED_KIND(examModal.kind).km+' ថ្មី",
   "Not counted as a lesson": "មិន​រាប់​បញ្ចូល​ជា​មេរៀន",
   "Students (multiple)": "សិស្ស (ច្រើន​នាក់)",
-  "+ Add student": "+ ជ្រើស​សិស្ស",
   "Instructors (multiple)": "គ្រូ (ច្រើន​នាក់)",
   "+ Add instructor": "+ ជ្រើស​គ្រូ",
   "e.g. road-test application": "ឧ. ដាក់​ពាក្យ​ប្រឡង​ផ្លូវ",
@@ -1917,7 +1918,6 @@ window.__trGroups = {
     "New '+window.__SCHED_KIND(examModal.kind).en.toLowerCase())}\n            </div>\n            <div style={{fontSize:11,color:'var(--ink-3)": "កែ '+window.__SCHED_KIND(examModal.kind).km, 'Edit '+window.__SCHED_KIND(examModal.kind).en.toLowerCase()) : tr(window.__SCHED_KIND(examModal.kind).km+' ថ្មី",
     "Not counted as a lesson": "មិន​រាប់​បញ្ចូល​ជា​មេរៀន",
     "Students (multiple)": "សិស្ស (ច្រើន​នាក់)",
-    "+ Add student": "+ ជ្រើស​សិស្ស",
     "Instructors (multiple)": "គ្រូ (ច្រើន​នាក់)",
     "+ Add instructor": "+ ជ្រើស​គ្រូ",
     "e.g. road-test application": "ឧ. ដាក់​ពាក្យ​ប្រឡង​ផ្លូវ",
@@ -2757,6 +2757,8 @@ window.__trGroups = {
     "Duration": "រយៈ​ពេល",
     "PEOPLE": "អ្នក​ពាក់​ព័ន្ធ",
     "Student": "សិស្ស",
+    "You can pick multiple students": "អាច​ជ្រើស​សិស្ស​ច្រើន​នាក់",
+    "+ Add student": "+ បន្ថែម​សិស្ស",
     "Group / not individual": "ក្រុម / មិន​ផ្ទាល់​ខ្លួន",
     "Instructor *": "គ្រូ *",
     "⚠ Instructor busy": "⚠ គ្រូ​នេះ​រវល់​ម៉ោង​នេះ",
@@ -3052,7 +3054,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v171";</script>
+<script>window.__ANZEN_VERSION="v172";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -7307,7 +7309,7 @@ var NewLessonForm = ({
     setAddingDate('');
   };
   var removeDate = d => setDates(prev => prev.filter(x => x !== d));
-  var [studentId, setStudentId] = React.useState(editLesson ? editLesson.studentId === '—' ? '' : editLesson.studentId : ctx.studentId || '');
+  var [studentIds, setStudentIds] = React.useState(editLesson ? editLesson.studentId && editLesson.studentId !== '—' ? [editLesson.studentId] : [] : ctx.studentId ? [ctx.studentId] : []);
   var [instId, setInstId] = React.useState(editLesson ? editLesson.instId : ctx.instId || '');
   var [guests, setGuests] = React.useState(editLesson && Array.isArray(editLesson.guests) ? [...editLesson.guests] : []);
   var [vehId, setVehId] = React.useState(editLesson ? editLesson.veh === '—' ? '' : editLesson.veh : '');
@@ -7386,7 +7388,7 @@ var NewLessonForm = ({
       toast(tr('ឡាន​ជាន់​ម៉ោង​គ្នា', 'Vehicle already booked'), 'warn');
       return;
     }
-    var stu = STUDENTS.find(s => s.id === studentId);
+    var stu = STUDENTS.find(s => s.id === studentIds[0]);
     var selObjs = catObj.items.filter(u => selLessons.includes(u.id));
     var selLabel = selObjs.map(u => u.no ? `${lessonNum(u.no)} ${tr(u.km, u.en)}` : tr(u.km, u.en)).join(', ');
     var typeName = `${tr(catObj.km, catObj.en)}${selLabel ? ' · ' + selLabel : ''}`;
@@ -7399,7 +7401,7 @@ var NewLessonForm = ({
           date: dates[0] || editLesson.date,
           h: parseInt(hour),
           len: parseFloat(len),
-          studentId: studentId || '—',
+          studentId: studentIds[0] || '—',
           instId,
           guests: guests.length > 0 ? [...guests] : undefined,
           veh: vehId || '—',
@@ -7422,13 +7424,14 @@ var NewLessonForm = ({
       return;
     }
     var hoursToBook = startHours.length ? startHours : [hour];
-    dates.forEach(date => hoursToBook.forEach(h => {
+    var studsToBook = studentIds.length ? studentIds : ['—'];
+    studsToBook.forEach(sid => dates.forEach(date => hoursToBook.forEach(h => {
       LESSONS.push({
         id: nextLessonId(),
         date,
         h: parseInt(h),
         len: parseFloat(len),
-        studentId: studentId || '—',
+        studentId: sid,
         instId,
         guests: guests.length > 0 ? [...guests] : undefined,
         veh: vehId || '—',
@@ -7444,22 +7447,29 @@ var NewLessonForm = ({
         createdBy: window.__currentUserName || '',
         createdAt: new Date().toISOString()
       });
-    }));
+    })));
     if (window.__notifyLessonsChanged) window.__notifyLessonsChanged();
     if (window.__notifyStudentsChanged) window.__notifyStudentsChanged();
     if (window.__logActivity) window.__logActivity('create', 'lesson', (stu ? stu.name + ' · ' : '') + (lessonNo || typeName || 'lesson'));
     if (window.saveAllData) window.saveAllData();
-    if (studentId && window.__autoTelegramStudent) {
+    if (studentIds.length && window.__autoTelegramStudent) {
       var inst = INSTRUCTORS.find(i => i.id === instId);
       var tmpl = window.__schoolSettings?.notifTemplates?.lesson24 || {};
       var lang = window.__anzenLang || 'km';
       var base = (lang === 'km' ? tmpl.km : tmpl.en) || (lang === 'km' ? 'ជំរាបសួរ {student.name} 👋 មេរៀន {lesson.date} ម៉ោង {lesson.time} ជាមួយ {instructor.name}។' : 'Hi {student.name} 👋 Lesson {lesson.date} at {lesson.time} with {instructor.name}.');
-      var msg = base.replace(/\{student\.name\}/g, stu?.name || '').replace(/\{lesson\.date\}/g, dates[0] || '').replace(/\{lesson\.time\}/g, String(parseInt(hour)).padStart(2, '0') + ':00').replace(/\{instructor\.name\}/g, inst?.en || inst?.name || '').replace(/\{school\.name\}/g, window.__schoolSettings?.name || 'Anzen');
-      window.__autoTelegramStudent(studentId, msg).then(r => {
-        if (r && r.ok) toast(tr('📨 បានផ្ញើទៅ Telegram សិស្ស ✓', '📨 Sent to student Telegram ✓'), 'good');
+      var sentAny = false;
+      studentIds.forEach(sid => {
+        var su = STUDENTS.find(s => s.id === sid);
+        var msg = base.replace(/\{student\.name\}/g, su?.name || '').replace(/\{lesson\.date\}/g, dates[0] || '').replace(/\{lesson\.time\}/g, String(parseInt(hour)).padStart(2, '0') + ':00').replace(/\{instructor\.name\}/g, inst?.en || inst?.name || '').replace(/\{school\.name\}/g, window.__schoolSettings?.name || 'Anzen');
+        window.__autoTelegramStudent(sid, msg).then(r => {
+          if (r && r.ok && !sentAny) {
+            sentAny = true;
+            toast(tr('📨 បានផ្ញើទៅ Telegram សិស្ស ✓', '📨 Sent to student Telegram ✓'), 'good');
+          }
+        });
       });
     }
-    var who = stu ? stu.name + ' · ' + stu.id : tr('ក្រុម', 'Group');
+    var who = studentIds.length === 1 ? stu ? stu.name + ' · ' + stu.id : studentIds[0] : studentIds.length > 1 ? tr(`${studentIds.length} សិស្ស`, `${studentIds.length} students`) : tr('ក្រុម', 'Group');
     var dLabel = dates.length === 1 ? dates[0] : `${dates.length} ថ្ងៃ`;
     toast(tr(`បាន​កក់ ${dLabel} · ${who}`, `Scheduled ${dLabel} · ${who}`), 'good');
     onClose();
@@ -7759,7 +7769,7 @@ var NewLessonForm = ({
     value: "3.5"
   }, "3.5 \u1798\u17C9\u17C4\u1784"), React.createElement("option", {
     value: "4"
-  }, "4 \u1798\u17C9\u17C4\u1784")))), !editLesson && dates.length * Math.max(1, startHours.length) > 1 && React.createElement("div", {
+  }, "4 \u1798\u17C9\u17C4\u1784")))), !editLesson && dates.length * Math.max(1, startHours.length) * Math.max(1, studentIds.length) > 1 && React.createElement("div", {
     style: {
       marginTop: 8,
       padding: '8px 12px',
@@ -7769,7 +7779,7 @@ var NewLessonForm = ({
       color: 'var(--accent)',
       fontWeight: 500
     }
-  }, "\u2139 ", tr(`នឹង​បង្កើត​មេរៀន​ ${dates.length * Math.max(1, startHours.length)} ចំណែក`, `Will create ${dates.length * Math.max(1, startHours.length)} separate lessons`))), React.createElement(FormSection, {
+  }, "\u2139 ", tr(`នឹង​បង្កើត​មេរៀន​ ${dates.length * Math.max(1, startHours.length) * Math.max(1, studentIds.length)} ចំណែក`, `Will create ${dates.length * Math.max(1, startHours.length) * Math.max(1, studentIds.length)} separate lessons`))), React.createElement(FormSection, {
     title: tr('អ្នក​ពាក់​ព័ន្ធ', 'PEOPLE')
   }, React.createElement("div", {
     style: {
@@ -7779,13 +7789,56 @@ var NewLessonForm = ({
     }
   }, React.createElement(Field, {
     label: tr('សិស្ស', 'Student'),
-    full: true
-  }, React.createElement(Select, {
-    value: studentId,
-    onChange: e => setStudentId(e.target.value)
+    full: true,
+    sub: editLesson ? '' : studentIds.length > 1 ? tr(`ជ្រើស ${studentIds.length} នាក់ · មេរៀន​ដាច់​ដោយ​ឡែក​ក្នុង​សិស្ស​ម្នាក់ៗ`, `${studentIds.length} selected · one lesson each`) : tr('អាច​ជ្រើស​សិស្ស​ច្រើន​នាក់', 'You can pick multiple students')
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginBottom: studentIds.length > 0 ? 8 : 0
+    }
+  }, studentIds.map(sid => {
+    var su = STUDENTS.find(s => s.id === sid);
+    return React.createElement("div", {
+      key: sid,
+      style: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 5,
+        padding: '4px 10px',
+        background: 'var(--accent-soft)',
+        border: '1px solid var(--accent)',
+        borderRadius: 6,
+        fontSize: 12,
+        fontWeight: 500,
+        color: 'var(--accent)'
+      }
+    }, su ? su.en || su.name : sid, React.createElement("button", {
+      type: "button",
+      onClick: () => setStudentIds(prev => prev.filter(x => x !== sid)),
+      style: {
+        border: 'none',
+        background: 'none',
+        cursor: 'pointer',
+        padding: 0,
+        color: 'inherit',
+        fontSize: 14,
+        lineHeight: 1,
+        display: 'flex',
+        alignItems: 'center'
+      }
+    }, "\xD7"));
+  })), React.createElement(Select, {
+    value: "",
+    onChange: e => {
+      var v = e.target.value;
+      if (!v) return;
+      if (editLesson) setStudentIds([v]);else if (!studentIds.includes(v)) setStudentIds(prev => [...prev, v]);
+    }
   }, React.createElement("option", {
     value: ""
-  }, tr('ក្រុម / មិន​ផ្ទាល់​ខ្លួន', 'Group / not individual')), STUDENTS.filter(s => !(window.__isGraduated && window.__isGraduated(s)) || s.id === studentId).map(s => React.createElement("option", {
+  }, studentIds.length ? tr('+ បន្ថែម​សិស្ស', '+ Add student') : tr('ក្រុម / មិន​ផ្ទាល់​ខ្លួន', 'Group / not individual')), STUDENTS.filter(s => (!(window.__isGraduated && window.__isGraduated(s)) || studentIds.includes(s.id)) && !studentIds.includes(s.id)).map(s => React.createElement("option", {
     key: s.id,
     value: s.id
   }, s.en || s.name)))), React.createElement(Field, {

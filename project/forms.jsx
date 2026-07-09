@@ -1845,7 +1845,10 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
   const removeDate = (d) => setDates(prev => prev.filter(x => x !== d));
 
   // ── People ────────────────────────────────────────────────────────────────
-  const [studentId, setStudentId] = React.useState(editLesson ? (editLesson.studentId==='—' ? '' : editLesson.studentId) : (ctx.studentId || ''));
+  const [studentIds, setStudentIds] = React.useState(
+    editLesson ? (editLesson.studentId && editLesson.studentId !== '—' ? [editLesson.studentId] : [])
+               : (ctx.studentId ? [ctx.studentId] : [])
+  );
   const [instId,    setInstId]    = React.useState(editLesson ? editLesson.instId : (ctx.instId || ''));
   const [guests,    setGuests]    = React.useState(editLesson && Array.isArray(editLesson.guests) ? [...editLesson.guests] : []);
   const [vehId,     setVehId]     = React.useState(editLesson ? (editLesson.veh==='—' ? '' : editLesson.veh) : '');
@@ -1894,7 +1897,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
     if (hasConflict)   { toast(tr('គ្រូ​ រវល់​ម៉ោង​នេះ','Instructor has a conflict'), 'warn'); return; }
     if (vehConflict)   { toast(tr('ឡាន​ជាន់​ម៉ោង​គ្នា','Vehicle already booked'), 'warn'); return; }
 
-    const stu      = STUDENTS.find(s => s.id === studentId);
+    const stu      = STUDENTS.find(s => s.id === studentIds[0]);
     const selObjs  = catObj.items.filter(u => selLessons.includes(u.id));
     const selLabel = selObjs.map(u => u.no ? `${lessonNum(u.no)} ${tr(u.km,u.en)}` : tr(u.km,u.en)).join(', ');
     const typeName = `${tr(catObj.km, catObj.en)}${selLabel ? ' · ' + selLabel : ''}`;
@@ -1907,7 +1910,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
         LESSONS[idx] = { ...LESSONS[idx],
           date: dates[0] || editLesson.date,
           h: parseInt(hour), len: parseFloat(len),
-          studentId: studentId || '—',
+          studentId: studentIds[0] || '—',
           instId,
           guests: guests.length > 0 ? [...guests] : undefined,
           veh: vehId || '—',
@@ -1926,11 +1929,12 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
     }
 
     const hoursToBook = startHours.length ? startHours : [hour];
-    dates.forEach(date => hoursToBook.forEach(h => {
+    const studsToBook = studentIds.length ? studentIds : ['—'];
+    studsToBook.forEach(sid => dates.forEach(date => hoursToBook.forEach(h => {
       LESSONS.push({
         id: nextLessonId(),
         date, h: parseInt(h), len: parseFloat(len),
-        studentId: studentId || '—',
+        studentId: sid,
         instId,
         guests: guests.length > 0 ? [...guests] : undefined,
         veh: vehId || '—',
@@ -1946,33 +1950,39 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
         createdBy: window.__currentUserName || '',
         createdAt: new Date().toISOString(),
       });
-    }));
+    })));
 
     if (window.__notifyLessonsChanged)  window.__notifyLessonsChanged();
     if (window.__notifyStudentsChanged) window.__notifyStudentsChanged();
     if (window.__logActivity) window.__logActivity('create','lesson', ((stu?stu.name+' · ':'') + (lessonNo || typeName || 'lesson')));
     if (window.saveAllData) window.saveAllData();
 
-    // Auto-send the booking to the student's Telegram (if configured)
-    if (studentId && window.__autoTelegramStudent) {
+    // Auto-send the booking to each student's Telegram (if configured)
+    if (studentIds.length && window.__autoTelegramStudent) {
       const inst = INSTRUCTORS.find(i => i.id === instId);
       const tmpl = (window.__schoolSettings?.notifTemplates?.lesson24) || {};
       const lang = window.__anzenLang || 'km';
       const base = (lang==='km' ? tmpl.km : tmpl.en) ||
         (lang==='km' ? 'ជំរាបសួរ {student.name} 👋 មេរៀន {lesson.date} ម៉ោង {lesson.time} ជាមួយ {instructor.name}។'
                      : 'Hi {student.name} 👋 Lesson {lesson.date} at {lesson.time} with {instructor.name}.');
-      const msg = base
-        .replace(/\{student\.name\}/g, stu?.name || '')
-        .replace(/\{lesson\.date\}/g, dates[0] || '')
-        .replace(/\{lesson\.time\}/g, String(parseInt(hour)).padStart(2,'0')+':00')
-        .replace(/\{instructor\.name\}/g, inst?.en || inst?.name || '')
-        .replace(/\{school\.name\}/g, window.__schoolSettings?.name || 'Anzen');
-      window.__autoTelegramStudent(studentId, msg).then(r => {
-        if (r && r.ok) toast(tr('📨 បានផ្ញើទៅ Telegram សិស្ស ✓','📨 Sent to student Telegram ✓'),'good');
+      let sentAny = false;
+      studentIds.forEach(sid => {
+        const su = STUDENTS.find(s => s.id === sid);
+        const msg = base
+          .replace(/\{student\.name\}/g, su?.name || '')
+          .replace(/\{lesson\.date\}/g, dates[0] || '')
+          .replace(/\{lesson\.time\}/g, String(parseInt(hour)).padStart(2,'0')+':00')
+          .replace(/\{instructor\.name\}/g, inst?.en || inst?.name || '')
+          .replace(/\{school\.name\}/g, window.__schoolSettings?.name || 'Anzen');
+        window.__autoTelegramStudent(sid, msg).then(r => {
+          if (r && r.ok && !sentAny) { sentAny = true; toast(tr('📨 បានផ្ញើទៅ Telegram សិស្ស ✓','📨 Sent to student Telegram ✓'),'good'); }
+        });
       });
     }
 
-    const who = stu ? (stu.name + ' · ' + stu.id) : tr('ក្រុម','Group');
+    const who = studentIds.length === 1 ? (stu ? (stu.name + ' · ' + stu.id) : studentIds[0])
+              : studentIds.length > 1 ? tr(`${studentIds.length} សិស្ស`, `${studentIds.length} students`)
+              : tr('ក្រុម','Group');
     const dLabel = dates.length === 1 ? dates[0] : `${dates.length} ថ្ងៃ`;
     toast(tr(`បាន​កក់ ${dLabel} · ${who}`, `Scheduled ${dLabel} · ${who}`), 'good');
     onClose();
@@ -2118,9 +2128,9 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
             </Select>
           </Field>
         </div>
-        {!editLesson && (dates.length * Math.max(1,startHours.length)) > 1 && (
+        {!editLesson && (dates.length * Math.max(1,startHours.length) * Math.max(1,studentIds.length)) > 1 && (
           <div style={{marginTop:8,padding:'8px 12px',background:'var(--accent-soft)',borderRadius:7,fontSize:12,color:'var(--accent)',fontWeight:500}}>
-            ℹ {tr(`នឹង​បង្កើត​មេរៀន​ ${dates.length * Math.max(1,startHours.length)} ចំណែក`,`Will create ${dates.length * Math.max(1,startHours.length)} separate lessons`)}
+            ℹ {tr(`នឹង​បង្កើត​មេរៀន​ ${dates.length * Math.max(1,startHours.length) * Math.max(1,studentIds.length)} ចំណែក`,`Will create ${dates.length * Math.max(1,startHours.length) * Math.max(1,studentIds.length)} separate lessons`)}
           </div>
         )}
       </FormSection>
@@ -2128,10 +2138,34 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
       {/* ── PEOPLE ── */}
       <FormSection title={tr('អ្នក​ពាក់​ព័ន្ធ','PEOPLE')}>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-          <Field label={tr('សិស្ស','Student')} full>
-            <Select value={studentId} onChange={e=>setStudentId(e.target.value)}>
-              <option value="">{tr('ក្រុម / មិន​ផ្ទាល់​ខ្លួន','Group / not individual')}</option>
-              {STUDENTS.filter(s => !(window.__isGraduated && window.__isGraduated(s)) || s.id===studentId).map(s=>(
+          <Field label={tr('សិស្ស','Student')} full
+            sub={editLesson ? '' : (studentIds.length > 1 ? tr(`ជ្រើស ${studentIds.length} នាក់ · មេរៀន​ដាច់​ដោយ​ឡែក​ក្នុង​សិស្ស​ម្នាក់ៗ`,`${studentIds.length} selected · one lesson each`) : tr('អាច​ជ្រើស​សិស្ស​ច្រើន​នាក់','You can pick multiple students'))}>
+            <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:studentIds.length>0?8:0}}>
+              {studentIds.map(sid => {
+                const su = STUDENTS.find(s => s.id === sid);
+                return (
+                  <div key={sid} style={{
+                    display:'inline-flex',alignItems:'center',gap:5,padding:'4px 10px',
+                    background:'var(--accent-soft)',border:'1px solid var(--accent)',
+                    borderRadius:6,fontSize:12,fontWeight:500,color:'var(--accent)',
+                  }}>
+                    {su ? (su.en || su.name) : sid}
+                    <button type="button" onClick={()=>setStudentIds(prev=>prev.filter(x=>x!==sid))} style={{
+                      border:'none',background:'none',cursor:'pointer',padding:0,
+                      color:'inherit',fontSize:14,lineHeight:1,display:'flex',alignItems:'center',
+                    }}>×</button>
+                  </div>
+                );
+              })}
+            </div>
+            <Select value="" onChange={e=>{
+              const v = e.target.value;
+              if (!v) return;
+              if (editLesson) setStudentIds([v]);
+              else if (!studentIds.includes(v)) setStudentIds(prev=>[...prev, v]);
+            }}>
+              <option value="">{studentIds.length ? tr('+ បន្ថែម​សិស្ស','+ Add student') : tr('ក្រុម / មិន​ផ្ទាល់​ខ្លួន','Group / not individual')}</option>
+              {STUDENTS.filter(s => (!(window.__isGraduated && window.__isGraduated(s)) || studentIds.includes(s.id)) && !studentIds.includes(s.id)).map(s=>(
                 <option key={s.id} value={s.id}>{s.en || s.name}</option>
               ))}
             </Select>
