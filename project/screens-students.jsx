@@ -1273,19 +1273,20 @@ const StudentsScreenV2 = () => {
           <CvSection label={tr('បញ្ជីមេរៀន និង មតិគ្រូ','Lessons & Comments')} isOpen={openSections.lessons} onToggle={()=>toggleSection('lessons')}>
             {(() => {
               // Group by tracking phase (KH / JP / AI). Within each phase, exams &
-              // applications are mixed in with the lessons in date order.
-              const hourNumMap = buildHourNumbering(studentLessons);
+              // applications are mixed in with the lessons in date order. Hour
+              // numbering restarts at 1 per phase (theory & practical separate).
               if (studentLessons.length === 0 && studentExams.length === 0) return (
                 <div style={{fontSize:13,color:'var(--ink-3)',textAlign:'center',padding:'12px 0'}}>{tr('មិន​ទាន់​មាន​មេរៀន','No lessons yet')}</div>
               );
               const examPhase = (e) => e.phase || 'KH';
               const groups = (window.STUDENT_PHASES || []).map(p => {
-                const lessonItems = studentLessons.filter(l => lessonPhase(l) === p.k)
+                const phaseLessons = studentLessons.filter(l => lessonPhase(l) === p.k);
+                const lessonItems = phaseLessons
                   .flatMap(l => lessonHourSlices(l).map(sl => ({ type:'lesson', l, sl, k:(l.date||'')+' '+String(sl.h).padStart(2,'0') })));
                 const examItems = studentExams.filter(e => examPhase(e) === p.k)
                   .map(e => ({ type:'exam', e, k:(e.date||'')+' '+String(e.time||'').slice(0,5) }));
                 const items = [...lessonItems, ...examItems].sort((a,b)=> a.k<b.k ? -1 : a.k>b.k ? 1 : 0);
-                return { p, items, hours: lessonItems.length };
+                return { p, items, hours: lessonItems.length, hourMap: buildHourNumbering(phaseLessons) };
               }).filter(g => g.items.length > 0);
               const GroupHead = ({bg, label, sub}) => (
                 <div style={{display:'flex',alignItems:'center',gap:8,margin:'10px 0 8px'}}>
@@ -1300,7 +1301,7 @@ const StudentsScreenV2 = () => {
                     <GroupHead bg={g.p.color} label={g.p.label} sub={`${g.hours} ${tr('ម៉ោង','hrs')}`}/>
                     {g.items.map((it,i) => it.type === 'exam'
                       ? <ExamFeedbackRow key={it.e.id||('ex'+i)} e={it.e} sid={s.id} tr={tr} onSave={saveExamResult}/>
-                      : (() => { const cumNo = (hourNumMap[it.l.id] || [])[it.sl.offset];
+                      : (() => { const cumNo = (g.hourMap[it.l.id] || [])[it.sl.offset];
                           return <CvLessonRow key={(it.l.id||('ls'+i))+'-'+it.sl.offset} l={it.l} offset={it.sl.offset} h={it.sl.h} total={it.sl.total} cumNo={cumNo} tr={tr} onSave={saveLessonFeedback}/>; })()
                     )}
                   </div>
@@ -2168,15 +2169,15 @@ const LessonRecords = ({ s, onSaveLesson, onSaveExam, readOnly = false }) => {
   if (studentLessons.length === 0 && studentExams.length === 0) return (
     <div style={{fontSize:13,color:'var(--ink-3)',textAlign:'center',padding:'16px 0'}}>{tr('មិន​ទាន់​មាន​មេរៀន','No lessons yet')}</div>
   );
-  const hourNumMap = buildHourNumbering(studentLessons);
   const examPhase = (e) => e.phase || 'KH';
   const groups = (window.STUDENT_PHASES || []).map(p => {
-    const lessonItems = studentLessons.filter(l => lessonPhase(l) === p.k)
+    const phaseLessons = studentLessons.filter(l => lessonPhase(l) === p.k);
+    const lessonItems = phaseLessons
       .flatMap(l => lessonHourSlices(l).map(sl => ({ type:'lesson', l, sl, k:(l.date||'')+' '+String(sl.h).padStart(2,'0') })));
     const examItems = studentExams.filter(e => examPhase(e) === p.k)
       .map(e => ({ type:'exam', e, k:(e.date||'')+' '+String(e.time||'').slice(0,5) }));
     const items = [...lessonItems, ...examItems].sort((a,b)=> a.k<b.k ? -1 : a.k>b.k ? 1 : 0);
-    return { p, items, hours: lessonItems.length };
+    return { p, items, hours: lessonItems.length, hourMap: buildHourNumbering(phaseLessons) };
   }).filter(g => g.items.length > 0);
   const pdfLessons = studentLessons.filter(l => pdfPhase === 'all' || lessonPhase(l) === pdfPhase);
   const pdfExams   = studentExams.filter(e => pdfPhase === 'all' || (e.phase||'KH') === pdfPhase);
@@ -2192,7 +2193,7 @@ const LessonRecords = ({ s, onSaveLesson, onSaveExam, readOnly = false }) => {
           </div>
           {g.items.map((it,i) => it.type === 'exam'
             ? <ExamFeedbackRow key={it.e.id||('ex'+i)} e={it.e} sid={s.id} tr={tr} onSave={onSaveExam} readOnly={readOnly}/>
-            : (() => { const cumNo = (hourNumMap[it.l.id] || [])[it.sl.offset];
+            : (() => { const cumNo = (g.hourMap[it.l.id] || [])[it.sl.offset];
                 return <CvLessonRow key={(it.l.id||('ls'+i))+'-'+it.sl.offset} l={it.l} offset={it.sl.offset} h={it.sl.h} total={it.sl.total} cumNo={cumNo} tr={tr} onSave={onSaveLesson} readOnly={readOnly}/>; })()
           )}
         </div>

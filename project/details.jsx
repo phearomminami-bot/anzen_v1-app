@@ -316,8 +316,9 @@ const LessonDetail = ({ lesson, onClose }) => {
     const sid = lesson.studentId;
     if (!sid || sid === '—') return '';
     const sameType = isTheory(lesson);
+    const myPhase  = lessonPhase(lesson);   // count restarts at 1 per phase (KH / JP / AI / SST)
     const mine = (typeof LESSONS !== 'undefined' ? LESSONS : [])
-      .filter(l => l.studentId === sid && l.status !== 'cancelled' && isTheory(l) === sameType)
+      .filter(l => l.studentId === sid && l.status !== 'cancelled' && isTheory(l) === sameType && lessonPhase(l) === myPhase)
       .sort((a,b) => String(a.date||'').localeCompare(String(b.date||'')) || ((a.h||0) - (b.h||0)));
     let acc = 0, start = null;
     for (const l of mine) { if (l.id === lesson.id) { start = acc + 1; break; } acc += Math.max(1, Math.round(l.len||1)); }

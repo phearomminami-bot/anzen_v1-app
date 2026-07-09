@@ -3054,7 +3054,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v172";</script>
+<script>window.__ANZEN_VERSION="v173";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -10020,7 +10020,8 @@ var LessonDetail = ({
     var sid = lesson.studentId;
     if (!sid || sid === '—') return '';
     var sameType = isTheory(lesson);
-    var mine = (typeof LESSONS !== 'undefined' ? LESSONS : []).filter(l => l.studentId === sid && l.status !== 'cancelled' && isTheory(l) === sameType).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')) || (a.h || 0) - (b.h || 0));
+    var myPhase = lessonPhase(lesson);
+    var mine = (typeof LESSONS !== 'undefined' ? LESSONS : []).filter(l => l.studentId === sid && l.status !== 'cancelled' && isTheory(l) === sameType && lessonPhase(l) === myPhase).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')) || (a.h || 0) - (b.h || 0));
     var acc = 0,
       start = null;
     for (var l of mine) {
@@ -46180,7 +46181,6 @@ var StudentsScreenV2 = () => {
         isOpen: openSections.lessons,
         onToggle: () => toggleSection('lessons')
       }, (() => {
-        var hourNumMap = buildHourNumbering(studentLessons);
         if (studentLessons.length === 0 && studentExams.length === 0) return React.createElement("div", {
           style: {
             fontSize: 13,
@@ -46191,7 +46191,8 @@ var StudentsScreenV2 = () => {
         }, tr('មិន​ទាន់​មាន​មេរៀន', 'No lessons yet'));
         var examPhase = e => e.phase || 'KH';
         var groups = (window.STUDENT_PHASES || []).map(p => {
-          var lessonItems = studentLessons.filter(l => lessonPhase(l) === p.k).flatMap(l => lessonHourSlices(l).map(sl => ({
+          var phaseLessons = studentLessons.filter(l => lessonPhase(l) === p.k);
+          var lessonItems = phaseLessons.flatMap(l => lessonHourSlices(l).map(sl => ({
             type: 'lesson',
             l,
             sl,
@@ -46206,7 +46207,8 @@ var StudentsScreenV2 = () => {
           return {
             p,
             items,
-            hours: lessonItems.length
+            hours: lessonItems.length,
+            hourMap: buildHourNumbering(phaseLessons)
           };
         }).filter(g => g.items.length > 0);
         var GroupHead = ({
@@ -46255,7 +46257,7 @@ var StudentsScreenV2 = () => {
           tr: tr,
           onSave: saveExamResult
         }) : (() => {
-          var cumNo = (hourNumMap[it.l.id] || [])[it.sl.offset];
+          var cumNo = (g.hourMap[it.l.id] || [])[it.sl.offset];
           return React.createElement(CvLessonRow, {
             key: (it.l.id || 'ls' + i) + '-' + it.sl.offset,
             l: it.l,
@@ -48258,10 +48260,10 @@ var LessonRecords = ({
       padding: '16px 0'
     }
   }, tr('មិន​ទាន់​មាន​មេរៀន', 'No lessons yet'));
-  var hourNumMap = buildHourNumbering(studentLessons);
   var examPhase = e => e.phase || 'KH';
   var groups = (window.STUDENT_PHASES || []).map(p => {
-    var lessonItems = studentLessons.filter(l => lessonPhase(l) === p.k).flatMap(l => lessonHourSlices(l).map(sl => ({
+    var phaseLessons = studentLessons.filter(l => lessonPhase(l) === p.k);
+    var lessonItems = phaseLessons.flatMap(l => lessonHourSlices(l).map(sl => ({
       type: 'lesson',
       l,
       sl,
@@ -48276,7 +48278,8 @@ var LessonRecords = ({
     return {
       p,
       items,
-      hours: lessonItems.length
+      hours: lessonItems.length,
+      hourMap: buildHourNumbering(phaseLessons)
     };
   }).filter(g => g.items.length > 0);
   var pdfLessons = studentLessons.filter(l => pdfPhase === 'all' || lessonPhase(l) === pdfPhase);
@@ -48327,7 +48330,7 @@ var LessonRecords = ({
     onSave: onSaveExam,
     readOnly: readOnly
   }) : (() => {
-    var cumNo = (hourNumMap[it.l.id] || [])[it.sl.offset];
+    var cumNo = (g.hourMap[it.l.id] || [])[it.sl.offset];
     return React.createElement(CvLessonRow, {
       key: (it.l.id || 'ls' + i) + '-' + it.sl.offset,
       l: it.l,
