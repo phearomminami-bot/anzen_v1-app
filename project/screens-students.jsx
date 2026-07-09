@@ -873,6 +873,11 @@ const StudentsScreenV2 = () => {
   const [, forceUpdate] = React.useReducer(n => n + 1, 0);
   const [tab, setTab]         = React.useState('directory');
   const [view, setView]       = React.useState('list');
+  // Mobile directory view mode (card / list / table / grid) — remembered.
+  const [stView, setStViewRaw] = React.useState(() => {
+    try { return localStorage.getItem('anzen_stView') || 'card'; } catch (e) { return 'card'; }
+  });
+  const setStView = (v) => { setStViewRaw(v); try { localStorage.setItem('anzen_stView', v); } catch (e) {} };
   const [filter, setFilter]   = React.useState('all');
   const [filterMenuOpen, setFilterMenuOpen] = React.useState(false);
   const [selectedId, setSelectedId] = React.useState(STUDENTS[0]?.id);
@@ -1382,18 +1387,54 @@ const StudentsScreenV2 = () => {
             {filter!=='all' && <span style={{position:'absolute',top:-2,right:-2,width:12,height:12,borderRadius:'50%',background:'var(--accent)',border:'2px solid var(--surface)'}}/>}
           </button>
         </div>
-        <div style={{display:'flex',flexDirection:'column',gap:6}}>
-          {filtered.length === 0 && (
-            <div style={{padding:'40px 16px',textAlign:'center',color:'var(--ink-3)',fontSize:13}}>
-              {tr('គ្មាន​សិស្ស','No students')}
+        {/* Blue summary hero + View switcher — styled like the Vehicles panel */}
+        {(() => {
+          const phOf = (s,k) => (typeof phaseStatusOf==='function' ? phaseStatusOf(s,k) : ((s.phaseStatus||{})[k]||''));
+          const totalN  = allStudents.length;
+          const activeN = allStudents.filter(s => (window.STUDENT_PHASES||[]).some(p => phOf(s,p.k)==='starting') || s.status==='In progress' || s.status==='Road exam soon').length;
+          const passN   = allStudents.filter(s => s.exam_result==='pass' || isGraduated(s)).length;
+          const stat   = { flex:1, background:'rgba(255,255,255,.13)', borderRadius:12, padding:'9px 11px' };
+          const statNum= { fontFamily:'"JetBrains Mono",monospace', fontSize:18, fontWeight:800, lineHeight:1 };
+          const statLbl= { fontSize:10, opacity:.85, marginTop:3 };
+          const VIEWS = [
+            { id:'card',  svg:(<><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/></>) },
+            { id:'list',  svg:(<><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></>) },
+            { id:'table', svg:(<><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="10" y1="4" x2="10" y2="20"/></>) },
+            { id:'grid',  svg:(<><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></>) },
+          ];
+          return (
+            <div style={{ position:'relative', borderRadius:20, padding:'15px 16px', color:'#fff',
+              background:'linear-gradient(135deg,#243a66,#365a9c 60%,#4f7bc0)', boxShadow:'0 12px 28px rgba(36,58,102,.30)' }}>
+              <div style={{position:'absolute',inset:0,overflow:'hidden',borderRadius:20,pointerEvents:'none'}}>
+                <div style={{position:'absolute',right:-6,bottom:-16,opacity:.14,color:'#fff'}}><Icon name="users" size={104} stroke={1.4}/></div>
+              </div>
+              <div style={{position:'relative',display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
+                <div style={{fontSize:17,fontWeight:800}}>{tr('សិស្ស','Students')}</div>
+                <div style={{display:'inline-flex',background:'rgba(255,255,255,.16)',borderRadius:10,padding:3,gap:2}}>
+                  {VIEWS.map(v => (
+                    <button key={v.id} onClick={()=>setStView(v.id)} title={v.id} aria-label={v.id+' view'} style={{
+                      width:30,height:28,display:'flex',alignItems:'center',justifyContent:'center',border:'none',borderRadius:7,cursor:'pointer',
+                      background: stView===v.id ? '#fff' : 'transparent', color: stView===v.id ? 'var(--accent)' : '#fff', transition:'background .14s,color .14s' }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{v.svg}</svg>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{position:'relative',display:'flex',gap:8,marginTop:14}}>
+                <div style={stat}><div style={{display:'flex',alignItems:'center',gap:6}}><Icon name="users" size={14}/><span style={statNum}>{totalN}</span></div><div style={statLbl}>{tr('សរុប','Total')}</div></div>
+                <div style={stat}><div style={{display:'flex',alignItems:'center',gap:6}}><span style={{width:8,height:8,borderRadius:'50%',background:'#6BE39A'}}/><span style={statNum}>{activeN}</span></div><div style={statLbl}>{tr('សកម្ម','Active')}</div></div>
+                <div style={stat}><div style={{display:'flex',alignItems:'center',gap:6}}><span style={{fontSize:13,lineHeight:1}}>🎓</span><span style={statNum}>{passN}</span></div><div style={statLbl}>{tr('ជាប់','Passed')}</div></div>
+              </div>
             </div>
-          )}
-          {filtered.map(s => {
+          );
+        })()}
+
+        {/* Directory body — rendered per the selected View (card / list / table / grid) */}
+        {(() => {
+          const stData = (s) => {
             const tMeta = ST_TYPE_META[s.studentType] || ST_TYPE_META['ធម្មតា'];
             const phases = window.STUDENT_PHASES || [{k:'KH',label:'KH',color:'#2A5DB0'},{k:'JP',label:'JP',color:'#B0413E'},{k:'AI',label:'AI',color:'#12A302'}];
             const phSt = (k) => (typeof phaseStatusOf==='function' ? phaseStatusOf(s,k) : ((s.phaseStatus||{})[k]||''));
-            // Phases the student is currently doing (ALL "starting" — so JP + AI can
-            // both show); else the last finished one; else KH.
             const activePhases = phases.filter(p=>phSt(p.k)==='starting');
             const displayPhases = activePhases.length ? activePhases
               : [ [...phases].reverse().find(p=>phSt(p.k)==='finished') || phases[0] ];
@@ -1408,16 +1449,13 @@ const StudentsScreenV2 = () => {
               return { th:10, prAT:12, prMT:15 };
             };
             const isTheoryLn = (l) => l.color==='c' || l.color==='e';
-            // The student's single transmission: explicit field, else dominant by hours, else MT.
             const isATVeh = (l) => { const v=(VEHICLES||[]).find(x=>x.id===l.veh||x.plate===l.veh); return !!(v && (v.trans==='AT'||v.trans==='CVT')); };
             const studentIsAT = s.trans==='AT' ? true : s.trans==='MT' ? false : (() => {
               const pr = LESSONS.filter(l=>l.studentId===s.id && l.status==='done' && !isTheoryLn(l));
               const at = pr.filter(isATVeh).reduce((a,l)=>a+(l.len||1),0), mt = pr.filter(l=>!isATVeh(l)).reduce((a,l)=>a+(l.len||1),0);
               return at > mt;
             })();
-            const transLabel = 'pt';   // practical (matches pt- lesson ids)
-            const transKey   = studentIsAT ? 'prAT' : 'prMT';
-            // One row per displayed phase: theory + the student's transmission practical.
+            const transKey = studentIsAT ? 'prAT' : 'prMT';
             const phaseRows = displayPhases.map(ph => {
               const cfgH = cfgOf(ph.k);
               const pDone = LESSONS.filter(l => l.studentId===s.id && l.status==='done' && (l.phase||'KH')===ph.k);
@@ -1427,56 +1465,135 @@ const StudentsScreenV2 = () => {
             });
             const learned = phaseRows.reduce((a,r)=>a+r.thDone+r.prDone,0);
             const target  = Math.max(1, phaseRows.reduce((a,r)=>a+r.thTarget+r.prTarget,0));
-            const pct     = Math.min(1, learned/target);
-            const grad    = isGraduated(s);
+            const pct = Math.min(1, learned/target);
+            const grad = isGraduated(s);
             const ringCol = grad ? '#2E9E5B' : displayPhases[0].color;
-            const R = 23, C = 2*Math.PI*R, off = C*(1-pct);
+            return { s, tMeta, phases, phSt, phaseRows, pct, grad, ringCol, transLabel:'pt' };
+          };
+          const open = (s) => { setMobileProfileId(s.id); setOpenSections({bio:true}); };
+          const chips = (d) => (
+            <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
+              {d.phases.map(p => { const st=d.phSt(p.k), done=st==='finished', active=st==='starting';
+                return <span key={p.k} style={{fontSize:9,fontWeight:800,padding:'2px 8px',borderRadius:999,whiteSpace:'nowrap',
+                  border:`1px solid ${done||active?p.color:'var(--border)'}`,
+                  background: done?p.color:active?(p.color+'1a'):'transparent',
+                  color: done?'#fff':active?p.color:'var(--ink-3)'}}>{done?'✓ ':''}{p.label}{active?tr(' កំពុង',' now'):''}</span>;
+              })}
+            </div>
+          );
+          const progText = (d) => d.phaseRows.map((r,i)=>(
+            <div key={i} style={{fontSize:11,marginTop:2,fontFamily:'"JetBrains Mono",monospace',color:'var(--ink-3)'}}>
+              <span style={{color:r.ph.color,fontWeight:700}}>{r.ph.label}</span> · tt {r.thDone}/{r.thTarget} · {d.transLabel} {r.prDone}/{r.prTarget}
+            </div>
+          ));
+          const ring = (d, sz) => {
+            const R = sz/2 - 5, C = 2*Math.PI*R, off = C*(1-d.pct);
             return (
-              <div key={s.id} style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:16,boxShadow:'0 4px 14px rgba(20,30,60,.05)',overflow:'hidden'}}>
-                <button onClick={()=>{ setMobileProfileId(s.id); setOpenSections({bio:true}); }} style={{
-                  width:'100%',padding:'13px 14px',display:'flex',alignItems:'center',gap:12,
-                  background:'transparent',border:'none',cursor:'pointer',textAlign:'left',
-                }}>
-                  {/* progress ring around the photo */}
-                  <div style={{position:'relative',width:56,height:56,flexShrink:0}}>
-                    <svg width="56" height="56" style={{position:'absolute',inset:0,transform:'rotate(-90deg)'}}>
-                      <circle cx="28" cy="28" r={R} fill="none" stroke="var(--surface-muted)" strokeWidth="4"/>
-                      <circle cx="28" cy="28" r={R} fill="none" stroke={ringCol} strokeWidth="4" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={off} style={{transition:'stroke-dashoffset .5s'}}/>
-                    </svg>
-                    <div style={{position:'absolute',inset:8,borderRadius:'50%',overflow:'hidden',display:'flex'}}><Avatar tag={s.photo} size={40}/></div>
-                  </div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
-                      <span style={{fontSize:14.5,fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.en || s.name}</span>
-                      <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:20,flexShrink:0,background:tMeta.bg,color:tMeta.color,border:`1px solid ${tMeta.color}33`}}>{stTypeEn(s.studentType)}</span>
-                    </div>
-                    <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2,fontFamily:'"JetBrains Mono",monospace'}}>{s.id} · {clsLetter(s.cls)}</div>
-                    {phaseRows.map((r,i)=>(
-                      <div key={i} style={{fontSize:11,marginTop:2,fontFamily:'"JetBrains Mono",monospace',color:'var(--ink-3)'}}>
-                        <span style={{color:r.ph.color,fontWeight:700}}>{r.ph.label}</span> · tt {r.thDone}/{r.thTarget} · {transLabel} {r.prDone}/{r.prTarget}
-                      </div>
-                    ))}
-                    <div style={{display:'flex',gap:5,marginTop:7,flexWrap:'wrap'}}>
-                      {phases.map(p => {
-                        const st = (typeof phaseStatusOf==='function' ? phaseStatusOf(s,p.k) : ((s.phaseStatus||{})[p.k]||''));
-                        const done = st==='finished', active = st==='starting';
-                        return (
-                          <span key={p.k} style={{fontSize:9,fontWeight:800,padding:'2px 8px',borderRadius:999,whiteSpace:'nowrap',
-                            border:`1px solid ${done||active?p.color:'var(--border)'}`,
-                            background: done?p.color:active?(p.color+'1a'):'transparent',
-                            color: done?'#fff':active?p.color:'var(--ink-3)'}}>
-                            {done?'✓ ':''}{p.label}{active?tr(' កំពុង',' now'):''}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  <span style={{fontSize:15,color:'var(--ink-3)',flexShrink:0}}>›</span>
-                </button>
+              <div style={{position:'relative',width:sz,height:sz,flexShrink:0}}>
+                <svg width={sz} height={sz} style={{position:'absolute',inset:0,transform:'rotate(-90deg)'}}>
+                  <circle cx={sz/2} cy={sz/2} r={R} fill="none" stroke="var(--surface-muted)" strokeWidth="4"/>
+                  <circle cx={sz/2} cy={sz/2} r={R} fill="none" stroke={d.ringCol} strokeWidth="4" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={off} style={{transition:'stroke-dashoffset .5s'}}/>
+                </svg>
+                <div style={{position:'absolute',inset:7,borderRadius:'50%',overflow:'hidden',display:'flex'}}><Avatar tag={d.s.photo} size={sz-14}/></div>
               </div>
             );
-          })}
-        </div>
+          };
+
+          if (filtered.length === 0) return (
+            <div style={{padding:'40px 16px',textAlign:'center',color:'var(--ink-3)',fontSize:13}}>{tr('គ្មាន​សិស្ស','No students')}</div>
+          );
+
+          // ── CARD (default) — full detail, one per row ──
+          if (stView === 'card') return (
+            <div style={{display:'flex',flexDirection:'column',gap:6}}>
+              {filtered.map(s => { const d = stData(s); return (
+                <div key={s.id} style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:16,boxShadow:'0 4px 14px rgba(20,30,60,.05)',overflow:'hidden'}}>
+                  <button onClick={()=>open(s)} style={{width:'100%',padding:'13px 14px',display:'flex',alignItems:'center',gap:12,background:'transparent',border:'none',cursor:'pointer',textAlign:'left'}}>
+                    {ring(d,56)}
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
+                        <span style={{fontSize:14.5,fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.en || s.name}</span>
+                        <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:20,flexShrink:0,background:d.tMeta.bg,color:d.tMeta.color,border:`1px solid ${d.tMeta.color}33`}}>{stTypeEn(s.studentType)}</span>
+                      </div>
+                      <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2,fontFamily:'"JetBrains Mono",monospace'}}>{s.id} · {clsLetter(s.cls)}</div>
+                      {progText(d)}
+                      <div style={{marginTop:7}}>{chips(d)}</div>
+                    </div>
+                    <span style={{fontSize:15,color:'var(--ink-3)',flexShrink:0}}>›</span>
+                  </button>
+                </div>
+              ); })}
+            </div>
+          );
+
+          // ── LIST — compact one-line rows ──
+          if (stView === 'list') return (
+            <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:14,overflow:'hidden',boxShadow:'0 4px 14px rgba(20,30,60,.05)'}}>
+              {filtered.map((s,idx) => { const d = stData(s); const r0 = d.phaseRows[0]; return (
+                <button key={s.id} onClick={()=>open(s)} style={{width:'100%',display:'flex',alignItems:'center',gap:11,padding:'10px 13px',
+                  background:'transparent',border:'none',borderTop: idx?'1px solid var(--border)':'none',cursor:'pointer',textAlign:'left'}}>
+                  <div style={{width:38,height:38,borderRadius:'50%',overflow:'hidden',flexShrink:0,display:'flex'}}><Avatar tag={s.photo} size={38}/></div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:'flex',alignItems:'center',gap:7}}>
+                      <span style={{fontSize:13.5,fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.en || s.name}</span>
+                      <span style={{fontSize:9,fontWeight:700,padding:'1px 7px',borderRadius:20,flexShrink:0,background:d.tMeta.bg,color:d.tMeta.color}}>{stTypeEn(s.studentType)}</span>
+                    </div>
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginTop:2,flexWrap:'wrap'}}>
+                      <span style={{fontSize:10.5,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{s.id} · {clsLetter(s.cls)}</span>
+                      {r0 && <span style={{fontSize:10.5,fontFamily:'"JetBrains Mono",monospace',color:'var(--ink-2)'}}><span style={{color:r0.ph.color,fontWeight:700}}>{r0.ph.label}</span> tt {r0.thDone}/{r0.thTarget} · {d.transLabel} {r0.prDone}/{r0.prTarget}</span>}
+                      <span style={{display:'flex',gap:3}}>{d.phases.map(p=>{ const st=d.phSt(p.k); return <span key={p.k} style={{width:7,height:7,borderRadius:2,background: st==='finished'||st==='starting'? p.color : 'var(--border-strong)'}}/>; })}</span>
+                    </div>
+                  </div>
+                  <span style={{fontSize:14,color:'var(--ink-3)',flexShrink:0}}>›</span>
+                </button>
+              ); })}
+            </div>
+          );
+
+          // ── TABLE — spreadsheet-style columns ──
+          if (stView === 'table') return (
+            <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:14,overflowX:'auto',boxShadow:'0 4px 14px rgba(20,30,60,.05)'}}>
+              <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,minWidth:440}}>
+                <thead><tr style={{background:'var(--surface-muted)'}}>
+                  {[tr('សិស្ស','Student'),tr('ថ្នាក់','Cls'),tr('វគ្គ','Phase'),'tt','pt',tr('ប្រភេទ','Type')].map((h,i)=>(
+                    <th key={i} style={{padding:'9px 11px',textAlign:i===0?'left':'center',fontSize:10.5,color:'var(--ink-3)',fontWeight:700,whiteSpace:'nowrap'}}>{h}</th>
+                  ))}
+                </tr></thead>
+                <tbody>
+                  {filtered.map(s => { const d = stData(s); const r0 = d.phaseRows[0]; return (
+                    <tr key={s.id} onClick={()=>open(s)} style={{borderTop:'1px solid var(--border)',cursor:'pointer'}}>
+                      <td style={{padding:'9px 11px'}}><div style={{fontWeight:600,fontSize:12.5}}>{s.en||s.name}</div><div style={{fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{s.id}</div></td>
+                      <td style={{padding:'9px 11px',textAlign:'center'}}>{clsLetter(s.cls)}</td>
+                      <td style={{padding:'9px 11px',textAlign:'center'}}>{r0 ? <span style={{color:r0.ph.color,fontWeight:800,fontSize:11}}>{r0.ph.label}</span> : '—'}</td>
+                      <td style={{padding:'9px 11px',textAlign:'center',fontFamily:'"JetBrains Mono",monospace'}}>{r0?`${r0.thDone}/${r0.thTarget}`:'—'}</td>
+                      <td style={{padding:'9px 11px',textAlign:'center',fontFamily:'"JetBrains Mono",monospace'}}>{r0?`${r0.prDone}/${r0.prTarget}`:'—'}</td>
+                      <td style={{padding:'9px 11px',textAlign:'center'}}><span style={{fontSize:9,fontWeight:700,padding:'2px 7px',borderRadius:20,background:d.tMeta.bg,color:d.tMeta.color}}>{stTypeEn(s.studentType)}</span></td>
+                    </tr>
+                  ); })}
+                </tbody>
+              </table>
+            </div>
+          );
+
+          // ── GRID — small cards, two per row ──
+          return (
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+              {filtered.map(s => { const d = stData(s); const r0 = d.phaseRows[0]; return (
+                <button key={s.id} onClick={()=>open(s)} style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:14,padding:11,boxShadow:'0 4px 14px rgba(20,30,60,.05)',cursor:'pointer',textAlign:'left',display:'flex',flexDirection:'column',gap:7}}>
+                  <div style={{display:'flex',gap:9,alignItems:'center',minWidth:0}}>
+                    {ring(d,42)}
+                    <div style={{minWidth:0}}>
+                      <div style={{fontSize:12.5,fontWeight:700,lineHeight:1.25,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.en||s.name}</div>
+                      <div style={{fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{s.id} · {clsLetter(s.cls)}</div>
+                    </div>
+                  </div>
+                  {r0 && <div style={{fontSize:10.5,fontFamily:'"JetBrains Mono",monospace',color:'var(--ink-2)'}}><span style={{color:r0.ph.color,fontWeight:700}}>{r0.ph.label}</span> tt {r0.thDone}/{r0.thTarget} · {d.transLabel} {r0.prDone}/{r0.prTarget}</div>}
+                  {chips(d)}
+                </button>
+              ); })}
+            </div>
+          );
+        })()}
       </div>
     );
   }

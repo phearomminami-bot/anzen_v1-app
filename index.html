@@ -710,7 +710,7 @@ window.__trRegistry = {
   "Mark as unread": "សម្គាល់ថាមិនទាន់អាន",
   "Mark as read ✓": "សម្គាល់ថាបានអាន ✓",
   "questions": "សំណួរ",
-  "Passed": "ឆ្លងកាត់",
+  "Passed": "ជាប់",
   "Open in new tab": "បើក​ក្នុង​ផ្ទាំង​ថ្មី",
   "Mark as done": "សម្គាល់​ថា​បាន​ធ្វើ",
   "Passed! Well done!": "ឆ្លងកាត់! ល្អណាស់!",
@@ -1064,6 +1064,7 @@ window.__trRegistry = {
   "Khmer": "ខ្មែរ",
   "Enroll student": "ចុះឈ្មោះ​សិស្ស",
   "Filter": "តម្រង",
+  "Cls": "ថ្នាក់",
   "Enroll": "ចុះ​ឈ្មោះ​",
   "Avg mock": "មធ្យម",
   "In progress": "កំពុង​រៀន",
@@ -1771,6 +1772,7 @@ window.__trGroups = {
     "Khmer": "ខ្មែរ",
     "Enroll student": "ចុះឈ្មោះ​សិស្ស",
     "Filter": "តម្រង",
+    "Cls": "ថ្នាក់",
     "Enroll": "ចុះឈ្មោះ​សិស្ស",
     "Avg mock": "មធ្យម",
     "In progress": "កំពុង​បន្ត",
@@ -3068,7 +3070,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v179";</script>
+<script>window.__ANZEN_VERSION="v180";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -45594,6 +45596,19 @@ var StudentsScreenV2 = () => {
   var [, forceUpdate] = React.useReducer(n => n + 1, 0);
   var [tab, setTab] = React.useState('directory');
   var [view, setView] = React.useState('list');
+  var [stView, setStViewRaw] = React.useState(() => {
+    try {
+      return localStorage.getItem('anzen_stView') || 'card';
+    } catch (e) {
+      return 'card';
+    }
+  });
+  var setStView = v => {
+    setStViewRaw(v);
+    try {
+      localStorage.setItem('anzen_stView', v);
+    } catch (e) {}
+  };
   var [filter, setFilter] = React.useState('all');
   var [filterMenuOpen, setFilterMenuOpen] = React.useState(false);
   var [selectedId, setSelectedId] = React.useState(STUDENTS[0]?.id);
@@ -46495,232 +46510,347 @@ var StudentsScreenV2 = () => {
         background: 'var(--accent)',
         border: '2px solid var(--surface)'
       }
-    }))), React.createElement("div", {
-      style: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 6
-      }
-    }, filtered.length === 0 && React.createElement("div", {
-      style: {
-        padding: '40px 16px',
-        textAlign: 'center',
-        color: 'var(--ink-3)',
-        fontSize: 13
-      }
-    }, tr('គ្មាន​សិស្ស', 'No students')), filtered.map(s => {
-      var tMeta = ST_TYPE_META[s.studentType] || ST_TYPE_META['ធម្មតា'];
-      var phases = window.STUDENT_PHASES || [{
-        k: 'KH',
-        label: 'KH',
-        color: '#2A5DB0'
+    }))), (() => {
+      var phOf = (s, k) => typeof phaseStatusOf === 'function' ? phaseStatusOf(s, k) : (s.phaseStatus || {})[k] || '';
+      var totalN = allStudents.length;
+      var activeN = allStudents.filter(s => (window.STUDENT_PHASES || []).some(p => phOf(s, p.k) === 'starting') || s.status === 'In progress' || s.status === 'Road exam soon').length;
+      var passN = allStudents.filter(s => s.exam_result === 'pass' || isGraduated(s)).length;
+      var stat = {
+        flex: 1,
+        background: 'rgba(255,255,255,.13)',
+        borderRadius: 12,
+        padding: '9px 11px'
+      };
+      var statNum = {
+        fontFamily: '"JetBrains Mono",monospace',
+        fontSize: 18,
+        fontWeight: 800,
+        lineHeight: 1
+      };
+      var statLbl = {
+        fontSize: 10,
+        opacity: .85,
+        marginTop: 3
+      };
+      var VIEWS = [{
+        id: 'card',
+        svg: React.createElement(React.Fragment, null, React.createElement("rect", {
+          x: "3",
+          y: "4",
+          width: "18",
+          height: "7",
+          rx: "2"
+        }), React.createElement("rect", {
+          x: "3",
+          y: "13",
+          width: "18",
+          height: "7",
+          rx: "2"
+        }))
       }, {
-        k: 'JP',
-        label: 'JP',
-        color: '#B0413E'
+        id: 'list',
+        svg: React.createElement(React.Fragment, null, React.createElement("line", {
+          x1: "4",
+          y1: "7",
+          x2: "20",
+          y2: "7"
+        }), React.createElement("line", {
+          x1: "4",
+          y1: "12",
+          x2: "20",
+          y2: "12"
+        }), React.createElement("line", {
+          x1: "4",
+          y1: "17",
+          x2: "20",
+          y2: "17"
+        }))
       }, {
-        k: 'AI',
-        label: 'AI',
-        color: '#12A302'
+        id: 'table',
+        svg: React.createElement(React.Fragment, null, React.createElement("rect", {
+          x: "3",
+          y: "4",
+          width: "18",
+          height: "16",
+          rx: "2"
+        }), React.createElement("line", {
+          x1: "3",
+          y1: "10",
+          x2: "21",
+          y2: "10"
+        }), React.createElement("line", {
+          x1: "10",
+          y1: "4",
+          x2: "10",
+          y2: "20"
+        }))
+      }, {
+        id: 'grid',
+        svg: React.createElement(React.Fragment, null, React.createElement("rect", {
+          x: "3",
+          y: "3",
+          width: "8",
+          height: "8",
+          rx: "1.5"
+        }), React.createElement("rect", {
+          x: "13",
+          y: "3",
+          width: "8",
+          height: "8",
+          rx: "1.5"
+        }), React.createElement("rect", {
+          x: "3",
+          y: "13",
+          width: "8",
+          height: "8",
+          rx: "1.5"
+        }), React.createElement("rect", {
+          x: "13",
+          y: "13",
+          width: "8",
+          height: "8",
+          rx: "1.5"
+        }))
       }];
-      var phSt = k => typeof phaseStatusOf === 'function' ? phaseStatusOf(s, k) : (s.phaseStatus || {})[k] || '';
-      var activePhases = phases.filter(p => phSt(p.k) === 'starting');
-      var displayPhases = activePhases.length ? activePhases : [[...phases].reverse().find(p => phSt(p.k) === 'finished') || phases[0]];
-      var progHours = window.__schoolSettings && window.__schoolSettings.programHours || {};
-      var cfgOf = k => {
-        var v = progHours[k];
-        if (v && typeof v === 'object') {
-          if ('prAT' in v || 'prMT' in v) return {
-            th: Number(v.th) || 0,
-            prAT: Number(v.prAT) || 0,
-            prMT: Number(v.prMT) || 0
-          };
-          var pr = Number(v.pr) || 0;
-          return {
-            th: Number(v.th) || 0,
-            prAT: pr,
-            prMT: pr
-          };
-        }
-        if (typeof v === 'number') return {
-          th: 0,
-          prAT: v,
-          prMT: v
-        };
-        return {
-          th: 10,
-          prAT: 12,
-          prMT: 15
-        };
-      };
-      var isTheoryLn = l => l.color === 'c' || l.color === 'e';
-      var isATVeh = l => {
-        var v = (VEHICLES || []).find(x => x.id === l.veh || x.plate === l.veh);
-        return !!(v && (v.trans === 'AT' || v.trans === 'CVT'));
-      };
-      var studentIsAT = s.trans === 'AT' ? true : s.trans === 'MT' ? false : (() => {
-        var pr = LESSONS.filter(l => l.studentId === s.id && l.status === 'done' && !isTheoryLn(l));
-        var at = pr.filter(isATVeh).reduce((a, l) => a + (l.len || 1), 0),
-          mt = pr.filter(l => !isATVeh(l)).reduce((a, l) => a + (l.len || 1), 0);
-        return at > mt;
-      })();
-      var transLabel = 'pt';
-      var transKey = studentIsAT ? 'prAT' : 'prMT';
-      var phaseRows = displayPhases.map(ph => {
-        var cfgH = cfgOf(ph.k);
-        var pDone = LESSONS.filter(l => l.studentId === s.id && l.status === 'done' && (l.phase || 'KH') === ph.k);
-        var thDone = pDone.filter(isTheoryLn).reduce((a, l) => a + (l.len || 1), 0);
-        var prDone = pDone.filter(l => !isTheoryLn(l)).reduce((a, l) => a + (l.len || 1), 0);
-        return {
-          ph,
-          thDone,
-          thTarget: cfgH.th,
-          prDone,
-          prTarget: cfgH[transKey]
-        };
-      });
-      var learned = phaseRows.reduce((a, r) => a + r.thDone + r.prDone, 0);
-      var target = Math.max(1, phaseRows.reduce((a, r) => a + r.thTarget + r.prTarget, 0));
-      var pct = Math.min(1, learned / target);
-      var grad = isGraduated(s);
-      var ringCol = grad ? '#2E9E5B' : displayPhases[0].color;
-      var R = 23,
-        C = 2 * Math.PI * R,
-        off = C * (1 - pct);
       return React.createElement("div", {
-        key: s.id,
-        style: {
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: 16,
-          boxShadow: '0 4px 14px rgba(20,30,60,.05)',
-          overflow: 'hidden'
-        }
-      }, React.createElement("button", {
-        onClick: () => {
-          setMobileProfileId(s.id);
-          setOpenSections({
-            bio: true
-          });
-        },
-        style: {
-          width: '100%',
-          padding: '13px 14px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          background: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          textAlign: 'left'
-        }
-      }, React.createElement("div", {
         style: {
           position: 'relative',
-          width: 56,
-          height: 56,
-          flexShrink: 0
+          borderRadius: 20,
+          padding: '15px 16px',
+          color: '#fff',
+          background: 'linear-gradient(135deg,#243a66,#365a9c 60%,#4f7bc0)',
+          boxShadow: '0 12px 28px rgba(36,58,102,.30)'
         }
-      }, React.createElement("svg", {
-        width: "56",
-        height: "56",
+      }, React.createElement("div", {
         style: {
           position: 'absolute',
           inset: 0,
-          transform: 'rotate(-90deg)'
-        }
-      }, React.createElement("circle", {
-        cx: "28",
-        cy: "28",
-        r: R,
-        fill: "none",
-        stroke: "var(--surface-muted)",
-        strokeWidth: "4"
-      }), React.createElement("circle", {
-        cx: "28",
-        cy: "28",
-        r: R,
-        fill: "none",
-        stroke: ringCol,
-        strokeWidth: "4",
-        strokeLinecap: "round",
-        strokeDasharray: C,
-        strokeDashoffset: off,
-        style: {
-          transition: 'stroke-dashoffset .5s'
-        }
-      })), React.createElement("div", {
-        style: {
-          position: 'absolute',
-          inset: 8,
-          borderRadius: '50%',
           overflow: 'hidden',
-          display: 'flex'
-        }
-      }, React.createElement(Avatar, {
-        tag: s.photo,
-        size: 40
-      }))), React.createElement("div", {
-        style: {
-          flex: 1,
-          minWidth: 0
+          borderRadius: 20,
+          pointerEvents: 'none'
         }
       }, React.createElement("div", {
         style: {
+          position: 'absolute',
+          right: -6,
+          bottom: -16,
+          opacity: .14,
+          color: '#fff'
+        }
+      }, React.createElement(Icon, {
+        name: "users",
+        size: 104,
+        stroke: 1.4
+      }))), React.createElement("div", {
+        style: {
+          position: 'relative',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: 8
         }
+      }, React.createElement("div", {
+        style: {
+          fontSize: 17,
+          fontWeight: 800
+        }
+      }, tr('សិស្ស', 'Students')), React.createElement("div", {
+        style: {
+          display: 'inline-flex',
+          background: 'rgba(255,255,255,.16)',
+          borderRadius: 10,
+          padding: 3,
+          gap: 2
+        }
+      }, VIEWS.map(v => React.createElement("button", {
+        key: v.id,
+        onClick: () => setStView(v.id),
+        title: v.id,
+        "aria-label": v.id + ' view',
+        style: {
+          width: 30,
+          height: 28,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: 'none',
+          borderRadius: 7,
+          cursor: 'pointer',
+          background: stView === v.id ? '#fff' : 'transparent',
+          color: stView === v.id ? 'var(--accent)' : '#fff',
+          transition: 'background .14s,color .14s'
+        }
+      }, React.createElement("svg", {
+        width: "15",
+        height: "15",
+        viewBox: "0 0 24 24",
+        fill: "none",
+        stroke: "currentColor",
+        strokeWidth: "2",
+        strokeLinecap: "round",
+        strokeLinejoin: "round"
+      }, v.svg))))), React.createElement("div", {
+        style: {
+          position: 'relative',
+          display: 'flex',
+          gap: 8,
+          marginTop: 14
+        }
+      }, React.createElement("div", {
+        style: stat
+      }, React.createElement("div", {
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6
+        }
+      }, React.createElement(Icon, {
+        name: "users",
+        size: 14
+      }), React.createElement("span", {
+        style: statNum
+      }, totalN)), React.createElement("div", {
+        style: statLbl
+      }, tr('សរុប', 'Total'))), React.createElement("div", {
+        style: stat
+      }, React.createElement("div", {
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6
+        }
       }, React.createElement("span", {
         style: {
-          fontSize: 14.5,
-          fontWeight: 700,
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis'
+          width: 8,
+          height: 8,
+          borderRadius: '50%',
+          background: '#6BE39A'
         }
-      }, s.en || s.name), React.createElement("span", {
+      }), React.createElement("span", {
+        style: statNum
+      }, activeN)), React.createElement("div", {
+        style: statLbl
+      }, tr('សកម្ម', 'Active'))), React.createElement("div", {
+        style: stat
+      }, React.createElement("div", {
         style: {
-          fontSize: 10,
-          fontWeight: 700,
-          padding: '2px 8px',
-          borderRadius: 20,
-          flexShrink: 0,
-          background: tMeta.bg,
-          color: tMeta.color,
-          border: `1px solid ${tMeta.color}33`
-        }
-      }, stTypeEn(s.studentType))), React.createElement("div", {
-        style: {
-          fontSize: 11,
-          color: 'var(--ink-3)',
-          marginTop: 2,
-          fontFamily: '"JetBrains Mono",monospace'
-        }
-      }, s.id, " \xB7 ", clsLetter(s.cls)), phaseRows.map((r, i) => React.createElement("div", {
-        key: i,
-        style: {
-          fontSize: 11,
-          marginTop: 2,
-          fontFamily: '"JetBrains Mono",monospace',
-          color: 'var(--ink-3)'
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6
         }
       }, React.createElement("span", {
         style: {
-          color: r.ph.color,
-          fontWeight: 700
+          fontSize: 13,
+          lineHeight: 1
         }
-      }, r.ph.label), " \xB7 tt ", r.thDone, "/", r.thTarget, " \xB7 ", transLabel, " ", r.prDone, "/", r.prTarget)), React.createElement("div", {
+      }, "\uD83C\uDF93"), React.createElement("span", {
+        style: statNum
+      }, passN)), React.createElement("div", {
+        style: statLbl
+      }, tr('ជាប់', 'Passed')))));
+    })(), (() => {
+      var stData = s => {
+        var tMeta = ST_TYPE_META[s.studentType] || ST_TYPE_META['ធម្មតា'];
+        var phases = window.STUDENT_PHASES || [{
+          k: 'KH',
+          label: 'KH',
+          color: '#2A5DB0'
+        }, {
+          k: 'JP',
+          label: 'JP',
+          color: '#B0413E'
+        }, {
+          k: 'AI',
+          label: 'AI',
+          color: '#12A302'
+        }];
+        var phSt = k => typeof phaseStatusOf === 'function' ? phaseStatusOf(s, k) : (s.phaseStatus || {})[k] || '';
+        var activePhases = phases.filter(p => phSt(p.k) === 'starting');
+        var displayPhases = activePhases.length ? activePhases : [[...phases].reverse().find(p => phSt(p.k) === 'finished') || phases[0]];
+        var progHours = window.__schoolSettings && window.__schoolSettings.programHours || {};
+        var cfgOf = k => {
+          var v = progHours[k];
+          if (v && typeof v === 'object') {
+            if ('prAT' in v || 'prMT' in v) return {
+              th: Number(v.th) || 0,
+              prAT: Number(v.prAT) || 0,
+              prMT: Number(v.prMT) || 0
+            };
+            var pr = Number(v.pr) || 0;
+            return {
+              th: Number(v.th) || 0,
+              prAT: pr,
+              prMT: pr
+            };
+          }
+          if (typeof v === 'number') return {
+            th: 0,
+            prAT: v,
+            prMT: v
+          };
+          return {
+            th: 10,
+            prAT: 12,
+            prMT: 15
+          };
+        };
+        var isTheoryLn = l => l.color === 'c' || l.color === 'e';
+        var isATVeh = l => {
+          var v = (VEHICLES || []).find(x => x.id === l.veh || x.plate === l.veh);
+          return !!(v && (v.trans === 'AT' || v.trans === 'CVT'));
+        };
+        var studentIsAT = s.trans === 'AT' ? true : s.trans === 'MT' ? false : (() => {
+          var pr = LESSONS.filter(l => l.studentId === s.id && l.status === 'done' && !isTheoryLn(l));
+          var at = pr.filter(isATVeh).reduce((a, l) => a + (l.len || 1), 0),
+            mt = pr.filter(l => !isATVeh(l)).reduce((a, l) => a + (l.len || 1), 0);
+          return at > mt;
+        })();
+        var transKey = studentIsAT ? 'prAT' : 'prMT';
+        var phaseRows = displayPhases.map(ph => {
+          var cfgH = cfgOf(ph.k);
+          var pDone = LESSONS.filter(l => l.studentId === s.id && l.status === 'done' && (l.phase || 'KH') === ph.k);
+          var thDone = pDone.filter(isTheoryLn).reduce((a, l) => a + (l.len || 1), 0);
+          var prDone = pDone.filter(l => !isTheoryLn(l)).reduce((a, l) => a + (l.len || 1), 0);
+          return {
+            ph,
+            thDone,
+            thTarget: cfgH.th,
+            prDone,
+            prTarget: cfgH[transKey]
+          };
+        });
+        var learned = phaseRows.reduce((a, r) => a + r.thDone + r.prDone, 0);
+        var target = Math.max(1, phaseRows.reduce((a, r) => a + r.thTarget + r.prTarget, 0));
+        var pct = Math.min(1, learned / target);
+        var grad = isGraduated(s);
+        var ringCol = grad ? '#2E9E5B' : displayPhases[0].color;
+        return {
+          s,
+          tMeta,
+          phases,
+          phSt,
+          phaseRows,
+          pct,
+          grad,
+          ringCol,
+          transLabel: 'pt'
+        };
+      };
+      var open = s => {
+        setMobileProfileId(s.id);
+        setOpenSections({
+          bio: true
+        });
+      };
+      var chips = d => React.createElement("div", {
         style: {
           display: 'flex',
           gap: 5,
-          marginTop: 7,
           flexWrap: 'wrap'
         }
-      }, phases.map(p => {
-        var st = typeof phaseStatusOf === 'function' ? phaseStatusOf(s, p.k) : (s.phaseStatus || {})[p.k] || '';
-        var done = st === 'finished',
+      }, d.phases.map(p => {
+        var st = d.phSt(p.k),
+          done = st === 'finished',
           active = st === 'starting';
         return React.createElement("span", {
           key: p.k,
@@ -46735,14 +46865,439 @@ var StudentsScreenV2 = () => {
             color: done ? '#fff' : active ? p.color : 'var(--ink-3)'
           }
         }, done ? '✓ ' : '', p.label, active ? tr(' កំពុង', ' now') : '');
-      }))), React.createElement("span", {
+      }));
+      var progText = d => d.phaseRows.map((r, i) => React.createElement("div", {
+        key: i,
         style: {
-          fontSize: 15,
-          color: 'var(--ink-3)',
-          flexShrink: 0
+          fontSize: 11,
+          marginTop: 2,
+          fontFamily: '"JetBrains Mono",monospace',
+          color: 'var(--ink-3)'
         }
-      }, "\u203A")));
-    })));
+      }, React.createElement("span", {
+        style: {
+          color: r.ph.color,
+          fontWeight: 700
+        }
+      }, r.ph.label), " \xB7 tt ", r.thDone, "/", r.thTarget, " \xB7 ", d.transLabel, " ", r.prDone, "/", r.prTarget));
+      var ring = (d, sz) => {
+        var R = sz / 2 - 5,
+          C = 2 * Math.PI * R,
+          off = C * (1 - d.pct);
+        return React.createElement("div", {
+          style: {
+            position: 'relative',
+            width: sz,
+            height: sz,
+            flexShrink: 0
+          }
+        }, React.createElement("svg", {
+          width: sz,
+          height: sz,
+          style: {
+            position: 'absolute',
+            inset: 0,
+            transform: 'rotate(-90deg)'
+          }
+        }, React.createElement("circle", {
+          cx: sz / 2,
+          cy: sz / 2,
+          r: R,
+          fill: "none",
+          stroke: "var(--surface-muted)",
+          strokeWidth: "4"
+        }), React.createElement("circle", {
+          cx: sz / 2,
+          cy: sz / 2,
+          r: R,
+          fill: "none",
+          stroke: d.ringCol,
+          strokeWidth: "4",
+          strokeLinecap: "round",
+          strokeDasharray: C,
+          strokeDashoffset: off,
+          style: {
+            transition: 'stroke-dashoffset .5s'
+          }
+        })), React.createElement("div", {
+          style: {
+            position: 'absolute',
+            inset: 7,
+            borderRadius: '50%',
+            overflow: 'hidden',
+            display: 'flex'
+          }
+        }, React.createElement(Avatar, {
+          tag: d.s.photo,
+          size: sz - 14
+        })));
+      };
+      if (filtered.length === 0) return React.createElement("div", {
+        style: {
+          padding: '40px 16px',
+          textAlign: 'center',
+          color: 'var(--ink-3)',
+          fontSize: 13
+        }
+      }, tr('គ្មាន​សិស្ស', 'No students'));
+      if (stView === 'card') return React.createElement("div", {
+        style: {
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 6
+        }
+      }, filtered.map(s => {
+        var d = stData(s);
+        return React.createElement("div", {
+          key: s.id,
+          style: {
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 16,
+            boxShadow: '0 4px 14px rgba(20,30,60,.05)',
+            overflow: 'hidden'
+          }
+        }, React.createElement("button", {
+          onClick: () => open(s),
+          style: {
+            width: '100%',
+            padding: '13px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            textAlign: 'left'
+          }
+        }, ring(d, 56), React.createElement("div", {
+          style: {
+            flex: 1,
+            minWidth: 0
+          }
+        }, React.createElement("div", {
+          style: {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 8
+          }
+        }, React.createElement("span", {
+          style: {
+            fontSize: 14.5,
+            fontWeight: 700,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }
+        }, s.en || s.name), React.createElement("span", {
+          style: {
+            fontSize: 10,
+            fontWeight: 700,
+            padding: '2px 8px',
+            borderRadius: 20,
+            flexShrink: 0,
+            background: d.tMeta.bg,
+            color: d.tMeta.color,
+            border: `1px solid ${d.tMeta.color}33`
+          }
+        }, stTypeEn(s.studentType))), React.createElement("div", {
+          style: {
+            fontSize: 11,
+            color: 'var(--ink-3)',
+            marginTop: 2,
+            fontFamily: '"JetBrains Mono",monospace'
+          }
+        }, s.id, " \xB7 ", clsLetter(s.cls)), progText(d), React.createElement("div", {
+          style: {
+            marginTop: 7
+          }
+        }, chips(d))), React.createElement("span", {
+          style: {
+            fontSize: 15,
+            color: 'var(--ink-3)',
+            flexShrink: 0
+          }
+        }, "\u203A")));
+      }));
+      if (stView === 'list') return React.createElement("div", {
+        style: {
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 14,
+          overflow: 'hidden',
+          boxShadow: '0 4px 14px rgba(20,30,60,.05)'
+        }
+      }, filtered.map((s, idx) => {
+        var d = stData(s);
+        var r0 = d.phaseRows[0];
+        return React.createElement("button", {
+          key: s.id,
+          onClick: () => open(s),
+          style: {
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 11,
+            padding: '10px 13px',
+            background: 'transparent',
+            border: 'none',
+            borderTop: idx ? '1px solid var(--border)' : 'none',
+            cursor: 'pointer',
+            textAlign: 'left'
+          }
+        }, React.createElement("div", {
+          style: {
+            width: 38,
+            height: 38,
+            borderRadius: '50%',
+            overflow: 'hidden',
+            flexShrink: 0,
+            display: 'flex'
+          }
+        }, React.createElement(Avatar, {
+          tag: s.photo,
+          size: 38
+        })), React.createElement("div", {
+          style: {
+            flex: 1,
+            minWidth: 0
+          }
+        }, React.createElement("div", {
+          style: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 7
+          }
+        }, React.createElement("span", {
+          style: {
+            fontSize: 13.5,
+            fontWeight: 700,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }
+        }, s.en || s.name), React.createElement("span", {
+          style: {
+            fontSize: 9,
+            fontWeight: 700,
+            padding: '1px 7px',
+            borderRadius: 20,
+            flexShrink: 0,
+            background: d.tMeta.bg,
+            color: d.tMeta.color
+          }
+        }, stTypeEn(s.studentType))), React.createElement("div", {
+          style: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            marginTop: 2,
+            flexWrap: 'wrap'
+          }
+        }, React.createElement("span", {
+          style: {
+            fontSize: 10.5,
+            color: 'var(--ink-3)',
+            fontFamily: '"JetBrains Mono",monospace'
+          }
+        }, s.id, " \xB7 ", clsLetter(s.cls)), r0 && React.createElement("span", {
+          style: {
+            fontSize: 10.5,
+            fontFamily: '"JetBrains Mono",monospace',
+            color: 'var(--ink-2)'
+          }
+        }, React.createElement("span", {
+          style: {
+            color: r0.ph.color,
+            fontWeight: 700
+          }
+        }, r0.ph.label), " tt ", r0.thDone, "/", r0.thTarget, " \xB7 ", d.transLabel, " ", r0.prDone, "/", r0.prTarget), React.createElement("span", {
+          style: {
+            display: 'flex',
+            gap: 3
+          }
+        }, d.phases.map(p => {
+          var st = d.phSt(p.k);
+          return React.createElement("span", {
+            key: p.k,
+            style: {
+              width: 7,
+              height: 7,
+              borderRadius: 2,
+              background: st === 'finished' || st === 'starting' ? p.color : 'var(--border-strong)'
+            }
+          });
+        })))), React.createElement("span", {
+          style: {
+            fontSize: 14,
+            color: 'var(--ink-3)',
+            flexShrink: 0
+          }
+        }, "\u203A"));
+      }));
+      if (stView === 'table') return React.createElement("div", {
+        style: {
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 14,
+          overflowX: 'auto',
+          boxShadow: '0 4px 14px rgba(20,30,60,.05)'
+        }
+      }, React.createElement("table", {
+        style: {
+          width: '100%',
+          borderCollapse: 'collapse',
+          fontSize: 12,
+          minWidth: 440
+        }
+      }, React.createElement("thead", null, React.createElement("tr", {
+        style: {
+          background: 'var(--surface-muted)'
+        }
+      }, [tr('សិស្ស', 'Student'), tr('ថ្នាក់', 'Cls'), tr('វគ្គ', 'Phase'), 'tt', 'pt', tr('ប្រភេទ', 'Type')].map((h, i) => React.createElement("th", {
+        key: i,
+        style: {
+          padding: '9px 11px',
+          textAlign: i === 0 ? 'left' : 'center',
+          fontSize: 10.5,
+          color: 'var(--ink-3)',
+          fontWeight: 700,
+          whiteSpace: 'nowrap'
+        }
+      }, h)))), React.createElement("tbody", null, filtered.map(s => {
+        var d = stData(s);
+        var r0 = d.phaseRows[0];
+        return React.createElement("tr", {
+          key: s.id,
+          onClick: () => open(s),
+          style: {
+            borderTop: '1px solid var(--border)',
+            cursor: 'pointer'
+          }
+        }, React.createElement("td", {
+          style: {
+            padding: '9px 11px'
+          }
+        }, React.createElement("div", {
+          style: {
+            fontWeight: 600,
+            fontSize: 12.5
+          }
+        }, s.en || s.name), React.createElement("div", {
+          style: {
+            fontSize: 10,
+            color: 'var(--ink-3)',
+            fontFamily: '"JetBrains Mono",monospace'
+          }
+        }, s.id)), React.createElement("td", {
+          style: {
+            padding: '9px 11px',
+            textAlign: 'center'
+          }
+        }, clsLetter(s.cls)), React.createElement("td", {
+          style: {
+            padding: '9px 11px',
+            textAlign: 'center'
+          }
+        }, r0 ? React.createElement("span", {
+          style: {
+            color: r0.ph.color,
+            fontWeight: 800,
+            fontSize: 11
+          }
+        }, r0.ph.label) : '—'), React.createElement("td", {
+          style: {
+            padding: '9px 11px',
+            textAlign: 'center',
+            fontFamily: '"JetBrains Mono",monospace'
+          }
+        }, r0 ? `${r0.thDone}/${r0.thTarget}` : '—'), React.createElement("td", {
+          style: {
+            padding: '9px 11px',
+            textAlign: 'center',
+            fontFamily: '"JetBrains Mono",monospace'
+          }
+        }, r0 ? `${r0.prDone}/${r0.prTarget}` : '—'), React.createElement("td", {
+          style: {
+            padding: '9px 11px',
+            textAlign: 'center'
+          }
+        }, React.createElement("span", {
+          style: {
+            fontSize: 9,
+            fontWeight: 700,
+            padding: '2px 7px',
+            borderRadius: 20,
+            background: d.tMeta.bg,
+            color: d.tMeta.color
+          }
+        }, stTypeEn(s.studentType))));
+      }))));
+      return React.createElement("div", {
+        style: {
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: 8
+        }
+      }, filtered.map(s => {
+        var d = stData(s);
+        var r0 = d.phaseRows[0];
+        return React.createElement("button", {
+          key: s.id,
+          onClick: () => open(s),
+          style: {
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 14,
+            padding: 11,
+            boxShadow: '0 4px 14px rgba(20,30,60,.05)',
+            cursor: 'pointer',
+            textAlign: 'left',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 7
+          }
+        }, React.createElement("div", {
+          style: {
+            display: 'flex',
+            gap: 9,
+            alignItems: 'center',
+            minWidth: 0
+          }
+        }, ring(d, 42), React.createElement("div", {
+          style: {
+            minWidth: 0
+          }
+        }, React.createElement("div", {
+          style: {
+            fontSize: 12.5,
+            fontWeight: 700,
+            lineHeight: 1.25,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }
+        }, s.en || s.name), React.createElement("div", {
+          style: {
+            fontSize: 10,
+            color: 'var(--ink-3)',
+            fontFamily: '"JetBrains Mono",monospace'
+          }
+        }, s.id, " \xB7 ", clsLetter(s.cls)))), r0 && React.createElement("div", {
+          style: {
+            fontSize: 10.5,
+            fontFamily: '"JetBrains Mono",monospace',
+            color: 'var(--ink-2)'
+          }
+        }, React.createElement("span", {
+          style: {
+            color: r0.ph.color,
+            fontWeight: 700
+          }
+        }, r0.ph.label), " tt ", r0.thDone, "/", r0.thTarget, " \xB7 ", d.transLabel, " ", r0.prDone, "/", r0.prTarget), chips(d));
+      }));
+    })());
   }
   return React.createElement("div", {
     style: {
