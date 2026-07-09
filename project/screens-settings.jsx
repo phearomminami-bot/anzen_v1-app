@@ -1576,6 +1576,7 @@ const NOTIF_ROWS = [
   {km:'អបអរ​ជោគជ័យ',       en:'Exam passed',     sub:'ភ្លាមៗ',               ch:['app','sms'],           tkey:'exam'},
 ];
 const NOTIF_TMPL_META = [
+  { key:'reminder', label:'ការ​រំលឹក​កាលវិភាគ (១ ថ្ងៃ​មុន) · Schedule reminder' },
   { key:'lesson24', label:'Lesson reminder 24h' },
   { key:'lesson1',  label:'Lesson reminder 1h'  },
   { key:'payment',  label:'Payment reminder'    },
@@ -1585,6 +1586,7 @@ const NOTIF_TMPL_META = [
   { key:'welcome',  label:'Welcome'             },
 ];
 const DEFAULT_NOTIF_TEMPLATES = {
+  reminder:{ km:'សួស្ដី {student} 👋 នៅ​ថ្ងៃ​ស្អែក {date} វេលា​ម៉ោង {time} {activity}​នៅ {location}។', en:'Hi {student} 👋 Tomorrow {date} at {time}, {activity} at {location}.' },
   lesson24:{ km:'ជំរាបសួរ {student.name} 👋 មេរៀនបន្ទាប់របស់អ្នកនឹងប្រព្រឹត្តទៅ {lesson.date} ម៉ោង {lesson.time} ជាមួយលោកគ្រូ {instructor.name}។', en:'Hi {student.name} 👋 Your next lesson is on {lesson.date} at {lesson.time} with {instructor.name}.' },
   lesson1: { km:'{student.name} មេរៀនរបស់អ្នកនឹងចាប់ផ្ដើមក្នុង ១ ម៉ោងទៀត ({lesson.time})។', en:'{student.name}, your lesson starts in 1 hour ({lesson.time}).' },
   payment: { km:'{student.name} សូមរំលឹកការទូទាត់ថ្លៃសិក្សា ផុតកំណត់ {lesson.date}។', en:'{student.name}, payment reminder — due {lesson.date}.' },
@@ -1626,6 +1628,11 @@ const NotifSettings = ({ onDirty }) => {
 
   const fillVars = (s) => (s||'')
     .replace(/\{student\.name\}/g, STUDENTS[0]?.name || 'សិស្ស')
+    .replace(/\{student\}/g, STUDENTS[0]?.name || 'ធឿន យ៉ា')
+    .replace(/\{date\}/g, tLang==='km' ? 'ទី១០ ខែ ៧ ឆ្នាំ ២០២៦' : 'Jul 10, 2026')
+    .replace(/\{time\}/g, tLang==='km' ? '១០ៈ០០ ដល់ ១២ៈ០០' : '10:00 to 12:00')
+    .replace(/\{activity\}/g, tLang==='km' ? 'រៀន' : 'lesson')
+    .replace(/\{location\}/g, tLang==='km' ? 'ទីលាន​ហាត់' : 'Training course')
     .replace(/\{lesson\.date\}/g, (typeof todayStr==='function'?todayStr():'2026-01-01'))
     .replace(/\{lesson\.time\}/g, '09:00')
     .replace(/\{instructor\.name\}/g, INSTRUCTORS[0]?.en || 'Instructor')
@@ -1782,7 +1789,7 @@ const NotifSettings = ({ onDirty }) => {
               {fillVars((ss.notifTemplates[tmplKey]||{})[tLang] || '') || <span style={{color:'var(--ink-3)'}}>—</span>}
             </div>
             <div style={{marginTop:8,fontSize:11,color:'var(--ink-3)'}}>
-              {tr('អថេរ','Variables')}: {['{student.name}','{lesson.date}','{lesson.time}','{instructor.name}','{school.name}'].map(v=>(
+              {tr('អថេរ','Variables')}: {(tmplKey==='reminder' ? ['{student}','{date}','{time}','{activity}','{location}'] : ['{student.name}','{lesson.date}','{lesson.time}','{instructor.name}','{school.name}']).map(v=>(
                 <span key={v} onClick={()=>setTmplText(((ss.notifTemplates[tmplKey]||{})[tLang]||'')+' '+v)} style={{display:'inline-block',margin:'2px 4px 0 0',padding:'1px 6px',background:'var(--accent-soft)',color:'var(--accent)',borderRadius:4,fontFamily:'"JetBrains Mono",monospace',fontSize:10,cursor:'pointer'}}>{v}</span>
               ))}
             </div>

@@ -473,6 +473,13 @@ window.__trRegistry = {
   "Check-out": "ចេញ​ថ្ងៃ​នេះ",
   "Contact": "ទំនាក់​ទំនង",
   "Editing...": "កំពុង​កែ​ប្រែ...",
+  "Lesson": "រៀន",
+  "Apply": "ដាក់ពាក្យ",
+  "Exam": "ប្រឡង",
+  "Low stock": "ស្តុក​ជិត​អស់",
+  "Notifications": "ការ​ជូន​ដំណឹង",
+  "No new notifications": "គ្មាន​ការ​ជូន​ដំណឹង​ថ្មី",
+  "Dismiss": "បិទ",
   "Theme": "ផ្ទៃ​ខ្នង",
   "Switch to light": "ប្ដូរ​ទៅ​ភ្លឺ",
   "Switch to dark": "ប្ដូរ​ទៅ​ងងឹត",
@@ -612,8 +619,6 @@ window.__trRegistry = {
   "Download PDF (month)": "ទាញ​យក PDF (ប្រចាំ​ខែ)",
   "Lesson colour": "ពណ៌​មេរៀន",
   "per student · light=practical · dark=theory": "តាម​សិស្ស​ម្នាក់ៗ · ស្រាល=អនុវត្តន៍ · ចាស់=ទ្រឹស្ដី",
-  "Exam": "ប្រឡង",
-  "Apply": "ដាក់ពាក្យ",
   "Auto": "លេខ​អូតូ",
   "Manual": "លេខ​ដៃ MT",
   "Edit note": "កែ​ចំណាំ",
@@ -1573,7 +1578,6 @@ window.__trRegistry = {
   "Supplier": "អ្នក​ចែកចាយ",
   "Recipient": "អ្នក​ទទួល",
   "Quantity *": "ចំនួន *",
-  "Low stock": "ស្តុក​ជិត​អស់",
   "On hand": "ស្តុក​ក្នុង​ដៃ",
   "On order": "កំពុង​កម្មង់",
   "Value": "តម្លៃ",
@@ -1662,7 +1666,6 @@ window.__trRegistry = {
   "New student": "សិស្ស​ថ្មី",
   "New instructor": "គ្រូ​ថ្មី",
   "New vehicle": "យានយន្ត​ថ្មី",
-  "Notifications": "ការ​ជូន​ដំណឹង",
   "NOTIFICATIONS": "ការ​ជូន​ដំណឹង",
   "No notifications": "គ្មាន​ការ​ជូន​ដំណឹង",
   "Marked all read": "បាន​សម្គាល់​ទាំង​អស់",
@@ -1951,8 +1954,6 @@ window.__trGroups = {
     "Download PDF (month)": "ទាញ​យក PDF (ប្រចាំ​ខែ)",
     "Lesson colour": "ពណ៌​មេរៀន",
     "per student · light=practical · dark=theory": "តាម​សិស្ស​ម្នាក់ៗ · ស្រាល=អនុវត្តន៍ · ចាស់=ទ្រឹស្ដី",
-    "Exam": "ប្រឡង",
-    "Apply": "ដាក់ពាក្យ",
     "Auto": "អូតូ",
     "Manual": "ដៃ",
     "Edit note": "កែ​ចំណាំ",
@@ -2976,6 +2977,13 @@ window.__trGroups = {
     "Editing...": "កំពុង​កែ​ប្រែ..."
   },
   "ការ​រុករក · Navigation": {
+    "Lesson": "រៀន",
+    "Apply": "ដាក់​ពាក្យ",
+    "Exam": "ប្រឡង",
+    "Low stock": "ស្តុក​ជិត​អស់",
+    "Notifications": "ការ​ជូន​ដំណឹង",
+    "No new notifications": "គ្មាន​ការ​ជូន​ដំណឹង​ថ្មី",
+    "Dismiss": "បិទ",
     "Theme": "ផ្ទៃ​ខ្នង",
     "Switch to light": "ប្ដូរ​ទៅ​ភ្លឺ",
     "Switch to dark": "ប្ដូរ​ទៅ​ងងឹត",
@@ -3010,7 +3018,6 @@ window.__trGroups = {
     "New student": "សិស្ស​ថ្មី",
     "New instructor": "គ្រូ​ថ្មី",
     "New vehicle": "យានយន្ត​ថ្មី",
-    "Notifications": "ការ​ជូន​ដំណឹង",
     "NOTIFICATIONS": "ការ​ជូន​ដំណឹង",
     "No notifications": "គ្មាន​ការ​ជូន​ដំណឹង",
     "Marked all read": "បាន​សម្គាល់​ទាំង​អស់",
@@ -3126,7 +3133,6 @@ window.__trGroups = {
     "Supplier": "អ្នក​ផ្គត់ផ្គង់",
     "Recipient": "អ្នក​ទទួល",
     "Quantity *": "ចំនួន *",
-    "Low stock": "ស្តុក​ជិត​អស់",
     "On hand": "ស្តុក​ក្នុង​ដៃ",
     "On order": "កំពុង​កម្មង់",
     "Value": "តម្លៃ​សរុប",
@@ -3158,7 +3164,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v182";</script>
+<script>window.__ANZEN_VERSION="v183";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -14361,6 +14367,396 @@ var BAR_SHORT = {
     en: 'News'
   }
 };
+var NOTIF_DISMISS_KEY = 'anzen_notif_dismissed';
+var __khDigit = {
+  '0': '០',
+  '1': '១',
+  '2': '២',
+  '3': '៣',
+  '4': '៤',
+  '5': '៥',
+  '6': '៦',
+  '7': '៧',
+  '8': '៨',
+  '9': '៩'
+};
+var khNum = s => String(s).replace(/[0-9]/g, d => __khDigit[d]);
+var __localDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+var notifDateLabel = (ds, lang) => {
+  if (!/^\d{4}-\d{2}-\d{2}/.test(ds || '')) return ds || '';
+  var [y, m, d] = ds.split('-');
+  if (lang === 'km') return `ទី${khNum(+d)} ខែ ${khNum(+m)} ឆ្នាំ ${khNum(y)}`;
+  var EM = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${EM[+m - 1]} ${+d}, ${y}`;
+};
+var notifTimeRange = (startHHMM, lenH, lang) => {
+  var sh = parseInt(String(startHHMM).split(':')[0]) || 0;
+  var sm = String(startHHMM).includes(':') ? String(startHHMM).split(':')[1] : '00';
+  var eh = sh + (parseFloat(lenH) || 2);
+  var pad = n => String(Math.floor(n)).padStart(2, '0');
+  var one = (h, mm) => lang === 'km' ? `${khNum(pad(h))}ៈ${khNum(mm)}` : `${pad(h)}:${mm}`;
+  return `${one(sh, sm)} ${lang === 'km' ? 'ដល់' : 'to'} ${one(eh, '00')}`;
+};
+var NOTIF_LOC = {
+  school: {
+    km: 'សាលា',
+    en: 'School'
+  },
+  yard: {
+    km: 'ទីលាន​ហាត់',
+    en: 'Training course'
+  },
+  apply: {
+    km: 'កន្លែង​ដាក់​ពាក្យ',
+    en: 'Application centre'
+  },
+  exam: {
+    km: 'កន្លែង​ប្រឡង',
+    en: 'Exam centre'
+  },
+  classA: {
+    km: 'Class A',
+    en: 'Class A'
+  },
+  classB: {
+    km: 'Class B',
+    en: 'Class B'
+  },
+  classC: {
+    km: 'Class C',
+    en: 'Class C'
+  }
+};
+var NOTIF_DEFAULT_TMPL = {
+  km: 'សួស្ដី {student} 👋 នៅ​ថ្ងៃ​ស្អែក {date} វេលា​ម៉ោង {time} {activity}​នៅ {location}។',
+  en: 'Hi {student} 👋 Tomorrow {date} at {time}, {activity} at {location}.'
+};
+var notifStock = it => (it.moves || []).reduce((a, m) => a + (m.type === 'in' ? m.qty : m.type === 'order' && m.received ? m.qty : m.type === 'out' ? -m.qty : 0), 0);
+var computeAlerts = (lang, tr) => {
+  var out = [];
+  var now = new Date();
+  var today = __localDate(now);
+  var tmr = new Date(now);
+  tmr.setDate(tmr.getDate() + 1);
+  var tomorrow = __localDate(tmr);
+  var ss = window.__schoolSettings || {};
+  var tmpl = ss.notifTemplates && ss.notifTemplates.reminder || NOTIF_DEFAULT_TMPL;
+  var base = tmpl[lang] || tmpl.km || NOTIF_DEFAULT_TMPL.km;
+  var students = window.STUDENTS || [];
+  var sName = id => {
+    var s = students.find(x => x.id === id);
+    return s ? lang === 'km' ? s.name : s.en || s.name : '';
+  };
+  var locName = k => {
+    var o = NOTIF_LOC[k];
+    return o ? o[lang] || o.en : '';
+  };
+  var fill = (student, date, time, activity, location) => base.replace(/\{student\}/g, student).replace(/\{date\}/g, date).replace(/\{time\}/g, time).replace(/\{activity\}/g, activity).replace(/\{location\}/g, location);
+  var ACT = {
+    lesson: {
+      km: 'រៀន',
+      en: 'lesson'
+    },
+    exam: {
+      km: 'ប្រឡង',
+      en: 'exam'
+    },
+    apply: {
+      km: 'ដាក់​ពាក្យ',
+      en: 'application'
+    }
+  };
+  (window.LESSONS || []).filter(l => l.date === tomorrow && l.status !== 'cancelled' && l.studentId && l.studentId !== '—').forEach(l => {
+    var nm = sName(l.studentId);
+    if (!nm) return;
+    var loc = locName(l.pickup) || l.location || locName('school');
+    out.push({
+      id: 'sched-' + (l.id || `${l.date}-${l.h}-${l.studentId}`),
+      kind: 'schedule',
+      severity: 'info',
+      icon: '📅',
+      title: `${nm} · ${tr('រៀន', 'Lesson')}`,
+      body: fill(nm, notifDateLabel(tomorrow, lang), notifTimeRange(String(l.h).padStart(2, '0') + ':00', l.len, lang), ACT.lesson[lang] || ACT.lesson.km, loc)
+    });
+  });
+  (ss.scheduleExams || []).filter(e => e.date === tomorrow).forEach(e => {
+    var isApply = e.kind === 'apply';
+    var act = isApply ? ACT.apply : ACT.exam;
+    var loc = isApply ? locName('apply') : locName('exam');
+    (e.studentIds || []).forEach(sid => {
+      var nm = sName(sid);
+      if (!nm) return;
+      out.push({
+        id: `sched-${e.id || e.date}-${sid}`,
+        kind: 'schedule',
+        severity: isApply ? 'info' : 'info',
+        icon: isApply ? '📝' : '🎓',
+        title: `${nm} · ${isApply ? tr('ដាក់​ពាក្យ', 'Apply') : tr('ប្រឡង', 'Exam')}`,
+        body: fill(nm, notifDateLabel(tomorrow, lang), notifTimeRange(e.time || '08:00', e.len, lang), act[lang] || act.km, loc)
+      });
+    });
+  });
+  (ss.inventory || []).forEach(it => {
+    var stk = notifStock(it);
+    if ((it.minStock || 0) > 0 && stk <= it.minStock) {
+      out.push({
+        id: 'stock-' + it.id,
+        kind: 'stock',
+        severity: 'warn',
+        icon: '📦',
+        title: `${tr('ស្តុក​ជិត​អស់', 'Low stock')} · ${it.name}`,
+        body: tr(`${it.name} នៅ​សល់ ${stk} ${it.unit || ''} (កំណត់ ${it.minStock})។ គួរ​ដាក់​កម្មង់​បន្ថែម។`, `${it.name} down to ${stk} ${it.unit || ''} (min ${it.minStock}). Time to reorder.`)
+      });
+    }
+  });
+  var daysUntil = ds => {
+    if (!/^\d{4}-\d{2}-\d{2}/.test(ds || '')) return null;
+    var t = new Date(ds + 'T00:00:00');
+    return Math.round((t - new Date(today + 'T00:00:00')) / 86400000);
+  };
+  var DOCS = [{
+    f: 'reg_exp',
+    km: 'ឆៀក​ឡាន',
+    en: 'Inspection'
+  }, {
+    f: 'road_tax',
+    km: 'បង់​ពន្ធ​ផ្លូវ',
+    en: 'Road tax'
+  }, {
+    f: 'ins_exp',
+    km: 'ធានា​រ៉ាប់រង',
+    en: 'Insurance'
+  }, {
+    f: 'oil_exp',
+    km: 'ប្ដូរ​ប្រេង',
+    en: 'Oil change'
+  }];
+  (window.VEHICLES || []).forEach(v => {
+    DOCS.forEach(doc => {
+      var dy = daysUntil(v[doc.f]);
+      if (dy == null || dy > 30) return;
+      var label = tr(doc.km, doc.en);
+      var plate = v.plate || v.id;
+      var severity, msg;
+      if (dy < 0) {
+        severity = 'danger';
+        msg = tr(`${label} របស់ ${plate} បាន​ផុត​កំណត់ ${Math.abs(dy)} ថ្ងៃ​មុន!`, `${label} for ${plate} expired ${Math.abs(dy)} days ago!`);
+      } else if (dy <= 7) {
+        severity = 'danger';
+        msg = tr(`⚠ ជិត​ដល់​ថ្ងៃ ${label} របស់ ${plate} — នៅ ${dy} ថ្ងៃ​ទៀត។`, `⚠ ${label} for ${plate} due in ${dy} day(s).`);
+      } else {
+        severity = 'warn';
+        msg = tr(`${label} របស់ ${plate} ជិត​ដល់ — នៅ ${dy} ថ្ងៃ​ទៀត។`, `${label} for ${plate} in ${dy} days.`);
+      }
+      out.push({
+        id: `veh-${v.id}-${doc.f}`,
+        kind: 'vehicle',
+        severity,
+        icon: severity === 'danger' ? '🚨' : '🚗',
+        title: `${plate} · ${label}`,
+        body: msg
+      });
+    });
+  });
+  var rank = {
+    danger: 0,
+    warn: 1,
+    info: 2
+  };
+  return out.sort((a, b) => rank[a.severity] - rank[b.severity]);
+};
+var NotificationBell = () => {
+  var {
+    tr,
+    lang
+  } = useAppActions();
+  var [open, setOpen] = React.useState(false);
+  var [tick, setTick] = React.useState(0);
+  var readDismissed = () => {
+    try {
+      var o = JSON.parse(localStorage.getItem(NOTIF_DISMISS_KEY) || '{}');
+      var now = Date.now();
+      var c = {};
+      Object.entries(o).forEach(([k, v]) => {
+        if (v > now) c[k] = v;
+      });
+      return c;
+    } catch (e) {
+      return {};
+    }
+  };
+  var dismiss = id => {
+    var c = readDismissed();
+    c[id] = Date.now() + 24 * 3600 * 1000;
+    try {
+      localStorage.setItem(NOTIF_DISMISS_KEY, JSON.stringify(c));
+    } catch (e) {}
+    setTick(t => t + 1);
+  };
+  var dismissed = readDismissed();
+  var alerts = computeAlerts(lang, tr).filter(a => !dismissed[a.id]);
+  var n = alerts.length;
+  var sevColor = {
+    danger: '#B0413E',
+    warn: '#C98A12',
+    info: 'var(--accent)'
+  };
+  var sq = {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    border: 'none',
+    background: 'transparent',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    position: 'relative',
+    color: 'var(--ink-2)'
+  };
+  return React.createElement("div", {
+    style: {
+      position: 'relative'
+    }
+  }, React.createElement("button", {
+    onClick: () => setOpen(o => !o),
+    "aria-label": tr('ការ​ជូន​ដំណឹង', 'Notifications'),
+    title: tr('ការ​ជូន​ដំណឹង', 'Notifications'),
+    style: sq
+  }, React.createElement(Icon, {
+    name: "bell",
+    size: 20
+  }), n > 0 && React.createElement("span", {
+    style: {
+      position: 'absolute',
+      top: 5,
+      right: 6,
+      minWidth: 16,
+      height: 16,
+      padding: '0 4px',
+      borderRadius: 999,
+      background: '#B0413E',
+      color: '#fff',
+      fontSize: 10,
+      fontWeight: 800,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: '"JetBrains Mono",monospace',
+      border: '2px solid var(--surface)'
+    }
+  }, n > 9 ? '9+' : n)), open && React.createElement(React.Fragment, null, React.createElement("div", {
+    onClick: () => setOpen(false),
+    style: {
+      position: 'fixed',
+      inset: 0,
+      zIndex: 300
+    }
+  }), React.createElement("div", {
+    style: {
+      position: 'absolute',
+      top: 'calc(100% + 6px)',
+      right: 0,
+      zIndex: 301,
+      width: 'min(360px, calc(100vw - 20px))',
+      background: 'var(--surface)',
+      border: '1px solid var(--border)',
+      borderRadius: 14,
+      boxShadow: '0 16px 40px rgba(20,30,55,.28)',
+      overflow: 'hidden'
+    }
+  }, React.createElement("div", {
+    style: {
+      padding: '12px 14px',
+      borderBottom: '1px solid var(--border)',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8
+    }
+  }, React.createElement(Icon, {
+    name: "bell",
+    size: 15
+  }), React.createElement("span", {
+    style: {
+      flex: 1,
+      fontSize: 14,
+      fontWeight: 700,
+      fontFamily: 'var(--font-km)'
+    }
+  }, tr('ការ​ជូន​ដំណឹង', 'Notifications')), React.createElement("span", {
+    style: {
+      fontSize: 11,
+      color: 'var(--ink-3)',
+      fontFamily: '"JetBrains Mono",monospace'
+    }
+  }, n)), React.createElement("div", {
+    style: {
+      maxHeight: '62vh',
+      overflowY: 'auto'
+    }
+  }, n === 0 ? React.createElement("div", {
+    style: {
+      padding: '32px 20px',
+      textAlign: 'center',
+      color: 'var(--ink-3)',
+      fontSize: 13
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 26,
+      marginBottom: 8
+    }
+  }, "\uD83D\uDD14"), tr('គ្មាន​ការ​ជូន​ដំណឹង​ថ្មី', 'No new notifications')) : alerts.map(a => React.createElement("div", {
+    key: a.id,
+    style: {
+      display: 'flex',
+      gap: 10,
+      padding: '11px 13px',
+      borderBottom: '1px solid var(--border)',
+      borderLeft: `3px solid ${sevColor[a.severity]}`
+    }
+  }, React.createElement("span", {
+    style: {
+      fontSize: 17,
+      flexShrink: 0,
+      lineHeight: 1.3
+    }
+  }, a.icon), React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      fontWeight: 700,
+      color: 'var(--ink)'
+    }
+  }, a.title), React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'var(--ink-2)',
+      marginTop: 2,
+      lineHeight: 1.45,
+      fontFamily: 'var(--font-km)'
+    }
+  }, a.body)), React.createElement("button", {
+    onClick: () => dismiss(a.id),
+    "aria-label": tr('បិទ', 'Dismiss'),
+    title: tr('បិទ', 'Dismiss'),
+    style: {
+      border: 'none',
+      background: 'transparent',
+      color: 'var(--ink-3)',
+      cursor: 'pointer',
+      fontSize: 14,
+      flexShrink: 0,
+      padding: '0 2px',
+      alignSelf: 'flex-start'
+    }
+  }, "\u2715")))))));
+};
 var MobileAppHeader = ({
   title,
   subtitle
@@ -14447,10 +14843,10 @@ var MobileAppHeader = ({
     style: {
       display: 'flex',
       alignItems: 'center',
-      gap: 8,
+      gap: 4,
       flexShrink: 0
     }
-  }, React.createElement("button", {
+  }, React.createElement(NotificationBell, null), React.createElement("button", {
     onClick: toggleDark,
     "aria-label": tr('ផ្ទៃ​ខ្នង', 'Theme'),
     title: dark ? tr('ប្ដូរ​ទៅ​ភ្លឺ', 'Switch to light') : tr('ប្ដូរ​ទៅ​ងងឹត', 'Switch to dark'),
@@ -62335,6 +62731,9 @@ var NOTIF_ROWS = [{
   tkey: 'exam'
 }];
 var NOTIF_TMPL_META = [{
+  key: 'reminder',
+  label: 'ការ​រំលឹក​កាលវិភាគ (១ ថ្ងៃ​មុន) · Schedule reminder'
+}, {
   key: 'lesson24',
   label: 'Lesson reminder 24h'
 }, {
@@ -62357,6 +62756,10 @@ var NOTIF_TMPL_META = [{
   label: 'Welcome'
 }];
 var DEFAULT_NOTIF_TEMPLATES = {
+  reminder: {
+    km: 'សួស្ដី {student} 👋 នៅ​ថ្ងៃ​ស្អែក {date} វេលា​ម៉ោង {time} {activity}​នៅ {location}។',
+    en: 'Hi {student} 👋 Tomorrow {date} at {time}, {activity} at {location}.'
+  },
   lesson24: {
     km: 'ជំរាបសួរ {student.name} 👋 មេរៀនបន្ទាប់របស់អ្នកនឹងប្រព្រឹត្តទៅ {lesson.date} ម៉ោង {lesson.time} ជាមួយលោកគ្រូ {instructor.name}។',
     en: 'Hi {student.name} 👋 Your next lesson is on {lesson.date} at {lesson.time} with {instructor.name}.'
@@ -62455,7 +62858,7 @@ var NotifSettings = ({
     onDirty();
     force();
   };
-  var fillVars = s => (s || '').replace(/\{student\.name\}/g, STUDENTS[0]?.name || 'សិស្ស').replace(/\{lesson\.date\}/g, typeof todayStr === 'function' ? todayStr() : '2026-01-01').replace(/\{lesson\.time\}/g, '09:00').replace(/\{instructor\.name\}/g, INSTRUCTORS[0]?.en || 'Instructor').replace(/\{school\.name\}/g, ss.name || 'Anzen').replace(/\{doc\.name\}/g, 'Medical cert').replace(/\{doc\.date\}/g, typeof todayStr === 'function' ? todayStr() : '');
+  var fillVars = s => (s || '').replace(/\{student\.name\}/g, STUDENTS[0]?.name || 'សិស្ស').replace(/\{student\}/g, STUDENTS[0]?.name || 'ធឿន យ៉ា').replace(/\{date\}/g, tLang === 'km' ? 'ទី១០ ខែ ៧ ឆ្នាំ ២០២៦' : 'Jul 10, 2026').replace(/\{time\}/g, tLang === 'km' ? '១០ៈ០០ ដល់ ១២ៈ០០' : '10:00 to 12:00').replace(/\{activity\}/g, tLang === 'km' ? 'រៀន' : 'lesson').replace(/\{location\}/g, tLang === 'km' ? 'ទីលាន​ហាត់' : 'Training course').replace(/\{lesson\.date\}/g, typeof todayStr === 'function' ? todayStr() : '2026-01-01').replace(/\{lesson\.time\}/g, '09:00').replace(/\{instructor\.name\}/g, INSTRUCTORS[0]?.en || 'Instructor').replace(/\{school\.name\}/g, ss.name || 'Anzen').replace(/\{doc\.name\}/g, 'Medical cert').replace(/\{doc\.date\}/g, typeof todayStr === 'function' ? todayStr() : '');
   var sendTest = i => {
     var row = NOTIF_ROWS[i];
     var t = ss.notifTemplates[row.tkey] || {};
@@ -62814,7 +63217,7 @@ var NotifSettings = ({
       fontSize: 11,
       color: 'var(--ink-3)'
     }
-  }, tr('អថេរ', 'Variables'), ": ", ['{student.name}', '{lesson.date}', '{lesson.time}', '{instructor.name}', '{school.name}'].map(v => React.createElement("span", {
+  }, tr('អថេរ', 'Variables'), ": ", (tmplKey === 'reminder' ? ['{student}', '{date}', '{time}', '{activity}', '{location}'] : ['{student.name}', '{lesson.date}', '{lesson.time}', '{instructor.name}', '{school.name}']).map(v => React.createElement("span", {
     key: v,
     onClick: () => setTmplText(((ss.notifTemplates[tmplKey] || {})[tLang] || '') + ' ' + v),
     style: {

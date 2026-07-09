@@ -228,6 +228,165 @@ const BAR_SHORT = {
 
 // Shared mobile header — logo + school name + theme/language toggles.
 // Used in the "More" menu and (with showDate) atop the dashboard.
+// ── Notifications ────────────────────────────────────────────────────────────
+// A live alert feed shown from a bell in the header: student schedule reminders
+// (lessons / exams / applications happening TOMORROW), low-stock warnings, and
+// vehicle document reminders (1 month) / warnings (1 week). Reminder wording is
+// configurable in Settings (notifTemplates.reminder). Dismissed alerts hide for
+// 24h; schedule reminders naturally clear once the day passes.
+const NOTIF_DISMISS_KEY = 'anzen_notif_dismissed';
+const __khDigit = { '0':'០','1':'១','2':'២','3':'៣','4':'៤','5':'៥','6':'៦','7':'៧','8':'៨','9':'៩' };
+const khNum = (s) => String(s).replace(/[0-9]/g, d => __khDigit[d]);
+const __localDate = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const notifDateLabel = (ds, lang) => {
+  if (!/^\d{4}-\d{2}-\d{2}/.test(ds||'')) return ds||'';
+  const [y,m,d] = ds.split('-');
+  if (lang === 'km') return `ទី${khNum(+d)} ខែ ${khNum(+m)} ឆ្នាំ ${khNum(y)}`;
+  const EM = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${EM[+m-1]} ${+d}, ${y}`;
+};
+const notifTimeRange = (startHHMM, lenH, lang) => {
+  const sh = parseInt(String(startHHMM).split(':')[0]) || 0;
+  const sm = String(startHHMM).includes(':') ? String(startHHMM).split(':')[1] : '00';
+  const eh = sh + (parseFloat(lenH) || 2);
+  const pad = (n) => String(Math.floor(n)).padStart(2,'0');
+  const one = (h,mm) => lang==='km' ? `${khNum(pad(h))}ៈ${khNum(mm)}` : `${pad(h)}:${mm}`;
+  return `${one(sh,sm)} ${lang==='km'?'ដល់':'to'} ${one(eh,'00')}`;
+};
+const NOTIF_LOC = {
+  school:{km:'សាលា',en:'School'}, yard:{km:'ទីលាន​ហាត់',en:'Training course'},
+  apply:{km:'កន្លែង​ដាក់​ពាក្យ',en:'Application centre'}, exam:{km:'កន្លែង​ប្រឡង',en:'Exam centre'},
+  classA:{km:'Class A',en:'Class A'}, classB:{km:'Class B',en:'Class B'}, classC:{km:'Class C',en:'Class C'},
+};
+const NOTIF_DEFAULT_TMPL = {
+  km: 'សួស្ដី {student} 👋 នៅ​ថ្ងៃ​ស្អែក {date} វេលា​ម៉ោង {time} {activity}​នៅ {location}។',
+  en: 'Hi {student} 👋 Tomorrow {date} at {time}, {activity} at {location}.',
+};
+const notifStock = (it) => (it.moves||[]).reduce((a,m)=> a + (m.type==='in'?m.qty:(m.type==='order'&&m.received)?m.qty:m.type==='out'?-m.qty:0), 0);
+
+// Build every currently-active alert. Pure — reads live globals, returns a list.
+const computeAlerts = (lang, tr) => {
+  const out = [];
+  const now = new Date();
+  const today = __localDate(now);
+  const tmr = new Date(now); tmr.setDate(tmr.getDate()+1);
+  const tomorrow = __localDate(tmr);
+  const ss = window.__schoolSettings || {};
+  const tmpl = (ss.notifTemplates && ss.notifTemplates.reminder) || NOTIF_DEFAULT_TMPL;
+  const base = tmpl[lang] || tmpl.km || NOTIF_DEFAULT_TMPL.km;
+  const students = window.STUDENTS || [];
+  const sName = (id) => { const s = students.find(x=>x.id===id); return s ? (lang==='km' ? s.name : (s.en||s.name)) : ''; };
+  const locName = (k) => { const o = NOTIF_LOC[k]; return o ? o[lang]||o.en : ''; };
+  const fill = (student, date, time, activity, location) => base
+    .replace(/\{student\}/g, student).replace(/\{date\}/g, date).replace(/\{time\}/g, time)
+    .replace(/\{activity\}/g, activity).replace(/\{location\}/g, location);
+
+  // ── Schedule reminders (events tomorrow) ──
+  const ACT = { lesson:{km:'រៀន',en:'lesson'}, exam:{km:'ប្រឡង',en:'exam'}, apply:{km:'ដាក់​ពាក្យ',en:'application'} };
+  (window.LESSONS || []).filter(l => l.date === tomorrow && l.status !== 'cancelled' && l.studentId && l.studentId !== '—').forEach(l => {
+    const nm = sName(l.studentId); if (!nm) return;
+    const loc = locName(l.pickup) || l.location || locName('school');
+    out.push({ id:'sched-'+(l.id||`${l.date}-${l.h}-${l.studentId}`), kind:'schedule', severity:'info', icon:'📅',
+      title:`${nm} · ${tr('រៀន','Lesson')}`,
+      body: fill(nm, notifDateLabel(tomorrow,lang), notifTimeRange(String(l.h).padStart(2,'0')+':00', l.len, lang), (ACT.lesson[lang]||ACT.lesson.km), loc) });
+  });
+  ((ss.scheduleExams)||[]).filter(e => e.date === tomorrow).forEach(e => {
+    const isApply = e.kind === 'apply';
+    const act = isApply ? ACT.apply : ACT.exam;
+    const loc = isApply ? locName('apply') : locName('exam');
+    (e.studentIds||[]).forEach(sid => { const nm = sName(sid); if (!nm) return;
+      out.push({ id:`sched-${e.id||e.date}-${sid}`, kind:'schedule', severity: isApply?'info':'info', icon: isApply?'📝':'🎓',
+        title:`${nm} · ${isApply?tr('ដាក់​ពាក្យ','Apply'):tr('ប្រឡង','Exam')}`,
+        body: fill(nm, notifDateLabel(tomorrow,lang), notifTimeRange(e.time||'08:00', e.len, lang), (act[lang]||act.km), loc) });
+    });
+  });
+
+  // ── Low-stock alerts ──
+  ((ss.inventory)||[]).forEach(it => {
+    const stk = notifStock(it);
+    if ((it.minStock||0) > 0 && stk <= it.minStock) {
+      out.push({ id:'stock-'+it.id, kind:'stock', severity:'warn', icon:'📦',
+        title:`${tr('ស្តុក​ជិត​អស់','Low stock')} · ${it.name}`,
+        body: tr(`${it.name} នៅ​សល់ ${stk} ${it.unit||''} (កំណត់ ${it.minStock})។ គួរ​ដាក់​កម្មង់​បន្ថែម។`,
+                 `${it.name} down to ${stk} ${it.unit||''} (min ${it.minStock}). Time to reorder.`) });
+    }
+  });
+
+  // ── Vehicle document reminders ──
+  const daysUntil = (ds) => { if (!/^\d{4}-\d{2}-\d{2}/.test(ds||'')) return null; const t = new Date(ds+'T00:00:00'); return Math.round((t - new Date(today+'T00:00:00'))/86400000); };
+  const DOCS = [
+    { f:'reg_exp',  km:'ឆៀក​ឡាន',       en:'Inspection' },
+    { f:'road_tax', km:'បង់​ពន្ធ​ផ្លូវ',  en:'Road tax' },
+    { f:'ins_exp',  km:'ធានា​រ៉ាប់រង',    en:'Insurance' },
+    { f:'oil_exp',  km:'ប្ដូរ​ប្រេង',      en:'Oil change' },
+  ];
+  (window.VEHICLES || []).forEach(v => {
+    DOCS.forEach(doc => {
+      const dy = daysUntil(v[doc.f]);
+      if (dy == null || dy > 30) return;
+      const label = tr(doc.km, doc.en);
+      const plate = v.plate || v.id;
+      let severity, msg;
+      if (dy < 0)       { severity='danger'; msg = tr(`${label} របស់ ${plate} បាន​ផុត​កំណត់ ${Math.abs(dy)} ថ្ងៃ​មុន!`, `${label} for ${plate} expired ${Math.abs(dy)} days ago!`); }
+      else if (dy <= 7) { severity='danger'; msg = tr(`⚠ ជិត​ដល់​ថ្ងៃ ${label} របស់ ${plate} — នៅ ${dy} ថ្ងៃ​ទៀត។`, `⚠ ${label} for ${plate} due in ${dy} day(s).`); }
+      else              { severity='warn';   msg = tr(`${label} របស់ ${plate} ជិត​ដល់ — នៅ ${dy} ថ្ងៃ​ទៀត។`, `${label} for ${plate} in ${dy} days.`); }
+      out.push({ id:`veh-${v.id}-${doc.f}`, kind:'vehicle', severity, icon: severity==='danger'?'🚨':'🚗',
+        title:`${plate} · ${label}`, body: msg });
+    });
+  });
+
+  const rank = { danger:0, warn:1, info:2 };
+  return out.sort((a,b)=> (rank[a.severity]-rank[b.severity]));
+};
+
+const NotificationBell = () => {
+  const { tr, lang } = useAppActions();
+  const [open, setOpen] = React.useState(false);
+  const [tick, setTick] = React.useState(0);   // re-render on dismiss
+  const readDismissed = () => { try { const o = JSON.parse(localStorage.getItem(NOTIF_DISMISS_KEY)||'{}'); const now=Date.now(); const c={}; Object.entries(o).forEach(([k,v])=>{ if(v>now) c[k]=v; }); return c; } catch(e){ return {}; } };
+  const dismiss = (id) => { const c = readDismissed(); c[id] = Date.now()+24*3600*1000; try { localStorage.setItem(NOTIF_DISMISS_KEY, JSON.stringify(c)); } catch(e){} setTick(t=>t+1); };
+  const dismissed = readDismissed();
+  const alerts = computeAlerts(lang, tr).filter(a => !dismissed[a.id]);
+  const n = alerts.length;
+  const sevColor = { danger:'#B0413E', warn:'#C98A12', info:'var(--accent)' };
+  const sq = { width:40, height:40, borderRadius:10, border:'none', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, position:'relative', color:'var(--ink-2)' };
+  return (
+    <div style={{ position:'relative' }}>
+      <button onClick={()=>setOpen(o=>!o)} aria-label={tr('ការ​ជូន​ដំណឹង','Notifications')} title={tr('ការ​ជូន​ដំណឹង','Notifications')} style={sq}>
+        <Icon name="bell" size={20}/>
+        {n > 0 && <span style={{ position:'absolute', top:5, right:6, minWidth:16, height:16, padding:'0 4px', borderRadius:999, background:'#B0413E', color:'#fff', fontSize:10, fontWeight:800, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'"JetBrains Mono",monospace', border:'2px solid var(--surface)' }}>{n>9?'9+':n}</span>}
+      </button>
+      {open && (<>
+        <div onClick={()=>setOpen(false)} style={{ position:'fixed', inset:0, zIndex:300 }}/>
+        <div style={{ position:'absolute', top:'calc(100% + 6px)', right:0, zIndex:301, width:'min(360px, calc(100vw - 20px))',
+          background:'var(--surface)', border:'1px solid var(--border)', borderRadius:14, boxShadow:'0 16px 40px rgba(20,30,55,.28)', overflow:'hidden' }}>
+          <div style={{ padding:'12px 14px', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', gap:8 }}>
+            <Icon name="bell" size={15}/>
+            <span style={{ flex:1, fontSize:14, fontWeight:700, fontFamily:'var(--font-km)' }}>{tr('ការ​ជូន​ដំណឹង','Notifications')}</span>
+            <span style={{ fontSize:11, color:'var(--ink-3)', fontFamily:'"JetBrains Mono",monospace' }}>{n}</span>
+          </div>
+          <div style={{ maxHeight:'62vh', overflowY:'auto' }}>
+            {n === 0 ? (
+              <div style={{ padding:'32px 20px', textAlign:'center', color:'var(--ink-3)', fontSize:13 }}>
+                <div style={{ fontSize:26, marginBottom:8 }}>🔔</div>{tr('គ្មាន​ការ​ជូន​ដំណឹង​ថ្មី','No new notifications')}
+              </div>
+            ) : alerts.map(a => (
+              <div key={a.id} style={{ display:'flex', gap:10, padding:'11px 13px', borderBottom:'1px solid var(--border)', borderLeft:`3px solid ${sevColor[a.severity]}` }}>
+                <span style={{ fontSize:17, flexShrink:0, lineHeight:1.3 }}>{a.icon}</span>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:12.5, fontWeight:700, color:'var(--ink)' }}>{a.title}</div>
+                  <div style={{ fontSize:12, color:'var(--ink-2)', marginTop:2, lineHeight:1.45, fontFamily:'var(--font-km)' }}>{a.body}</div>
+                </div>
+                <button onClick={()=>dismiss(a.id)} aria-label={tr('បិទ','Dismiss')} title={tr('បិទ','Dismiss')} style={{ border:'none', background:'transparent', color:'var(--ink-3)', cursor:'pointer', fontSize:14, flexShrink:0, padding:'0 2px', alignSelf:'flex-start' }}>✕</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </>)}
+    </div>
+  );
+};
+
 const MobileAppHeader = ({ title, subtitle }) => {
   const { lang, tr, toast, setLang, dark, toggleDark } = useAppActions();
   const ss = window.__schoolSettings || {};
@@ -250,7 +409,8 @@ const MobileAppHeader = ({ title, subtitle }) => {
           {subtitle && <div style={{fontSize:12,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.04em',lineHeight:1.3}}>{subtitle}</div>}
         </div>
       </div>
-      <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
+      <div style={{display:'flex',alignItems:'center',gap:4,flexShrink:0}}>
+        <NotificationBell/>
         <button onClick={toggleDark} aria-label={tr('ផ្ទៃ​ខ្នង','Theme')} title={dark?tr('ប្ដូរ​ទៅ​ភ្លឺ','Switch to light'):tr('ប្ដូរ​ទៅ​ងងឹត','Switch to dark')} style={{...sq,fontSize:18}}>{dark?'🌙':'☀️'}</button>
         <button onClick={cycleLang} aria-label={tr('ភាសា','Language')} title={tr('ប្ដូរ​ភាសា','Change language')} style={{...sq,color:'var(--ink-2)'}}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"/></svg>
