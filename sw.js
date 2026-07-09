@@ -1,6 +1,6 @@
 /* Anzen PWA service worker — app-shell caching + offline support.
    Bump CACHE when the shell needs to be refreshed. */
-const CACHE = 'anzen-shell-v178';
+const CACHE = 'anzen-shell-v179';
 const SHELL = [
   './',
   'index.html',

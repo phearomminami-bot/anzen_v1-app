@@ -504,6 +504,22 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
     return { id: i.id, name: i.en || i.name || i.id, students: studs, pass: A_pct(p, p + f), rating, hours, hoursByPhase, totalHours, guestHours, cancelled: canc, completion: A_pct(done.length, taughtKH.length) };
   }).sort((a, b) => b.pass - a.pass || b.hours - a.hours);
 
+  // Exam-assistant instructors — those recorded on exam slots (e.instIds). Their
+  // pass/fail tallies come from the exam results of the students on those exams.
+  const examInstRows = I.map(i => {
+    const myExams = fEX.filter(e => (e.instIds || []).includes(i.id));
+    let pass = 0, fail = 0;
+    const stu = new Set();
+    myExams.forEach(e => {
+      (e.studentIds || []).forEach(sid => stu.add(sid));
+      Object.entries(e.results || {}).forEach(([sid, r]) => { stu.add(sid); if (r.result === 'pass') pass++; else if (r.result === 'fail') fail++; });
+    });
+    const rated = L.filter(l => l.instId === i.id && l.status === 'done' && l.rating > 0);
+    const rating = rated.length ? A_num(rated.reduce((a, l) => a + l.rating, 0) / rated.length) : 0;
+    return { id: i.id, name: i.en || i.name || i.id, exams: myExams.length, students: stu.size, pass, fail, rating, passPct: A_pct(pass, pass + fail) };
+  }).filter(r => r.exams > 0)
+    .sort((a, b) => b.passPct - a.passPct || b.pass - a.pass);
+
   // Vehicle analytics
   const vehWorkshop = V.filter(v => v.status === 'Workshop').length;
   const vehInUse = V.filter(v => L.some(l => l.veh === v.id && l.date === today && l.status !== 'cancelled')).length;
@@ -739,11 +755,6 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
           </tbody>
         </table>
       </div>
-      <div style={chartGrid}>
-        <ChartCard title={tr('គ្រូ​កំពូល​តាម​អត្រា​ជាប់', 'Top Instructors — Pass Rate')}><BarsH data={instRows.slice(0, 10).map(r => ({ label: r.name.split(' ')[0], value: r.pass, color: '#12A302' }))} fmt={v => v + '%'} max={100} /></ChartCard>
-        <ChartCard title={tr('ម៉ោង​បង្រៀន', 'Teaching Hours')}><BarsH data={instRows.slice(0, 10).map(r => ({ label: r.name.split(' ')[0], value: r.hours, color: '#2A5DB0' }))} fmt={v => v + 'h'} /></ChartCard>
-      </div>
-
       {/* Teaching hours by phase + guest hours (guest = count only, no scoring) */}
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 4, overflowX: 'auto', marginTop: 12 }}>
         <div style={{ padding: '11px 12px 6px', fontSize: 13, fontWeight: 700 }}>{tr('ម៉ោង​បង្រៀន​តាម​វគ្គ', 'Teaching hours by phase')}</div>
@@ -771,6 +782,32 @@ const AnalyticsScreen = ({ role = 'admin' }) => {
           </tbody>
         </table>
         <div style={{ padding: '6px 12px 10px', fontSize: 11, color: 'var(--ink-3)' }}>{tr('សរុប = ម៉ោង​បង្រៀន​ជា​គ្រូ​ចម្បង · គ្រូ​ភ្ញៀវ​រាប់​តែ​ចំនួន គ្មាន​ការ​ដាក់​ពិន្ទុ', 'Total = primary teaching hours · Guest hours are a plain count, no scoring')}</div>
+      </div>
+
+      {/* Exam-assistant instructors — recorded on exam slots (e.instIds) */}
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 4, overflowX: 'auto', marginTop: 12 }}>
+        <div style={{ padding: '11px 12px 6px', fontSize: 13, fontWeight: 700 }}>{tr('គ្រូ​ជំនួយ​ការ​ប្រឡង', 'Exam-assistant instructors')}</div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, minWidth: 560 }}>
+          <thead><tr style={{ background: 'var(--surface-muted)' }}>
+            {[tr('គ្រូ', 'Instructor'), tr('សិស្ស', 'Students'), tr('ជាប់', 'Pass'), tr('ធ្លាក់', 'Fail'), tr('ការ​វាយ​តម្លៃ', 'Rating'), tr('អត្រា​ជាប់', 'Pass %')].map((h, i) => (
+              <th key={i} style={{ padding: '10px 12px', textAlign: i === 0 ? 'left' : 'center', fontSize: 11, color: 'var(--ink-3)', fontWeight: 700, whiteSpace: 'nowrap' }}>{h}</th>
+            ))}
+          </tr></thead>
+          <tbody>
+            {examInstRows.map((r, i) => (
+              <tr key={r.id} style={{ borderTop: '1px solid var(--border)' }}>
+                <td style={{ padding: '10px 12px', fontWeight: 600 }}>{(r.pass + r.fail) > 0 && i < 3 ? ['🥇', '🥈', '🥉'][i] + ' ' : ''}{r.name}</td>
+                <td style={{ textAlign: 'center' }}>{r.students}</td>
+                <td style={{ textAlign: 'center', color: 'var(--good)', fontWeight: 700 }}>{r.pass}</td>
+                <td style={{ textAlign: 'center', color: r.fail ? 'var(--danger)' : 'var(--ink-3)' }}>{r.fail}</td>
+                <td style={{ textAlign: 'center', color: 'var(--gold)' }}>{r.rating ? '★ ' + r.rating : '—'}</td>
+                <td style={{ textAlign: 'center' }}><span style={{ fontWeight: 700, color: r.passPct >= 70 ? 'var(--good)' : r.passPct >= 50 ? 'var(--warn)' : 'var(--danger)' }}>{r.passPct}%</span></td>
+              </tr>
+            ))}
+            {examInstRows.length === 0 && <tr><td colSpan={6} style={{ textAlign: 'center', padding: 18, color: 'var(--ink-3)' }}>{tr('គ្មាន​គ្រូ​ជំនួយ​ការ​ប្រឡង', 'No exam-assistant instructors yet')}</td></tr>}
+          </tbody>
+        </table>
+        <div style={{ padding: '6px 12px 10px', fontSize: 11, color: 'var(--ink-3)' }}>{tr('គ្រូ​ដែល​មាន​ឈ្មោះ​កត់ត្រា​ក្នុង​ការ​ប្រឡង · មេដាយ​តាម​អត្រា​ជាប់', 'Instructors recorded on exam slots · medals by pass rate')}</div>
       </div>
 
       {/* ── Section 6 — Vehicles ── */}
