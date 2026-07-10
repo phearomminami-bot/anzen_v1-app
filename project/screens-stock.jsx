@@ -11,7 +11,22 @@ const INV_CATS = [
   { k:'material', km:'មេរៀនចែកសិស្ស',   en:'Lesson materials', color:'#12A302' },
   { k:'other',    km:'ផ្សេងៗ',          en:'Other',            color:'#7A45C9' },
 ];
-const invCatOf   = (k) => INV_CATS.find(c => c.k === k) || INV_CATS[3];
+// Custom categories the school added, kept in the synced settings blob.
+const invCustomCats = () => ((window.__schoolSettings && window.__schoolSettings.inventoryCats) || []);
+const invAllCats    = () => [...INV_CATS, ...invCustomCats()];
+const invCatOf      = (k) => invAllCats().find(c => c.k === k) || INV_CATS[3];
+const INV_CAT_PALETTE = ['#0E7C8B','#C6612E','#7A45C9','#B0413E','#2A5DB0','#12873F','#C98A12','#8E44AD','#16A085'];
+const invAddCat = (name) => {
+  const nm = (name||'').trim(); if (!nm) return null;
+  if (!window.__schoolSettings) window.__schoolSettings = {};
+  const cur = window.__schoolSettings.inventoryCats || [];
+  const existing = invAllCats().find(c => (c.km===nm || c.en===nm));
+  if (existing) return existing.k;
+  const cat = { k:'cat'+Date.now().toString(36)+Math.random().toString(36).slice(2,5), km:nm, en:nm, color: INV_CAT_PALETTE[cur.length % INV_CAT_PALETTE.length], custom:true };
+  window.__schoolSettings.inventoryCats = [...cur, cat];
+  if (window.saveAllData) window.saveAllData();
+  return cat.k;
+};
 const invList    = () => ((window.__schoolSettings && window.__schoolSettings.inventory) || []);
 const invPersist = (list) => {
   if (!window.__schoolSettings) window.__schoolSettings = {};
@@ -23,6 +38,7 @@ const invUid   = () => 'INV' + Date.now().toString(36) + Math.random().toString(
 const invStock = (it) => (it.moves || []).reduce((a, m) =>
   a + (m.type === 'in' ? m.qty : (m.type === 'order' && m.received) ? m.qty : m.type === 'out' ? -m.qty : 0), 0);
 const invOnOrder = (it) => (it.moves || []).filter(m => m.type === 'order' && !m.received).reduce((a, m) => a + m.qty, 0);
+const invKhr = (n) => n ? Number(n).toLocaleString('en-US') + '៛' : '';
 
 // ── Add / edit item form ─────────────────────────────────────────────────────
 const StockItemForm = ({ item, onSave, onCancel, tr }) => {
@@ -31,10 +47,14 @@ const StockItemForm = ({ item, onSave, onCancel, tr }) => {
   const [category, setCategory] = React.useState(item?.category || 'book');
   const [unit,     setUnit]     = React.useState(item?.unit || '');
   const [price,    setPrice]    = React.useState(item?.price != null ? String(item.price) : '');
+  const [priceKHR, setPriceKHR] = React.useState(item?.priceKHR != null ? String(item.priceKHR) : '');
   const [supplier, setSupplier] = React.useState(item?.supplier || '');
   const [minStock, setMinStock] = React.useState(item?.minStock != null ? String(item.minStock) : '');
   const [notes,    setNotes]    = React.useState(item?.notes || '');
   const [initQty,  setInitQty]  = React.useState('');   // opening stock (new items only)
+  const [addingCat, setAddingCat] = React.useState(false);
+  const [newCat,     setNewCat]   = React.useState('');
+  const [, forceCat] = React.useReducer(n=>n+1, 0);   // re-render after adding a category
 
   const fld = { width:'100%', padding:'10px 12px', border:'1px solid var(--border)', borderRadius:9, fontSize:14,
     fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)', boxSizing:'border-box' };
@@ -47,6 +67,7 @@ const StockItemForm = ({ item, onSave, onCancel, tr }) => {
     base.category = category;
     base.unit = unit.trim();
     base.price = parseFloat(price) || 0;
+    base.priceKHR = parseInt(String(priceKHR).replace(/[^\d]/g,'')) || 0;
     base.supplier = supplier.trim();
     base.minStock = parseInt(minStock) || 0;
     base.notes = notes.trim();
@@ -69,9 +90,20 @@ const StockItemForm = ({ item, onSave, onCancel, tr }) => {
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
         <div>
           <div style={lbl}>{tr('ប្រភេទ','Category')}</div>
-          <select value={category} onChange={e=>setCategory(e.target.value)} style={fld}>
-            {INV_CATS.map(c => <option key={c.k} value={c.k}>{tr(c.km, c.en)}</option>)}
+          <select value={category} onChange={e=>{ if (e.target.value==='__add') { setAddingCat(true); } else setCategory(e.target.value); }} style={fld}>
+            {invAllCats().map(c => <option key={c.k} value={c.k}>{tr(c.km, c.en)}</option>)}
+            <option value="__add">➕ {tr('បន្ថែម​ប្រភេទ​ថ្មី...','Add category...')}</option>
           </select>
+          {addingCat && (
+            <div style={{ display:'flex', gap:6, marginTop:6 }}>
+              <input value={newCat} onChange={e=>setNewCat(e.target.value)} autoFocus placeholder={tr('ឈ្មោះ​ប្រភេទ​ថ្មី','New category name')}
+                onKeyDown={e=>{ if(e.key==='Enter'){ const k=invAddCat(newCat); if(k){ setCategory(k); setNewCat(''); setAddingCat(false); forceCat(); } } }}
+                style={{ ...fld, padding:'8px 10px', fontSize:13 }}/>
+              <button type="button" onClick={()=>{ const k=invAddCat(newCat); if(k){ setCategory(k); setNewCat(''); setAddingCat(false); forceCat(); } }}
+                style={{ border:'none', background:'var(--accent)', color:'#fff', borderRadius:8, padding:'0 12px', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit', flexShrink:0 }}>{tr('បន្ថែម','Add')}</button>
+              <button type="button" onClick={()=>{ setAddingCat(false); setNewCat(''); }} style={{ border:'1px solid var(--border)', background:'var(--surface)', color:'var(--ink-3)', borderRadius:8, padding:'0 10px', fontSize:13, cursor:'pointer', flexShrink:0 }}>✕</button>
+            </div>
+          )}
         </div>
         <div>
           <div style={lbl}>{tr('ឯកតា','Unit')}</div>
@@ -80,6 +112,10 @@ const StockItemForm = ({ item, onSave, onCancel, tr }) => {
         <div>
           <div style={lbl}>{tr('តម្លៃ ($)','Price ($)')}</div>
           <input value={price} onChange={e=>setPrice(e.target.value)} style={fld} inputMode="decimal" placeholder="0.00"/>
+        </div>
+        <div>
+          <div style={lbl}>{tr('តម្លៃ (៛)','Price (៛)')}</div>
+          <input value={priceKHR} onChange={e=>setPriceKHR(e.target.value)} style={fld} inputMode="numeric" placeholder="0"/>
         </div>
         <div>
           <div style={lbl}>{tr('ស្តុក​អប្បបរមា','Low-stock alert')}</div>
@@ -197,7 +233,8 @@ const StockItemDetail = ({ item, onClose, onEdit, onMove, onReceive, onDeleteMov
         </div>
         <div style={{ flex:1, background:'var(--surface-muted)', borderRadius:12, padding:'11px 12px' }}>
           <div style={{ fontSize:24, fontWeight:800, fontFamily:'"JetBrains Mono",monospace', lineHeight:1 }}>${(stock * (item.price||0)).toFixed(0)}</div>
-          <div style={{ fontSize:10.5, color:'var(--ink-3)', marginTop:3 }}>{tr('តម្លៃ​សរុប','Value')} · ${item.price||0}</div>
+          <div style={{ fontSize:10.5, color:'var(--ink-3)', marginTop:3 }}>{tr('តម្លៃ​សរុប','Value')} · ${item.price||0}{item.priceKHR?` · ${invKhr(item.priceKHR)}`:''}</div>
+          {item.priceKHR ? <div style={{ fontSize:11, color:'var(--ink-3)', fontFamily:'"JetBrains Mono",monospace', marginTop:2 }}>{invKhr(stock*item.priceKHR)}</div> : null}
         </div>
       </div>
       {item.supplier && <div style={{ fontSize:12, color:'var(--ink-2)' }}>🚚 {tr('អ្នក​ចែកចាយ','Supplier')}: <b>{item.supplier}</b></div>}
@@ -288,7 +325,7 @@ const StockScreen = ({ role }) => {
   const statNum = { fontFamily:'"JetBrains Mono",monospace', fontSize:18, fontWeight:800, lineHeight:1 };
   const statLbl = { fontSize:10, opacity:.85, marginTop:3 };
 
-  const CHIPS = [{ k:'all', label:tr('ទាំងអស់','All'), color:'var(--accent)' }, ...INV_CATS.map(c => ({ k:c.k, label:tr(c.km, c.en), color:c.color }))];
+  const CHIPS = [{ k:'all', label:tr('ទាំងអស់','All'), color:'var(--accent)' }, ...invAllCats().map(c => ({ k:c.k, label:tr(c.km, c.en), color:c.color }))];
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
@@ -387,8 +424,8 @@ const StockScreen = ({ role }) => {
                         <td style={td}><span style={{ color:cat.color, fontWeight:700 }}>{tr(cat.km, cat.en)}</span></td>
                         <td style={{ ...num, color: low?'#B0413E':'var(--ink)', fontWeight:800 }}>{stock}</td>
                         <td style={td}>{it.unit || '—'}</td>
-                        <td style={num}>{it.price ? '$'+it.price : '—'}</td>
-                        <td style={num}>${(stock*(it.price||0)).toFixed(0)}</td>
+                        <td style={num}>{it.price ? '$'+it.price : (it.priceKHR?'':'—')}{it.priceKHR ? <div style={{ fontSize:10, color:'var(--ink-3)', fontWeight:400 }}>{invKhr(it.priceKHR)}</div> : null}</td>
+                        <td style={num}>${(stock*(it.price||0)).toFixed(0)}{it.priceKHR ? <div style={{ fontSize:10, color:'var(--ink-3)', fontWeight:400 }}>{invKhr(stock*it.priceKHR)}</div> : null}</td>
                         <td style={{ ...num, color: onOrder?'#C98A12':'var(--ink-3)' }}>{onOrder || '—'}</td>
                         <td style={{ ...td, color:'var(--ink-2)' }}>{it.supplier || '—'}</td>
                       </tr>
@@ -416,6 +453,7 @@ const StockScreen = ({ role }) => {
                   <div style={{ fontSize:11, color:'var(--ink-3)', marginTop:2 }}>
                     <span style={{ color:cat.color, fontWeight:700 }}>{tr(cat.km, cat.en)}</span>
                     {it.price ? <span style={{ fontFamily:'"JetBrains Mono",monospace' }}> · ${it.price}</span> : null}
+                    {it.priceKHR ? <span style={{ fontFamily:'"JetBrains Mono",monospace' }}> · {invKhr(it.priceKHR)}</span> : null}
                     {it.supplier ? ` · ${it.supplier}` : ''}
                     {onOrder ? <span style={{ color:'#C98A12', fontWeight:700 }}> · 🛒 {onOrder}</span> : null}
                   </div>
