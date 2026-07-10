@@ -1255,6 +1255,7 @@ const NewStudentForm = ({ onClose }) => {
   const [dob,     setDob]     = React.useState('');
   const [natId,   setNatId]   = React.useState('');
   const [studentType, setStudentType] = React.useState('ធម្មតា');
+  const [natType,     setNatType]     = React.useState('khmer');
   // ② Class
   const [cls,     setCls]     = React.useState('B');
   const [vehType, setVehType] = React.useState('');   // 'manual' | 'auto'
@@ -1532,6 +1533,7 @@ Use "" for any field that cannot be read clearly.`;
       vehType, trans: vehType === 'manual' ? 'MT' : 'AT',
       shift: shift.join(', '), days: days.join(', '), fee: courseFee, regDate,
       studentType,
+      natType,
     });
     if (window.__notifyStudentsChanged) window.__notifyStudentsChanged();
     if (window.__logActivity) window.__logActivity('create','student', (name.trim()||nextId));
@@ -1640,7 +1642,12 @@ Use "" for any field that cannot be read clearly.`;
             <option value="SSW">SSW</option>
           </Select>
         </Field>
-        <div/>
+        <Field label={tr('ជនជាតិ','Nationality')}>
+          <Select value={natType} onChange={e=>setNatType(e.target.value)}>
+            <option value="khmer">{tr('ខ្មែរ','Khmer')}</option>
+            <option value="foreign">{tr('បរទេស','Foreigner')}</option>
+          </Select>
+        </Field>
       </Row>
       <Row>
         <Field label={tr('ប្រភេទបណ្ណបើកបរ *','License type *')}>

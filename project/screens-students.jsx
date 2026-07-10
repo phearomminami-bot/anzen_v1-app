@@ -866,6 +866,22 @@ const APPLICATIONS_LIST = window.__applicationsData;
 if (!window.__messagesData) window.__messagesData = [];
 const MESSAGES_LIST = window.__messagesData;
 
+// Documents to collect FROM the student — the required list depends on whether
+// the student is Khmer or a foreigner.
+const RECV_DOCS_KH = [
+  { key:'rcv_fee',   km:'ថ្លៃ​សាលា',                      en:'School fee',            qty:'' },
+  { key:'rcv_id',    km:'អត្តសញ្ញាណ​ប័ណ្ណ​បញ្ជាក់',        en:'National ID copy',      qty:'1 សន្លឹក' },
+  { key:'rcv_photo', km:'រូបថត 4×6 ផ្ទៃ​ក្រោយ​ពណ៌​ស',    en:'Photo 4×6 (white bg)',  qty:'5 សន្លឹក' },
+];
+const RECV_DOCS_FOREIGN = [
+  { key:'rcv_fee',       km:'ថ្លៃ​សាលា',                   en:'School fee', qty:'' },
+  { key:'rcv_passport',  km:'លិខិត​ឆ្លង​ដែន (ទិដ្ឋាការ​សុពលភាព ≥15 ថ្ងៃ · មិន​មែន​ទេសចរណ៍) — ថត​ចម្លង', en:'Passport (valid visa ≥15 days, non-tourist) — copy', qty:'1 សន្លឹក' },
+  { key:'rcv_residence', km:'លិខិត​បញ្ជាក់​ទី​លំនៅ (ចេញ​ដោយ​អាជ្ញាធរ​ដែនដី)', en:'Residence certificate (local authority)', qty:'1 សន្លឹក' },
+  { key:'rcv_photo',     km:'រូបថត 4×6 ផ្ទៃ​ក្រោយ​ពណ៌​ស', en:'Photo 4×6 (white bg)', qty:'5 សន្លឹក' },
+];
+// On-hand stock of an inventory item (mirrors invStock in the Stock screen).
+const stockOnHand = (it) => (it.moves||[]).reduce((a,m)=> a + (m.type==='in'?m.qty:(m.type==='order'&&m.received)?m.qty:m.type==='out'?-m.qty:0), 0);
+
 // ── Main screen ──────────────────────────────────────────────────────────────
 const StudentsScreenV2 = () => {
   const { openForm, toast, tr, lang, navigate, hideChrome } = useAppActions();
@@ -1251,29 +1267,58 @@ const StudentsScreenV2 = () => {
             </>)}
           </CvSection>
 
-          {/* Section 4: Documents */}
-          <CvSection label={tr('ឯកសារសិស្ស','Documents')} isOpen={openSections.docs} onToggle={()=>toggleSection('docs')}>
-            <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:6}}>{tr('ចុច​ដើម្បី​ប្ដូរ​ស្ថានភាព','Tap to toggle status')}</div>
-            {[
-              {key:'permit',   km:'ប័ណ្ណ​អនុញ្ញាត',       en:"Learner's permit"},
-              {key:'id_doc',   km:'អត្តសញ្ញាណ​ប័ណ្ណ',     en:'National ID'},
-              {key:'medical',  km:'វេជ្ជ​បណ្ណ',            en:'Medical cert.'},
-              {key:'photo_id', km:'រូប​ថត 4×6',             en:'Photo 4×6'},
-            ].map(d => (
-              <div key={d.key}
-                onClick={() => { const i = STUDENTS.findIndex(x=>x.id===s.id); if(i!==-1){ STUDENTS[i][d.key] = s[d.key]?0:1; if(window.saveAllData) window.saveAllData(); forceUpdate(); } }}
-                style={{display:'flex',alignItems:'center',justifyContent:'space-between',
-                padding:'9px 0',borderBottom:'1px solid var(--border)',cursor:'pointer'}}>
-                <span style={{fontSize:13,color:'var(--ink-2)'}}>{tr(d.km, d.en)}</span>
-                <span style={{fontSize:13,fontWeight:600,padding:'2px 10px',borderRadius:6,
-                  background: s[d.key] ? 'color-mix(in srgb,var(--good) 14%,transparent)' : 'var(--surface-muted)',
-                  color: s[d.key] ? 'var(--good)' : 'var(--ink-3)'}}>
-                  {s[d.key] ? '✓ '+tr('មាន','Done') : tr('មិន​ទាន់','Missing')}
-                </span>
-              </div>
-            ))}
-            {/* Upload actual files (image/PDF) */}
-            <SchoolDocs student={s}/>
+          {/* Section 4: Documents — received from student + handed to student */}
+          <CvSection label={tr('ឯកសារ​សិស្ស','Documents')} isOpen={openSections.docs} onToggle={()=>toggleSection('docs')}>
+            {(() => {
+              const isForeign = s.natType === 'foreign';
+              const recvList = isForeign ? RECV_DOCS_FOREIGN : RECV_DOCS_KH;
+              const toggleRecv = (key) => { const i=STUDENTS.findIndex(x=>x.id===s.id); if(i!==-1){ STUDENTS[i][key]=s[key]?0:1; if(window.saveAllData)window.saveAllData(); forceUpdate(); } };
+              const invItems = (window.__schoolSettings && window.__schoolSettings.inventory) || [];
+              // Ticking an item hands one to the student and books a stock-out;
+              // un-ticking removes that movement, returning it to stock.
+              const toggleGive = (it) => {
+                const i=STUDENTS.findIndex(x=>x.id===s.id); if(i===-1) return;
+                const stu=STUDENTS[i]; if(!stu.given) stu.given={};
+                const inv=(window.__schoolSettings.inventory)||[]; const idx=inv.findIndex(x=>x.id===it.id); if(idx===-1) return;
+                if(stu.given[it.id]){ const mid=stu.given[it.id]; inv[idx]={...inv[idx],moves:(inv[idx].moves||[]).filter(m=>m.id!==mid)}; delete stu.given[it.id]; }
+                else { const mid='gv'+Date.now()+Math.random().toString(36).slice(2,5); inv[idx]={...inv[idx],moves:[...(inv[idx].moves||[]),{id:mid,type:'out',qty:1,date:new Date().toISOString().slice(0,10),party:(stu.name||stu.en||''),note:tr('ប្រគល់​អោយ​សិស្ស','Handed to student'),studentId:stu.id}]}; stu.given[it.id]=mid; }
+                window.__schoolSettings.inventory=inv; if(window.saveAllData)window.saveAllData(); forceUpdate();
+                toast(stu.given[it.id]?tr('បាន​ប្រគល់ · ដក​ពី​ស្តុក ✓','Handed over · stock deducted ✓'):tr('បាន​សង​ចូល​ស្តុក','Returned to stock'),'good');
+              };
+              const rowSt = {display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,padding:'9px 0',borderBottom:'1px solid var(--border)',cursor:'pointer'};
+              const badge = (on, onLabel, offLabel) => <span style={{fontSize:12.5,fontWeight:600,padding:'2px 10px',borderRadius:6,whiteSpace:'nowrap',flexShrink:0,background:on?'color-mix(in srgb,var(--good) 14%,transparent)':'var(--surface-muted)',color:on?'var(--good)':'var(--ink-3)'}}>{on?onLabel:offLabel}</span>;
+              return (<>
+                {/* ※ Received from student — list depends on nationality */}
+                <div style={{fontSize:13,fontWeight:800,marginBottom:2}}>※ {tr('ទទួល​ពី​សិស្ស','Received from student')}
+                  <span style={{marginLeft:8,fontSize:11,fontWeight:700,padding:'1px 8px',borderRadius:5,background:isForeign?'rgba(176,65,62,.13)':'var(--accent-soft)',color:isForeign?'#B0413E':'var(--accent)'}}>{isForeign?tr('បរទេស','Foreigner'):tr('ខ្មែរ','Khmer')}</span>
+                </div>
+                <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:4}}>{tr('ចុច​ដើម្បី​ប្ដូរ​ស្ថានភាព · ជនជាតិ​កំណត់​ក្នុង​ព័ត៌មាន​សិស្ស','Tap to toggle · nationality set in student info')}</div>
+                {recvList.map(d => (
+                  <div key={d.key} onClick={()=>toggleRecv(d.key)} style={rowSt}>
+                    <span style={{fontSize:12.5,color:'var(--ink-2)',lineHeight:1.4,minWidth:0}}>{tr(d.km,d.en)}{d.qty?<span style={{color:'var(--ink-3)'}}> · {d.qty}</span>:''}</span>
+                    {badge(!!s[d.key], '✓ '+tr('ទទួល','Got'), tr('មិន​ទាន់','Pending'))}
+                  </div>
+                ))}
+
+                {/* ※ Handed to student — ticking auto-deducts from stock */}
+                <div style={{fontSize:13,fontWeight:800,marginTop:16,marginBottom:2}}>※ {tr('ប្រគល់​អោយ​សិស្ស','Handed to student')}</div>
+                <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:4}}>{tr('គ្រីស → ដក​ពី​ស្តុក​ដោយ​ស្វ័យ​ប្រវត្តិ','Tick → auto-deduct from stock')}</div>
+                {invItems.length===0 ? (
+                  <div style={{fontSize:12,color:'var(--ink-3)',padding:'8px 0'}}>{tr('គ្មាន​ទំនិញ​ក្នុង​ស្តុក — បន្ថែម​ក្នុង​ផ្ទាំង​ស្តុក','No stock items — add them in the Stock tab')}</div>
+                ) : invItems.map(it => { const given=!!(s.given && s.given[it.id]); const stk=stockOnHand(it);
+                  return (
+                    <div key={it.id} onClick={()=>toggleGive(it)} style={rowSt}>
+                      <span style={{fontSize:12.5,color:'var(--ink-2)'}}>{it.name} <span style={{color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>· {tr('ស្តុក','stock')} {stk}</span></span>
+                      {badge(given, '✓ '+tr('ប្រគល់','Given'), tr('ប្រគល់','Give'))}
+                    </div>
+                  );
+                })}
+
+                {/* Attached files */}
+                <div style={{fontSize:13,fontWeight:800,marginTop:16,marginBottom:6}}>{tr('ឯកសារ​ភ្ជាប់','Attached files')}</div>
+                <SchoolDocs student={s}/>
+              </>);
+            })()}
           </CvSection>
 
           {/* Section 5: Lessons & comments */}
@@ -2642,6 +2687,7 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
   const [prefTimes, setPrefTimes] = React.useState(Array.isArray(s.prefTimes) ? s.prefTimes : []);
 
   const [nationality,   setNationality]   = React.useState(s.nationality   || 'ខ្មែរ');
+  const [natType,       setNatType]       = React.useState(s.natType       || 'khmer');
   const [eyeLeft,       setEyeLeft]       = React.useState(s.eye_left      || '');
   const [eyeRight,      setEyeRight]      = React.useState(s.eye_right     || '');
   const [eyeBoth,       setEyeBoth]       = React.useState(s.eye_both      || '');
@@ -2735,6 +2781,7 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
       prefDays,
       prefTimes,
       nationality:   nationality.trim(),
+      natType,
       eye_left:      eyeLeft,
       eye_right:     eyeRight,
       eye_both:      eyeBoth,
@@ -2847,7 +2894,13 @@ const StudentEditPanel = ({ s, onSave, onCancel, onDelete }) => {
         </SEField>
       </div>
       <div {...g2}>
-        <SEField label={tr('ជនជាតិ','Nationality')}><input {...inp} value={nationality} onChange={e=>setNationality(e.target.value)} placeholder="ខ្មែរ"/></SEField>
+        <SEField label={tr('ជនជាតិ','Nationality')}>
+          <select {...sel} value={natType} onChange={e=>setNatType(e.target.value)}>
+            <option value="khmer">{tr('ខ្មែរ','Khmer')}</option>
+            <option value="foreign">{tr('បរទេស','Foreigner')}</option>
+          </select>
+        </SEField>
+        <SEField label={tr('សញ្ជាតិ (លម្អិត)','Citizenship (detail)')}><input {...inp} value={nationality} onChange={e=>setNationality(e.target.value)} placeholder={tr('ខ្មែរ / Japanese...','Khmer / Japanese...')}/></SEField>
         <SEField label={tr('ស្ថានភាពភ្នែក','Eye condition')}>
           <select {...sel} value={normEye(glasses)} onChange={e=>setGlasses(e.target.value)}>
             {EYE_COND_OPTS.map(o=> <option key={o.v} value={o.v}>{tr(o.v, o.en)}</option>)}
