@@ -281,6 +281,16 @@ const Icon = ({ name, size = 16, stroke = 1.6 }) => {
     filter:'M4 6h16M7 12h10M10 18h4',
     box:'M21 8l-9-5-9 5v8l9 5 9-5V8zM3 8l9 5 9-5M12 13v8',
     tag:'M20 12l-8 8-9-9V4h7l10 8zM7.5 7.5h.01',
+    // distinct, modern nav icons
+    grid:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
+    cap:'M12 4 2 9l10 5 10-5-10-5ZM6 11.5V16c0 1 2.7 2 6 2s6-1 6-2v-4.5M20 10v5',
+    wheel:'M12 3a9 9 0 100 18 9 9 0 000-18zM12 9a3 3 0 100 6 3 3 0 000-6M12 3v6M6.5 17.5 10 14M17.5 17.5 14 14',
+    trend:'M3 17l6-6 4 4 8-8M15 7h6v6',
+    wallet:'M3 7h15a2 2 0 012 2v8a2 2 0 01-2 2H4a1 1 0 01-1-1V7ZM3 7V6a2 2 0 012-2h11v3M16.5 13h1',
+    briefcase:'M4 8h16v12H4zM9 8V5a1 1 0 011-1h4a1 1 0 011 1v3M4 13h16',
+    megaphone:'M3 10v4h4l9 5V5L7 10H3ZM18 9a4 4 0 010 6',
+    clipboard:'M9 4h6v3H9zM8 5H6a1 1 0 00-1 1v13a1 1 0 001 1h12a1 1 0 001-1V6a1 1 0 00-1-1h-2M9 12h6M9 16h4',
+    receipt:'M6 2h12v20l-3-2-3 2-3-2-3 2V2ZM9 7h6M9 11h6M9 15h4',
   };
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
