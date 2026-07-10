@@ -573,7 +573,7 @@ function App() {
           <Sidebar items={items} current={current} onGo={setCurrent} role={role} onLogout={logout} onReorder={handleNavReorder} collapsed={sideCollapsed} onToggleCollapse={toggleSideCollapsed}/>
           <div style={{flex:1,display:'flex',flexDirection:'column',minWidth:0}}>
             <ContentTopbar role={role}/>
-            <main style={{flex:1,overflow:'auto',padding:'24px 28px'}}>{screens[current]}</main>
+            <main style={{flex:1,overflow:'auto',padding:'24px 28px'}}><div style={{maxWidth:1360,margin:'0 auto',width:'100%'}}>{screens[current]}</div></main>
           </div>
         </div>
       );

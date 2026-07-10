@@ -3212,7 +3212,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v195";</script>
+<script>window.__ANZEN_VERSION="v196";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -74096,7 +74096,13 @@ function App() {
           overflow: 'auto',
           padding: '24px 28px'
         }
-      }, screens[current])));
+      }, React.createElement("div", {
+        style: {
+          maxWidth: 1360,
+          margin: '0 auto',
+          width: '100%'
+        }
+      }, screens[current]))));
     }
     if (navStyle === 'topbar') {
       return React.createElement("div", {
