@@ -252,6 +252,8 @@ const StockScreen = ({ role }) => {
   const [, force] = React.useReducer(n => n + 1, 0);
   const [filter, setFilter] = React.useState('all');
   const [query, setQuery] = React.useState('');
+  const [stView, setStViewRaw] = React.useState(() => { try { return localStorage.getItem('anzen_stockView') || 'card'; } catch (e) { return 'card'; } });
+  const setStView = (v) => { setStViewRaw(v); try { localStorage.setItem('anzen_stockView', v); } catch (e) {} };
   const [formItem, setFormItem] = React.useState(null);   // {} new · item edit · null closed
   const [detailId, setDetailId] = React.useState(null);
   const [move, setMove] = React.useState(null);           // { itemId, type }
@@ -298,9 +300,24 @@ const StockScreen = ({ role }) => {
         </div>
         <div style={{ position:'relative', display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
           <div style={{ fontSize:17, fontWeight:800 }}>{tr('គ្រប់គ្រង​ស្តុក','Stock management')}</div>
-          <button onClick={()=>setFormItem({})} style={{ display:'inline-flex', alignItems:'center', gap:5, height:32, padding:'0 13px', border:'none', borderRadius:999, cursor:'pointer', background:'rgba(255,255,255,.18)', color:'#fff', fontSize:12, fontWeight:700, fontFamily:'inherit' }}>
-            <Icon name="plus" size={14}/>{tr('បន្ថែម','Add')}
-          </button>
+          <div style={{ display:'flex', alignItems:'center', gap:7 }}>
+            {/* Card / Table view switcher */}
+            <div style={{ display:'inline-flex', background:'rgba(255,255,255,.16)', borderRadius:10, padding:3, gap:2 }}>
+              {[
+                { id:'card',  svg:(<><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/></>) },
+                { id:'table', svg:(<><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="10" y1="4" x2="10" y2="20"/></>) },
+              ].map(v => (
+                <button key={v.id} onClick={()=>setStView(v.id)} title={v.id} aria-label={v.id+' view'} style={{
+                  width:30, height:28, display:'flex', alignItems:'center', justifyContent:'center', border:'none', borderRadius:7, cursor:'pointer',
+                  background: stView===v.id ? '#fff' : 'transparent', color: stView===v.id ? 'var(--accent)' : '#fff', transition:'background .14s,color .14s' }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{v.svg}</svg>
+                </button>
+              ))}
+            </div>
+            <button onClick={()=>setFormItem({})} style={{ display:'inline-flex', alignItems:'center', gap:5, height:32, padding:'0 13px', border:'none', borderRadius:999, cursor:'pointer', background:'rgba(255,255,255,.18)', color:'#fff', fontSize:12, fontWeight:700, fontFamily:'inherit' }}>
+              <Icon name="plus" size={14}/>{tr('បន្ថែម','Add')}
+            </button>
+          </div>
         </div>
         <div style={{ position:'relative', display:'flex', gap:8, marginTop:14 }}>
           <div style={stat}><div style={{ display:'flex', alignItems:'center', gap:6 }}><Icon name="box" size={14}/><span style={statNum}>{totalItems}</span></div><div style={statLbl}>{tr('ប្រភេទ​ទំនិញ','Items')}</div></div>
@@ -334,6 +351,54 @@ const StockScreen = ({ role }) => {
           <div style={{ fontSize:14, fontWeight:600, color:'var(--ink)', marginBottom:5 }}>{items.length===0 ? tr('មិន​ទាន់​មាន​ទំនិញ','No items yet') : tr('គ្មាន​លទ្ធផល','No matches')}</div>
           {items.length===0 && <button onClick={()=>setFormItem({})} style={{ marginTop:10, padding:'9px 18px', borderRadius:9, border:'none', background:'var(--accent)', color:'#fff', cursor:'pointer', fontSize:13, fontWeight:700, fontFamily:'inherit' }}>{tr('បន្ថែម​ទំនិញ​ដំបូង','Add first item')}</button>}
         </div>
+      ) : stView === 'table' ? (
+        // Google-Sheets-style grid: row numbers, gridlines, sticky header, scrollable.
+        (() => {
+          const th = { position:'sticky', top:0, zIndex:1, background:'var(--surface-muted)', border:'1px solid var(--border)', padding:'8px 10px', fontSize:10.5, fontWeight:700, color:'var(--ink-3)', letterSpacing:'.02em', whiteSpace:'nowrap', textTransform:'uppercase' };
+          const td = { border:'1px solid var(--border)', padding:'7px 10px', whiteSpace:'nowrap' };
+          const num = { ...td, textAlign:'right', fontFamily:'"JetBrains Mono",monospace', fontVariantNumeric:'tabular-nums' };
+          const rowHdr = { border:'1px solid var(--border)', background:'var(--surface-muted)', color:'var(--ink-3)', textAlign:'center', fontFamily:'"JetBrains Mono",monospace', fontSize:11, width:34, padding:'7px 4px', position:'sticky', left:0 };
+          return (
+            <div style={{ background:'var(--surface)', border:'1px solid var(--border-strong)', borderRadius:10, overflowX:'auto', boxShadow:'0 4px 14px rgba(20,30,60,.05)' }}>
+              <table style={{ borderCollapse:'collapse', width:'100%', minWidth:680, fontSize:12.5 }}>
+                <thead>
+                  <tr>
+                    <th style={{ ...th, ...rowHdr, textTransform:'none' }}>#</th>
+                    <th style={{ ...th, textAlign:'left', position:'sticky', left:34 }}>{tr('ឈ្មោះ','Name')}</th>
+                    <th style={{ ...th, textAlign:'left' }}>{tr('ប្រភេទ','Category')}</th>
+                    <th style={{ ...th, textAlign:'right' }}>{tr('ស្តុក','Stock')}</th>
+                    <th style={{ ...th, textAlign:'left' }}>{tr('ឯកតា','Unit')}</th>
+                    <th style={{ ...th, textAlign:'right' }}>{tr('តម្លៃ','Price')}</th>
+                    <th style={{ ...th, textAlign:'right' }}>{tr('តម្លៃ​សរុប','Value')}</th>
+                    <th style={{ ...th, textAlign:'right' }}>{tr('កម្មង់','On order')}</th>
+                    <th style={{ ...th, textAlign:'left' }}>{tr('អ្នក​ចែកចាយ','Supplier')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((it, idx) => {
+                    const cat = invCatOf(it.category);
+                    const stock = invStock(it);
+                    const onOrder = invOnOrder(it);
+                    const low = it.minStock > 0 && stock <= it.minStock;
+                    return (
+                      <tr key={it.id} onClick={()=>setDetailId(it.id)} style={{ cursor:'pointer' }}>
+                        <td style={rowHdr}>{idx+1}</td>
+                        <td style={{ ...td, fontWeight:700, position:'sticky', left:34, background:'var(--surface)', borderLeft:`3px solid ${cat.color}` }}>{it.name}{low && <span style={{ color:'#B0413E', marginLeft:5 }}>⚠</span>}</td>
+                        <td style={td}><span style={{ color:cat.color, fontWeight:700 }}>{tr(cat.km, cat.en)}</span></td>
+                        <td style={{ ...num, color: low?'#B0413E':'var(--ink)', fontWeight:800 }}>{stock}</td>
+                        <td style={td}>{it.unit || '—'}</td>
+                        <td style={num}>{it.price ? '$'+it.price : '—'}</td>
+                        <td style={num}>${(stock*(it.price||0)).toFixed(0)}</td>
+                        <td style={{ ...num, color: onOrder?'#C98A12':'var(--ink-3)' }}>{onOrder || '—'}</td>
+                        <td style={{ ...td, color:'var(--ink-2)' }}>{it.supplier || '—'}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          );
+        })()
       ) : (
         <div style={{ display: bp.mobile ? 'flex' : 'grid', flexDirection:'column', gridTemplateColumns: bp.mobile ? undefined : '1fr 1fr', gap:8 }}>
           {filtered.map(it => {
