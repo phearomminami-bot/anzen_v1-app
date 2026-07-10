@@ -369,14 +369,16 @@ const NotificationBell = () => {
       </button>
       {open && (<>
         <div onClick={()=>setOpen(false)} style={{ position:'fixed', inset:0, zIndex:300 }}/>
-        <div style={{ position:'absolute', top:'calc(100% + 6px)', right:0, zIndex:301, width:'min(360px, calc(100vw - 20px))',
+        {/* Pinned to the viewport's right edge (not the bell) so it never spills off-screen on a phone. */}
+        <div style={{ position:'fixed', top:'calc(58px + env(safe-area-inset-top,0px))', right:8, left:'auto', zIndex:301,
+          width:'min(380px, calc(100vw - 16px))', maxHeight:'calc(100vh - 72px - env(safe-area-inset-top,0px))', display:'flex', flexDirection:'column',
           background:'var(--surface)', border:'1px solid var(--border)', borderRadius:14, boxShadow:'0 16px 40px rgba(20,30,55,.28)', overflow:'hidden' }}>
           <div style={{ padding:'12px 14px', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', gap:8 }}>
             <Icon name="bell" size={15}/>
             <span style={{ flex:1, fontSize:14, fontWeight:700, fontFamily:'var(--font-km)' }}>{tr('ការ​ជូន​ដំណឹង','Notifications')}</span>
             <span style={{ fontSize:11, color:'var(--ink-3)', fontFamily:'"JetBrains Mono",monospace' }}>{n}</span>
           </div>
-          <div style={{ maxHeight:'62vh', overflowY:'auto' }}>
+          <div style={{ flex:1, minHeight:0, overflowY:'auto' }}>
             {n === 0 ? (
               <div style={{ padding:'32px 20px', textAlign:'center', color:'var(--ink-3)', fontSize:13 }}>
                 <div style={{ fontSize:26, marginBottom:8 }}>🔔</div>{tr('គ្មាន​ការ​ជូន​ដំណឹង​ថ្មី','No new notifications')}

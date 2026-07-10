@@ -3182,7 +3182,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v186";</script>
+<script>window.__ANZEN_VERSION="v187";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -14714,11 +14714,15 @@ var NotificationBell = () => {
     }
   }), React.createElement("div", {
     style: {
-      position: 'absolute',
-      top: 'calc(100% + 6px)',
-      right: 0,
+      position: 'fixed',
+      top: 'calc(58px + env(safe-area-inset-top,0px))',
+      right: 8,
+      left: 'auto',
       zIndex: 301,
-      width: 'min(360px, calc(100vw - 20px))',
+      width: 'min(380px, calc(100vw - 16px))',
+      maxHeight: 'calc(100vh - 72px - env(safe-area-inset-top,0px))',
+      display: 'flex',
+      flexDirection: 'column',
       background: 'var(--surface)',
       border: '1px solid var(--border)',
       borderRadius: 14,
@@ -14751,7 +14755,8 @@ var NotificationBell = () => {
     }
   }, n)), React.createElement("div", {
     style: {
-      maxHeight: '62vh',
+      flex: 1,
+      minHeight: 0,
       overflowY: 'auto'
     }
   }, n === 0 ? React.createElement("div", {
