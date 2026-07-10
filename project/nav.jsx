@@ -238,13 +238,12 @@ const NOTIF_DISMISS_KEY = 'anzen_notif_dismissed';
 const __khDigit = { '0':'០','1':'១','2':'២','3':'៣','4':'៤','5':'៥','6':'៦','7':'៧','8':'៨','9':'៩' };
 const khNum = (s) => String(s).replace(/[0-9]/g, d => __khDigit[d]);
 const __localDate = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-// Dates & times in notifications always render in English (Latin numerals),
-// even inside a Khmer message — easier to read at a glance.
+// Dates in notifications use Khmer wording with Latin numerals
+// ("ទី 11 ខែ 7 ឆ្នាំ 2026"); times use Latin ("10:00–12:00").
 const notifDateLabel = (ds) => {
   if (!/^\d{4}-\d{2}-\d{2}/.test(ds||'')) return ds||'';
   const [y,m,d] = ds.split('-');
-  const EM = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `${EM[+m-1]} ${+d}, ${y}`;
+  return `ទី ${+d} ខែ ${+m} ឆ្នាំ ${y}`;
 };
 const notifTimeRange = (startHHMM, lenH) => {
   const sh = parseInt(String(startHHMM).split(':')[0]) || 0;

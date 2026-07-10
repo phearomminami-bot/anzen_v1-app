@@ -1629,7 +1629,7 @@ const NotifSettings = ({ onDirty }) => {
   const fillVars = (s) => (s||'')
     .replace(/\{student\.name\}/g, STUDENTS[0]?.name || 'សិស្ស')
     .replace(/\{student\}/g, STUDENTS[0]?.name || 'ធឿន យ៉ា')
-    .replace(/\{date\}/g, 'Jul 10, 2026')
+    .replace(/\{date\}/g, 'ទី 10 ខែ 7 ឆ្នាំ 2026')
     .replace(/\{time\}/g, '10:00–12:00')
     .replace(/\{activity\}/g, tLang==='km' ? 'រៀន' : 'lesson')
     .replace(/\{location\}/g, tLang==='km' ? 'ទីលាន​ហាត់' : 'Training course')

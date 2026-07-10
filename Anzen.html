@@ -3184,7 +3184,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v189";</script>
+<script>window.__ANZEN_VERSION="v190";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -14405,8 +14405,7 @@ var __localDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2
 var notifDateLabel = ds => {
   if (!/^\d{4}-\d{2}-\d{2}/.test(ds || '')) return ds || '';
   var [y, m, d] = ds.split('-');
-  var EM = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return `${EM[+m - 1]} ${+d}, ${y}`;
+  return `ទី ${+d} ខែ ${+m} ឆ្នាំ ${y}`;
 };
 var notifTimeRange = (startHHMM, lenH) => {
   var sh = parseInt(String(startHHMM).split(':')[0]) || 0;
@@ -62937,7 +62936,7 @@ var NotifSettings = ({
     onDirty();
     force();
   };
-  var fillVars = s => (s || '').replace(/\{student\.name\}/g, STUDENTS[0]?.name || 'សិស្ស').replace(/\{student\}/g, STUDENTS[0]?.name || 'ធឿន យ៉ា').replace(/\{date\}/g, 'Jul 10, 2026').replace(/\{time\}/g, '10:00–12:00').replace(/\{activity\}/g, tLang === 'km' ? 'រៀន' : 'lesson').replace(/\{location\}/g, tLang === 'km' ? 'ទីលាន​ហាត់' : 'Training course').replace(/\{lesson\.date\}/g, typeof todayStr === 'function' ? todayStr() : '2026-01-01').replace(/\{lesson\.time\}/g, '09:00').replace(/\{instructor\.name\}/g, INSTRUCTORS[0]?.en || 'Instructor').replace(/\{school\.name\}/g, ss.name || 'Anzen').replace(/\{doc\.name\}/g, 'Medical cert').replace(/\{doc\.date\}/g, typeof todayStr === 'function' ? todayStr() : '');
+  var fillVars = s => (s || '').replace(/\{student\.name\}/g, STUDENTS[0]?.name || 'សិស្ស').replace(/\{student\}/g, STUDENTS[0]?.name || 'ធឿន យ៉ា').replace(/\{date\}/g, 'ទី 10 ខែ 7 ឆ្នាំ 2026').replace(/\{time\}/g, '10:00–12:00').replace(/\{activity\}/g, tLang === 'km' ? 'រៀន' : 'lesson').replace(/\{location\}/g, tLang === 'km' ? 'ទីលាន​ហាត់' : 'Training course').replace(/\{lesson\.date\}/g, typeof todayStr === 'function' ? todayStr() : '2026-01-01').replace(/\{lesson\.time\}/g, '09:00').replace(/\{instructor\.name\}/g, INSTRUCTORS[0]?.en || 'Instructor').replace(/\{school\.name\}/g, ss.name || 'Anzen').replace(/\{doc\.name\}/g, 'Medical cert').replace(/\{doc\.date\}/g, typeof todayStr === 'function' ? todayStr() : '');
   var sendTest = i => {
     var row = NOTIF_ROWS[i];
     var t = ss.notifTemplates[row.tkey] || {};
