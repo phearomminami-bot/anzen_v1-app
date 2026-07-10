@@ -238,20 +238,20 @@ const NOTIF_DISMISS_KEY = 'anzen_notif_dismissed';
 const __khDigit = { '0':'០','1':'១','2':'២','3':'៣','4':'៤','5':'៥','6':'៦','7':'៧','8':'៨','9':'៩' };
 const khNum = (s) => String(s).replace(/[0-9]/g, d => __khDigit[d]);
 const __localDate = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-const notifDateLabel = (ds, lang) => {
+// Dates & times in notifications always render in English (Latin numerals),
+// even inside a Khmer message — easier to read at a glance.
+const notifDateLabel = (ds) => {
   if (!/^\d{4}-\d{2}-\d{2}/.test(ds||'')) return ds||'';
   const [y,m,d] = ds.split('-');
-  if (lang === 'km') return `ទី${khNum(+d)} ខែ ${khNum(+m)} ឆ្នាំ ${khNum(y)}`;
   const EM = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   return `${EM[+m-1]} ${+d}, ${y}`;
 };
-const notifTimeRange = (startHHMM, lenH, lang) => {
+const notifTimeRange = (startHHMM, lenH) => {
   const sh = parseInt(String(startHHMM).split(':')[0]) || 0;
   const sm = String(startHHMM).includes(':') ? String(startHHMM).split(':')[1] : '00';
   const eh = sh + (parseFloat(lenH) || 2);
   const pad = (n) => String(Math.floor(n)).padStart(2,'0');
-  const one = (h,mm) => lang==='km' ? `${khNum(pad(h))}ៈ${khNum(mm)}` : `${pad(h)}:${mm}`;
-  return `${one(sh,sm)} ${lang==='km'?'ដល់':'to'} ${one(eh,'00')}`;
+  return `${pad(sh)}:${sm}–${pad(eh)}:00`;
 };
 const NOTIF_LOC = {
   school:{km:'សាលា',en:'School'}, yard:{km:'ទីលាន​ហាត់',en:'Training course'},
