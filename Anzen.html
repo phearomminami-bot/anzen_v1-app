@@ -788,7 +788,7 @@ window.__trRegistry = {
   "Marked as former staff ✓": "បាន​សម្គាល់​ថា​ឈប់​ពី​ការងារ ✓",
   "Restored to active staff": "បាន​ជួល​ឡើង​វិញ​ជា​បុគ្គលិក​សកម្ម",
   "CSV exported — open in Google Sheets ✓": "បាននាំចេញ CSV — បើកក្នុង Google Sheets បាន ✓",
-  "Export failed": "Export មានបញ្ហា",
+  "Export failed": "នាំចេញ​មិន​បាន",
   "Add staff": "បន្ថែមបុគ្គលិក",
   "Total": "សរុប",
   "On duty": "សកម្ម",
@@ -1606,14 +1606,21 @@ window.__trRegistry = {
   "Delete this movement?": "លុប​ចលនា​នេះ?",
   "All its stock data will be removed.": "ទិន្នន័យ​ស្តុក​ទាំងអស់​នឹង​បាត់​បង់។",
   "Item deleted": "បាន​លុប​ទំនិញ",
+  "Nothing to export": "គ្មាន​ទំនិញ​សម្រាប់​នាំចេញ",
+  "Stock": "ស្តុក",
+  "Price USD": "តម្លៃ ($)",
+  "Price KHR": "តម្លៃ (៛)",
+  "Value USD": "តម្លៃសរុប ($)",
+  "Min stock": "ស្តុកអប្បបរមា",
+  "Exported CSV ✓ — open it in Google Sheets": "បាន​នាំចេញ CSV ✓ — បើក​ក្នុង Google Sheets",
   "Stock management": "គ្រប់គ្រង​ស្តុក",
+  "Export CSV (Google Sheets)": "នាំចេញ CSV (Google Sheets)",
   "Items": "ប្រភេទ​ទំនិញ",
   "Total units": "ចំនួន​សរុប",
   "Search items...": "ស្វែងរក​ទំនិញ...",
   "No items yet": "មិន​ទាន់​មាន​ទំនិញ",
   "No matches": "គ្មាន​លទ្ធផល",
   "Add first item": "បន្ថែម​ទំនិញ​ដំបូង",
-  "Stock": "ស្តុក",
   "Price": "តម្លៃ",
   "Low": "ជិត​អស់",
   "on hand": "ក្នុង​ដៃ",
@@ -3178,14 +3185,21 @@ window.__trGroups = {
     "Delete this movement?": "លុប​ចលនា​នេះ?",
     "All its stock data will be removed.": "ទិន្នន័យ​ស្តុក​ទាំងអស់​នឹង​បាត់​បង់។",
     "Item deleted": "បាន​លុប​ទំនិញ",
+    "Nothing to export": "គ្មាន​ទំនិញ​សម្រាប់​នាំចេញ",
+    "Stock": "ស្តុក",
+    "Price USD": "តម្លៃ ($)",
+    "Price KHR": "តម្លៃ (៛)",
+    "Value USD": "តម្លៃសរុប ($)",
+    "Min stock": "ស្តុកអប្បបរមា",
+    "Exported CSV ✓ — open it in Google Sheets": "បាន​នាំចេញ CSV ✓ — បើក​ក្នុង Google Sheets",
     "Stock management": "គ្រប់គ្រង​ស្តុក",
+    "Export CSV (Google Sheets)": "នាំចេញ CSV (Google Sheets)",
     "Items": "ប្រភេទ​ទំនិញ",
     "Total units": "ចំនួន​សរុប",
     "Search items...": "ស្វែងរក​ទំនិញ...",
     "No items yet": "មិន​ទាន់​មាន​ទំនិញ",
     "No matches": "គ្មាន​លទ្ធផល",
     "Add first item": "បន្ថែម​ទំនិញ​ដំបូង",
-    "Stock": "ស្តុក",
     "Price": "តម្លៃ",
     "Low": "ជិត​អស់",
     "on hand": "ក្នុង​ដៃ",
@@ -3198,7 +3212,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v193";</script>
+<script>window.__ANZEN_VERSION="v194";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -71139,6 +71153,18 @@ var StockScreen = ({
   var totalUnits = items.reduce((a, it) => a + invStock(it), 0);
   var lowCount = items.filter(it => it.minStock > 0 && invStock(it) <= it.minStock).length;
   var totalValue = items.reduce((a, it) => a + invStock(it) * (it.price || 0), 0);
+  var exportStockCSV = () => {
+    if (!filtered.length) {
+      toast(tr('គ្មាន​ទំនិញ​សម្រាប់​នាំចេញ', 'Nothing to export'), 'warn');
+      return;
+    }
+    var catLabel = it => {
+      var c = invCatOf(it.category);
+      return tr(c.km, c.en);
+    };
+    var ok = typeof exportCSV === 'function' && exportCSV('anzen-stock.csv', [[tr('ឈ្មោះ', 'Name'), it => it.name || ''], [tr('ប្រភេទ', 'Category'), catLabel], [tr('ស្តុក', 'Stock'), it => invStock(it)], [tr('ឯកតា', 'Unit'), it => it.unit || ''], [tr('តម្លៃ ($)', 'Price USD'), it => it.price || 0], [tr('តម្លៃ (៛)', 'Price KHR'), it => it.priceKHR || 0], [tr('តម្លៃសរុប ($)', 'Value USD'), it => invStock(it) * (it.price || 0)], [tr('កម្មង់', 'On order'), it => invOnOrder(it)], [tr('អ្នកចែកចាយ', 'Supplier'), it => it.supplier || ''], [tr('ស្តុកអប្បបរមា', 'Min stock'), it => it.minStock || 0], [tr('ចំណាំ', 'Notes'), it => it.notes || '']], filtered);
+    toast(ok ? tr('បាន​នាំចេញ CSV ✓ — បើក​ក្នុង Google Sheets', 'Exported CSV ✓ — open it in Google Sheets') : tr('នាំចេញ​មិន​បាន', 'Export failed'), ok ? 'good' : 'warn');
+  };
   var stat = {
     flex: 1,
     background: 'rgba(255,255,255,.13)',
@@ -71294,6 +71320,26 @@ var StockScreen = ({
     strokeLinecap: "round",
     strokeLinejoin: "round"
   }, v.svg)))), React.createElement("button", {
+    onClick: exportStockCSV,
+    title: tr('នាំចេញ CSV (Google Sheets)', 'Export CSV (Google Sheets)'),
+    "aria-label": tr('នាំចេញ CSV', 'Export CSV'),
+    style: {
+      width: 32,
+      height: 32,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      border: 'none',
+      borderRadius: 10,
+      cursor: 'pointer',
+      background: 'rgba(255,255,255,.18)',
+      color: '#fff',
+      flexShrink: 0
+    }
+  }, React.createElement(Icon, {
+    name: "download",
+    size: 15
+  })), React.createElement("button", {
     onClick: () => setFormItem({}),
     style: {
       display: 'inline-flex',

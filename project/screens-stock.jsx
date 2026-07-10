@@ -321,6 +321,26 @@ const StockScreen = ({ role }) => {
   const lowCount   = items.filter(it => it.minStock > 0 && invStock(it) <= it.minStock).length;
   const totalValue = items.reduce((a, it) => a + invStock(it) * (it.price || 0), 0);
 
+  // Export the (filtered) stock list as CSV — opens cleanly in Google Sheets / Excel.
+  const exportStockCSV = () => {
+    if (!filtered.length) { toast(tr('គ្មាន​ទំនិញ​សម្រាប់​នាំចេញ','Nothing to export'), 'warn'); return; }
+    const catLabel = (it) => { const c = invCatOf(it.category); return tr(c.km, c.en); };
+    const ok = (typeof exportCSV === 'function') && exportCSV('anzen-stock.csv', [
+      [tr('ឈ្មោះ','Name'),        it => it.name || ''],
+      [tr('ប្រភេទ','Category'),    catLabel],
+      [tr('ស្តុក','Stock'),        it => invStock(it)],
+      [tr('ឯកតា','Unit'),         it => it.unit || ''],
+      [tr('តម្លៃ ($)','Price USD'),  it => it.price || 0],
+      [tr('តម្លៃ (៛)','Price KHR'),  it => it.priceKHR || 0],
+      [tr('តម្លៃសរុប ($)','Value USD'), it => invStock(it) * (it.price || 0)],
+      [tr('កម្មង់','On order'),      it => invOnOrder(it)],
+      [tr('អ្នកចែកចាយ','Supplier'),  it => it.supplier || ''],
+      [tr('ស្តុកអប្បបរមា','Min stock'), it => it.minStock || 0],
+      [tr('ចំណាំ','Notes'),        it => it.notes || ''],
+    ], filtered);
+    toast(ok ? tr('បាន​នាំចេញ CSV ✓ — បើក​ក្នុង Google Sheets','Exported CSV ✓ — open it in Google Sheets') : tr('នាំចេញ​មិន​បាន','Export failed'), ok ? 'good' : 'warn');
+  };
+
   const stat = { flex:1, background:'rgba(255,255,255,.13)', borderRadius:12, padding:'9px 11px' };
   const statNum = { fontFamily:'"JetBrains Mono",monospace', fontSize:18, fontWeight:800, lineHeight:1 };
   const statLbl = { fontSize:10, opacity:.85, marginTop:3 };
@@ -351,6 +371,9 @@ const StockScreen = ({ role }) => {
                 </button>
               ))}
             </div>
+            <button onClick={exportStockCSV} title={tr('នាំចេញ CSV (Google Sheets)','Export CSV (Google Sheets)')} aria-label={tr('នាំចេញ CSV','Export CSV')} style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', border:'none', borderRadius:10, cursor:'pointer', background:'rgba(255,255,255,.18)', color:'#fff', flexShrink:0 }}>
+              <Icon name="download" size={15}/>
+            </button>
             <button onClick={()=>setFormItem({})} style={{ display:'inline-flex', alignItems:'center', gap:5, height:32, padding:'0 13px', border:'none', borderRadius:999, cursor:'pointer', background:'rgba(255,255,255,.18)', color:'#fff', fontSize:12, fontWeight:700, fontFamily:'inherit' }}>
               <Icon name="plus" size={14}/>{tr('បន្ថែម','Add')}
             </button>
