@@ -264,7 +264,11 @@ const NOTIF_DEFAULT_TMPL = {
 const notifStock = (it) => (it.moves||[]).reduce((a,m)=> a + (m.type==='in'?m.qty:(m.type==='order'&&m.received)?m.qty:m.type==='out'?-m.qty:0), 0);
 
 // Build every currently-active alert. Pure — reads live globals, returns a list.
-const computeAlerts = (lang, tr) => {
+// opts.role/opts.studentId: a student only gets their OWN schedule reminders —
+// no stock or vehicle alerts, and no other students' schedules.
+const computeAlerts = (lang, tr, opts = {}) => {
+  const isStudent = opts.role === 'student';
+  const myId = opts.studentId || null;
   const out = [];
   const now = new Date();
   const today = __localDate(now);
@@ -282,7 +286,7 @@ const computeAlerts = (lang, tr) => {
 
   // ── Schedule reminders (events tomorrow) ──
   const ACT = { lesson:{km:'រៀន',en:'lesson'}, exam:{km:'ប្រឡង',en:'exam'}, apply:{km:'ដាក់​ពាក្យ',en:'application'} };
-  (window.LESSONS || []).filter(l => l.date === tomorrow && l.status !== 'cancelled' && l.studentId && l.studentId !== '—').forEach(l => {
+  (window.LESSONS || []).filter(l => l.date === tomorrow && l.status !== 'cancelled' && l.studentId && l.studentId !== '—' && (!isStudent || l.studentId === myId)).forEach(l => {
     const nm = sName(l.studentId); if (!nm) return;
     const loc = locName(l.pickup) || l.location || locName('school');
     out.push({ id:'sched-'+(l.id||`${l.date}-${l.h}-${l.studentId}`), kind:'schedule', severity:'info', icon:'📅',
@@ -293,12 +297,15 @@ const computeAlerts = (lang, tr) => {
     const isApply = e.kind === 'apply';
     const act = isApply ? ACT.apply : ACT.exam;
     const loc = isApply ? locName('apply') : locName('exam');
-    (e.studentIds||[]).forEach(sid => { const nm = sName(sid); if (!nm) return;
+    (e.studentIds||[]).forEach(sid => { if (isStudent && sid !== myId) return; const nm = sName(sid); if (!nm) return;
       out.push({ id:`sched-${e.id||e.date}-${sid}`, kind:'schedule', severity: isApply?'info':'info', icon: isApply?'📝':'🎓',
         title:`${nm} · ${isApply?tr('ដាក់​ពាក្យ','Apply'):tr('ប្រឡង','Exam')}`,
         body: fill(nm, notifDateLabel(tomorrow,lang), notifTimeRange(e.time||'08:00', e.len, lang), (act[lang]||act.km), loc) });
     });
   });
+
+  // Students only ever see their own schedule — stop here for them.
+  if (isStudent) { const rank1 = { danger:0, warn:1, info:2 }; return out.sort((a,b)=> (rank1[a.severity]-rank1[b.severity])); }
 
   // ── Low-stock alerts ──
   ((ss.inventory)||[]).forEach(it => {
@@ -339,7 +346,7 @@ const computeAlerts = (lang, tr) => {
 };
 
 const NotificationBell = () => {
-  const { tr, lang, toast } = useAppActions();
+  const { tr, lang, toast, role, studentId } = useAppActions();
   const [open, setOpen] = React.useState(false);
   const [tick, setTick] = React.useState(0);   // re-render on dismiss
   const [copiedId, setCopiedId] = React.useState(null);
@@ -366,7 +373,7 @@ const NotificationBell = () => {
     toast && toast(ok ? tr('បាន​ចម្លង​សារ ✓','Message copied ✓') : tr('សូម​ចុច​សង្កត់​លើ​សារ​ដើម្បី​ជ្រើស','Long-press the text to select & copy'), ok?'good':'warn');
   };
   const dismissed = readDismissed();
-  const alerts = computeAlerts(lang, tr).filter(a => !dismissed[a.id]);
+  const alerts = computeAlerts(lang, tr, { role, studentId }).filter(a => !dismissed[a.id]);
   const n = alerts.length;
   const sevColor = { danger:'#B0413E', warn:'#C98A12', info:'var(--accent)' };
   const sq = { width:40, height:40, borderRadius:10, border:'none', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, position:'relative', color:'var(--ink-2)' };

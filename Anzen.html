@@ -3184,7 +3184,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v190";</script>
+<script>window.__ANZEN_VERSION="v191";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -14449,7 +14449,9 @@ var NOTIF_DEFAULT_TMPL = {
   en: 'Hi {student} 👋 Tomorrow {date} at {time}, {activity} at {location}.'
 };
 var notifStock = it => (it.moves || []).reduce((a, m) => a + (m.type === 'in' ? m.qty : m.type === 'order' && m.received ? m.qty : m.type === 'out' ? -m.qty : 0), 0);
-var computeAlerts = (lang, tr) => {
+var computeAlerts = (lang, tr, opts = {}) => {
+  var isStudent = opts.role === 'student';
+  var myId = opts.studentId || null;
   var out = [];
   var now = new Date();
   var today = __localDate(now);
@@ -14483,7 +14485,7 @@ var computeAlerts = (lang, tr) => {
       en: 'application'
     }
   };
-  (window.LESSONS || []).filter(l => l.date === tomorrow && l.status !== 'cancelled' && l.studentId && l.studentId !== '—').forEach(l => {
+  (window.LESSONS || []).filter(l => l.date === tomorrow && l.status !== 'cancelled' && l.studentId && l.studentId !== '—' && (!isStudent || l.studentId === myId)).forEach(l => {
     var nm = sName(l.studentId);
     if (!nm) return;
     var loc = locName(l.pickup) || l.location || locName('school');
@@ -14501,6 +14503,7 @@ var computeAlerts = (lang, tr) => {
     var act = isApply ? ACT.apply : ACT.exam;
     var loc = isApply ? locName('apply') : locName('exam');
     (e.studentIds || []).forEach(sid => {
+      if (isStudent && sid !== myId) return;
       var nm = sName(sid);
       if (!nm) return;
       out.push({
@@ -14513,6 +14516,14 @@ var computeAlerts = (lang, tr) => {
       });
     });
   });
+  if (isStudent) {
+    var rank1 = {
+      danger: 0,
+      warn: 1,
+      info: 2
+    };
+    return out.sort((a, b) => rank1[a.severity] - rank1[b.severity]);
+  }
   (ss.inventory || []).forEach(it => {
     var stk = notifStock(it);
     if ((it.minStock || 0) > 0 && stk <= it.minStock) {
@@ -14586,7 +14597,9 @@ var NotificationBell = () => {
   var {
     tr,
     lang,
-    toast
+    toast,
+    role,
+    studentId
   } = useAppActions();
   var [open, setOpen] = React.useState(false);
   var [tick, setTick] = React.useState(0);
@@ -14645,7 +14658,10 @@ var NotificationBell = () => {
     toast && toast(ok ? tr('បាន​ចម្លង​សារ ✓', 'Message copied ✓') : tr('សូម​ចុច​សង្កត់​លើ​សារ​ដើម្បី​ជ្រើស', 'Long-press the text to select & copy'), ok ? 'good' : 'warn');
   };
   var dismissed = readDismissed();
-  var alerts = computeAlerts(lang, tr).filter(a => !dismissed[a.id]);
+  var alerts = computeAlerts(lang, tr, {
+    role,
+    studentId
+  }).filter(a => !dismissed[a.id]);
   var n = alerts.length;
   var sevColor = {
     danger: '#B0413E',
@@ -73683,6 +73699,7 @@ function App() {
     tr,
     setLang,
     tabPermission,
+    studentId: role === 'student' ? activeStudentId : null,
     dark: !!t.dark,
     toggleDark: () => setTweak('dark', !t.dark),
     settingsVersion,
@@ -73715,7 +73732,7 @@ function App() {
       setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), opts.duration || 3200);
     },
     logout
-  }), [role, lang, tr, t.dark, settingsVersion, curriculumDone, curriculumFeedback]);
+  }), [role, lang, tr, t.dark, settingsVersion, curriculumDone, curriculumFeedback, activeStudentId]);
   React.useEffect(() => {
     if (!authed) return;
     var onKey = e => {

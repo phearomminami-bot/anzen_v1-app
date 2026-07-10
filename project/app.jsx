@@ -423,6 +423,7 @@ function App() {
   // app actions exposed to all children via context
   const actions = React.useMemo(() => ({
     role, lang, tr, setLang, tabPermission,
+    studentId: role === 'student' ? activeStudentId : null,
     dark: !!t.dark,
     toggleDark: () => setTweak('dark', !t.dark),
     settingsVersion,
@@ -441,7 +442,7 @@ function App() {
       setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), opts.duration || 3200);
     },
     logout,
-  }), [role, lang, tr, t.dark, settingsVersion, curriculumDone, curriculumFeedback]);
+  }), [role, lang, tr, t.dark, settingsVersion, curriculumDone, curriculumFeedback, activeStudentId]);
 
   // global keyboard shortcuts
   React.useEffect(() => {
