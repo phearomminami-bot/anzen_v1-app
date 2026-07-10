@@ -344,18 +344,28 @@ const NotificationBell = () => {
   const [open, setOpen] = React.useState(false);
   const [tick, setTick] = React.useState(0);   // re-render on dismiss
   const [copiedId, setCopiedId] = React.useState(null);
-  const pressRef = React.useRef(null);
   const readDismissed = () => { try { const o = JSON.parse(localStorage.getItem(NOTIF_DISMISS_KEY)||'{}'); const now=Date.now(); const c={}; Object.entries(o).forEach(([k,v])=>{ if(v>now) c[k]=v; }); return c; } catch(e){ return {}; } };
   const dismiss = (id) => { const c = readDismissed(); c[id] = Date.now()+24*3600*1000; try { localStorage.setItem(NOTIF_DISMISS_KEY, JSON.stringify(c)); } catch(e){} setTick(t=>t+1); };
-  // Long-press (or click-hold) a message to copy it to the clipboard.
+  // Tap a message to copy it. Runs synchronously inside the click gesture so it
+  // works on iOS Safari (which blocks clipboard writes from delayed callbacks).
+  // Uses an execCommand selection (most compatible on mobile) plus the async API.
   const copyText = (text, id) => {
-    const done = () => { setCopiedId(id); setTimeout(()=>setCopiedId(c=>c===id?null:c), 1400); toast && toast(tr('បាន​ចម្លង​សារ ✓','Message copied ✓'),'good'); };
-    const fallback = () => { try { const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done(); } catch(e){} };
-    try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(fallback); else fallback(); }
-    catch(e) { fallback(); }
+    let ok = false;
+    try {
+      const el = document.createElement('textarea');
+      el.value = text; el.readOnly = false; el.contentEditable = 'true';
+      el.style.position = 'fixed'; el.style.top = '0'; el.style.left = '0'; el.style.opacity = '0'; el.style.fontSize = '16px';
+      document.body.appendChild(el);
+      const range = document.createRange(); range.selectNodeContents(el);
+      const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      el.setSelectionRange(0, text.length);
+      ok = document.execCommand('copy');
+      document.body.removeChild(el);
+    } catch (e) {}
+    try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(()=>{}, ()=>{}); ok = true; } } catch (e) {}
+    setCopiedId(id); setTimeout(()=>setCopiedId(c=>c===id?null:c), 1400);
+    toast && toast(ok ? tr('បាន​ចម្លង​សារ ✓','Message copied ✓') : tr('សូម​ចុច​សង្កត់​លើ​សារ​ដើម្បី​ជ្រើស','Long-press the text to select & copy'), ok?'good':'warn');
   };
-  const startPress = (text, id) => { if (pressRef.current) clearTimeout(pressRef.current); pressRef.current = setTimeout(()=>{ copyText(text, id); pressRef.current=null; }, 420); };
-  const cancelPress = () => { if (pressRef.current) { clearTimeout(pressRef.current); pressRef.current=null; } };
   const dismissed = readDismissed();
   const alerts = computeAlerts(lang, tr).filter(a => !dismissed[a.id]);
   const n = alerts.length;
@@ -387,11 +397,9 @@ const NotificationBell = () => {
               <div key={a.id} style={{ display:'flex', gap:10, padding:'11px 13px', borderBottom:'1px solid var(--border)', borderLeft:`3px solid ${sevColor[a.severity]}`, background: copiedId===a.id ? 'var(--accent-soft)' : 'transparent', transition:'background .2s' }}>
                 <span style={{ fontSize:17, flexShrink:0, lineHeight:1.3 }}>{a.icon}</span>
                 <div
-                  onMouseDown={()=>startPress(a.body, a.id)} onMouseUp={cancelPress} onMouseLeave={cancelPress}
-                  onTouchStart={()=>startPress(a.body, a.id)} onTouchEnd={cancelPress} onTouchMove={cancelPress} onTouchCancel={cancelPress}
-                  onContextMenu={(e)=>e.preventDefault()}
-                  title={tr('ចុច​ជាប់​ដើម្បី​ចម្លង','Press & hold to copy')}
-                  style={{ flex:1, minWidth:0, cursor:'pointer', userSelect:'none', WebkitUserSelect:'none', WebkitTouchCallout:'none' }}>
+                  onClick={()=>copyText(a.body, a.id)}
+                  title={tr('ចុច​ដើម្បី​ចម្លង','Tap to copy')}
+                  style={{ flex:1, minWidth:0, cursor:'pointer', userSelect:'text', WebkitUserSelect:'text' }}>
                   <div style={{ fontSize:12.5, fontWeight:700, color:'var(--ink)' }}>{a.title}</div>
                   <div style={{ fontSize:12, color:'var(--ink-2)', marginTop:2, lineHeight:1.45, fontFamily:'var(--font-km)' }}>{a.body}</div>
                   {copiedId===a.id && <div style={{ fontSize:10.5, color:'var(--accent)', fontWeight:700, marginTop:3 }}>✓ {tr('បាន​ចម្លង','Copied')}</div>}
@@ -400,7 +408,7 @@ const NotificationBell = () => {
               </div>
             ))}
           </div>
-          {n > 0 && <div style={{ padding:'8px 14px', borderTop:'1px solid var(--border)', fontSize:10.5, color:'var(--ink-3)', textAlign:'center' }}>💡 {tr('ចុច​ជាប់​លើ​សារ​ដើម្បី​ចម្លង','Press & hold a message to copy it')}</div>}
+          {n > 0 && <div style={{ padding:'8px 14px', borderTop:'1px solid var(--border)', fontSize:10.5, color:'var(--ink-3)', textAlign:'center' }}>💡 {tr('ចុច​លើ​សារ​ដើម្បី​ចម្លង','Tap a message to copy it')}</div>}
         </div>
       </>)}
     </div>
