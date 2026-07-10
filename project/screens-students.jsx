@@ -1234,39 +1234,6 @@ const StudentsScreenV2 = () => {
             </>)}
           </CvSection>
 
-          {/* Section 2: Enrollment & payment */}
-          <CvSection label={tr('ចុះឈ្មោះ និង កាបង់ប្រាក់','Enrollment & Payment')} isOpen={openSections.payment} onToggle={()=>toggleSection('payment')} action={editAction('payment')}>
-            {mobileEdit==='payment'
-              ? <PaymentEditForm s={s} tr={tr} onSave={(u)=>{ saveStudent(u); setMobileEdit(null); }}/>
-              : (<>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px 14px',marginBottom:12}}>
-              <InfoPair label={tr('ថ្ងៃចុះឈ្មោះ','Reg. date')} val={s.regDate}/>
-              <InfoPair label={tr('ថ្លៃ​វគ្គ','Course fee')} val={`$${price}`}/>
-              <InfoPair label={tr('បានបង់','Paid')} val={`$${paidAmt}`}/>
-              <InfoPair label={tr('នៅខ្វះ','Balance')} val={`$${Math.max(0, price - paidAmt)}`}/>
-            </div>
-            <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:4,display:'flex',justifyContent:'space-between'}}>
-              <span>{tr('ការបង់ប្រាក់','Payment progress')}</span>
-              <span style={{fontWeight:600}}>{Math.round((s.paid||0)*100)}%</span>
-            </div>
-            <div style={{height:6,background:'var(--surface-muted)',borderRadius:999,overflow:'hidden',marginBottom:12}}>
-              <div style={{width:`${Math.round((s.paid||0)*100)}%`,height:'100%',background:'var(--good)',borderRadius:999}}/>
-            </div>
-            {s.payment_log?.length > 0 && (
-              <div>
-                <div style={{fontSize:11,fontWeight:600,color:'var(--ink-3)',marginBottom:6}}>{tr('ប្រវត្តិ​បង់','Payment log')}</div>
-                {s.payment_log.map((e,i) => (
-                  <div key={i} style={{display:'flex',justifyContent:'space-between',fontSize:12,
-                    padding:'5px 0',borderBottom:'1px solid var(--border)',color:'var(--ink-2)'}}>
-                    <span>{e.date}</span>
-                    <span style={{fontWeight:600,color:'var(--good)'}}>+${e.amount}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            </>)}
-          </CvSection>
-
           {/* Section 4: Documents — received from student + handed to student */}
           <CvSection label={tr('ឯកសារ​សិស្ស','Documents')} isOpen={openSections.docs} onToggle={()=>toggleSection('docs')}>
             {(() => {
@@ -1281,7 +1248,7 @@ const StudentsScreenV2 = () => {
                 const stu=STUDENTS[i]; if(!stu.given) stu.given={};
                 const inv=(window.__schoolSettings.inventory)||[]; const idx=inv.findIndex(x=>x.id===it.id); if(idx===-1) return;
                 if(stu.given[it.id]){ const mid=stu.given[it.id]; inv[idx]={...inv[idx],moves:(inv[idx].moves||[]).filter(m=>m.id!==mid)}; delete stu.given[it.id]; }
-                else { const mid='gv'+Date.now()+Math.random().toString(36).slice(2,5); inv[idx]={...inv[idx],moves:[...(inv[idx].moves||[]),{id:mid,type:'out',qty:1,date:new Date().toISOString().slice(0,10),party:(stu.name||stu.en||''),note:tr('ប្រគល់​អោយ​សិស្ស','Handed to student'),studentId:stu.id}]}; stu.given[it.id]=mid; }
+                else { const mid='gv'+Date.now()+Math.random().toString(36).slice(2,5); inv[idx]={...inv[idx],moves:[...(inv[idx].moves||[]),{id:mid,type:'out',qty:1,date:new Date().toISOString().slice(0,10),party:(stu.name||stu.en||''),by:(window.__currentUserName||''),note:tr('ប្រគល់​អោយ​សិស្ស','Handed to student'),studentId:stu.id}]}; stu.given[it.id]=mid; }
                 window.__schoolSettings.inventory=inv; if(window.saveAllData)window.saveAllData(); forceUpdate();
                 toast(stu.given[it.id]?tr('បាន​ប្រគល់ · ដក​ពី​ស្តុក ✓','Handed over · stock deducted ✓'):tr('បាន​សង​ចូល​ស្តុក','Returned to stock'),'good');
               };
@@ -1292,7 +1259,6 @@ const StudentsScreenV2 = () => {
                 <div style={{fontSize:13,fontWeight:800,marginBottom:2}}>※ {tr('ទទួល​ពី​សិស្ស','Received from student')}
                   <span style={{marginLeft:8,fontSize:11,fontWeight:700,padding:'1px 8px',borderRadius:5,background:isForeign?'rgba(176,65,62,.13)':'var(--accent-soft)',color:isForeign?'#B0413E':'var(--accent)'}}>{isForeign?tr('បរទេស','Foreigner'):tr('ខ្មែរ','Khmer')}</span>
                 </div>
-                <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:4}}>{tr('ចុច​ដើម្បី​ប្ដូរ​ស្ថានភាព · ជនជាតិ​កំណត់​ក្នុង​ព័ត៌មាន​សិស្ស','Tap to toggle · nationality set in student info')}</div>
                 {recvList.map(d => (
                   <div key={d.key} onClick={()=>toggleRecv(d.key)} style={rowSt}>
                     <span style={{fontSize:12.5,color:'var(--ink-2)',lineHeight:1.4,minWidth:0}}>{tr(d.km,d.en)}{d.qty?<span style={{color:'var(--ink-3)'}}> · {d.qty}</span>:''}</span>
@@ -1301,14 +1267,13 @@ const StudentsScreenV2 = () => {
                 ))}
 
                 {/* ※ Handed to student — ticking auto-deducts from stock */}
-                <div style={{fontSize:13,fontWeight:800,marginTop:16,marginBottom:2}}>※ {tr('ប្រគល់​អោយ​សិស្ស','Handed to student')}</div>
-                <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:4}}>{tr('គ្រីស → ដក​ពី​ស្តុក​ដោយ​ស្វ័យ​ប្រវត្តិ','Tick → auto-deduct from stock')}</div>
+                <div style={{fontSize:13,fontWeight:800,marginTop:16,marginBottom:4}}>※ {tr('ប្រគល់​អោយ​សិស្ស','Handed to student')}</div>
                 {invItems.length===0 ? (
                   <div style={{fontSize:12,color:'var(--ink-3)',padding:'8px 0'}}>{tr('គ្មាន​ទំនិញ​ក្នុង​ស្តុក — បន្ថែម​ក្នុង​ផ្ទាំង​ស្តុក','No stock items — add them in the Stock tab')}</div>
-                ) : invItems.map(it => { const given=!!(s.given && s.given[it.id]); const stk=stockOnHand(it);
+                ) : invItems.map(it => { const given=!!(s.given && s.given[it.id]);
                   return (
                     <div key={it.id} onClick={()=>toggleGive(it)} style={rowSt}>
-                      <span style={{fontSize:12.5,color:'var(--ink-2)'}}>{it.name} <span style={{color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>· {tr('ស្តុក','stock')} {stk}</span></span>
+                      <span style={{fontSize:12.5,color:'var(--ink-2)'}}>{it.name}</span>
                       {badge(given, '✓ '+tr('ប្រគល់','Given'), tr('ប្រគល់','Give'))}
                     </div>
                   );

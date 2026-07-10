@@ -262,7 +262,7 @@ const StockItemDetail = ({ item, onClose, onEdit, onMove, onReceive, onDeleteMov
                     {pending && <span style={{ fontSize:10, marginLeft:6, background:'rgba(201,138,18,.16)', color:'#C98A12', padding:'1px 7px', borderRadius:5, fontWeight:800 }}>{tr('រង់ចាំ','Pending')}</span>}
                     {m.type==='order' && m.received && <span style={{ fontSize:10, marginLeft:6, color:'#12873f', fontWeight:800 }}>✓ {tr('បាន​ទទួល','Received')}</span>}
                   </div>
-                  <div style={{ fontSize:11, color:'var(--ink-3)', fontFamily:'"JetBrains Mono",monospace', marginTop:1 }}>{m.date}{m.party?` · ${m.party}`:''}{m.note?` · ${m.note}`:''}</div>
+                  <div style={{ fontSize:11, color:'var(--ink-3)', fontFamily:'"JetBrains Mono",monospace', marginTop:1 }}>{m.date}{m.party?` · ${m.party}`:''}{m.by?` · ${tr('ដោយ','by')} ${m.by}`:''}{m.note?` · ${m.note}`:''}</div>
                 </div>
                 {pending && <button onClick={()=>onReceive(m.id)} style={{ border:'none', background:'#12873f', color:'#fff', borderRadius:7, padding:'6px 10px', fontSize:11, fontWeight:700, cursor:'pointer', flexShrink:0, fontFamily:'inherit' }}>{tr('ទទួល','Receive')}</button>}
                 <button onClick={()=>confirm?.({ title:tr('លុប​ចលនា​នេះ?','Delete this movement?'), confirmText:tr('លុប','Delete'), danger:true, onConfirm:()=>onDeleteMove(m.id) })} aria-label={tr('លុប','Delete')} style={{ border:'none', background:'transparent', color:'var(--ink-3)', cursor:'pointer', fontSize:14, flexShrink:0, padding:2 }}>🗑</button>
