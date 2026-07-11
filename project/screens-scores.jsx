@@ -245,6 +245,22 @@ const ScoresScreen = ({ role }) => {
     { k:'score',   label:tr('ពិន្ទុ','Score') },
   ];
 
+  // Quick "add a new link" — a blank form only (no existing links shown).
+  const [addMode, setAddMode]     = React.useState(false);
+  const [addForm, setAddForm]     = React.useState({ group:'', item:'', url:'', map:{} });
+  const [addHeaders, setAddHeaders] = React.useState(null);
+  const openAdd = () => { setAddForm({ group:'', item:'', url:'', map:{} }); setAddHeaders(null); setCfg(false); setAddMode(true); };
+  const loadAddHeaders = () => { if (!addForm.url.trim()) return; fetchScoreSheet(addForm.url.trim(), false).then(d => setAddHeaders(d.headers)).catch(() => setAddHeaders(null)); };
+  const saveAdd = () => {
+    const url = addForm.url.trim();
+    if (!url) { toast(tr('សូម​ដាក់ URL','Enter a URL'), 'warn'); return; }
+    const title = ((addForm.group || '') + (addForm.item || '')).trim() || tr('មេរៀន','Lesson');
+    const list = [...scoreSheets(), { title, url, map: addForm.map || {} }];
+    saveScoreSheets(list); window.__scoreCache = {}; setAddMode(false);
+    setSelIdx(list.length - 1); toast(tr('បាន​បន្ថែម​តំណ ✓','Link added ✓'), 'good');
+    setTimeout(() => load(list[list.length - 1].url, true), 0);
+  };
+
   const inp = { width:'100%', padding:'8px 10px', border:'1px solid var(--border)', borderRadius:8, fontSize:12.5, fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)', boxSizing:'border-box' };
 
   // Filter rows by student name, pass/fail, and company.
@@ -287,6 +303,7 @@ const ScoresScreen = ({ role }) => {
           <div style={{ fontSize:17, fontWeight:800 }}>{tr('តារាង​ពិន្ទុ','Scores')}</div>
           <div style={{ display:'flex', gap:7 }}>
             <button onClick={openCfg} title={tr('គ្រប់គ្រង​តំណ','Manage links')} style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', border:'none', borderRadius:10, cursor:'pointer', background:'rgba(255,255,255,.18)', color:'#fff' }}><Icon name="settings" size={15}/></button>
+            <button onClick={openAdd} title={tr('បន្ថែម​តំណ​ថ្មី','Add new link')} aria-label={tr('បន្ថែម​តំណ​ថ្មី','Add new link')} style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', border:'none', borderRadius:10, cursor:'pointer', background:'rgba(255,255,255,.18)', color:'#fff' }}><Icon name="plus" size={16}/></button>
             <button onClick={()=>load(cur && cur.url, true)} title={tr('ធ្វើ​បច្ចុប្បន្នភាព','Refresh')} style={{ display:'inline-flex', alignItems:'center', gap:5, height:32, padding:'0 13px', border:'none', borderRadius:999, cursor:'pointer', background:'rgba(255,255,255,.18)', color:'#fff', fontSize:12, fontWeight:700, fontFamily:'inherit' }}>
               <Icon name="download" size={14}/>{tr('ទាញ​ម្ដង​ទៀត','Refresh')}
             </button>
@@ -309,14 +326,52 @@ const ScoresScreen = ({ role }) => {
               <select value={Math.min(selIdx, sheets.length-1)} onChange={e=>setSelIdx(+e.target.value)} style={{ ...selStyle, flex:'0 1 150px' }}>
                 {items.map(x => <option key={x.i} value={x.i}>{x.s.title || tr('មេរៀន','Lesson')+' '+(x.i+1)}</option>)}
               </select>
-              <button onClick={()=>openCfg(true)} title={tr('បន្ថែម​តំណ​ភ្ជាប់​ថ្មី','Add a new link')} style={{ display:'inline-flex', alignItems:'center', gap:5, height:32, padding:'0 12px', border:'none', borderRadius:999, cursor:'pointer', background:'rgba(255,255,255,.18)', color:'#fff', fontSize:12, fontWeight:700, fontFamily:'inherit' }}>
-                <Icon name="plus" size={13}/>{tr('បន្ថែម​តំណ','Add link')}
-              </button>
               <span style={{ fontSize:11.5, opacity:.8, marginLeft:'auto' }}>{loading ? tr('កំពុង​ទាញ...','Loading…') : data ? `${data.rows.length} ${tr('ជួរ','rows')}` : ''}</span>
             </div>
           );
         })()}
       </div>
+
+      {/* Add a new link — blank form only (group · item · url · mapping) */}
+      {addMode && (
+        <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:12, padding:14, display:'flex', flexDirection:'column', gap:10 }}>
+          <div style={{ fontSize:13, fontWeight:700 }}>{tr('បន្ថែម​តំណ​ភ្ជាប់​ថ្មី','Add a new link')}</div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+            <div>
+              <div style={{ fontSize:10.5, color:'var(--ink-3)', marginBottom:3 }}>{tr('ក្រុម','Group')}</div>
+              <input value={addForm.group} onChange={e=>setAddForm(f=>({...f,group:e.target.value}))} placeholder={tr('ឧ. 仮免','e.g. 仮免')} style={inp}/>
+            </div>
+            <div>
+              <div style={{ fontSize:10.5, color:'var(--ink-3)', marginBottom:3 }}>{tr('ធាតុ','Item')}</div>
+              <input value={addForm.item} onChange={e=>setAddForm(f=>({...f,item:e.target.value}))} placeholder={tr('ឧ. ①','e.g. ①')} style={inp}/>
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize:10.5, color:'var(--ink-3)', marginBottom:3 }}>{tr('តំណ Google Sheet (សាធារណៈ)','Google Sheet link (public)')}</div>
+            <div style={{ display:'flex', gap:6 }}>
+              <input value={addForm.url} onChange={e=>setAddForm(f=>({...f,url:e.target.value}))} onBlur={loadAddHeaders} placeholder="https://docs.google.com/spreadsheets/d/..." style={{ ...inp, flex:1 }}/>
+              <button onClick={loadAddHeaders} title={tr('ផ្ទុក​ជួរ​ឈរ','Load columns')} style={{ border:'1px solid var(--border)', background:'var(--surface)', color:'var(--ink-2)', borderRadius:8, width:34, height:34, cursor:'pointer', flexShrink:0 }}>↻</button>
+            </div>
+          </div>
+          {addHeaders && addHeaders.length ? (
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:8 }}>
+              {MAP_FIELDS.map(f => (
+                <div key={f.k}>
+                  <div style={{ fontSize:10.5, color:'var(--ink-3)', marginBottom:3 }}>{f.label}</div>
+                  <select value={(addForm.map && Number.isInteger(addForm.map[f.k])) ? addForm.map[f.k] : ''} onChange={e=>{ const v=e.target.value; setAddForm(fm=>({...fm,map:{...(fm.map||{}),[f.k]: v===''?undefined:+v}})); }} style={{ ...inp, padding:'7px 9px', fontSize:12 }}>
+                    <option value="">{tr('— ស្វ័យ​ប្រវត្តិ —','— auto —')}</option>
+                    {addHeaders.map((h, ci) => <option key={ci} value={ci}>{h || ('Col '+(ci+1))}</option>)}
+                  </select>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          <div style={{ display:'flex', gap:8, justifyContent:'flex-end' }}>
+            <button onClick={()=>setAddMode(false)} style={{ border:'1px solid var(--border-strong)', background:'var(--surface)', color:'var(--ink-2)', borderRadius:8, padding:'8px 14px', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}>{tr('បោះបង់','Cancel')}</button>
+            <button onClick={saveAdd} style={{ border:'none', background:'var(--accent)', color:'#fff', borderRadius:8, padding:'8px 18px', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>{tr('បន្ថែម','Add')}</button>
+          </div>
+        </div>
+      )}
 
       {/* Config: multiple {title, url} */}
       {cfg && (
