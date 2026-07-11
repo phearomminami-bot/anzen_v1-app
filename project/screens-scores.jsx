@@ -111,9 +111,11 @@ const parseRowDate = (v) => {
 const dateStrToNum = (s) => { const m = String(s || '').match(/(\d{4})-(\d{2})-(\d{2})/); return m ? (+m[1]) * 10000 + (+m[2]) * 100 + (+m[3]) : null; };
 // Group name of a lesson title = the title with a trailing number stripped.
 // e.g. "仮免①" → "仮免", "仮免 10" → "仮免", "本免" → "本免".
+// The circled ranges cover ①-⑳ (U+2460-2473), ㉑-㉟ (U+3251-325F) and
+// ㊱-㊿ (U+32B1-32BF) so a group can hold up to 50 items, not just 20.
 const scoreGroup = (title) => {
   const t = String(title || '').trim();
-  const m = t.match(/^(.+?)[\s·・\-]*([①-⑳]+|\d+|[IVXivx]+)\s*$/);
+  const m = t.match(/^(.+?)[\s·・\-]*([①-⑳㉑-㉟㊱-㊿]+|\d+|[IVXivx]+)\s*$/);
   return (m && m[1].trim()) ? m[1].trim() : t;
 };
 // Column indices: use the sheet's manual map where set, else auto-detect.
@@ -216,6 +218,10 @@ const ScoresScreen = ({ role }) => {
 
   const sheets = scoreSheets();
   const cur = sheets[Math.min(selIdx, sheets.length - 1)] || sheets[0];
+  // Existing group names — offered as autocomplete suggestions on the add form
+  // so you can pick an existing group (e.g. 仮免) instead of retyping it, while
+  // still being free to type a brand-new one by hand.
+  const allGroups = [...new Set(sheets.map(s => scoreGroup(s.title)).filter(Boolean))];
 
   const load = React.useCallback((url, force) => {
     if (!url) return;
@@ -342,7 +348,8 @@ const ScoresScreen = ({ role }) => {
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
             <div>
               <div style={{ fontSize:10.5, color:'var(--ink-3)', marginBottom:3 }}>{tr('ក្រុម','Group')}</div>
-              <input value={addForm.group} onChange={e=>setAddForm(f=>({...f,group:e.target.value}))} placeholder={tr('ឧ. 仮免','e.g. 仮免')} style={inp}/>
+              <input value={addForm.group} onChange={e=>setAddForm(f=>({...f,group:e.target.value}))} list="scoreGroupList" autoComplete="off" placeholder={tr('ឧ. 仮免','e.g. 仮免')} style={inp}/>
+              <datalist id="scoreGroupList">{allGroups.map((g, i) => <option key={i} value={g}/>)}</datalist>
             </div>
             <div>
               <div style={{ fontSize:10.5, color:'var(--ink-3)', marginBottom:3 }}>{tr('ធាតុ','Item')}</div>

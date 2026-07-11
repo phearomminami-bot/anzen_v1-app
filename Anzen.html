@@ -3278,7 +3278,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v205";</script>
+<script>window.__ANZEN_VERSION="v206";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -19132,7 +19132,7 @@ var dateStrToNum = s => {
 };
 var scoreGroup = title => {
   var t = String(title || '').trim();
-  var m = t.match(/^(.+?)[\s·・\-]*([①-⑳]+|\d+|[IVXivx]+)\s*$/);
+  var m = t.match(/^(.+?)[\s·・\-]*([①-⑳㉑-㉟㊱-㊿]+|\d+|[IVXivx]+)\s*$/);
   return m && m[1].trim() ? m[1].trim() : t;
 };
 var resolveScoreCols = (headers, sheet) => {
@@ -19387,6 +19387,7 @@ var ScoresScreen = ({
   var [toDate, setToDate] = React.useState('');
   var sheets = scoreSheets();
   var cur = sheets[Math.min(selIdx, sheets.length - 1)] || sheets[0];
+  var allGroups = [...new Set(sheets.map(s => scoreGroup(s.title)).filter(Boolean))];
   var load = React.useCallback((url, force) => {
     if (!url) return;
     setLoading(true);
@@ -19761,9 +19762,16 @@ var ScoresScreen = ({
       ...f,
       group: e.target.value
     })),
+    list: "scoreGroupList",
+    autoComplete: "off",
     placeholder: tr('ឧ. 仮免', 'e.g. 仮免'),
     style: inp
-  })), React.createElement("div", null, React.createElement("div", {
+  }), React.createElement("datalist", {
+    id: "scoreGroupList"
+  }, allGroups.map((g, i) => React.createElement("option", {
+    key: i,
+    value: g
+  })))), React.createElement("div", null, React.createElement("div", {
     style: {
       fontSize: 10.5,
       color: 'var(--ink-3)',
