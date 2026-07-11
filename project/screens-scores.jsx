@@ -78,10 +78,11 @@ const findCol = (headers, regexes, exclude) => {
   return -1;
 };
 const detectScoreCols = (headers) => {
-  const company = findCol(headers, [/company/, /ក្រុមហ៊ុន/, /firm/]);
-  const student = findCol(headers, [/student/, /សិស្ស/, /ឈ្មោះ/, /\bname\b/], [company]);
-  const date    = findCol(headers, [/date/, /ថ្ងៃ/, /កាល/, /បរិច្ឆេ/], [company, student]);
-  const score   = findCol(headers, [/score/, /ពិន្ទុ/, /mark/, /grade/, /point/, /%/, /result/], [company, student, date]);
+  // Keywords in Khmer / English / Japanese.
+  const company = findCol(headers, [/company/, /ក្រុមហ៊ុន/, /firm/, /会社/, /企業/, /社名/]);
+  const student = findCol(headers, [/student/, /សិស្ស/, /ឈ្មោះ/, /\bname\b/, /氏名/, /名前/, /生徒/, /受験者/], [company]);
+  const date    = findCol(headers, [/date/, /ថ្ងៃ/, /កាល/, /បរិច្ឆេ/, /日付/, /年月日/, /月日/, /受験日/, /日にち/], [company, student]);
+  const score   = findCol(headers, [/score/, /ពិន្ទុ/, /mark/, /grade/, /point/, /%/, /result/, /点数/, /得点/, /成績/, /スコア/, /点/], [company, student, date]);
   return { date, student, company, score };
 };
 // Percentage of a score cell. Handles "47/50" (→94%), "96 / 100" (→96%),
@@ -119,14 +120,16 @@ const ScoreError = ({ err, tr }) => (
 // Four-column score table (date · student · company · score) with pass colours.
 const ScoreTable = ({ data, tr, sheet }) => {
   const cols = resolveScoreCols(data.headers, sheet);
-  const some = [cols.date, cols.student, cols.company, cols.score].some(i => i >= 0);
+  // Only use the compact 4-column view when we can identify at least the
+  // student and the score; otherwise show every column so nothing is hidden.
+  const some = cols.student >= 0 && cols.score >= 0;
   const th = { position:'sticky', top:0, zIndex:1, background:'var(--surface-muted)', border:'1px solid var(--border)', padding:'8px 11px', fontSize:10.5, fontWeight:700, color:'var(--ink-3)', letterSpacing:'.02em', whiteSpace:'nowrap', textAlign:'left', textTransform:'uppercase' };
   const td = { border:'1px solid var(--border)', padding:'8px 11px', whiteSpace:'nowrap', fontVariantNumeric:'tabular-nums' };
   const rowHdr = { border:'1px solid var(--border)', background:'var(--surface-muted)', color:'var(--ink-3)', textAlign:'center', fontFamily:'"JetBrains Mono",monospace', fontSize:11, width:34, padding:'8px 4px' };
   if (!some) {  // couldn't map — show the whole sheet so nothing is hidden
     return <>
-      <div style={{ fontSize:11, color:'var(--ink-3)', marginBottom:6 }}>{tr('រក​ជួរ​ឈរ (កាលបរិច្ឆេទ/សិស្ស/ក្រុមហ៊ុន/ពិន្ទុ) មិន​ឃើញ — បង្ហាញ​ទាំង​អស់','Couldn\'t map date/student/company/score — showing all columns')}</div>
-      <RawSheetTable data={data} tr={tr}/>
+      <div style={{ fontSize:11.5, color:'var(--ink-2)', marginBottom:8, background:'var(--surface-muted)', borderRadius:8, padding:'8px 11px' }}>💡 {tr('រក​ជួរ​ឈរ​ស្វ័យ​ប្រវត្តិ​មិន​ឃើញ​ទេ — ចុច ⚙ → ↻ → ជ្រើស​ជួរ​ឈរ (កាលបរិច្ឆេទ/សិស្ស/ក្រុមហ៊ុន/ពិន្ទុ)។ ខាង​ក្រោម​បង្ហាញ​ទិន្នន័យ​ទាំង​អស់​សិន។','Couldn\'t auto-detect columns — tap ⚙ → ↻ → choose the date/student/company/score columns. Showing all data for now.')}</div>
+      <RawSheetTable data={data} tr={tr} scoreCol={cols.score}/>
     </>;
   }
   const C = [
@@ -160,14 +163,14 @@ const ScoreTable = ({ data, tr, sheet }) => {
 };
 
 // Fallback: full sheet.
-const RawSheetTable = ({ data, tr }) => {
+const RawSheetTable = ({ data, tr, scoreCol }) => {
   const th = { position:'sticky', top:0, background:'var(--surface-muted)', border:'1px solid var(--border)', padding:'8px 10px', fontSize:10.5, fontWeight:700, color:'var(--ink-3)', whiteSpace:'nowrap', textAlign:'left' };
   const td = { border:'1px solid var(--border)', padding:'7px 10px', whiteSpace:'nowrap' };
   return (
     <div style={{ background:'var(--surface)', border:'1px solid var(--border-strong)', borderRadius:10, overflowX:'auto' }}>
       <table style={{ borderCollapse:'collapse', width:'100%', fontSize:12.5 }}>
         <thead><tr>{data.headers.map((h, i) => <th key={i} style={th}>{h || '—'}</th>)}</tr></thead>
-        <tbody>{data.rows.map((r, ri) => <tr key={ri}>{data.headers.map((h, ci) => <td key={ci} style={td}>{r[ci] != null ? r[ci] : ''}</td>)}</tr>)}</tbody>
+        <tbody>{data.rows.map((r, ri) => <tr key={ri}>{data.headers.map((h, ci) => <td key={ci} style={{ ...td, ...(ci === scoreCol ? { fontWeight:800, color:scoreColor(r[ci]) } : {}) }}>{r[ci] != null ? r[ci] : ''}</td>)}</tr>)}</tbody>
       </table>
     </div>
   );
@@ -183,6 +186,9 @@ const ScoresScreen = ({ role }) => {
   const [cfg, setCfg] = React.useState(false);
   const [draft, setDraft] = React.useState(null);        // editable list while cfg is open
   const [draftHeaders, setDraftHeaders] = React.useState([]);  // headers per draft row (for mapping)
+  const [studentQ, setStudentQ]     = React.useState('');
+  const [passFilter, setPassFilter] = React.useState('all');   // all | pass | fail
+  const [companyF, setCompanyF]     = React.useState('');      // '' = all
 
   const sheets = scoreSheets();
   const cur = sheets[Math.min(selIdx, sheets.length - 1)] || sheets[0];
@@ -192,7 +198,7 @@ const ScoresScreen = ({ role }) => {
     setLoading(true); setErr(null);
     fetchScoreSheet(url, force).then(d => { setData(d); setLoading(false); }).catch(e => { setErr(e); setLoading(false); });
   }, []);
-  React.useEffect(() => { load(cur && cur.url, false); /* eslint-disable-next-line */ }, [selIdx]);
+  React.useEffect(() => { load(cur && cur.url, false); setCompanyF(''); /* eslint-disable-next-line */ }, [selIdx]);
 
   const loadHeadersFor = (i, url) => {
     if (!url) return;
@@ -218,6 +224,27 @@ const ScoresScreen = ({ role }) => {
   ];
 
   const inp = { width:'100%', padding:'8px 10px', border:'1px solid var(--border)', borderRadius:8, fontSize:12.5, fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)', boxSizing:'border-box' };
+
+  // Filter rows by student name, pass/fail, and company.
+  const fcols = data ? resolveScoreCols(data.headers, cur) : null;
+  const companies = (data && fcols && fcols.company >= 0)
+    ? [...new Set(data.rows.map(r => String(r[fcols.company] || '').trim()).filter(Boolean))].sort() : [];
+  const filtered = React.useMemo(() => {
+    if (!data || !fcols) return data;
+    const q = studentQ.trim().toLowerCase();
+    const rows = data.rows.filter(r => {
+      if (q && fcols.student >= 0 && !String(r[fcols.student] || '').toLowerCase().includes(q)) return false;
+      if (companyF && fcols.company >= 0 && String(r[fcols.company] || '').trim() !== companyF) return false;
+      if (passFilter !== 'all' && fcols.score >= 0) {
+        const p = scorePct(r[fcols.score]); const passed = p != null && p >= SCORE_PASS;
+        if (passFilter === 'pass' && !passed) return false;
+        if (passFilter === 'fail' && passed) return false;
+      }
+      return true;
+    });
+    return { headers: data.headers, rows };
+  }, [data, fcols, studentQ, passFilter, companyF]);
+  const canFilter = !!(data && fcols && (fcols.student >= 0 || fcols.company >= 0 || fcols.score >= 0));
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
@@ -291,10 +318,38 @@ const ScoresScreen = ({ role }) => {
         </div>
       )}
 
+      {/* Filters: student name · pass/fail · company */}
+      {canFilter && (
+        <div style={{ display:'flex', gap:8, flexWrap:'wrap', alignItems:'center' }}>
+          {fcols.student >= 0 && (
+            <input value={studentQ} onChange={e=>setStudentQ(e.target.value)} placeholder={tr('🔍 ស្វែងរក​ឈ្មោះ​សិស្ស...','🔍 Search student name…')}
+              style={{ flex:'1 1 200px', minWidth:0, padding:'9px 12px', border:'1px solid var(--border)', borderRadius:9, fontSize:13, fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)' }}/>
+          )}
+          {fcols.score >= 0 && (
+            <div style={{ display:'inline-flex', background:'var(--surface-muted)', border:'1px solid var(--border)', borderRadius:9, padding:2 }}>
+              {[{k:'all',l:tr('ទាំងអស់','All'),c:'var(--ink)'},{k:'pass',l:tr('ជាប់','Pass'),c:'#2A5DB0'},{k:'fail',l:tr('ធ្លាក់','Fail'),c:'#B0413E'}].map(o => (
+                <button key={o.k} onClick={()=>setPassFilter(o.k)} style={{ border:'none', borderRadius:7, padding:'6px 12px', cursor:'pointer', fontSize:12.5, fontWeight:700, fontFamily:'inherit',
+                  background: passFilter===o.k ? 'var(--surface)' : 'transparent', color: passFilter===o.k ? o.c : 'var(--ink-3)', boxShadow: passFilter===o.k ? '0 1px 2px rgba(20,30,60,.12)' : 'none' }}>{o.l}</button>
+              ))}
+            </div>
+          )}
+          {fcols.company >= 0 && companies.length > 0 && (
+            <select value={companyF} onChange={e=>setCompanyF(e.target.value)} style={{ flex:'0 1 200px', padding:'9px 11px', border:'1px solid var(--border)', borderRadius:9, fontSize:13, fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)', cursor:'pointer' }}>
+              <option value="">{tr('ក្រុមហ៊ុន​ទាំងអស់','All companies')}</option>
+              {companies.map((c, i) => <option key={i} value={c}>{c}</option>)}
+            </select>
+          )}
+          {(studentQ || passFilter!=='all' || companyF) && (
+            <button onClick={()=>{ setStudentQ(''); setPassFilter('all'); setCompanyF(''); }} style={{ border:'1px solid var(--border)', background:'var(--surface)', color:'var(--ink-3)', borderRadius:9, padding:'8px 12px', fontSize:12.5, cursor:'pointer', fontFamily:'inherit' }}>{tr('សម្អាត','Clear')}</button>
+          )}
+          <span style={{ fontSize:11.5, color:'var(--ink-3)', marginLeft:'auto' }}>{filtered ? `${filtered.rows.length}/${data.rows.length} ${tr('ជួរ','rows')}` : ''}</span>
+        </div>
+      )}
+
       {loading && !data ? (
         <div style={{ textAlign:'center', padding:'48px', color:'var(--ink-3)', fontSize:13 }}>{tr('កំពុង​ទាញ​តារាង...','Loading the sheet…')}</div>
       ) : err ? <ScoreError err={err} tr={tr}/>
-        : data ? <ScoreTable data={data} tr={tr} sheet={cur}/>
+        : data ? <ScoreTable data={filtered || data} tr={tr} sheet={cur}/>
         : null}
     </div>
   );
