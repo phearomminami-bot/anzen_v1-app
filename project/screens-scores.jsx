@@ -97,6 +97,18 @@ const scorePct = (v) => {
   return n ? parseFloat(n[0]) : null;
 };
 const scoreColor = (v) => { const p = scorePct(v); if (p == null) return 'var(--ink)'; return p < SCORE_PASS ? '#B0413E' : '#2A5DB0'; };
+// Normalise a date cell to a comparable YYYYMMDD number (or null). Handles
+// 2026-07-10, 2026/7/10, 2026年7月10日, and anything Date can parse.
+const parseRowDate = (v) => {
+  const s = String(v == null ? '' : v).trim();
+  if (!s) return null;
+  let m = s.match(/(\d{4})\s*[-/年.]\s*(\d{1,2})\s*[-/月.]\s*(\d{1,2})/);
+  if (m) return (+m[1]) * 10000 + (+m[2]) * 100 + (+m[3]);
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  return null;
+};
+const dateStrToNum = (s) => { const m = String(s || '').match(/(\d{4})-(\d{2})-(\d{2})/); return m ? (+m[1]) * 10000 + (+m[2]) * 100 + (+m[3]) : null; };
 // Column indices: use the sheet's manual map where set, else auto-detect.
 const resolveScoreCols = (headers, sheet) => {
   const auto = detectScoreCols(headers);
@@ -189,6 +201,8 @@ const ScoresScreen = ({ role }) => {
   const [studentQ, setStudentQ]     = React.useState('');
   const [passFilter, setPassFilter] = React.useState('all');   // all | pass | fail
   const [companyF, setCompanyF]     = React.useState('');      // '' = all
+  const [fromDate, setFromDate]     = React.useState('');      // 'YYYY-MM-DD'
+  const [toDate, setToDate]         = React.useState('');
 
   const sheets = scoreSheets();
   const cur = sheets[Math.min(selIdx, sheets.length - 1)] || sheets[0];
@@ -198,7 +212,7 @@ const ScoresScreen = ({ role }) => {
     setLoading(true); setErr(null);
     fetchScoreSheet(url, force).then(d => { setData(d); setLoading(false); }).catch(e => { setErr(e); setLoading(false); });
   }, []);
-  React.useEffect(() => { load(cur && cur.url, false); setCompanyF(''); /* eslint-disable-next-line */ }, [selIdx]);
+  React.useEffect(() => { load(cur && cur.url, false); setCompanyF(''); setFromDate(''); setToDate(''); /* eslint-disable-next-line */ }, [selIdx]);
 
   const loadHeadersFor = (i, url) => {
     if (!url) return;
@@ -232,6 +246,7 @@ const ScoresScreen = ({ role }) => {
   const filtered = React.useMemo(() => {
     if (!data || !fcols) return data;
     const q = studentQ.trim().toLowerCase();
+    const fromN = dateStrToNum(fromDate), toN = dateStrToNum(toDate);
     const rows = data.rows.filter(r => {
       if (q && fcols.student >= 0 && !String(r[fcols.student] || '').toLowerCase().includes(q)) return false;
       if (companyF && fcols.company >= 0 && String(r[fcols.company] || '').trim() !== companyF) return false;
@@ -240,11 +255,17 @@ const ScoresScreen = ({ role }) => {
         if (passFilter === 'pass' && !passed) return false;
         if (passFilter === 'fail' && passed) return false;
       }
+      if ((fromN || toN) && fcols.date >= 0) {
+        const dn = parseRowDate(r[fcols.date]);
+        if (dn == null) return false;                 // can't confirm the date → exclude
+        if (fromN && dn < fromN) return false;
+        if (toN && dn > toN) return false;
+      }
       return true;
     });
     return { headers: data.headers, rows };
-  }, [data, fcols, studentQ, passFilter, companyF]);
-  const canFilter = !!(data && fcols && (fcols.student >= 0 || fcols.company >= 0 || fcols.score >= 0));
+  }, [data, fcols, studentQ, passFilter, companyF, fromDate, toDate]);
+  const canFilter = !!(data && fcols && (fcols.student >= 0 || fcols.company >= 0 || fcols.score >= 0 || fcols.date >= 0));
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
@@ -339,8 +360,16 @@ const ScoresScreen = ({ role }) => {
               {companies.map((c, i) => <option key={i} value={c}>{c}</option>)}
             </select>
           )}
-          {(studentQ || passFilter!=='all' || companyF) && (
-            <button onClick={()=>{ setStudentQ(''); setPassFilter('all'); setCompanyF(''); }} style={{ border:'1px solid var(--border)', background:'var(--surface)', color:'var(--ink-3)', borderRadius:9, padding:'8px 12px', fontSize:12.5, cursor:'pointer', fontFamily:'inherit' }}>{tr('សម្អាត','Clear')}</button>
+          {fcols.date >= 0 && (
+            <div style={{ display:'inline-flex', alignItems:'center', gap:5, border:'1px solid var(--border)', borderRadius:9, padding:'3px 8px', background:'var(--surface)' }}>
+              <span style={{ fontSize:11.5, color:'var(--ink-3)' }}>{tr('ពី','From')}</span>
+              <input type="date" value={fromDate} onChange={e=>setFromDate(e.target.value)} style={{ border:'none', background:'transparent', color:'var(--ink)', fontSize:12.5, fontFamily:'inherit' }}/>
+              <span style={{ fontSize:11.5, color:'var(--ink-3)' }}>{tr('ដល់','to')}</span>
+              <input type="date" value={toDate} onChange={e=>setToDate(e.target.value)} style={{ border:'none', background:'transparent', color:'var(--ink)', fontSize:12.5, fontFamily:'inherit' }}/>
+            </div>
+          )}
+          {(studentQ || passFilter!=='all' || companyF || fromDate || toDate) && (
+            <button onClick={()=>{ setStudentQ(''); setPassFilter('all'); setCompanyF(''); setFromDate(''); setToDate(''); }} style={{ border:'1px solid var(--border)', background:'var(--surface)', color:'var(--ink-3)', borderRadius:9, padding:'8px 12px', fontSize:12.5, cursor:'pointer', fontFamily:'inherit' }}>{tr('សម្អាត','Clear')}</button>
           )}
           <span style={{ fontSize:11.5, color:'var(--ink-3)', marginLeft:'auto' }}>{filtered ? `${filtered.rows.length}/${data.rows.length} ${tr('ជួរ','rows')}` : ''}</span>
         </div>

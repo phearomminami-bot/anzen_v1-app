@@ -625,6 +625,8 @@ window.__trRegistry = {
   "Pass": "ជាប់",
   "Fail": "ធ្លាក់",
   "All companies": "ក្រុមហ៊ុន​ទាំងអស់",
+  "From": "ពី",
+  "to": "ដល់",
   "Clear": "សម្អាត",
   "Loading the sheet…": "កំពុង​ទាញ​តារាង...",
   "Loading scores…": "កំពុង​ទាញ​ពិន្ទុ...",
@@ -932,7 +934,6 @@ window.__trRegistry = {
   "Sick": "ច្បាប់​ឈឺ",
   "Personal": "ផ្ទាល់​ខ្លួន",
   "Maternity": "ច្បាប់​សម្រាល",
-  "From": "ពី",
   "To": "ដល់",
   "Reason": "មូល​ហេតុ",
   "Vehicle removed": "បានលុបយានយន្ត",
@@ -2394,7 +2395,6 @@ window.__trGroups = {
     "Sick": "ច្បាប់​ឈឺ",
     "Personal": "ផ្ទាល់​ខ្លួន",
     "Maternity": "ច្បាប់​សម្រាល",
-    "From": "ពី",
     "To": "ដល់",
     "Reason": "មូល​ហេតុ"
   },
@@ -3100,6 +3100,8 @@ window.__trGroups = {
     "Pass": "ជាប់",
     "Fail": "ធ្លាក់",
     "All companies": "ក្រុមហ៊ុន​ទាំងអស់",
+    "From": "ពី",
+    "to": "ដល់",
     "Clear": "សម្អាត",
     "Loading the sheet…": "កំពុង​ទាញ​តារាង...",
     "Loading scores…": "កំពុង​ទាញ​ពិន្ទុ...",
@@ -3260,7 +3262,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v200";</script>
+<script>window.__ANZEN_VERSION="v201";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -19099,6 +19101,19 @@ var scoreColor = v => {
   if (p == null) return 'var(--ink)';
   return p < SCORE_PASS ? '#B0413E' : '#2A5DB0';
 };
+var parseRowDate = v => {
+  var s = String(v == null ? '' : v).trim();
+  if (!s) return null;
+  var m = s.match(/(\d{4})\s*[-/年.]\s*(\d{1,2})\s*[-/月.]\s*(\d{1,2})/);
+  if (m) return +m[1] * 10000 + +m[2] * 100 + +m[3];
+  var d = new Date(s);
+  if (!isNaN(d.getTime())) return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  return null;
+};
+var dateStrToNum = s => {
+  var m = String(s || '').match(/(\d{4})-(\d{2})-(\d{2})/);
+  return m ? +m[1] * 10000 + +m[2] * 100 + +m[3] : null;
+};
 var resolveScoreCols = (headers, sheet) => {
   var auto = detectScoreCols(headers);
   var m = sheet && sheet.map || {};
@@ -19340,6 +19355,8 @@ var ScoresScreen = ({
   var [studentQ, setStudentQ] = React.useState('');
   var [passFilter, setPassFilter] = React.useState('all');
   var [companyF, setCompanyF] = React.useState('');
+  var [fromDate, setFromDate] = React.useState('');
+  var [toDate, setToDate] = React.useState('');
   var sheets = scoreSheets();
   var cur = sheets[Math.min(selIdx, sheets.length - 1)] || sheets[0];
   var load = React.useCallback((url, force) => {
@@ -19357,6 +19374,8 @@ var ScoresScreen = ({
   React.useEffect(() => {
     load(cur && cur.url, false);
     setCompanyF('');
+    setFromDate('');
+    setToDate('');
   }, [selIdx]);
   var loadHeadersFor = (i, url) => {
     if (!url) return;
@@ -19429,6 +19448,8 @@ var ScoresScreen = ({
   var filtered = React.useMemo(() => {
     if (!data || !fcols) return data;
     var q = studentQ.trim().toLowerCase();
+    var fromN = dateStrToNum(fromDate),
+      toN = dateStrToNum(toDate);
     var rows = data.rows.filter(r => {
       if (q && fcols.student >= 0 && !String(r[fcols.student] || '').toLowerCase().includes(q)) return false;
       if (companyF && fcols.company >= 0 && String(r[fcols.company] || '').trim() !== companyF) return false;
@@ -19438,14 +19459,20 @@ var ScoresScreen = ({
         if (passFilter === 'pass' && !passed) return false;
         if (passFilter === 'fail' && passed) return false;
       }
+      if ((fromN || toN) && fcols.date >= 0) {
+        var dn = parseRowDate(r[fcols.date]);
+        if (dn == null) return false;
+        if (fromN && dn < fromN) return false;
+        if (toN && dn > toN) return false;
+      }
       return true;
     });
     return {
       headers: data.headers,
       rows
     };
-  }, [data, fcols, studentQ, passFilter, companyF]);
-  var canFilter = !!(data && fcols && (fcols.student >= 0 || fcols.company >= 0 || fcols.score >= 0));
+  }, [data, fcols, studentQ, passFilter, companyF, fromDate, toDate]);
+  var canFilter = !!(data && fcols && (fcols.student >= 0 || fcols.company >= 0 || fcols.score >= 0 || fcols.date >= 0));
   return React.createElement("div", {
     style: {
       display: 'flex',
@@ -19828,11 +19855,55 @@ var ScoresScreen = ({
   }, tr('ក្រុមហ៊ុន​ទាំងអស់', 'All companies')), companies.map((c, i) => React.createElement("option", {
     key: i,
     value: c
-  }, c))), (studentQ || passFilter !== 'all' || companyF) && React.createElement("button", {
+  }, c))), fcols.date >= 0 && React.createElement("div", {
+    style: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 5,
+      border: '1px solid var(--border)',
+      borderRadius: 9,
+      padding: '3px 8px',
+      background: 'var(--surface)'
+    }
+  }, React.createElement("span", {
+    style: {
+      fontSize: 11.5,
+      color: 'var(--ink-3)'
+    }
+  }, tr('ពី', 'From')), React.createElement("input", {
+    type: "date",
+    value: fromDate,
+    onChange: e => setFromDate(e.target.value),
+    style: {
+      border: 'none',
+      background: 'transparent',
+      color: 'var(--ink)',
+      fontSize: 12.5,
+      fontFamily: 'inherit'
+    }
+  }), React.createElement("span", {
+    style: {
+      fontSize: 11.5,
+      color: 'var(--ink-3)'
+    }
+  }, tr('ដល់', 'to')), React.createElement("input", {
+    type: "date",
+    value: toDate,
+    onChange: e => setToDate(e.target.value),
+    style: {
+      border: 'none',
+      background: 'transparent',
+      color: 'var(--ink)',
+      fontSize: 12.5,
+      fontFamily: 'inherit'
+    }
+  })), (studentQ || passFilter !== 'all' || companyF || fromDate || toDate) && React.createElement("button", {
     onClick: () => {
       setStudentQ('');
       setPassFilter('all');
       setCompanyF('');
+      setFromDate('');
+      setToDate('');
     },
     style: {
       border: '1px solid var(--border)',
