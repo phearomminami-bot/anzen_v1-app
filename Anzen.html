@@ -615,7 +615,10 @@ window.__trRegistry = {
   "rows": "ជួរ",
   "Google Sheet links (public)": "តំណ Google Sheet (សាធារណៈ)",
   "Lesson name": "ឈ្មោះ​មេរៀន",
+  "Load columns": "ផ្ទុក​ជួរ​ឈរ",
   "Remove": "ដក​ចេញ",
+  "— auto —": "— ស្វ័យ​ប្រវត្តិ —",
+  "Click ↻ to load columns for mapping": "ចុច ↻ ដើម្បី​ផ្ទុក​ជួរ​ឈរ​សម្រាប់​ការ​កំណត់",
   "Add link": "បន្ថែម​តំណ",
   "Loading the sheet…": "កំពុង​ទាញ​តារាង...",
   "Loading scores…": "កំពុង​ទាញ​ពិន្ទុ...",
@@ -3089,7 +3092,10 @@ window.__trGroups = {
     "rows": "ជួរ",
     "Google Sheet links (public)": "តំណ Google Sheet (សាធារណៈ)",
     "Lesson name": "ឈ្មោះ​មេរៀន",
+    "Load columns": "ផ្ទុក​ជួរ​ឈរ",
     "Remove": "លុប",
+    "— auto —": "— ស្វ័យ​ប្រវត្តិ —",
+    "Click ↻ to load columns for mapping": "ចុច ↻ ដើម្បី​ផ្ទុក​ជួរ​ឈរ​សម្រាប់​ការ​កំណត់",
     "Add link": "បន្ថែម​តំណ",
     "Loading the sheet…": "កំពុង​ទាញ​តារាង...",
     "Loading scores…": "កំពុង​ទាញ​ពិន្ទុ...",
@@ -3250,7 +3256,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v198";</script>
+<script>window.__ANZEN_VERSION="v199";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -19072,14 +19078,33 @@ var detectScoreCols = headers => {
     score
   };
 };
-var scoreNum = v => {
-  var m = String(v == null ? '' : v).match(/-?\d+(\.\d+)?/);
-  return m ? parseFloat(m[0]) : null;
+var scorePct = v => {
+  var s = String(v == null ? '' : v).trim();
+  var frac = s.match(/(-?\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)/);
+  if (frac) {
+    var den = parseFloat(frac[2]);
+    if (den > 0) return parseFloat(frac[1]) / den * 100;
+  }
+  var pct = s.match(/(-?\d+(?:\.\d+)?)\s*%/);
+  if (pct) return parseFloat(pct[1]);
+  var n = s.match(/-?\d+(?:\.\d+)?/);
+  return n ? parseFloat(n[0]) : null;
 };
 var scoreColor = v => {
-  var n = scoreNum(v);
-  if (n == null) return 'var(--ink)';
-  return n < SCORE_PASS ? '#B0413E' : '#2A5DB0';
+  var p = scorePct(v);
+  if (p == null) return 'var(--ink)';
+  return p < SCORE_PASS ? '#B0413E' : '#2A5DB0';
+};
+var resolveScoreCols = (headers, sheet) => {
+  var auto = detectScoreCols(headers);
+  var m = sheet && sheet.map || {};
+  var pick = k => Number.isInteger(m[k]) && m[k] >= 0 && m[k] < headers.length ? m[k] : auto[k];
+  return {
+    date: pick('date'),
+    student: pick('student'),
+    company: pick('company'),
+    score: pick('score')
+  };
 };
 var ScoreError = ({
   err,
@@ -19121,9 +19146,10 @@ var ScoreError = ({
 }, String(err && err.message || err || '')));
 var ScoreTable = ({
   data,
-  tr
+  tr,
+  sheet
 }) => {
-  var cols = detectScoreCols(data.headers);
+  var cols = resolveScoreCols(data.headers, sheet);
   var some = [cols.date, cols.student, cols.company, cols.score].some(i => i >= 0);
   var th = {
     position: 'sticky',
@@ -19295,6 +19321,7 @@ var ScoresScreen = ({
   var [loading, setLoading] = React.useState(false);
   var [cfg, setCfg] = React.useState(false);
   var [draft, setDraft] = React.useState(null);
+  var [draftHeaders, setDraftHeaders] = React.useState([]);
   var sheets = scoreSheets();
   var cur = sheets[Math.min(selIdx, sheets.length - 1)] || sheets[0];
   var load = React.useCallback((url, force) => {
@@ -19312,20 +19339,41 @@ var ScoresScreen = ({
   React.useEffect(() => {
     load(cur && cur.url, false);
   }, [selIdx]);
+  var loadHeadersFor = (i, url) => {
+    if (!url) return;
+    fetchScoreSheet(url, false).then(d => setDraftHeaders(h => {
+      var c = [...h];
+      c[i] = d.headers;
+      return c;
+    })).catch(() => setDraftHeaders(h => {
+      var c = [...h];
+      c[i] = null;
+      return c;
+    }));
+  };
   var openCfg = () => {
-    setDraft(sheets.map(s => ({
-      ...s
-    })));
+    var d = sheets.map(s => ({
+      title: s.title || '',
+      url: s.url || '',
+      map: {
+        ...(s.map || {})
+      }
+    }));
+    setDraft(d);
+    setDraftHeaders([]);
     setCfg(true);
+    d.forEach((s, i) => loadHeadersFor(i, s.url));
   };
   var saveCfg = () => {
     var clean = (draft || []).map(s => ({
       title: (s.title || '').trim() || tr('មេរៀន', 'Lesson'),
-      url: (s.url || '').trim()
+      url: (s.url || '').trim(),
+      map: s.map || {}
     })).filter(s => s.url);
     saveScoreSheets(clean.length ? clean : [{
       title: tr('តារាងពិន្ទុ', 'Scores'),
-      url: SCORE_SHEET_DEFAULT
+      url: SCORE_SHEET_DEFAULT,
+      map: {}
     }]);
     window.__scoreCache = {};
     setCfg(false);
@@ -19333,6 +19381,19 @@ var ScoresScreen = ({
     toast(tr('បាន​រក្សាទុក', 'Saved'), 'good');
     setTimeout(() => load(scoreSheets()[0].url, true), 0);
   };
+  var MAP_FIELDS = [{
+    k: 'date',
+    label: tr('កាលបរិច្ឆេទ', 'Date')
+  }, {
+    k: 'student',
+    label: tr('ឈ្មោះ​សិស្ស', 'Student')
+  }, {
+    k: 'company',
+    label: tr('ក្រុមហ៊ុន', 'Company')
+  }, {
+    k: 'score',
+    label: tr('ពិន្ទុ', 'Score')
+  }];
   var inp = {
     width: '100%',
     padding: '8px 10px',
@@ -19489,50 +19550,117 @@ var ScoresScreen = ({
       fontSize: 13,
       fontWeight: 700
     }
-  }, tr('តំណ Google Sheet (សាធារណៈ)', 'Google Sheet links (public)')), (draft || []).map((s, i) => React.createElement("div", {
-    key: i,
-    style: {
-      display: 'flex',
-      gap: 6,
-      alignItems: 'flex-start'
-    }
-  }, React.createElement("div", {
-    style: {
-      flex: '0 0 140px'
-    }
-  }, React.createElement("input", {
-    value: s.title,
-    onChange: e => setDraft(d => d.map((x, j) => j === i ? {
-      ...x,
-      title: e.target.value
-    } : x)),
-    placeholder: tr('ឈ្មោះ​មេរៀន', 'Lesson name'),
-    style: inp
-  })), React.createElement("input", {
-    value: s.url,
-    onChange: e => setDraft(d => d.map((x, j) => j === i ? {
-      ...x,
-      url: e.target.value
-    } : x)),
-    placeholder: "https://docs.google.com/spreadsheets/d/...",
-    style: {
-      ...inp,
-      flex: 1
-    }
-  }), React.createElement("button", {
-    onClick: () => setDraft(d => d.filter((_, j) => j !== i)),
-    title: tr('លុប', 'Remove'),
-    style: {
-      border: '1px solid var(--border)',
-      background: 'var(--surface)',
-      color: 'var(--ink-3)',
-      borderRadius: 8,
-      width: 34,
-      height: 34,
-      cursor: 'pointer',
-      flexShrink: 0
-    }
-  }, "\u2715"))), React.createElement("div", {
+  }, tr('តំណ Google Sheet (សាធារណៈ)', 'Google Sheet links (public)')), (draft || []).map((s, i) => {
+    var hdrs = draftHeaders[i];
+    return React.createElement("div", {
+      key: i,
+      style: {
+        border: '1px solid var(--border)',
+        borderRadius: 10,
+        padding: 11,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8
+      }
+    }, React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 6,
+        alignItems: 'flex-start'
+      }
+    }, React.createElement("div", {
+      style: {
+        flex: '0 0 140px'
+      }
+    }, React.createElement("input", {
+      value: s.title,
+      onChange: e => setDraft(d => d.map((x, j) => j === i ? {
+        ...x,
+        title: e.target.value
+      } : x)),
+      placeholder: tr('ឈ្មោះ​មេរៀន', 'Lesson name'),
+      style: inp
+    })), React.createElement("input", {
+      value: s.url,
+      onChange: e => setDraft(d => d.map((x, j) => j === i ? {
+        ...x,
+        url: e.target.value
+      } : x)),
+      onBlur: () => loadHeadersFor(i, s.url),
+      placeholder: "https://docs.google.com/spreadsheets/d/...",
+      style: {
+        ...inp,
+        flex: 1
+      }
+    }), React.createElement("button", {
+      onClick: () => loadHeadersFor(i, s.url),
+      title: tr('ផ្ទុក​ជួរ​ឈរ', 'Load columns'),
+      style: {
+        border: '1px solid var(--border)',
+        background: 'var(--surface)',
+        color: 'var(--ink-2)',
+        borderRadius: 8,
+        width: 34,
+        height: 34,
+        cursor: 'pointer',
+        flexShrink: 0
+      }
+    }, "\u21BB"), React.createElement("button", {
+      onClick: () => setDraft(d => d.filter((_, j) => j !== i)),
+      title: tr('លុប', 'Remove'),
+      style: {
+        border: '1px solid var(--border)',
+        background: 'var(--surface)',
+        color: 'var(--ink-3)',
+        borderRadius: 8,
+        width: 34,
+        height: 34,
+        cursor: 'pointer',
+        flexShrink: 0
+      }
+    }, "\u2715")), hdrs && hdrs.length ? React.createElement("div", {
+      style: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))',
+        gap: 8
+      }
+    }, MAP_FIELDS.map(f => React.createElement("div", {
+      key: f.k
+    }, React.createElement("div", {
+      style: {
+        fontSize: 10.5,
+        color: 'var(--ink-3)',
+        marginBottom: 3
+      }
+    }, f.label), React.createElement("select", {
+      value: s.map && Number.isInteger(s.map[f.k]) ? s.map[f.k] : '',
+      onChange: e => {
+        var v = e.target.value;
+        setDraft(d => d.map((x, j) => j === i ? {
+          ...x,
+          map: {
+            ...(x.map || {}),
+            [f.k]: v === '' ? undefined : +v
+          }
+        } : x));
+      },
+      style: {
+        ...inp,
+        padding: '7px 9px',
+        fontSize: 12
+      }
+    }, React.createElement("option", {
+      value: ""
+    }, tr('— ស្វ័យ​ប្រវត្តិ —', '— auto —')), hdrs.map((h, ci) => React.createElement("option", {
+      key: ci,
+      value: ci
+    }, h || 'Col ' + (ci + 1))))))) : React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: 'var(--ink-3)'
+      }
+    }, s.url ? tr('ចុច ↻ ដើម្បី​ផ្ទុក​ជួរ​ឈរ​សម្រាប់​ការ​កំណត់', 'Click ↻ to load columns for mapping') : ''));
+  }), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8
@@ -19595,7 +19723,8 @@ var ScoresScreen = ({
     tr: tr
   }) : data ? React.createElement(ScoreTable, {
     data: data,
-    tr: tr
+    tr: tr,
+    sheet: cur
   }) : null);
 };
 var ScoreSheetForStudent = ({
@@ -19624,7 +19753,7 @@ var ScoreSheetForStudent = ({
           sh,
           d
         } = r.value;
-        var cols = detectScoreCols(d.headers);
+        var cols = resolveScoreCols(d.headers, sh);
         d.rows.forEach(row => {
           var match = row.some(cell => {
             var c = String(cell || '').toLowerCase().trim();

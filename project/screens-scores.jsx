@@ -84,8 +84,25 @@ const detectScoreCols = (headers) => {
   const score   = findCol(headers, [/score/, /ពិន្ទុ/, /mark/, /grade/, /point/, /%/, /result/], [company, student, date]);
   return { date, student, company, score };
 };
-const scoreNum = (v) => { const m = String(v == null ? '' : v).match(/-?\d+(\.\d+)?/); return m ? parseFloat(m[0]) : null; };
-const scoreColor = (v) => { const n = scoreNum(v); if (n == null) return 'var(--ink)'; return n < SCORE_PASS ? '#B0413E' : '#2A5DB0'; };
+// Percentage of a score cell. Handles "47/50" (→94%), "96 / 100" (→96%),
+// "88%", or a bare number (treated as a percentage). Pass = ≥95%.
+const scorePct = (v) => {
+  const s = String(v == null ? '' : v).trim();
+  const frac = s.match(/(-?\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)/);
+  if (frac) { const den = parseFloat(frac[2]); if (den > 0) return parseFloat(frac[1]) / den * 100; }
+  const pct = s.match(/(-?\d+(?:\.\d+)?)\s*%/);
+  if (pct) return parseFloat(pct[1]);
+  const n = s.match(/-?\d+(?:\.\d+)?/);
+  return n ? parseFloat(n[0]) : null;
+};
+const scoreColor = (v) => { const p = scorePct(v); if (p == null) return 'var(--ink)'; return p < SCORE_PASS ? '#B0413E' : '#2A5DB0'; };
+// Column indices: use the sheet's manual map where set, else auto-detect.
+const resolveScoreCols = (headers, sheet) => {
+  const auto = detectScoreCols(headers);
+  const m = (sheet && sheet.map) || {};
+  const pick = (k) => (Number.isInteger(m[k]) && m[k] >= 0 && m[k] < headers.length) ? m[k] : auto[k];
+  return { date: pick('date'), student: pick('student'), company: pick('company'), score: pick('score') };
+};
 
 const ScoreError = ({ err, tr }) => (
   <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:14, padding:'22px 20px', textAlign:'center' }}>
@@ -100,8 +117,8 @@ const ScoreError = ({ err, tr }) => (
 );
 
 // Four-column score table (date · student · company · score) with pass colours.
-const ScoreTable = ({ data, tr }) => {
-  const cols = detectScoreCols(data.headers);
+const ScoreTable = ({ data, tr, sheet }) => {
+  const cols = resolveScoreCols(data.headers, sheet);
   const some = [cols.date, cols.student, cols.company, cols.score].some(i => i >= 0);
   const th = { position:'sticky', top:0, zIndex:1, background:'var(--surface-muted)', border:'1px solid var(--border)', padding:'8px 11px', fontSize:10.5, fontWeight:700, color:'var(--ink-3)', letterSpacing:'.02em', whiteSpace:'nowrap', textAlign:'left', textTransform:'uppercase' };
   const td = { border:'1px solid var(--border)', padding:'8px 11px', whiteSpace:'nowrap', fontVariantNumeric:'tabular-nums' };
@@ -164,7 +181,8 @@ const ScoresScreen = ({ role }) => {
   const [err, setErr] = React.useState(null);
   const [loading, setLoading] = React.useState(false);
   const [cfg, setCfg] = React.useState(false);
-  const [draft, setDraft] = React.useState(null);   // editable list while cfg is open
+  const [draft, setDraft] = React.useState(null);        // editable list while cfg is open
+  const [draftHeaders, setDraftHeaders] = React.useState([]);  // headers per draft row (for mapping)
 
   const sheets = scoreSheets();
   const cur = sheets[Math.min(selIdx, sheets.length - 1)] || sheets[0];
@@ -176,14 +194,28 @@ const ScoresScreen = ({ role }) => {
   }, []);
   React.useEffect(() => { load(cur && cur.url, false); /* eslint-disable-next-line */ }, [selIdx]);
 
-  const openCfg = () => { setDraft(sheets.map(s => ({ ...s }))); setCfg(true); };
+  const loadHeadersFor = (i, url) => {
+    if (!url) return;
+    fetchScoreSheet(url, false).then(d => setDraftHeaders(h => { const c = [...h]; c[i] = d.headers; return c; })).catch(() => setDraftHeaders(h => { const c = [...h]; c[i] = null; return c; }));
+  };
+  const openCfg = () => {
+    const d = sheets.map(s => ({ title: s.title || '', url: s.url || '', map: { ...(s.map || {}) } }));
+    setDraft(d); setDraftHeaders([]); setCfg(true);
+    d.forEach((s, i) => loadHeadersFor(i, s.url));
+  };
   const saveCfg = () => {
-    const clean = (draft || []).map(s => ({ title: (s.title || '').trim() || tr('មេរៀន','Lesson'), url: (s.url || '').trim() })).filter(s => s.url);
-    saveScoreSheets(clean.length ? clean : [{ title: tr('តារាងពិន្ទុ','Scores'), url: SCORE_SHEET_DEFAULT }]);
+    const clean = (draft || []).map(s => ({ title: (s.title || '').trim() || tr('មេរៀន','Lesson'), url: (s.url || '').trim(), map: s.map || {} })).filter(s => s.url);
+    saveScoreSheets(clean.length ? clean : [{ title: tr('តារាងពិន្ទុ','Scores'), url: SCORE_SHEET_DEFAULT, map:{} }]);
     window.__scoreCache = {};
     setCfg(false); setSelIdx(0); toast(tr('បាន​រក្សាទុក','Saved'), 'good');
     setTimeout(() => load(scoreSheets()[0].url, true), 0);
   };
+  const MAP_FIELDS = [
+    { k:'date',    label:tr('កាលបរិច្ឆេទ','Date') },
+    { k:'student', label:tr('ឈ្មោះ​សិស្ស','Student') },
+    { k:'company', label:tr('ក្រុមហ៊ុន','Company') },
+    { k:'score',   label:tr('ពិន្ទុ','Score') },
+  ];
 
   const inp = { width:'100%', padding:'8px 10px', border:'1px solid var(--border)', borderRadius:8, fontSize:12.5, fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)', boxSizing:'border-box' };
 
@@ -220,15 +252,36 @@ const ScoresScreen = ({ role }) => {
       {cfg && (
         <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:12, padding:14, display:'flex', flexDirection:'column', gap:10 }}>
           <div style={{ fontSize:13, fontWeight:700 }}>{tr('តំណ Google Sheet (សាធារណៈ)','Google Sheet links (public)')}</div>
-          {(draft || []).map((s, i) => (
-            <div key={i} style={{ display:'flex', gap:6, alignItems:'flex-start' }}>
-              <div style={{ flex:'0 0 140px' }}>
-                <input value={s.title} onChange={e=>setDraft(d=>d.map((x,j)=>j===i?{...x,title:e.target.value}:x))} placeholder={tr('ឈ្មោះ​មេរៀន','Lesson name')} style={inp}/>
+          {(draft || []).map((s, i) => { const hdrs = draftHeaders[i];
+            return (
+            <div key={i} style={{ border:'1px solid var(--border)', borderRadius:10, padding:11, display:'flex', flexDirection:'column', gap:8 }}>
+              <div style={{ display:'flex', gap:6, alignItems:'flex-start' }}>
+                <div style={{ flex:'0 0 140px' }}>
+                  <input value={s.title} onChange={e=>setDraft(d=>d.map((x,j)=>j===i?{...x,title:e.target.value}:x))} placeholder={tr('ឈ្មោះ​មេរៀន','Lesson name')} style={inp}/>
+                </div>
+                <input value={s.url} onChange={e=>setDraft(d=>d.map((x,j)=>j===i?{...x,url:e.target.value}:x))} onBlur={()=>loadHeadersFor(i, s.url)} placeholder="https://docs.google.com/spreadsheets/d/..." style={{ ...inp, flex:1 }}/>
+                <button onClick={()=>loadHeadersFor(i, s.url)} title={tr('ផ្ទុក​ជួរ​ឈរ','Load columns')} style={{ border:'1px solid var(--border)', background:'var(--surface)', color:'var(--ink-2)', borderRadius:8, width:34, height:34, cursor:'pointer', flexShrink:0 }}>↻</button>
+                <button onClick={()=>setDraft(d=>d.filter((_,j)=>j!==i))} title={tr('លុប','Remove')} style={{ border:'1px solid var(--border)', background:'var(--surface)', color:'var(--ink-3)', borderRadius:8, width:34, height:34, cursor:'pointer', flexShrink:0 }}>✕</button>
               </div>
-              <input value={s.url} onChange={e=>setDraft(d=>d.map((x,j)=>j===i?{...x,url:e.target.value}:x))} placeholder="https://docs.google.com/spreadsheets/d/..." style={{ ...inp, flex:1 }}/>
-              <button onClick={()=>setDraft(d=>d.filter((_,j)=>j!==i))} title={tr('លុប','Remove')} style={{ border:'1px solid var(--border)', background:'var(--surface)', color:'var(--ink-3)', borderRadius:8, width:34, height:34, cursor:'pointer', flexShrink:0 }}>✕</button>
+              {/* Column mapping — choose which sheet column is which */}
+              {hdrs && hdrs.length ? (
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:8 }}>
+                  {MAP_FIELDS.map(f => (
+                    <div key={f.k}>
+                      <div style={{ fontSize:10.5, color:'var(--ink-3)', marginBottom:3 }}>{f.label}</div>
+                      <select value={(s.map && Number.isInteger(s.map[f.k])) ? s.map[f.k] : ''} onChange={e=>{ const v=e.target.value; setDraft(d=>d.map((x,j)=>j===i?{...x,map:{...(x.map||{}),[f.k]: v===''?undefined:+v}}:x)); }} style={{ ...inp, padding:'7px 9px', fontSize:12 }}>
+                        <option value="">{tr('— ស្វ័យ​ប្រវត្តិ —','— auto —')}</option>
+                        {hdrs.map((h, ci) => <option key={ci} value={ci}>{h || ('Col '+(ci+1))}</option>)}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ fontSize:11, color:'var(--ink-3)' }}>{s.url ? tr('ចុច ↻ ដើម្បី​ផ្ទុក​ជួរ​ឈរ​សម្រាប់​ការ​កំណត់','Click ↻ to load columns for mapping') : ''}</div>
+              )}
             </div>
-          ))}
+            );
+          })}
           <div style={{ display:'flex', gap:8 }}>
             <button onClick={()=>setDraft(d=>[...(d||[]), { title:'', url:'' }])} style={{ border:'1px dashed var(--border-strong)', background:'transparent', color:'var(--accent)', borderRadius:8, padding:'8px 12px', fontSize:12.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>+ {tr('បន្ថែម​តំណ','Add link')}</button>
             <div style={{ flex:1 }}/>
@@ -241,7 +294,7 @@ const ScoresScreen = ({ role }) => {
       {loading && !data ? (
         <div style={{ textAlign:'center', padding:'48px', color:'var(--ink-3)', fontSize:13 }}>{tr('កំពុង​ទាញ​តារាង...','Loading the sheet…')}</div>
       ) : err ? <ScoreError err={err} tr={tr}/>
-        : data ? <ScoreTable data={data} tr={tr}/>
+        : data ? <ScoreTable data={data} tr={tr} sheet={cur}/>
         : null}
     </div>
   );
@@ -262,7 +315,7 @@ const ScoreSheetForStudent = ({ student }) => {
         let anyOk = false; const out = [];
         results.forEach(r => {
           if (r.status !== 'fulfilled') return; anyOk = true;
-          const { sh, d } = r.value; const cols = detectScoreCols(d.headers);
+          const { sh, d } = r.value; const cols = resolveScoreCols(d.headers, sh);
           d.rows.forEach(row => {
             const match = row.some(cell => { const c = String(cell || '').toLowerCase().trim(); return c && names.some(n => n && (c === n || c.includes(n) || n.includes(c))); });
             if (match) out.push({ title: sh.title, cols, row, headers: d.headers });
