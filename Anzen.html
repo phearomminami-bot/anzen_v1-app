@@ -611,6 +611,8 @@ window.__trRegistry = {
   "Scores": "តារាង​ពិន្ទុ",
   "Saved": "បាន​រក្សាទុក",
   "Manage links": "គ្រប់គ្រង​តំណ",
+  "Add a new link": "បន្ថែម​តំណ​ភ្ជាប់​ថ្មី",
+  "Add link": "បន្ថែម​តំណ",
   "Loading…": "កំពុង​ទាញ...",
   "rows": "ជួរ",
   "Google Sheet links (public)": "តំណ Google Sheet (សាធារណៈ)",
@@ -619,7 +621,6 @@ window.__trRegistry = {
   "Remove": "ដក​ចេញ",
   "— auto —": "— ស្វ័យ​ប្រវត្តិ —",
   "Click ↻ to load columns for mapping": "ចុច ↻ ដើម្បី​ផ្ទុក​ជួរ​ឈរ​សម្រាប់​ការ​កំណត់",
-  "Add link": "បន្ថែម​តំណ",
   "🔍 Search student name…": "🔍 ស្វែងរក​ឈ្មោះ​សិស្ស...",
   "All": "ទាំងអស់",
   "Pass": "ជាប់",
@@ -3086,6 +3087,8 @@ window.__trGroups = {
     "Scores": "តារាងពិន្ទុ",
     "Saved": "បាន​រក្សាទុក",
     "Manage links": "គ្រប់គ្រង​តំណ",
+    "Add a new link": "បន្ថែម​តំណ​ភ្ជាប់​ថ្មី",
+    "Add link": "បន្ថែម​តំណ",
     "Loading…": "កំពុង​ទាញ...",
     "rows": "ជួរ",
     "Google Sheet links (public)": "តំណ Google Sheet (សាធារណៈ)",
@@ -3094,7 +3097,6 @@ window.__trGroups = {
     "Remove": "លុប",
     "— auto —": "— ស្វ័យ​ប្រវត្តិ —",
     "Click ↻ to load columns for mapping": "ចុច ↻ ដើម្បី​ផ្ទុក​ជួរ​ឈរ​សម្រាប់​ការ​កំណត់",
-    "Add link": "បន្ថែម​តំណ",
     "🔍 Search student name…": "🔍 ស្វែងរក​ឈ្មោះ​សិស្ស...",
     "All": "ទាំងអស់",
     "Pass": "ជាប់",
@@ -3262,7 +3264,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v201";</script>
+<script>window.__ANZEN_VERSION="v202";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -19114,6 +19116,11 @@ var dateStrToNum = s => {
   var m = String(s || '').match(/(\d{4})-(\d{2})-(\d{2})/);
   return m ? +m[1] * 10000 + +m[2] * 100 + +m[3] : null;
 };
+var scoreGroup = title => {
+  var t = String(title || '').trim();
+  var m = t.match(/^(.+?)[\s·・\-]*([①-⑳]+|\d+|[IVXivx]+)\s*$/);
+  return m && m[1].trim() ? m[1].trim() : t;
+};
 var resolveScoreCols = (headers, sheet) => {
   var auto = detectScoreCols(headers);
   var m = sheet && sheet.map || {};
@@ -19389,7 +19396,7 @@ var ScoresScreen = ({
       return c;
     }));
   };
-  var openCfg = () => {
+  var openCfg = addBlank => {
     var d = sheets.map(s => ({
       title: s.title || '',
       url: s.url || '',
@@ -19397,6 +19404,11 @@ var ScoresScreen = ({
         ...(s.map || {})
       }
     }));
+    if (addBlank) d.push({
+      title: '',
+      url: '',
+      map: {}
+    });
     setDraft(d);
     setDraftHeaders([]);
     setCfg(true);
@@ -19565,25 +19577,18 @@ var ScoresScreen = ({
   }, React.createElement(Icon, {
     name: "download",
     size: 14
-  }), tr('ទាញ​ម្ដង​ទៀត', 'Refresh')))), React.createElement("div", {
-    style: {
-      position: 'relative',
-      display: 'flex',
-      alignItems: 'center',
-      gap: 8,
-      marginTop: 12
-    }
-  }, React.createElement("span", {
-    style: {
-      fontSize: 11.5,
-      opacity: .85
-    }
-  }, tr('មេរៀន', 'Lesson')), React.createElement("select", {
-    value: Math.min(selIdx, sheets.length - 1),
-    onChange: e => setSelIdx(+e.target.value),
-    style: {
-      flex: '0 1 260px',
-      maxWidth: '70%',
+  }), tr('ទាញ​ម្ដង​ទៀត', 'Refresh')))), (() => {
+    var groups = [];
+    sheets.forEach(s => {
+      var g = scoreGroup(s.title);
+      if (!groups.includes(g)) groups.push(g);
+    });
+    var curGroup = scoreGroup(cur && cur.title);
+    var items = sheets.map((s, i) => ({
+      s,
+      i
+    })).filter(x => scoreGroup(x.s.title) === curGroup);
+    var selStyle = {
       padding: '7px 11px',
       borderRadius: 9,
       border: 'none',
@@ -19593,17 +19598,74 @@ var ScoresScreen = ({
       fontSize: 13,
       fontWeight: 600,
       fontFamily: 'inherit'
-    }
-  }, sheets.map((s, i) => React.createElement("option", {
-    key: i,
-    value: i
-  }, s.title || tr('មេរៀន', 'Lesson') + ' ' + (i + 1)))), React.createElement("span", {
-    style: {
-      fontSize: 11.5,
-      opacity: .8,
-      marginLeft: 'auto'
-    }
-  }, loading ? tr('កំពុង​ទាញ...', 'Loading…') : data ? `${data.rows.length} ${tr('ជួរ', 'rows')}` : ''))), cfg && React.createElement("div", {
+    };
+    return React.createElement("div", {
+      style: {
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 7,
+        marginTop: 12,
+        flexWrap: 'wrap'
+      }
+    }, React.createElement("span", {
+      style: {
+        fontSize: 11.5,
+        opacity: .85
+      }
+    }, tr('មេរៀន', 'Lesson')), React.createElement("select", {
+      value: curGroup,
+      onChange: e => {
+        var g = e.target.value;
+        var first = sheets.findIndex(s => scoreGroup(s.title) === g);
+        if (first >= 0) setSelIdx(first);
+      },
+      style: {
+        ...selStyle,
+        flex: '0 1 150px'
+      }
+    }, groups.map((g, i) => React.createElement("option", {
+      key: i,
+      value: g
+    }, g))), React.createElement("select", {
+      value: Math.min(selIdx, sheets.length - 1),
+      onChange: e => setSelIdx(+e.target.value),
+      style: {
+        ...selStyle,
+        flex: '0 1 150px'
+      }
+    }, items.map(x => React.createElement("option", {
+      key: x.i,
+      value: x.i
+    }, x.s.title || tr('មេរៀន', 'Lesson') + ' ' + (x.i + 1)))), React.createElement("button", {
+      onClick: () => openCfg(true),
+      title: tr('បន្ថែម​តំណ​ភ្ជាប់​ថ្មី', 'Add a new link'),
+      style: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 5,
+        height: 32,
+        padding: '0 12px',
+        border: 'none',
+        borderRadius: 999,
+        cursor: 'pointer',
+        background: 'rgba(255,255,255,.18)',
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: 700,
+        fontFamily: 'inherit'
+      }
+    }, React.createElement(Icon, {
+      name: "plus",
+      size: 13
+    }), tr('បន្ថែម​តំណ', 'Add link')), React.createElement("span", {
+      style: {
+        fontSize: 11.5,
+        opacity: .8,
+        marginLeft: 'auto'
+      }
+    }, loading ? tr('កំពុង​ទាញ...', 'Loading…') : data ? `${data.rows.length} ${tr('ជួរ', 'rows')}` : ''));
+  })()), cfg && React.createElement("div", {
     style: {
       background: 'var(--surface)',
       border: '1px solid var(--border)',

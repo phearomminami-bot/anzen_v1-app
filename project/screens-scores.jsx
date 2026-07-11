@@ -109,6 +109,13 @@ const parseRowDate = (v) => {
   return null;
 };
 const dateStrToNum = (s) => { const m = String(s || '').match(/(\d{4})-(\d{2})-(\d{2})/); return m ? (+m[1]) * 10000 + (+m[2]) * 100 + (+m[3]) : null; };
+// Group name of a lesson title = the title with a trailing number stripped.
+// e.g. "仮免①" → "仮免", "仮免 10" → "仮免", "本免" → "本免".
+const scoreGroup = (title) => {
+  const t = String(title || '').trim();
+  const m = t.match(/^(.+?)[\s·・\-]*([①-⑳]+|\d+|[IVXivx]+)\s*$/);
+  return (m && m[1].trim()) ? m[1].trim() : t;
+};
 // Column indices: use the sheet's manual map where set, else auto-detect.
 const resolveScoreCols = (headers, sheet) => {
   const auto = detectScoreCols(headers);
@@ -218,8 +225,9 @@ const ScoresScreen = ({ role }) => {
     if (!url) return;
     fetchScoreSheet(url, false).then(d => setDraftHeaders(h => { const c = [...h]; c[i] = d.headers; return c; })).catch(() => setDraftHeaders(h => { const c = [...h]; c[i] = null; return c; }));
   };
-  const openCfg = () => {
+  const openCfg = (addBlank) => {
     const d = sheets.map(s => ({ title: s.title || '', url: s.url || '', map: { ...(s.map || {}) } }));
+    if (addBlank) d.push({ title: '', url: '', map: {} });
     setDraft(d); setDraftHeaders([]); setCfg(true);
     d.forEach((s, i) => loadHeadersFor(i, s.url));
   };
@@ -284,16 +292,30 @@ const ScoresScreen = ({ role }) => {
             </button>
           </div>
         </div>
-        {/* Filter: pick a lesson (title only) */}
-        <div style={{ position:'relative', display:'flex', alignItems:'center', gap:8, marginTop:12 }}>
-          <span style={{ fontSize:11.5, opacity:.85 }}>{tr('មេរៀន','Lesson')}</span>
-          <select value={Math.min(selIdx, sheets.length-1)} onChange={e=>setSelIdx(+e.target.value)} style={{
-            flex:'0 1 260px', maxWidth:'70%', padding:'7px 11px', borderRadius:9, border:'none', cursor:'pointer',
-            background:'rgba(255,255,255,.92)', color:'#1a2032', fontSize:13, fontWeight:600, fontFamily:'inherit' }}>
-            {sheets.map((s, i) => <option key={i} value={i}>{s.title || tr('មេរៀន','Lesson')+' '+(i+1)}</option>)}
-          </select>
-          <span style={{ fontSize:11.5, opacity:.8, marginLeft:'auto' }}>{loading ? tr('កំពុង​ទាញ...','Loading…') : data ? `${data.rows.length} ${tr('ជួរ','rows')}` : ''}</span>
-        </div>
+        {/* Filter: group (仮免) → item (仮免①‐⑩) + quick add-link */}
+        {(() => {
+          const groups = []; sheets.forEach(s => { const g = scoreGroup(s.title); if (!groups.includes(g)) groups.push(g); });
+          const curGroup = scoreGroup(cur && cur.title);
+          const items = sheets.map((s, i) => ({ s, i })).filter(x => scoreGroup(x.s.title) === curGroup);
+          const selStyle = { padding:'7px 11px', borderRadius:9, border:'none', cursor:'pointer', background:'rgba(255,255,255,.92)', color:'#1a2032', fontSize:13, fontWeight:600, fontFamily:'inherit' };
+          return (
+            <div style={{ position:'relative', display:'flex', alignItems:'center', gap:7, marginTop:12, flexWrap:'wrap' }}>
+              <span style={{ fontSize:11.5, opacity:.85 }}>{tr('មេរៀន','Lesson')}</span>
+              {/* Dropdown 1 — group */}
+              <select value={curGroup} onChange={e=>{ const g=e.target.value; const first=sheets.findIndex(s=>scoreGroup(s.title)===g); if(first>=0) setSelIdx(first); }} style={{ ...selStyle, flex:'0 1 150px' }}>
+                {groups.map((g, i) => <option key={i} value={g}>{g}</option>)}
+              </select>
+              {/* Dropdown 2 — items within the group */}
+              <select value={Math.min(selIdx, sheets.length-1)} onChange={e=>setSelIdx(+e.target.value)} style={{ ...selStyle, flex:'0 1 150px' }}>
+                {items.map(x => <option key={x.i} value={x.i}>{x.s.title || tr('មេរៀន','Lesson')+' '+(x.i+1)}</option>)}
+              </select>
+              <button onClick={()=>openCfg(true)} title={tr('បន្ថែម​តំណ​ភ្ជាប់​ថ្មី','Add a new link')} style={{ display:'inline-flex', alignItems:'center', gap:5, height:32, padding:'0 12px', border:'none', borderRadius:999, cursor:'pointer', background:'rgba(255,255,255,.18)', color:'#fff', fontSize:12, fontWeight:700, fontFamily:'inherit' }}>
+                <Icon name="plus" size={13}/>{tr('បន្ថែម​តំណ','Add link')}
+              </button>
+              <span style={{ fontSize:11.5, opacity:.8, marginLeft:'auto' }}>{loading ? tr('កំពុង​ទាញ...','Loading…') : data ? `${data.rows.length} ${tr('ជួរ','rows')}` : ''}</span>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Config: multiple {title, url} */}
