@@ -1286,6 +1286,11 @@ const StudentsScreenV2 = () => {
             })()}
           </CvSection>
 
+          {/* Scores pulled from the shared Google Sheet, matched to this student */}
+          <CvSection label={tr('តារាង​ពិន្ទុ (Google Sheet)','Scores (Google Sheet)')} isOpen={openSections.scores} onToggle={()=>toggleSection('scores')}>
+            {ScoreSheetForStudent ? <ScoreSheetForStudent student={s}/> : null}
+          </CvSection>
+
           {/* Section 5: Lessons & comments */}
           {(() => {
             // Lessons grouped by tracking phase — shared by the trigger row and the

@@ -516,6 +516,7 @@ function App() {
     vehicle:     <VehicleScreen/>,
     finance:     <FinanceScreen role={role}/>,
     analytics:   <AnalyticsScreen role={role}/>,
+    scores:      <ScoresScreen role={role}/>,
     stock:       <StockScreen role={role}/>,
     announce:    <AnnounceScreen role={role}/>,
     settings:    <SettingsScreen role={role} fontSize={t.fontSize} setFontSize={(v)=>setTweak('fontSize',v)}/>,

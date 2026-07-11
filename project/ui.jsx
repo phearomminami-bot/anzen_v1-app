@@ -291,6 +291,7 @@ const Icon = ({ name, size = 16, stroke = 1.6 }) => {
     megaphone:'M3 10v4h4l9 5V5L7 10H3ZM18 9a4 4 0 010 6',
     clipboard:'M9 4h6v3H9zM8 5H6a1 1 0 00-1 1v13a1 1 0 001 1h12a1 1 0 001-1V6a1 1 0 00-1-1h-2M9 12h6M9 16h4',
     receipt:'M6 2h12v20l-3-2-3 2-3-2-3 2V2ZM9 7h6M9 11h6M9 15h4',
+    sheet:'M4 4h16v16H4zM4 9h16M4 14h16M9.5 4v16M14.5 4v16',
   };
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none"

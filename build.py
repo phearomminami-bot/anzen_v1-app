@@ -51,6 +51,7 @@ FILE_GROUPS = {
     "screens-invoice.jsx":      "វិក្កយបត្រ · Billing",
     "screens-finance.jsx":      "ហិរញ្ញវត្ថុ · Finance",
     "screens-analytics.jsx":    "ការវិភាគ · Analytics",
+    "screens-scores.jsx":       "តារាងពិន្ទុ · Scores",
     "screens-stock.jsx":        "ស្តុក · Stock",
     "screens-announce.jsx":     "ការ​ជូន​ដំណឹង · Announcements",
     "screens-bookings.jsx":     "ការ​កក់ · Booking",
@@ -132,6 +133,7 @@ JSX_ORDER = [
     "nav.jsx",
     "screens-core.jsx",
     "screens-people.jsx",
+    "screens-scores.jsx",   # Google-Sheets-backed scores (defines ScoreSheetForStudent)
     "screens-ops.jsx",
     "screens-lessons.jsx",
     "screens-admin-lessons.jsx",
