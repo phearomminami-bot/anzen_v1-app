@@ -625,9 +625,11 @@ window.__trRegistry = {
   "— auto —": "— ស្វ័យ​ប្រវត្តិ —",
   "Add": "បន្ថែម",
   "Google Sheet links (public)": "តំណ Google Sheet (សាធារណៈ)",
-  "Lesson name": "ឈ្មោះ​មេរៀន",
+  "Name": "ឈ្មោះ",
+  "Column mapping": "កំណត់​ជួរ​ឈរ",
   "Remove": "ដក​ចេញ",
-  "Click ↻ to load columns for mapping": "ចុច ↻ ដើម្បី​ផ្ទុក​ជួរ​ឈរ​សម្រាប់​ការ​កំណត់",
+  "to map columns": "ដើម្បី​កំណត់​ជួរ​ឈរ",
+  "enter a URL first": "ដាក់ URL សិន",
   "Add link": "បន្ថែម​តំណ",
   "🔍 Search student name…": "🔍 ស្វែងរក​ឈ្មោះ​សិស្ស...",
   "All": "ទាំងអស់",
@@ -892,7 +894,6 @@ window.__trRegistry = {
   "ID/Passport": "អត្ត​សញ្ញាណ",
   "Address": "អាសយដ្ឋាន",
   "EMERGENCY CONTACT": "ទំនាក់ទំនងបន្ទាន់",
-  "Name": "ឈ្មោះ",
   "Relation": "ទំ​នាក់",
   "Manager": "អ្នក​គ្រប់​គ្រង",
   "Allowance ($)": "ប្រាក់​ឧបត្ថម្ភ",
@@ -2351,7 +2352,6 @@ window.__trGroups = {
     "ID/Passport": "អត្ត​សញ្ញាណ",
     "Address": "អាសយដ្ឋាន",
     "EMERGENCY CONTACT": "ទំនាក់ទំនងបន្ទាន់",
-    "Name": "ឈ្មោះ",
     "Relation": "ទំ​នាក់",
     "Manager": "អ្នក​គ្រប់​គ្រង",
     "Allowance ($)": "ប្រាក់​ឧបត្ថម្ភ",
@@ -3107,9 +3107,11 @@ window.__trGroups = {
     "— auto —": "— ស្វ័យ​ប្រវត្តិ —",
     "Add": "បន្ថែម",
     "Google Sheet links (public)": "តំណ Google Sheet (សាធារណៈ)",
-    "Lesson name": "ឈ្មោះ​មេរៀន",
+    "Name": "ឈ្មោះ",
+    "Column mapping": "កំណត់​ជួរ​ឈរ",
     "Remove": "លុប",
-    "Click ↻ to load columns for mapping": "ចុច ↻ ដើម្បី​ផ្ទុក​ជួរ​ឈរ​សម្រាប់​ការ​កំណត់",
+    "to map columns": "ដើម្បី​កំណត់​ជួរ​ឈរ",
+    "enter a URL first": "ដាក់ URL សិន",
     "Add link": "បន្ថែម​តំណ",
     "🔍 Search student name…": "🔍 ស្វែងរក​ឈ្មោះ​សិស្ស...",
     "All": "ទាំងអស់",
@@ -3278,7 +3280,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v206";</script>
+<script>window.__ANZEN_VERSION="v207";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -19380,6 +19382,7 @@ var ScoresScreen = ({
   var [cfg, setCfg] = React.useState(false);
   var [draft, setDraft] = React.useState(null);
   var [draftHeaders, setDraftHeaders] = React.useState([]);
+  var [cfgOpen, setCfgOpen] = React.useState(-1);
   var [studentQ, setStudentQ] = React.useState('');
   var [passFilter, setPassFilter] = React.useState('all');
   var [companyF, setCompanyF] = React.useState('');
@@ -19433,8 +19436,8 @@ var ScoresScreen = ({
     });
     setDraft(d);
     setDraftHeaders([]);
+    setCfgOpen(-1);
     setCfg(true);
-    d.forEach((s, i) => loadHeadersFor(i, s.url));
   };
   var saveCfg = () => {
     var clean = (draft || []).map(s => ({
@@ -19603,7 +19606,7 @@ var ScoresScreen = ({
       gap: 7
     }
   }, React.createElement("button", {
-    onClick: openCfg,
+    onClick: () => openCfg(false),
     title: tr('គ្រប់គ្រង​តំណ', 'Manage links'),
     style: {
       width: 32,
@@ -19906,12 +19909,30 @@ var ScoresScreen = ({
     }
   }, tr('តំណ Google Sheet (សាធារណៈ)', 'Google Sheet links (public)')), (draft || []).map((s, i) => {
     var hdrs = draftHeaders[i];
+    var open = cfgOpen === i;
+    var toggle = () => {
+      var willOpen = !open;
+      setCfgOpen(willOpen ? i : -1);
+      if (willOpen && !hdrs && s.url) loadHeadersFor(i, s.url);
+    };
+    var iconBtn = {
+      border: '1px solid var(--border)',
+      background: 'var(--surface)',
+      color: 'var(--ink-3)',
+      borderRadius: 8,
+      width: 32,
+      height: 32,
+      cursor: 'pointer',
+      flexShrink: 0,
+      fontSize: 13,
+      lineHeight: 1
+    };
     return React.createElement("div", {
       key: i,
       style: {
-        border: '1px solid var(--border)',
+        border: '1px solid ' + (open ? 'var(--accent)' : 'var(--border)'),
         borderRadius: 10,
-        padding: 11,
+        padding: '7px 8px',
         display: 'flex',
         flexDirection: 'column',
         gap: 8
@@ -19920,11 +19941,7 @@ var ScoresScreen = ({
       style: {
         display: 'flex',
         gap: 6,
-        alignItems: 'flex-start'
-      }
-    }, React.createElement("div", {
-      style: {
-        flex: '0 0 140px'
+        alignItems: 'center'
       }
     }, React.createElement("input", {
       value: s.title,
@@ -19932,51 +19949,50 @@ var ScoresScreen = ({
         ...x,
         title: e.target.value
       } : x)),
-      placeholder: tr('ឈ្មោះ​មេរៀន', 'Lesson name'),
-      style: inp
-    })), React.createElement("input", {
+      placeholder: tr('ឈ្មោះ', 'Name'),
+      style: {
+        ...inp,
+        flex: '0 0 110px',
+        padding: '7px 9px'
+      }
+    }), React.createElement("input", {
       value: s.url,
       onChange: e => setDraft(d => d.map((x, j) => j === i ? {
         ...x,
         url: e.target.value
       } : x)),
-      onBlur: () => loadHeadersFor(i, s.url),
+      onBlur: () => {
+        if (open) loadHeadersFor(i, s.url);
+      },
       placeholder: "https://docs.google.com/spreadsheets/d/...",
       style: {
         ...inp,
-        flex: 1
+        flex: 1,
+        minWidth: 0,
+        padding: '7px 9px',
+        textOverflow: 'ellipsis'
       }
     }), React.createElement("button", {
-      onClick: () => loadHeadersFor(i, s.url),
-      title: tr('ផ្ទុក​ជួរ​ឈរ', 'Load columns'),
+      onClick: toggle,
+      title: tr('កំណត់​ជួរ​ឈរ', 'Column mapping'),
       style: {
-        border: '1px solid var(--border)',
-        background: 'var(--surface)',
-        color: 'var(--ink-2)',
-        borderRadius: 8,
-        width: 34,
-        height: 34,
-        cursor: 'pointer',
-        flexShrink: 0
+        ...iconBtn,
+        color: open ? 'var(--accent)' : 'var(--ink-3)',
+        borderColor: open ? 'var(--accent)' : 'var(--border)'
       }
-    }, "\u21BB"), React.createElement("button", {
-      onClick: () => setDraft(d => d.filter((_, j) => j !== i)),
+    }, open ? '▾' : '⚙'), React.createElement("button", {
+      onClick: () => {
+        setDraft(d => d.filter((_, j) => j !== i));
+        setCfgOpen(-1);
+      },
       title: tr('លុប', 'Remove'),
-      style: {
-        border: '1px solid var(--border)',
-        background: 'var(--surface)',
-        color: 'var(--ink-3)',
-        borderRadius: 8,
-        width: 34,
-        height: 34,
-        cursor: 'pointer',
-        flexShrink: 0
-      }
-    }, "\u2715")), hdrs && hdrs.length ? React.createElement("div", {
+      style: iconBtn
+    }, "\u2715")), open && (hdrs && hdrs.length ? React.createElement("div", {
       style: {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))',
-        gap: 8
+        gap: 8,
+        paddingTop: 2
       }
     }, MAP_FIELDS.map(f => React.createElement("div", {
       key: f.k
@@ -20010,10 +20026,26 @@ var ScoresScreen = ({
       value: ci
     }, h || 'Col ' + (ci + 1))))))) : React.createElement("div", {
       style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
         fontSize: 11,
-        color: 'var(--ink-3)'
+        color: 'var(--ink-3)',
+        paddingTop: 2
       }
-    }, s.url ? tr('ចុច ↻ ដើម្បី​ផ្ទុក​ជួរ​ឈរ​សម្រាប់​ការ​កំណត់', 'Click ↻ to load columns for mapping') : ''));
+    }, React.createElement("button", {
+      onClick: () => loadHeadersFor(i, s.url),
+      style: {
+        border: '1px solid var(--border)',
+        background: 'var(--surface)',
+        color: 'var(--ink-2)',
+        borderRadius: 7,
+        padding: '5px 10px',
+        cursor: 'pointer',
+        fontSize: 12,
+        fontFamily: 'inherit'
+      }
+    }, "\u21BB ", tr('ផ្ទុក​ជួរ​ឈរ', 'Load columns')), React.createElement("span", null, s.url ? tr('ដើម្បី​កំណត់​ជួរ​ឈរ', 'to map columns') : tr('ដាក់ URL សិន', 'enter a URL first')))));
   }), React.createElement("div", {
     style: {
       display: 'flex',

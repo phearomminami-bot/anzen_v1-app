@@ -210,6 +210,7 @@ const ScoresScreen = ({ role }) => {
   const [cfg, setCfg] = React.useState(false);
   const [draft, setDraft] = React.useState(null);        // editable list while cfg is open
   const [draftHeaders, setDraftHeaders] = React.useState([]);  // headers per draft row (for mapping)
+  const [cfgOpen, setCfgOpen] = React.useState(-1);      // which cfg row is expanded (accordion); -1 = all collapsed
   const [studentQ, setStudentQ]     = React.useState('');
   const [passFilter, setPassFilter] = React.useState('all');   // all | pass | fail
   const [companyF, setCompanyF]     = React.useState('');      // '' = all
@@ -237,8 +238,7 @@ const ScoresScreen = ({ role }) => {
   const openCfg = (addBlank) => {
     const d = sheets.map(s => ({ title: s.title || '', url: s.url || '', map: { ...(s.map || {}) } }));
     if (addBlank) d.push({ title: '', url: '', map: {} });
-    setDraft(d); setDraftHeaders([]); setCfg(true);
-    d.forEach((s, i) => loadHeadersFor(i, s.url));
+    setDraft(d); setDraftHeaders([]); setCfgOpen(-1); setCfg(true);
   };
   const saveCfg = () => {
     const clean = (draft || []).map(s => ({ title: (s.title || '').trim() || tr('មេរៀន','Lesson'), url: (s.url || '').trim(), map: s.map || {} })).filter(s => s.url);
@@ -311,7 +311,7 @@ const ScoresScreen = ({ role }) => {
         <div style={{ position:'relative', display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
           <div style={{ fontSize:17, fontWeight:800 }}>{tr('តារាង​ពិន្ទុ','Scores')}</div>
           <div style={{ display:'flex', gap:7 }}>
-            <button onClick={openCfg} title={tr('គ្រប់គ្រង​តំណ','Manage links')} style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', border:'none', borderRadius:10, cursor:'pointer', background:'rgba(255,255,255,.18)', color:'#fff' }}><Icon name="settings" size={15}/></button>
+            <button onClick={()=>openCfg(false)} title={tr('គ្រប់គ្រង​តំណ','Manage links')} style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', border:'none', borderRadius:10, cursor:'pointer', background:'rgba(255,255,255,.18)', color:'#fff' }}><Icon name="settings" size={15}/></button>
             <button onClick={openAdd} title={tr('បន្ថែម​តំណ​ថ្មី','Add new link')} aria-label={tr('បន្ថែម​តំណ​ថ្មី','Add new link')} style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', border:'none', borderRadius:10, cursor:'pointer', background:'rgba(255,255,255,.18)', color:'#fff' }}><Icon name="plus" size={16}/></button>
             <button onClick={()=>load(cur && cur.url, true)} title={tr('ធ្វើ​បច្ចុប្បន្នភាព','Refresh')} style={{ display:'inline-flex', alignItems:'center', gap:5, height:32, padding: bp.mobile?'0':'0 13px', width: bp.mobile?32:'auto', justifyContent:'center', border:'none', borderRadius: bp.mobile?10:999, cursor:'pointer', background:'rgba(255,255,255,.18)', color:'#fff', fontSize:12, fontWeight:700, fontFamily:'inherit' }}>
               <Icon name="download" size={bp.mobile?15:14}/>{bp.mobile ? '' : tr('ទាញ​ម្ដង​ទៀត','Refresh')}
@@ -387,20 +387,21 @@ const ScoresScreen = ({ role }) => {
       {cfg && (
         <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:12, padding:14, display:'flex', flexDirection:'column', gap:10 }}>
           <div style={{ fontSize:13, fontWeight:700 }}>{tr('តំណ Google Sheet (សាធារណៈ)','Google Sheet links (public)')}</div>
-          {(draft || []).map((s, i) => { const hdrs = draftHeaders[i];
+          {(draft || []).map((s, i) => { const hdrs = draftHeaders[i]; const open = cfgOpen === i;
+            const toggle = () => { const willOpen = !open; setCfgOpen(willOpen ? i : -1); if (willOpen && !hdrs && s.url) loadHeadersFor(i, s.url); };
+            const iconBtn = { border:'1px solid var(--border)', background:'var(--surface)', color:'var(--ink-3)', borderRadius:8, width:32, height:32, cursor:'pointer', flexShrink:0, fontSize:13, lineHeight:1 };
             return (
-            <div key={i} style={{ border:'1px solid var(--border)', borderRadius:10, padding:11, display:'flex', flexDirection:'column', gap:8 }}>
-              <div style={{ display:'flex', gap:6, alignItems:'flex-start' }}>
-                <div style={{ flex:'0 0 140px' }}>
-                  <input value={s.title} onChange={e=>setDraft(d=>d.map((x,j)=>j===i?{...x,title:e.target.value}:x))} placeholder={tr('ឈ្មោះ​មេរៀន','Lesson name')} style={inp}/>
-                </div>
-                <input value={s.url} onChange={e=>setDraft(d=>d.map((x,j)=>j===i?{...x,url:e.target.value}:x))} onBlur={()=>loadHeadersFor(i, s.url)} placeholder="https://docs.google.com/spreadsheets/d/..." style={{ ...inp, flex:1 }}/>
-                <button onClick={()=>loadHeadersFor(i, s.url)} title={tr('ផ្ទុក​ជួរ​ឈរ','Load columns')} style={{ border:'1px solid var(--border)', background:'var(--surface)', color:'var(--ink-2)', borderRadius:8, width:34, height:34, cursor:'pointer', flexShrink:0 }}>↻</button>
-                <button onClick={()=>setDraft(d=>d.filter((_,j)=>j!==i))} title={tr('លុប','Remove')} style={{ border:'1px solid var(--border)', background:'var(--surface)', color:'var(--ink-3)', borderRadius:8, width:34, height:34, cursor:'pointer', flexShrink:0 }}>✕</button>
+            <div key={i} style={{ border:'1px solid '+(open?'var(--accent)':'var(--border)'), borderRadius:10, padding:'7px 8px', display:'flex', flexDirection:'column', gap:8 }}>
+              {/* Compact one-line row: title · url · load · expand-mapping · remove */}
+              <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                <input value={s.title} onChange={e=>setDraft(d=>d.map((x,j)=>j===i?{...x,title:e.target.value}:x))} placeholder={tr('ឈ្មោះ','Name')} style={{ ...inp, flex:'0 0 110px', padding:'7px 9px' }}/>
+                <input value={s.url} onChange={e=>setDraft(d=>d.map((x,j)=>j===i?{...x,url:e.target.value}:x))} onBlur={()=>{ if (open) loadHeadersFor(i, s.url); }} placeholder="https://docs.google.com/spreadsheets/d/..." style={{ ...inp, flex:1, minWidth:0, padding:'7px 9px', textOverflow:'ellipsis' }}/>
+                <button onClick={toggle} title={tr('កំណត់​ជួរ​ឈរ','Column mapping')} style={{ ...iconBtn, color: open?'var(--accent)':'var(--ink-3)', borderColor: open?'var(--accent)':'var(--border)' }}>{open ? '▾' : '⚙'}</button>
+                <button onClick={()=>{ setDraft(d=>d.filter((_,j)=>j!==i)); setCfgOpen(-1); }} title={tr('លុប','Remove')} style={iconBtn}>✕</button>
               </div>
-              {/* Column mapping — choose which sheet column is which */}
-              {hdrs && hdrs.length ? (
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:8 }}>
+              {/* Column mapping — only for the expanded row */}
+              {open && (hdrs && hdrs.length ? (
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:8, paddingTop:2 }}>
                   {MAP_FIELDS.map(f => (
                     <div key={f.k}>
                       <div style={{ fontSize:10.5, color:'var(--ink-3)', marginBottom:3 }}>{f.label}</div>
@@ -412,8 +413,11 @@ const ScoresScreen = ({ role }) => {
                   ))}
                 </div>
               ) : (
-                <div style={{ fontSize:11, color:'var(--ink-3)' }}>{s.url ? tr('ចុច ↻ ដើម្បី​ផ្ទុក​ជួរ​ឈរ​សម្រាប់​ការ​កំណត់','Click ↻ to load columns for mapping') : ''}</div>
-              )}
+                <div style={{ display:'flex', alignItems:'center', gap:8, fontSize:11, color:'var(--ink-3)', paddingTop:2 }}>
+                  <button onClick={()=>loadHeadersFor(i, s.url)} style={{ border:'1px solid var(--border)', background:'var(--surface)', color:'var(--ink-2)', borderRadius:7, padding:'5px 10px', cursor:'pointer', fontSize:12, fontFamily:'inherit' }}>↻ {tr('ផ្ទុក​ជួរ​ឈរ','Load columns')}</button>
+                  <span>{s.url ? tr('ដើម្បី​កំណត់​ជួរ​ឈរ','to map columns') : tr('ដាក់ URL សិន','enter a URL first')}</span>
+                </div>
+              ))}
             </div>
             );
           })}
