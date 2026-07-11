@@ -3278,7 +3278,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v204";</script>
+<script>window.__ANZEN_VERSION="v205";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -20257,10 +20257,9 @@ var ScoreSheetForStudent = ({
         } = r.value;
         var cols = resolveScoreCols(d.headers, sh);
         d.rows.forEach(row => {
-          var match = row.some(cell => {
-            var c = String(cell || '').toLowerCase().trim();
-            return c && names.some(n => n && (c === n || c.includes(n) || n.includes(c)));
-          });
+          var nameCell = cols.student >= 0 ? String(row[cols.student] || '').toLowerCase().trim() : row.map(c => String(c || '')).join(' ').toLowerCase();
+          if (!nameCell) return;
+          var match = names.some(n => n && n.length >= 2 && (nameCell === n || nameCell.includes(n)));
           if (match) out.push({
             title: sh.title,
             cols,

@@ -485,7 +485,15 @@ const ScoreSheetForStudent = ({ student }) => {
           if (r.status !== 'fulfilled') return; anyOk = true;
           const { sh, d } = r.value; const cols = resolveScoreCols(d.headers, sh);
           d.rows.forEach(row => {
-            const match = row.some(cell => { const c = String(cell || '').toLowerCase().trim(); return c && names.some(n => n && (c === n || c.includes(n) || n.includes(c))); });
+            // Match ONLY the student-name column (fall back to the whole row if
+            // the sheet has no student column). Strict: the name cell must equal
+            // or contain the student's full name — never the reverse, so a short
+            // value like "T" can't match because a name happens to contain "t".
+            const nameCell = cols.student >= 0
+              ? String(row[cols.student] || '').toLowerCase().trim()
+              : row.map(c => String(c || '')).join(' ').toLowerCase();
+            if (!nameCell) return;
+            const match = names.some(n => n && n.length >= 2 && (nameCell === n || nameCell.includes(n)));
             if (match) out.push({ title: sh.title, cols, row, headers: d.headers });
           });
         });
