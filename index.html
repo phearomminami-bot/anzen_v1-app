@@ -476,7 +476,7 @@ window.__trRegistry = {
   "Check-out": "ចេញ​ថ្ងៃ​នេះ",
   "Contact": "ទំនាក់​ទំនង",
   "Editing...": "កំពុង​កែ​ប្រែ...",
-  "Lesson": "រៀន",
+  "Lesson": "មេរៀន",
   "Apply": "ដាក់ពាក្យ",
   "Exam": "ប្រឡង",
   "Low stock": "ស្តុក​ជិត​អស់",
@@ -604,21 +604,23 @@ window.__trRegistry = {
   "Rate": "វាយ​តម្លៃ",
   "Couldn\\'t load the sheet": "ទាញ​តារាង​មិន​បាន",
   "Make the sheet public: Google Sheets → Share → “Anyone with the link” → Viewer. Or File → Share → Publish to web → CSV, then paste that URL.": "សូម​ចែករំលែក​សន្លឹក​ជា​សាធារណៈ៖ Google Sheets → Share → “Anyone with the link” → Viewer។ ឬ File → Share → Publish to web → CSV រួច​ដាក់ URL នោះ។",
-  "Empty sheet": "សន្លឹក​ទទេ",
+  "Couldn\\'t map date/student/company/score — showing all columns": "រក​ជួរ​ឈរ (កាលបរិច្ឆេទ/សិស្ស/ក្រុមហ៊ុន/ពិន្ទុ) មិន​ឃើញ — បង្ហាញ​ទាំង​អស់",
+  "Company": "ក្រុមហ៊ុន",
+  "Score": "ពិន្ទុ",
   "No rows": "គ្មាន​ទិន្នន័យ",
-  "Sheet URL saved": "បាន​រក្សាទុក URL",
   "Scores": "តារាង​ពិន្ទុ",
-  "Sheet URL": "កំណត់ URL",
+  "Saved": "បាន​រក្សាទុក",
+  "Manage links": "គ្រប់គ្រង​តំណ",
   "Loading…": "កំពុង​ទាញ...",
   "rows": "ជួរ",
-  "columns": "ជួរឈរ",
-  "Live from Google Sheets": "ទាញ​ផ្ទាល់​ពី Google Sheets",
-  "Google Sheet URL (public)": "URL របស់ Google Sheet (សាធារណៈ)",
+  "Google Sheet links (public)": "តំណ Google Sheet (សាធារណៈ)",
+  "Lesson name": "ឈ្មោះ​មេរៀន",
+  "Remove": "ដក​ចេញ",
+  "Add link": "បន្ថែម​តំណ",
   "Loading the sheet…": "កំពុង​ទាញ​តារាង...",
   "Loading scores…": "កំពុង​ទាញ​ពិន្ទុ...",
-  "Couldn\\'t load scores — check the sheet sharing": "ទាញ​ពិន្ទុ​មិន​បាន — សូម​ពិនិត្យ​ការ​ចែករំលែក​សន្លឹក",
-  "No data": "គ្មាន​ទិន្នន័យ",
-  "No matching rows for this student in the sheet": "រក​ពិន្ទុ​របស់​សិស្ស​នេះ​មិន​ឃើញ​ក្នុង​សន្លឹក",
+  "Couldn\\'t load — check sheet sharing": "ទាញ​ពិន្ទុ​មិន​បាន — ពិនិត្យ​ការ​ចែករំលែក​សន្លឹក",
+  "No scores found for this student": "រក​ពិន្ទុ​សិស្ស​នេះ​មិន​ឃើញ",
   "Copy": "ម៉ូដ​ចម្លង",
   "Move": "ម៉ូដ​ផ្លាស់​ទី",
   "today": "ថ្ងៃ​នេះ",
@@ -656,7 +658,6 @@ window.__trRegistry = {
   "e.g. All-instructor meeting in the conference room at 2pm": "ឧ. ប្រជុំគ្រូទាំងអស់ នៅបន្ទប់ប្រជុំ ម៉ោង ២ រសៀល",
   "Invite instructors": "អញ្ជើញ​គ្រូ",
   "+ Select instructor": "+ ជ្រើស​គ្រូ",
-  "Remove": "ដក​ចេញ",
   "No instructors": "មិន​មាន​គ្រូ",
   "New '+window.__SCHED_KIND(examModal.kind).en.toLowerCase())}\n            </div>\n            <div style={{fontSize:11,color:'var(--ink-3)": "កែ '+window.__SCHED_KIND(examModal.kind).km, 'Edit '+window.__SCHED_KIND(examModal.kind).en.toLowerCase()) : tr(window.__SCHED_KIND(examModal.kind).km+' ថ្មី",
   "Not counted as a lesson": "មិន​រាប់​បញ្ចូល​ជា​មេរៀន",
@@ -784,7 +785,6 @@ window.__trRegistry = {
   "Add quiz": "បន្ថែម​លំហាត់",
   "Google Form exercise": "លំហាត់ Google Form",
   "question' + (qCount===1?'':'s": "សំណួរ",
-  "Saved": "បាន​រក្សាទុក",
   "Added": "បានបន្ថែម",
   "Delete this item?": "លុប​ទំនិញ​នេះ?",
   "Removed": "បានលុប",
@@ -2012,7 +2012,6 @@ window.__trGroups = {
     "e.g. All-instructor meeting in the conference room at 2pm": "ឧ. ប្រជុំគ្រូទាំងអស់ នៅបន្ទប់ប្រជុំ ម៉ោង ២ រសៀល",
     "Invite instructors": "អញ្ជើញ​គ្រូ",
     "+ Select instructor": "+ ជ្រើស​គ្រូ",
-    "Remove": "ដក​ចេញ",
     "No instructors": "មិន​មាន​គ្រូ",
     "New '+window.__SCHED_KIND(examModal.kind).en.toLowerCase())}\n            </div>\n            <div style={{fontSize:11,color:'var(--ink-3)": "កែ '+window.__SCHED_KIND(examModal.kind).km, 'Edit '+window.__SCHED_KIND(examModal.kind).en.toLowerCase()) : tr(window.__SCHED_KIND(examModal.kind).km+' ថ្មី",
     "Not counted as a lesson": "មិន​រាប់​បញ្ចូល​ជា​មេរៀន",
@@ -2144,7 +2143,6 @@ window.__trGroups = {
     "Add quiz": "បន្ថែម",
     "Google Form exercise": "លំហាត់ Google Form",
     "question' + (qCount===1?'':'s": "សំណួរ",
-    "Saved": "បាន​រក្សា​ទុក",
     "Added": "បាន​បន្ថែម",
     "Delete this item?": "លុប​មេរៀន?",
     "Removed": "បាន​លុប",
@@ -3080,21 +3078,23 @@ window.__trGroups = {
   "តារាងពិន្ទុ · Scores": {
     "Couldn\\'t load the sheet": "ទាញ​តារាង​មិន​បាន",
     "Make the sheet public: Google Sheets → Share → “Anyone with the link” → Viewer. Or File → Share → Publish to web → CSV, then paste that URL.": "សូម​ចែករំលែក​សន្លឹក​ជា​សាធារណៈ៖ Google Sheets → Share → “Anyone with the link” → Viewer។ ឬ File → Share → Publish to web → CSV រួច​ដាក់ URL នោះ។",
-    "Empty sheet": "សន្លឹក​ទទេ",
+    "Couldn\\'t map date/student/company/score — showing all columns": "រក​ជួរ​ឈរ (កាលបរិច្ឆេទ/សិស្ស/ក្រុមហ៊ុន/ពិន្ទុ) មិន​ឃើញ — បង្ហាញ​ទាំង​អស់",
+    "Company": "ក្រុមហ៊ុន",
+    "Score": "ពិន្ទុ",
     "No rows": "គ្មាន​ទិន្នន័យ",
-    "Sheet URL saved": "បាន​រក្សាទុក URL",
-    "Scores": "តារាង​ពិន្ទុ",
-    "Sheet URL": "កំណត់ URL",
+    "Scores": "តារាងពិន្ទុ",
+    "Saved": "បាន​រក្សាទុក",
+    "Manage links": "គ្រប់គ្រង​តំណ",
     "Loading…": "កំពុង​ទាញ...",
     "rows": "ជួរ",
-    "columns": "ជួរឈរ",
-    "Live from Google Sheets": "ទាញ​ផ្ទាល់​ពី Google Sheets",
-    "Google Sheet URL (public)": "URL របស់ Google Sheet (សាធារណៈ)",
+    "Google Sheet links (public)": "តំណ Google Sheet (សាធារណៈ)",
+    "Lesson name": "ឈ្មោះ​មេរៀន",
+    "Remove": "លុប",
+    "Add link": "បន្ថែម​តំណ",
     "Loading the sheet…": "កំពុង​ទាញ​តារាង...",
     "Loading scores…": "កំពុង​ទាញ​ពិន្ទុ...",
-    "Couldn\\'t load scores — check the sheet sharing": "ទាញ​ពិន្ទុ​មិន​បាន — សូម​ពិនិត្យ​ការ​ចែករំលែក​សន្លឹក",
-    "No data": "គ្មាន​ទិន្នន័យ",
-    "No matching rows for this student in the sheet": "រក​ពិន្ទុ​របស់​សិស្ស​នេះ​មិន​ឃើញ​ក្នុង​សន្លឹក"
+    "Couldn\\'t load — check sheet sharing": "ទាញ​ពិន្ទុ​មិន​បាន — ពិនិត្យ​ការ​ចែករំលែក​សន្លឹក",
+    "No scores found for this student": "រក​ពិន្ទុ​សិស្ស​នេះ​មិន​ឃើញ"
   },
   "ការវិភាគ · Analytics": {
     "Total Students": "សិស្ស​សរុប",
@@ -3250,7 +3250,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v197";</script>
+<script>window.__ANZEN_VERSION="v198";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -18935,6 +18935,7 @@ Object.assign(window, {
 
 <script>
 var SCORE_SHEET_DEFAULT = 'https://docs.google.com/spreadsheets/d/1Z09Vq9GfmlULihgw-hV_7UxKdbQOWxErdJ8N-SI7kRw/edit';
+var SCORE_PASS = 95;
 var parseSheetRef = url => {
   if (!url) return null;
   var u = String(url).trim();
@@ -18947,11 +18948,10 @@ var parseSheetRef = url => {
   if (!id) return null;
   var gidm = u.match(/[#&?]gid=(\d+)/);
   var gid = gidm ? gidm[1] : null;
-  var csvUrl = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv${gid ? `&gid=${gid}` : ''}`;
   return {
     id,
     gid,
-    csvUrl
+    csvUrl: `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv${gid ? `&gid=${gid}` : ''}`
   };
 };
 window.__parseSheetRef = parseSheetRef;
@@ -19007,16 +19007,12 @@ var parseSheetCSV = text => {
   return rows;
 };
 window.__parseSheetCSV = parseSheetCSV;
-window.__scoreCache = window.__scoreCache || {
-  url: null,
-  at: 0,
-  data: null
-};
+window.__scoreCache = window.__scoreCache || {};
 var fetchScoreSheet = async (url, force) => {
   var ref = parseSheetRef(url);
   if (!ref) throw new Error('bad-url');
-  var cache = window.__scoreCache;
-  if (!force && cache.data && cache.url === url && Date.now() - cache.at < 60000) return cache.data;
+  var c = window.__scoreCache[url];
+  if (!force && c && Date.now() - c.at < 60000) return c.data;
   var res = await fetch(ref.csvUrl, {
     credentials: 'omit'
   });
@@ -19028,15 +19024,63 @@ var fetchScoreSheet = async (url, force) => {
     headers: rows.length ? rows[0] : [],
     rows: rows.slice(1)
   };
-  window.__scoreCache = {
-    url,
+  window.__scoreCache[url] = {
     at: Date.now(),
     data
   };
   return data;
 };
 window.__fetchScoreSheet = fetchScoreSheet;
-var scoreSheetUrl = () => window.__schoolSettings && window.__schoolSettings.scoreSheetUrl || SCORE_SHEET_DEFAULT;
+var scoreSheets = () => {
+  var ss = window.__schoolSettings || {};
+  if (Array.isArray(ss.scoreSheets) && ss.scoreSheets.length) return ss.scoreSheets;
+  return [{
+    title: 'តារាងពិន្ទុ',
+    url: ss.scoreSheetUrl || SCORE_SHEET_DEFAULT
+  }];
+};
+var saveScoreSheets = list => {
+  if (!window.__schoolSettings) window.__schoolSettings = {};
+  window.__schoolSettings.scoreSheets = list;
+  if (window.saveAllData) window.saveAllData();
+};
+var findCol = (headers, regexes, exclude) => {
+  var _loop = function () {
+      if (exclude && exclude.includes(i)) return 0;
+      var h = String(headers[i] || '').toLowerCase();
+      if (regexes.some(r => r.test(h))) return {
+        v: i
+      };
+    },
+    _ret;
+  for (var i = 0; i < headers.length; i++) {
+    _ret = _loop();
+    if (_ret === 0) continue;
+    if (_ret) return _ret.v;
+  }
+  return -1;
+};
+var detectScoreCols = headers => {
+  var company = findCol(headers, [/company/, /ក្រុមហ៊ុន/, /firm/]);
+  var student = findCol(headers, [/student/, /សិស្ស/, /ឈ្មោះ/, /\bname\b/], [company]);
+  var date = findCol(headers, [/date/, /ថ្ងៃ/, /កាល/, /បរិច្ឆេ/], [company, student]);
+  var score = findCol(headers, [/score/, /ពិន្ទុ/, /mark/, /grade/, /point/, /%/, /result/], [company, student, date]);
+  return {
+    date,
+    student,
+    company,
+    score
+  };
+};
+var scoreNum = v => {
+  var m = String(v == null ? '' : v).match(/-?\d+(\.\d+)?/);
+  return m ? parseFloat(m[0]) : null;
+};
+var scoreColor = v => {
+  var n = scoreNum(v);
+  if (n == null) return 'var(--ink)';
+  return n < SCORE_PASS ? '#B0413E' : '#2A5DB0';
+};
 var ScoreError = ({
   err,
   tr
@@ -19075,28 +19119,30 @@ var ScoreError = ({
     fontFamily: '"JetBrains Mono",monospace'
   }
 }, String(err && err.message || err || '')));
-var SheetTable = ({
+var ScoreTable = ({
   data,
-  tr,
-  highlight
+  tr
 }) => {
+  var cols = detectScoreCols(data.headers);
+  var some = [cols.date, cols.student, cols.company, cols.score].some(i => i >= 0);
   var th = {
     position: 'sticky',
     top: 0,
     zIndex: 1,
     background: 'var(--surface-muted)',
     border: '1px solid var(--border)',
-    padding: '8px 10px',
+    padding: '8px 11px',
     fontSize: 10.5,
     fontWeight: 700,
     color: 'var(--ink-3)',
     letterSpacing: '.02em',
     whiteSpace: 'nowrap',
-    textAlign: 'left'
+    textAlign: 'left',
+    textTransform: 'uppercase'
   };
   var td = {
     border: '1px solid var(--border)',
-    padding: '7px 10px',
+    padding: '8px 11px',
     whiteSpace: 'nowrap',
     fontVariantNumeric: 'tabular-nums'
   };
@@ -19108,16 +19154,34 @@ var SheetTable = ({
     fontFamily: '"JetBrains Mono",monospace',
     fontSize: 11,
     width: 34,
-    padding: '7px 4px'
+    padding: '8px 4px'
   };
-  if (!data.headers.length) return React.createElement("div", {
-    style: {
-      fontSize: 13,
-      color: 'var(--ink-3)',
-      padding: '20px',
-      textAlign: 'center'
-    }
-  }, tr('សន្លឹក​ទទេ', 'Empty sheet'));
+  if (!some) {
+    return React.createElement(React.Fragment, null, React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: 'var(--ink-3)',
+        marginBottom: 6
+      }
+    }, tr('រក​ជួរ​ឈរ (កាលបរិច្ឆេទ/សិស្ស/ក្រុមហ៊ុន/ពិន្ទុ) មិន​ឃើញ — បង្ហាញ​ទាំង​អស់', 'Couldn\'t map date/student/company/score — showing all columns')), React.createElement(RawSheetTable, {
+      data: data,
+      tr: tr
+    }));
+  }
+  var C = [{
+    i: cols.date,
+    label: tr('កាលបរិច្ឆេទ', 'Date')
+  }, {
+    i: cols.student,
+    label: tr('ឈ្មោះ​សិស្ស', 'Student')
+  }, {
+    i: cols.company,
+    label: tr('ក្រុមហ៊ុន', 'Company')
+  }, {
+    i: cols.score,
+    label: tr('ពិន្ទុ', 'Score'),
+    score: true
+  }].filter(c => c.i >= 0);
   return React.createElement("div", {
     style: {
       background: 'var(--surface)',
@@ -19130,7 +19194,8 @@ var SheetTable = ({
     style: {
       borderCollapse: 'collapse',
       width: '100%',
-      fontSize: 12.5
+      fontSize: 12.5,
+      minWidth: 480
     }
   }, React.createElement("thead", null, React.createElement("tr", null, React.createElement("th", {
     style: {
@@ -19138,30 +19203,84 @@ var SheetTable = ({
       ...rowHdr,
       textAlign: 'center'
     }
-  }, "#"), data.headers.map((h, i) => React.createElement("th", {
+  }, "#"), C.map((c, i) => React.createElement("th", {
     key: i,
-    style: th
-  }, h || '—')))), React.createElement("tbody", null, data.rows.map((r, ri) => React.createElement("tr", {
+    style: {
+      ...th,
+      textAlign: c.score ? 'right' : 'left'
+    }
+  }, c.label)))), React.createElement("tbody", null, data.rows.map((r, ri) => React.createElement("tr", {
     key: ri
   }, React.createElement("td", {
     style: rowHdr
-  }, ri + 1), data.headers.map((h, ci) => React.createElement("td", {
-    key: ci,
+  }, ri + 1), C.map((c, i) => c.score ? React.createElement("td", {
+    key: i,
     style: {
       ...td,
-      ...(highlight && ci === highlight.col ? {
-        background: 'var(--accent-soft)',
-        fontWeight: 700
+      textAlign: 'right',
+      fontWeight: 800,
+      color: scoreColor(r[c.i])
+    }
+  }, r[c.i] != null ? r[c.i] : '') : React.createElement("td", {
+    key: i,
+    style: {
+      ...td,
+      ...(c.i === cols.student ? {
+        fontWeight: 600
       } : {})
     }
-  }, r[ci] != null ? r[ci] : '')))), data.rows.length === 0 && React.createElement("tr", null, React.createElement("td", {
-    colSpan: data.headers.length + 1,
+  }, r[c.i] != null ? r[c.i] : '')))), data.rows.length === 0 && React.createElement("tr", null, React.createElement("td", {
+    colSpan: C.length + 1,
     style: {
       textAlign: 'center',
       padding: 16,
       color: 'var(--ink-3)'
     }
   }, tr('គ្មាន​ទិន្នន័យ', 'No rows'))))));
+};
+var RawSheetTable = ({
+  data,
+  tr
+}) => {
+  var th = {
+    position: 'sticky',
+    top: 0,
+    background: 'var(--surface-muted)',
+    border: '1px solid var(--border)',
+    padding: '8px 10px',
+    fontSize: 10.5,
+    fontWeight: 700,
+    color: 'var(--ink-3)',
+    whiteSpace: 'nowrap',
+    textAlign: 'left'
+  };
+  var td = {
+    border: '1px solid var(--border)',
+    padding: '7px 10px',
+    whiteSpace: 'nowrap'
+  };
+  return React.createElement("div", {
+    style: {
+      background: 'var(--surface)',
+      border: '1px solid var(--border-strong)',
+      borderRadius: 10,
+      overflowX: 'auto'
+    }
+  }, React.createElement("table", {
+    style: {
+      borderCollapse: 'collapse',
+      width: '100%',
+      fontSize: 12.5
+    }
+  }, React.createElement("thead", null, React.createElement("tr", null, data.headers.map((h, i) => React.createElement("th", {
+    key: i,
+    style: th
+  }, h || '—')))), React.createElement("tbody", null, data.rows.map((r, ri) => React.createElement("tr", {
+    key: ri
+  }, data.headers.map((h, ci) => React.createElement("td", {
+    key: ci,
+    style: td
+  }, r[ci] != null ? r[ci] : '')))))));
 };
 var ScoresScreen = ({
   role
@@ -19170,15 +19289,19 @@ var ScoresScreen = ({
     tr,
     toast
   } = useAppActions();
-  var [data, setData] = React.useState(window.__scoreCache.data || null);
+  var [selIdx, setSelIdx] = React.useState(0);
+  var [data, setData] = React.useState(null);
   var [err, setErr] = React.useState(null);
   var [loading, setLoading] = React.useState(false);
   var [cfg, setCfg] = React.useState(false);
-  var [urlDraft, setUrlDraft] = React.useState(scoreSheetUrl());
-  var load = React.useCallback(force => {
+  var [draft, setDraft] = React.useState(null);
+  var sheets = scoreSheets();
+  var cur = sheets[Math.min(selIdx, sheets.length - 1)] || sheets[0];
+  var load = React.useCallback((url, force) => {
+    if (!url) return;
     setLoading(true);
     setErr(null);
-    fetchScoreSheet(scoreSheetUrl(), force).then(d => {
+    fetchScoreSheet(url, force).then(d => {
       setData(d);
       setLoading(false);
     }).catch(e => {
@@ -19187,20 +19310,39 @@ var ScoresScreen = ({
     });
   }, []);
   React.useEffect(() => {
-    load(false);
-  }, [load]);
-  var saveUrl = () => {
-    if (!window.__schoolSettings) window.__schoolSettings = {};
-    window.__schoolSettings.scoreSheetUrl = urlDraft.trim();
-    if (window.saveAllData) window.saveAllData();
+    load(cur && cur.url, false);
+  }, [selIdx]);
+  var openCfg = () => {
+    setDraft(sheets.map(s => ({
+      ...s
+    })));
+    setCfg(true);
+  };
+  var saveCfg = () => {
+    var clean = (draft || []).map(s => ({
+      title: (s.title || '').trim() || tr('មេរៀន', 'Lesson'),
+      url: (s.url || '').trim()
+    })).filter(s => s.url);
+    saveScoreSheets(clean.length ? clean : [{
+      title: tr('តារាងពិន្ទុ', 'Scores'),
+      url: SCORE_SHEET_DEFAULT
+    }]);
+    window.__scoreCache = {};
     setCfg(false);
-    window.__scoreCache = {
-      url: null,
-      at: 0,
-      data: null
-    };
-    load(true);
-    toast(tr('បាន​រក្សាទុក URL', 'Sheet URL saved'), 'good');
+    setSelIdx(0);
+    toast(tr('បាន​រក្សាទុក', 'Saved'), 'good');
+    setTimeout(() => load(scoreSheets()[0].url, true), 0);
+  };
+  var inp = {
+    width: '100%',
+    padding: '8px 10px',
+    border: '1px solid var(--border)',
+    borderRadius: 8,
+    fontSize: 12.5,
+    fontFamily: 'inherit',
+    background: 'var(--surface)',
+    color: 'var(--ink)',
+    boxSizing: 'border-box'
   };
   return React.createElement("div", {
     style: {
@@ -19256,8 +19398,8 @@ var ScoresScreen = ({
       gap: 7
     }
   }, React.createElement("button", {
-    onClick: () => setCfg(c => !c),
-    title: tr('កំណត់ URL', 'Sheet URL'),
+    onClick: openCfg,
+    title: tr('គ្រប់គ្រង​តំណ', 'Manage links'),
     style: {
       width: 32,
       height: 32,
@@ -19274,7 +19416,7 @@ var ScoresScreen = ({
     name: "settings",
     size: 15
   })), React.createElement("button", {
-    onClick: () => load(true),
+    onClick: () => load(cur && cur.url, true),
     title: tr('ធ្វើ​បច្ចុប្បន្នភាព', 'Refresh'),
     style: {
       display: 'inline-flex',
@@ -19297,56 +19439,149 @@ var ScoresScreen = ({
   }), tr('ទាញ​ម្ដង​ទៀត', 'Refresh')))), React.createElement("div", {
     style: {
       position: 'relative',
-      fontSize: 11.5,
-      opacity: .85,
-      marginTop: 8
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: 12
     }
-  }, loading ? tr('កំពុង​ទាញ...', 'Loading…') : data ? `${data.rows.length} ${tr('ជួរ', 'rows')} · ${data.headers.length} ${tr('ជួរឈរ', 'columns')}` : tr('ទាញ​ផ្ទាល់​ពី Google Sheets', 'Live from Google Sheets'))), cfg && React.createElement("div", {
+  }, React.createElement("span", {
+    style: {
+      fontSize: 11.5,
+      opacity: .85
+    }
+  }, tr('មេរៀន', 'Lesson')), React.createElement("select", {
+    value: Math.min(selIdx, sheets.length - 1),
+    onChange: e => setSelIdx(+e.target.value),
+    style: {
+      flex: '0 1 260px',
+      maxWidth: '70%',
+      padding: '7px 11px',
+      borderRadius: 9,
+      border: 'none',
+      cursor: 'pointer',
+      background: 'rgba(255,255,255,.92)',
+      color: '#1a2032',
+      fontSize: 13,
+      fontWeight: 600,
+      fontFamily: 'inherit'
+    }
+  }, sheets.map((s, i) => React.createElement("option", {
+    key: i,
+    value: i
+  }, s.title || tr('មេរៀន', 'Lesson') + ' ' + (i + 1)))), React.createElement("span", {
+    style: {
+      fontSize: 11.5,
+      opacity: .8,
+      marginLeft: 'auto'
+    }
+  }, loading ? tr('កំពុង​ទាញ...', 'Loading…') : data ? `${data.rows.length} ${tr('ជួរ', 'rows')}` : ''))), cfg && React.createElement("div", {
     style: {
       background: 'var(--surface)',
       border: '1px solid var(--border)',
       borderRadius: 12,
-      padding: 14
+      padding: 14,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 10
     }
   }, React.createElement("div", {
     style: {
-      fontSize: 11,
-      fontWeight: 600,
-      color: 'var(--ink-3)',
-      marginBottom: 5
+      fontSize: 13,
+      fontWeight: 700
     }
-  }, tr('URL របស់ Google Sheet (សាធារណៈ)', 'Google Sheet URL (public)')), React.createElement("div", {
+  }, tr('តំណ Google Sheet (សាធារណៈ)', 'Google Sheet links (public)')), (draft || []).map((s, i) => React.createElement("div", {
+    key: i,
+    style: {
+      display: 'flex',
+      gap: 6,
+      alignItems: 'flex-start'
+    }
+  }, React.createElement("div", {
+    style: {
+      flex: '0 0 140px'
+    }
+  }, React.createElement("input", {
+    value: s.title,
+    onChange: e => setDraft(d => d.map((x, j) => j === i ? {
+      ...x,
+      title: e.target.value
+    } : x)),
+    placeholder: tr('ឈ្មោះ​មេរៀន', 'Lesson name'),
+    style: inp
+  })), React.createElement("input", {
+    value: s.url,
+    onChange: e => setDraft(d => d.map((x, j) => j === i ? {
+      ...x,
+      url: e.target.value
+    } : x)),
+    placeholder: "https://docs.google.com/spreadsheets/d/...",
+    style: {
+      ...inp,
+      flex: 1
+    }
+  }), React.createElement("button", {
+    onClick: () => setDraft(d => d.filter((_, j) => j !== i)),
+    title: tr('លុប', 'Remove'),
+    style: {
+      border: '1px solid var(--border)',
+      background: 'var(--surface)',
+      color: 'var(--ink-3)',
+      borderRadius: 8,
+      width: 34,
+      height: 34,
+      cursor: 'pointer',
+      flexShrink: 0
+    }
+  }, "\u2715"))), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8
     }
-  }, React.createElement("input", {
-    value: urlDraft,
-    onChange: e => setUrlDraft(e.target.value),
-    placeholder: "https://docs.google.com/spreadsheets/d/...",
+  }, React.createElement("button", {
+    onClick: () => setDraft(d => [...(d || []), {
+      title: '',
+      url: ''
+    }]),
     style: {
-      flex: 1,
-      padding: '9px 11px',
-      border: '1px solid var(--border)',
+      border: '1px dashed var(--border-strong)',
+      background: 'transparent',
+      color: 'var(--accent)',
       borderRadius: 8,
+      padding: '8px 12px',
       fontSize: 12.5,
-      fontFamily: 'inherit',
-      background: 'var(--surface)',
-      color: 'var(--ink)'
+      fontWeight: 700,
+      cursor: 'pointer',
+      fontFamily: 'inherit'
+    }
+  }, "+ ", tr('បន្ថែម​តំណ', 'Add link')), React.createElement("div", {
+    style: {
+      flex: 1
     }
   }), React.createElement("button", {
-    onClick: saveUrl,
+    onClick: () => setCfg(false),
+    style: {
+      border: '1px solid var(--border-strong)',
+      background: 'var(--surface)',
+      color: 'var(--ink-2)',
+      borderRadius: 8,
+      padding: '8px 14px',
+      fontSize: 13,
+      fontWeight: 600,
+      cursor: 'pointer',
+      fontFamily: 'inherit'
+    }
+  }, tr('បោះបង់', 'Cancel')), React.createElement("button", {
+    onClick: saveCfg,
     style: {
       border: 'none',
       background: 'var(--accent)',
       color: '#fff',
       borderRadius: 8,
-      padding: '0 14px',
+      padding: '8px 16px',
+      fontSize: 13,
       fontWeight: 700,
       cursor: 'pointer',
-      fontSize: 13,
-      fontFamily: 'inherit',
-      flexShrink: 0
+      fontFamily: 'inherit'
     }
   }, tr('រក្សាទុក', 'Save')))), loading && !data ? React.createElement("div", {
     style: {
@@ -19358,7 +19593,7 @@ var ScoresScreen = ({
   }, tr('កំពុង​ទាញ​តារាង...', 'Loading the sheet…')) : err ? React.createElement(ScoreError, {
     err: err,
     tr: tr
-  }) : data ? React.createElement(SheetTable, {
+  }) : data ? React.createElement(ScoreTable, {
     data: data,
     tr: tr
   }) : null);
@@ -19369,21 +19604,43 @@ var ScoreSheetForStudent = ({
   var {
     tr
   } = useAppActions();
-  var [data, setData] = React.useState(window.__scoreCache.data || null);
-  var [err, setErr] = React.useState(null);
-  var [loading, setLoading] = React.useState(!window.__scoreCache.data);
+  var [hits, setHits] = React.useState(null);
+  var [loading, setLoading] = React.useState(true);
+  var [err, setErr] = React.useState(false);
   React.useEffect(() => {
     var alive = true;
-    fetchScoreSheet(scoreSheetUrl(), false).then(d => {
-      if (alive) {
-        setData(d);
-        setLoading(false);
-      }
-    }).catch(e => {
-      if (alive) {
-        setErr(e);
-        setLoading(false);
-      }
+    var names = [student.name, student.en, student.id].filter(Boolean).map(x => String(x).toLowerCase().trim());
+    Promise.allSettled(scoreSheets().map(sh => fetchScoreSheet(sh.url, false).then(d => ({
+      sh,
+      d
+    })))).then(results => {
+      if (!alive) return;
+      var anyOk = false;
+      var out = [];
+      results.forEach(r => {
+        if (r.status !== 'fulfilled') return;
+        anyOk = true;
+        var {
+          sh,
+          d
+        } = r.value;
+        var cols = detectScoreCols(d.headers);
+        d.rows.forEach(row => {
+          var match = row.some(cell => {
+            var c = String(cell || '').toLowerCase().trim();
+            return c && names.some(n => n && (c === n || c.includes(n) || n.includes(c)));
+          });
+          if (match) out.push({
+            title: sh.title,
+            cols,
+            row,
+            headers: d.headers
+          });
+        });
+      });
+      setHits(out);
+      setErr(!anyOk);
+      setLoading(false);
     });
     return () => {
       alive = false;
@@ -19402,59 +19659,63 @@ var ScoreSheetForStudent = ({
       color: 'var(--ink-3)',
       padding: '8px 0'
     }
-  }, tr('ទាញ​ពិន្ទុ​មិន​បាន — សូម​ពិនិត្យ​ការ​ចែករំលែក​សន្លឹក', 'Couldn\'t load scores — check the sheet sharing'));
-  if (!data || !data.headers.length) return React.createElement("div", {
+  }, tr('ទាញ​ពិន្ទុ​មិន​បាន — ពិនិត្យ​ការ​ចែករំលែក​សន្លឹក', 'Couldn\'t load — check sheet sharing'));
+  if (!hits || !hits.length) return React.createElement("div", {
     style: {
       fontSize: 12.5,
       color: 'var(--ink-3)',
       padding: '8px 0'
     }
-  }, tr('គ្មាន​ទិន្នន័យ', 'No data'));
-  var names = [student.name, student.en, student.id].filter(Boolean).map(x => String(x).toLowerCase().trim());
-  var mine = data.rows.filter(r => r.some(cell => {
-    var c = String(cell || '').toLowerCase().trim();
-    return c && names.some(n => n && (c === n || c.includes(n) || n.includes(c)));
-  }));
-  if (!mine.length) return React.createElement("div", {
-    style: {
-      fontSize: 12.5,
-      color: 'var(--ink-3)',
-      padding: '8px 0'
-    }
-  }, tr('រក​ពិន្ទុ​របស់​សិស្ស​នេះ​មិន​ឃើញ​ក្នុង​សន្លឹក', 'No matching rows for this student in the sheet'));
+  }, tr('រក​ពិន្ទុ​សិស្ស​នេះ​មិន​ឃើញ', 'No scores found for this student'));
+  var cell = (h, ci) => ci >= 0 && h.row[ci] != null ? h.row[ci] : '';
   return React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
-      gap: 10
+      gap: 8
     }
-  }, mine.map((r, ri) => React.createElement("div", {
-    key: ri,
-    style: {
-      border: '1px solid var(--border)',
-      borderRadius: 10,
-      overflow: 'hidden'
-    }
-  }, data.headers.map((h, ci) => r[ci] != null && String(r[ci]).trim() !== '' ? React.createElement("div", {
-    key: ci,
+  }, hits.map((h, i) => React.createElement("div", {
+    key: i,
     style: {
       display: 'flex',
-      justifyContent: 'space-between',
-      gap: 12,
-      padding: '7px 11px',
-      borderBottom: ci < data.headers.length - 1 ? '1px solid var(--border)' : 'none',
-      fontSize: 12.5
+      alignItems: 'center',
+      gap: 10,
+      padding: '10px 12px',
+      border: '1px solid var(--border)',
+      borderRadius: 10,
+      borderLeft: '3px solid ' + scoreColor(cell(h, h.cols.score))
     }
-  }, React.createElement("span", {
+  }, React.createElement("div", {
     style: {
-      color: 'var(--ink-3)'
+      flex: 1,
+      minWidth: 0
     }
-  }, h || '—'), React.createElement("span", {
+  }, React.createElement("div", {
     style: {
-      fontWeight: 600,
-      textAlign: 'right'
+      fontSize: 13,
+      fontWeight: 700
     }
-  }, r[ci])) : null))));
+  }, h.title, h.cols.company >= 0 && cell(h, h.cols.company) ? React.createElement("span", {
+    style: {
+      color: 'var(--ink-3)',
+      fontWeight: 500
+    }
+  }, " \xB7 ", cell(h, h.cols.company)) : ''), React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--ink-3)',
+      fontFamily: '"JetBrains Mono",monospace',
+      marginTop: 1
+    }
+  }, cell(h, h.cols.date) || '—')), React.createElement("div", {
+    style: {
+      fontSize: 20,
+      fontWeight: 800,
+      fontFamily: '"JetBrains Mono",monospace',
+      color: scoreColor(cell(h, h.cols.score)),
+      flexShrink: 0
+    }
+  }, cell(h, h.cols.score) || '—'))));
 };
 window.ScoreSheetForStudent = ScoreSheetForStudent;
 </script>
