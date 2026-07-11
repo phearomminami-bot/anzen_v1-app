@@ -137,14 +137,16 @@ const ScoreError = ({ err, tr }) => (
 );
 
 // Four-column score table (date · student · company · score) with pass colours.
-const ScoreTable = ({ data, tr, sheet }) => {
+const ScoreTable = ({ data, tr, sheet, compact }) => {
   const cols = resolveScoreCols(data.headers, sheet);
   // Only use the compact 4-column view when we can identify at least the
   // student and the score; otherwise show every column so nothing is hidden.
   const some = cols.student >= 0 && cols.score >= 0;
-  const th = { position:'sticky', top:0, zIndex:1, background:'var(--surface-muted)', border:'1px solid var(--border)', padding:'8px 11px', fontSize:10.5, fontWeight:700, color:'var(--ink-3)', letterSpacing:'.02em', whiteSpace:'nowrap', textAlign:'left', textTransform:'uppercase' };
-  const td = { border:'1px solid var(--border)', padding:'8px 11px', whiteSpace:'nowrap', fontVariantNumeric:'tabular-nums' };
-  const rowHdr = { border:'1px solid var(--border)', background:'var(--surface-muted)', color:'var(--ink-3)', textAlign:'center', fontFamily:'"JetBrains Mono",monospace', fontSize:11, width:34, padding:'8px 4px' };
+  // On phones: smaller text, tighter padding, wrap long cells so it fits.
+  const pad = compact ? '5px 6px' : '8px 11px';
+  const th = { position:'sticky', top:0, zIndex:1, background:'var(--surface-muted)', border:'1px solid var(--border)', padding:pad, fontSize:compact?9:10.5, fontWeight:700, color:'var(--ink-3)', letterSpacing:'.02em', whiteSpace:'nowrap', textAlign:'left', textTransform:'uppercase' };
+  const td = { border:'1px solid var(--border)', padding:pad, whiteSpace: compact?'normal':'nowrap', wordBreak: compact?'break-word':'normal', fontSize:compact?11:12.5, fontVariantNumeric:'tabular-nums', verticalAlign:'top' };
+  const rowHdr = { border:'1px solid var(--border)', background:'var(--surface-muted)', color:'var(--ink-3)', textAlign:'center', fontFamily:'"JetBrains Mono",monospace', fontSize:compact?9.5:11, width:compact?22:34, padding:compact?'5px 2px':'8px 4px' };
   if (!some) {  // couldn't map — show the whole sheet so nothing is hidden
     return <>
       <div style={{ fontSize:11.5, color:'var(--ink-2)', marginBottom:8, background:'var(--surface-muted)', borderRadius:8, padding:'8px 11px' }}>💡 {tr('រក​ជួរ​ឈរ​ស្វ័យ​ប្រវត្តិ​មិន​ឃើញ​ទេ — ចុច ⚙ → ↻ → ជ្រើស​ជួរ​ឈរ (កាលបរិច្ឆេទ/សិស្ស/ក្រុមហ៊ុន/ពិន្ទុ)។ ខាង​ក្រោម​បង្ហាញ​ទិន្នន័យ​ទាំង​អស់​សិន។','Couldn\'t auto-detect columns — tap ⚙ → ↻ → choose the date/student/company/score columns. Showing all data for now.')}</div>
@@ -159,7 +161,7 @@ const ScoreTable = ({ data, tr, sheet }) => {
   ].filter(c => c.i >= 0);
   return (
     <div style={{ background:'var(--surface)', border:'1px solid var(--border-strong)', borderRadius:10, overflowX:'auto', boxShadow:'0 4px 14px rgba(20,30,60,.05)' }}>
-      <table style={{ borderCollapse:'collapse', width:'100%', fontSize:12.5, minWidth:480 }}>
+      <table style={{ borderCollapse:'collapse', width:'100%', fontSize:compact?11:12.5, minWidth:compact?0:480, tableLayout:compact?'fixed':'auto' }}>
         <thead><tr>
           <th style={{ ...th, ...rowHdr, textAlign:'center' }}>#</th>
           {C.map((c, i) => <th key={i} style={{ ...th, textAlign: c.score ? 'right' : 'left' }}>{c.label}</th>)}
@@ -198,6 +200,7 @@ const RawSheetTable = ({ data, tr, scoreCol }) => {
 // ── Scores tab ───────────────────────────────────────────────────────────────
 const ScoresScreen = ({ role }) => {
   const { tr, toast } = useAppActions();
+  const bp = useBreakpoint();
   const [selIdx, setSelIdx] = React.useState(0);
   const [data, setData] = React.useState(null);
   const [err, setErr] = React.useState(null);
@@ -304,8 +307,8 @@ const ScoresScreen = ({ role }) => {
           <div style={{ display:'flex', gap:7 }}>
             <button onClick={openCfg} title={tr('គ្រប់គ្រង​តំណ','Manage links')} style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', border:'none', borderRadius:10, cursor:'pointer', background:'rgba(255,255,255,.18)', color:'#fff' }}><Icon name="settings" size={15}/></button>
             <button onClick={openAdd} title={tr('បន្ថែម​តំណ​ថ្មី','Add new link')} aria-label={tr('បន្ថែម​តំណ​ថ្មី','Add new link')} style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', border:'none', borderRadius:10, cursor:'pointer', background:'rgba(255,255,255,.18)', color:'#fff' }}><Icon name="plus" size={16}/></button>
-            <button onClick={()=>load(cur && cur.url, true)} title={tr('ធ្វើ​បច្ចុប្បន្នភាព','Refresh')} style={{ display:'inline-flex', alignItems:'center', gap:5, height:32, padding:'0 13px', border:'none', borderRadius:999, cursor:'pointer', background:'rgba(255,255,255,.18)', color:'#fff', fontSize:12, fontWeight:700, fontFamily:'inherit' }}>
-              <Icon name="download" size={14}/>{tr('ទាញ​ម្ដង​ទៀត','Refresh')}
+            <button onClick={()=>load(cur && cur.url, true)} title={tr('ធ្វើ​បច្ចុប្បន្នភាព','Refresh')} style={{ display:'inline-flex', alignItems:'center', gap:5, height:32, padding: bp.mobile?'0':'0 13px', width: bp.mobile?32:'auto', justifyContent:'center', border:'none', borderRadius: bp.mobile?10:999, cursor:'pointer', background:'rgba(255,255,255,.18)', color:'#fff', fontSize:12, fontWeight:700, fontFamily:'inherit' }}>
+              <Icon name="download" size={bp.mobile?15:14}/>{bp.mobile ? '' : tr('ទាញ​ម្ដង​ទៀត','Refresh')}
             </button>
           </div>
         </div>
@@ -416,46 +419,50 @@ const ScoresScreen = ({ role }) => {
         </div>
       )}
 
-      {/* Filters: student name · pass/fail · company */}
-      {canFilter && (
-        <div style={{ display:'flex', gap:8, flexWrap:'wrap', alignItems:'center' }}>
+      {/* Filters: student name · pass/fail · company · date. Compact on mobile. */}
+      {canFilter && (() => {
+        const m = bp.mobile;
+        const fsz = m ? 12 : 13, fpad = m ? '7px 10px' : '9px 12px';
+        return (
+        <div style={{ display:'flex', gap:m?6:8, flexWrap:'wrap', alignItems:'center' }}>
           {fcols.student >= 0 && (
             <input value={studentQ} onChange={e=>setStudentQ(e.target.value)} placeholder={tr('🔍 ស្វែងរក​ឈ្មោះ​សិស្ស...','🔍 Search student name…')}
-              style={{ flex:'1 1 200px', minWidth:0, padding:'9px 12px', border:'1px solid var(--border)', borderRadius:9, fontSize:13, fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)' }}/>
+              style={{ flex: m?'1 1 100%':'1 1 200px', minWidth:0, padding:fpad, border:'1px solid var(--border)', borderRadius:9, fontSize:fsz, fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)' }}/>
           )}
           {fcols.score >= 0 && (
-            <div style={{ display:'inline-flex', background:'var(--surface-muted)', border:'1px solid var(--border)', borderRadius:9, padding:2 }}>
+            <div style={{ display:'inline-flex', flex:m?'1 1 auto':'0 0 auto', background:'var(--surface-muted)', border:'1px solid var(--border)', borderRadius:9, padding:2 }}>
               {[{k:'all',l:tr('ទាំងអស់','All'),c:'var(--ink)'},{k:'pass',l:tr('ជាប់','Pass'),c:'#2A5DB0'},{k:'fail',l:tr('ធ្លាក់','Fail'),c:'#B0413E'}].map(o => (
-                <button key={o.k} onClick={()=>setPassFilter(o.k)} style={{ border:'none', borderRadius:7, padding:'6px 12px', cursor:'pointer', fontSize:12.5, fontWeight:700, fontFamily:'inherit',
+                <button key={o.k} onClick={()=>setPassFilter(o.k)} style={{ flex:m?1:'none', border:'none', borderRadius:7, padding:m?'6px 8px':'6px 12px', cursor:'pointer', fontSize:m?11.5:12.5, fontWeight:700, fontFamily:'inherit', whiteSpace:'nowrap',
                   background: passFilter===o.k ? 'var(--surface)' : 'transparent', color: passFilter===o.k ? o.c : 'var(--ink-3)', boxShadow: passFilter===o.k ? '0 1px 2px rgba(20,30,60,.12)' : 'none' }}>{o.l}</button>
               ))}
             </div>
           )}
           {fcols.company >= 0 && companies.length > 0 && (
-            <select value={companyF} onChange={e=>setCompanyF(e.target.value)} style={{ flex:'0 1 200px', padding:'9px 11px', border:'1px solid var(--border)', borderRadius:9, fontSize:13, fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)', cursor:'pointer' }}>
+            <select value={companyF} onChange={e=>setCompanyF(e.target.value)} style={{ flex: m?'1 1 46%':'0 1 200px', padding:fpad, border:'1px solid var(--border)', borderRadius:9, fontSize:fsz, fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)', cursor:'pointer' }}>
               <option value="">{tr('ក្រុមហ៊ុន​ទាំងអស់','All companies')}</option>
               {companies.map((c, i) => <option key={i} value={c}>{c}</option>)}
             </select>
           )}
           {fcols.date >= 0 && (
-            <div style={{ display:'inline-flex', alignItems:'center', gap:5, border:'1px solid var(--border)', borderRadius:9, padding:'3px 8px', background:'var(--surface)' }}>
-              <span style={{ fontSize:11.5, color:'var(--ink-3)' }}>{tr('ពី','From')}</span>
-              <input type="date" value={fromDate} onChange={e=>setFromDate(e.target.value)} style={{ border:'none', background:'transparent', color:'var(--ink)', fontSize:12.5, fontFamily:'inherit' }}/>
-              <span style={{ fontSize:11.5, color:'var(--ink-3)' }}>{tr('ដល់','to')}</span>
-              <input type="date" value={toDate} onChange={e=>setToDate(e.target.value)} style={{ border:'none', background:'transparent', color:'var(--ink)', fontSize:12.5, fontFamily:'inherit' }}/>
+            <div style={{ display:'inline-flex', flex:m?'1 1 100%':'0 0 auto', alignItems:'center', gap:5, border:'1px solid var(--border)', borderRadius:9, padding:'3px 8px', background:'var(--surface)' }}>
+              <span style={{ fontSize:11, color:'var(--ink-3)' }}>{tr('ពី','From')}</span>
+              <input type="date" value={fromDate} onChange={e=>setFromDate(e.target.value)} style={{ flex:m?1:'none', minWidth:0, border:'none', background:'transparent', color:'var(--ink)', fontSize:m?11:12.5, fontFamily:'inherit' }}/>
+              <span style={{ fontSize:11, color:'var(--ink-3)' }}>{tr('ដល់','to')}</span>
+              <input type="date" value={toDate} onChange={e=>setToDate(e.target.value)} style={{ flex:m?1:'none', minWidth:0, border:'none', background:'transparent', color:'var(--ink)', fontSize:m?11:12.5, fontFamily:'inherit' }}/>
             </div>
           )}
           {(studentQ || passFilter!=='all' || companyF || fromDate || toDate) && (
-            <button onClick={()=>{ setStudentQ(''); setPassFilter('all'); setCompanyF(''); setFromDate(''); setToDate(''); }} style={{ border:'1px solid var(--border)', background:'var(--surface)', color:'var(--ink-3)', borderRadius:9, padding:'8px 12px', fontSize:12.5, cursor:'pointer', fontFamily:'inherit' }}>{tr('សម្អាត','Clear')}</button>
+            <button onClick={()=>{ setStudentQ(''); setPassFilter('all'); setCompanyF(''); setFromDate(''); setToDate(''); }} style={{ border:'1px solid var(--border)', background:'var(--surface)', color:'var(--ink-3)', borderRadius:9, padding:m?'6px 10px':'8px 12px', fontSize:m?11.5:12.5, cursor:'pointer', fontFamily:'inherit' }}>{tr('សម្អាត','Clear')}</button>
           )}
-          <span style={{ fontSize:11.5, color:'var(--ink-3)', marginLeft:'auto' }}>{filtered ? `${filtered.rows.length}/${data.rows.length} ${tr('ជួរ','rows')}` : ''}</span>
+          <span style={{ fontSize:11, color:'var(--ink-3)', marginLeft:'auto' }}>{filtered ? `${filtered.rows.length}/${data.rows.length} ${tr('ជួរ','rows')}` : ''}</span>
         </div>
-      )}
+        );
+      })()}
 
       {loading && !data ? (
         <div style={{ textAlign:'center', padding:'48px', color:'var(--ink-3)', fontSize:13 }}>{tr('កំពុង​ទាញ​តារាង...','Loading the sheet…')}</div>
       ) : err ? <ScoreError err={err} tr={tr}/>
-        : data ? <ScoreTable data={filtered || data} tr={tr} sheet={cur}/>
+        : data ? <ScoreTable data={filtered || data} tr={tr} sheet={cur} compact={bp.mobile}/>
         : null}
     </div>
   );
