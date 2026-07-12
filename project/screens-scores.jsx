@@ -118,6 +118,20 @@ const scoreGroup = (title) => {
   const m = t.match(/^(.+?)[\s·・\-]*([①-⑳㉑-㉟㊱-㊿]+|\d+|[IVXivx]+)\s*$/);
   return (m && m[1].trim()) ? m[1].trim() : t;
 };
+// A sheet's group / item. When stored explicitly (s.group / s.item) they are
+// independent — the group name need not relate to the item at all. Older links
+// that saved only a combined title fall back to deriving both from the title.
+const sheetGroup = (s) => {
+  const g = s && s.group;
+  return (g != null && String(g).trim() !== '') ? String(g).trim() : scoreGroup(s && s.title);
+};
+const sheetItem = (s) => {
+  if (s && s.item != null && String(s.item).trim() !== '') return String(s.item);
+  const t = String((s && s.title) || '');
+  const g = scoreGroup(t);
+  const rest = (g && t.startsWith(g)) ? t.slice(g.length).replace(/^[\s·・\-]*/, '') : '';
+  return rest || t;
+};
 // Column indices: use the sheet's manual map where set, else auto-detect.
 const resolveScoreCols = (headers, sheet) => {
   const auto = detectScoreCols(headers);
@@ -222,7 +236,7 @@ const ScoresScreen = ({ role }) => {
   // Existing group names — offered as autocomplete suggestions on the add form
   // so you can pick an existing group (e.g. 仮免) instead of retyping it, while
   // still being free to type a brand-new one by hand.
-  const allGroups = [...new Set(sheets.map(s => scoreGroup(s.title)).filter(Boolean))];
+  const allGroups = [...new Set(sheets.map(s => sheetGroup(s)).filter(Boolean))];
 
   const load = React.useCallback((url, force) => {
     if (!url) return;
@@ -236,12 +250,17 @@ const ScoresScreen = ({ role }) => {
     fetchScoreSheet(url, false).then(d => setDraftHeaders(h => { const c = [...h]; c[i] = d.headers; return c; })).catch(() => setDraftHeaders(h => { const c = [...h]; c[i] = null; return c; }));
   };
   const openCfg = (addBlank) => {
-    const d = sheets.map(s => ({ title: s.title || '', url: s.url || '', map: { ...(s.map || {}) } }));
-    if (addBlank) d.push({ title: '', url: '', map: {} });
+    // Migrate each row to explicit group/item so they can be edited apart.
+    const d = sheets.map(s => ({ group: sheetGroup(s), item: sheetItem(s), url: s.url || '', map: { ...(s.map || {}) } }));
+    if (addBlank) d.push({ group: '', item: '', url: '', map: {} });
     setDraft(d); setDraftHeaders([]); setCfgOpen(-1); setCfg(true);
   };
   const saveCfg = () => {
-    const clean = (draft || []).map(s => ({ title: (s.title || '').trim() || tr('មេរៀន','Lesson'), url: (s.url || '').trim(), map: s.map || {} })).filter(s => s.url);
+    const clean = (draft || []).map(s => {
+      const group = (s.group || '').trim(), item = (s.item || '').trim();
+      const title = [group, item].filter(Boolean).join(' ').trim() || tr('មេរៀន','Lesson');
+      return { title, group, item, url: (s.url || '').trim(), map: s.map || {} };
+    }).filter(s => s.url);
     saveScoreSheets(clean.length ? clean : [{ title: tr('តារាងពិន្ទុ','Scores'), url: SCORE_SHEET_DEFAULT, map:{} }]);
     window.__scoreCache = {};
     setCfg(false); setSelIdx(0); toast(tr('បាន​រក្សាទុក','Saved'), 'good');
@@ -263,8 +282,12 @@ const ScoresScreen = ({ role }) => {
   const saveAdd = () => {
     const url = addForm.url.trim();
     if (!url) { toast(tr('សូម​ដាក់ URL','Enter a URL'), 'warn'); return; }
-    const title = ((addForm.group || '') + (addForm.item || '')).trim() || tr('មេរៀន','Lesson');
-    const list = [...scoreSheets(), { title, url, map: addForm.map || {} }];
+    const group = (addForm.group || '').trim();
+    const item  = (addForm.item  || '').trim();
+    // Store group & item independently. title (used for the profile card label)
+    // is the two joined, or whichever is present.
+    const title = [group, item].filter(Boolean).join(' ').trim() || tr('មេរៀន','Lesson');
+    const list = [...scoreSheets(), { title, group, item, url, map: addForm.map || {} }];
     saveScoreSheets(list); window.__scoreCache = {}; setAddMode(false);
     setSelIdx(list.length - 1); toast(tr('បាន​បន្ថែម​តំណ ✓','Link added ✓'), 'good');
     setTimeout(() => load(list[list.length - 1].url, true), 0);
@@ -320,26 +343,29 @@ const ScoresScreen = ({ role }) => {
         </div>
         {/* Filter: group (仮免) → item (仮免①‐⑩) + quick add-link */}
         {(() => {
-          const groups = []; sheets.forEach(s => { const g = scoreGroup(s.title); if (!groups.includes(g)) groups.push(g); });
-          const curGroup = scoreGroup(cur && cur.title);
-          const items = sheets.map((s, i) => ({ s, i })).filter(x => scoreGroup(x.s.title) === curGroup);
+          const groups = []; sheets.forEach(s => { const g = sheetGroup(s); if (!groups.includes(g)) groups.push(g); });
+          const curGroup = sheetGroup(cur);
+          const items = sheets.map((s, i) => ({ s, i })).filter(x => sheetGroup(x.s) === curGroup);
           const selStyle = { padding:'7px 11px', borderRadius:9, border:'none', cursor:'pointer', background:'rgba(255,255,255,.92)', color:'#1a2032', fontSize:13, fontWeight:600, fontFamily:'inherit' };
           return (
             <div style={{ position:'relative', display:'flex', alignItems:'center', gap:7, marginTop:12, flexWrap:'wrap' }}>
               <span style={{ fontSize:11.5, opacity:.85 }}>{tr('មេរៀន','Lesson')}</span>
               {/* Dropdown 1 — group */}
-              <select value={curGroup} onChange={e=>{ const g=e.target.value; const first=sheets.findIndex(s=>scoreGroup(s.title)===g); if(first>=0) setSelIdx(first); }} style={{ ...selStyle, flex:'0 1 150px' }}>
+              <select value={curGroup} onChange={e=>{ const g=e.target.value; const first=sheets.findIndex(s=>sheetGroup(s)===g); if(first>=0) setSelIdx(first); }} style={{ ...selStyle, flex:'0 1 150px' }}>
                 {groups.map((g, i) => <option key={i} value={g}>{g}</option>)}
               </select>
               {/* Dropdown 2 — items within the group */}
               <select value={Math.min(selIdx, sheets.length-1)} onChange={e=>setSelIdx(+e.target.value)} style={{ ...selStyle, flex:'0 1 150px' }}>
-                {items.map(x => <option key={x.i} value={x.i}>{x.s.title || tr('មេរៀន','Lesson')+' '+(x.i+1)}</option>)}
+                {items.map(x => <option key={x.i} value={x.i}>{sheetItem(x.s) || tr('មេរៀន','Lesson')+' '+(x.i+1)}</option>)}
               </select>
               <span style={{ fontSize:11.5, opacity:.8, marginLeft:'auto' }}>{loading ? tr('កំពុង​ទាញ...','Loading…') : data ? `${data.rows.length} ${tr('ជួរ','rows')}` : ''}</span>
             </div>
           );
         })()}
       </div>
+
+      {/* Shared group-name suggestions for the add form and the config rows. */}
+      <datalist id="scoreGroupList">{allGroups.map((g, i) => <option key={i} value={g}/>)}</datalist>
 
       {/* Add a new link — blank form only (group · item · url · mapping) */}
       {addMode && (
@@ -349,7 +375,6 @@ const ScoresScreen = ({ role }) => {
             <div>
               <div style={{ fontSize:10.5, color:'var(--ink-3)', marginBottom:3 }}>{tr('ក្រុម','Group')}</div>
               <input value={addForm.group} onChange={e=>setAddForm(f=>({...f,group:e.target.value}))} list="scoreGroupList" autoComplete="off" placeholder={tr('ឧ. 仮免','e.g. 仮免')} style={inp}/>
-              <datalist id="scoreGroupList">{allGroups.map((g, i) => <option key={i} value={g}/>)}</datalist>
             </div>
             <div>
               <div style={{ fontSize:10.5, color:'var(--ink-3)', marginBottom:3 }}>{tr('ធាតុ','Item')}</div>
@@ -394,7 +419,8 @@ const ScoresScreen = ({ role }) => {
             <div key={i} style={{ border:'1px solid '+(open?'var(--accent)':'var(--border)'), borderRadius:10, padding:'7px 8px', display:'flex', flexDirection:'column', gap:8 }}>
               {/* Compact one-line row: title · url · load · expand-mapping · remove */}
               <div style={{ display:'flex', gap:6, alignItems:'center' }}>
-                <input value={s.title} onChange={e=>setDraft(d=>d.map((x,j)=>j===i?{...x,title:e.target.value}:x))} placeholder={tr('ឈ្មោះ','Name')} style={{ ...inp, flex:'0 0 110px', padding:'7px 9px' }}/>
+                <input value={s.group||''} onChange={e=>setDraft(d=>d.map((x,j)=>j===i?{...x,group:e.target.value}:x))} list="scoreGroupList" autoComplete="off" placeholder={tr('ក្រុម','Group')} title={tr('ក្រុម','Group')} style={{ ...inp, flex:'0 0 92px', padding:'7px 9px' }}/>
+                <input value={s.item||''} onChange={e=>setDraft(d=>d.map((x,j)=>j===i?{...x,item:e.target.value}:x))} placeholder={tr('ធាតុ','Item')} title={tr('ធាតុ','Item')} style={{ ...inp, flex:'0 0 84px', padding:'7px 9px' }}/>
                 <input value={s.url} onChange={e=>setDraft(d=>d.map((x,j)=>j===i?{...x,url:e.target.value}:x))} onBlur={()=>{ if (open) loadHeadersFor(i, s.url); }} placeholder="https://docs.google.com/spreadsheets/d/..." style={{ ...inp, flex:1, minWidth:0, padding:'7px 9px', textOverflow:'ellipsis' }}/>
                 <button onClick={toggle} title={tr('កំណត់​ជួរ​ឈរ','Column mapping')} style={{ ...iconBtn, color: open?'var(--accent)':'var(--ink-3)', borderColor: open?'var(--accent)':'var(--border)' }}>{open ? '▾' : '⚙'}</button>
                 <button onClick={()=>{ setDraft(d=>d.filter((_,j)=>j!==i)); setCfgOpen(-1); }} title={tr('លុប','Remove')} style={iconBtn}>✕</button>
@@ -422,7 +448,7 @@ const ScoresScreen = ({ role }) => {
             );
           })}
           <div style={{ display:'flex', gap:8 }}>
-            <button onClick={()=>setDraft(d=>[...(d||[]), { title:'', url:'' }])} style={{ border:'1px dashed var(--border-strong)', background:'transparent', color:'var(--accent)', borderRadius:8, padding:'8px 12px', fontSize:12.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>+ {tr('បន្ថែម​តំណ','Add link')}</button>
+            <button onClick={()=>setDraft(d=>[...(d||[]), { group:'', item:'', url:'', map:{} }])} style={{ border:'1px dashed var(--border-strong)', background:'transparent', color:'var(--accent)', borderRadius:8, padding:'8px 12px', fontSize:12.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>+ {tr('បន្ថែម​តំណ','Add link')}</button>
             <div style={{ flex:1 }}/>
             <button onClick={()=>setCfg(false)} style={{ border:'1px solid var(--border-strong)', background:'var(--surface)', color:'var(--ink-2)', borderRadius:8, padding:'8px 14px', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}>{tr('បោះបង់','Cancel')}</button>
             <button onClick={saveCfg} style={{ border:'none', background:'var(--accent)', color:'#fff', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>{tr('រក្សាទុក','Save')}</button>

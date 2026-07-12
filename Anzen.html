@@ -625,7 +625,6 @@ window.__trRegistry = {
   "— auto —": "— ស្វ័យ​ប្រវត្តិ —",
   "Add": "បន្ថែម",
   "Google Sheet links (public)": "តំណ Google Sheet (សាធារណៈ)",
-  "Name": "ឈ្មោះ",
   "Column mapping": "កំណត់​ជួរ​ឈរ",
   "Remove": "ដក​ចេញ",
   "to map columns": "ដើម្បី​កំណត់​ជួរ​ឈរ",
@@ -894,6 +893,7 @@ window.__trRegistry = {
   "ID/Passport": "អត្ត​សញ្ញាណ",
   "Address": "អាសយដ្ឋាន",
   "EMERGENCY CONTACT": "ទំនាក់ទំនងបន្ទាន់",
+  "Name": "ឈ្មោះ",
   "Relation": "ទំ​នាក់",
   "Manager": "អ្នក​គ្រប់​គ្រង",
   "Allowance ($)": "ប្រាក់​ឧបត្ថម្ភ",
@@ -2352,6 +2352,7 @@ window.__trGroups = {
     "ID/Passport": "អត្ត​សញ្ញាណ",
     "Address": "អាសយដ្ឋាន",
     "EMERGENCY CONTACT": "ទំនាក់ទំនងបន្ទាន់",
+    "Name": "ឈ្មោះ",
     "Relation": "ទំ​នាក់",
     "Manager": "អ្នក​គ្រប់​គ្រង",
     "Allowance ($)": "ប្រាក់​ឧបត្ថម្ភ",
@@ -3107,7 +3108,6 @@ window.__trGroups = {
     "— auto —": "— ស្វ័យ​ប្រវត្តិ —",
     "Add": "បន្ថែម",
     "Google Sheet links (public)": "តំណ Google Sheet (សាធារណៈ)",
-    "Name": "ឈ្មោះ",
     "Column mapping": "កំណត់​ជួរ​ឈរ",
     "Remove": "លុប",
     "to map columns": "ដើម្បី​កំណត់​ជួរ​ឈរ",
@@ -3280,7 +3280,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v207";</script>
+<script>window.__ANZEN_VERSION="v208";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -19137,6 +19137,17 @@ var scoreGroup = title => {
   var m = t.match(/^(.+?)[\s·・\-]*([①-⑳㉑-㉟㊱-㊿]+|\d+|[IVXivx]+)\s*$/);
   return m && m[1].trim() ? m[1].trim() : t;
 };
+var sheetGroup = s => {
+  var g = s && s.group;
+  return g != null && String(g).trim() !== '' ? String(g).trim() : scoreGroup(s && s.title);
+};
+var sheetItem = s => {
+  if (s && s.item != null && String(s.item).trim() !== '') return String(s.item);
+  var t = String(s && s.title || '');
+  var g = scoreGroup(t);
+  var rest = g && t.startsWith(g) ? t.slice(g.length).replace(/^[\s·・\-]*/, '') : '';
+  return rest || t;
+};
 var resolveScoreCols = (headers, sheet) => {
   var auto = detectScoreCols(headers);
   var m = sheet && sheet.map || {};
@@ -19390,7 +19401,7 @@ var ScoresScreen = ({
   var [toDate, setToDate] = React.useState('');
   var sheets = scoreSheets();
   var cur = sheets[Math.min(selIdx, sheets.length - 1)] || sheets[0];
-  var allGroups = [...new Set(sheets.map(s => scoreGroup(s.title)).filter(Boolean))];
+  var allGroups = [...new Set(sheets.map(s => sheetGroup(s)).filter(Boolean))];
   var load = React.useCallback((url, force) => {
     if (!url) return;
     setLoading(true);
@@ -19423,14 +19434,16 @@ var ScoresScreen = ({
   };
   var openCfg = addBlank => {
     var d = sheets.map(s => ({
-      title: s.title || '',
+      group: sheetGroup(s),
+      item: sheetItem(s),
       url: s.url || '',
       map: {
         ...(s.map || {})
       }
     }));
     if (addBlank) d.push({
-      title: '',
+      group: '',
+      item: '',
       url: '',
       map: {}
     });
@@ -19440,11 +19453,18 @@ var ScoresScreen = ({
     setCfg(true);
   };
   var saveCfg = () => {
-    var clean = (draft || []).map(s => ({
-      title: (s.title || '').trim() || tr('មេរៀន', 'Lesson'),
-      url: (s.url || '').trim(),
-      map: s.map || {}
-    })).filter(s => s.url);
+    var clean = (draft || []).map(s => {
+      var group = (s.group || '').trim(),
+        item = (s.item || '').trim();
+      var title = [group, item].filter(Boolean).join(' ').trim() || tr('មេរៀន', 'Lesson');
+      return {
+        title,
+        group,
+        item,
+        url: (s.url || '').trim(),
+        map: s.map || {}
+      };
+    }).filter(s => s.url);
     saveScoreSheets(clean.length ? clean : [{
       title: tr('តារាងពិន្ទុ', 'Scores'),
       url: SCORE_SHEET_DEFAULT,
@@ -19498,9 +19518,13 @@ var ScoresScreen = ({
       toast(tr('សូម​ដាក់ URL', 'Enter a URL'), 'warn');
       return;
     }
-    var title = ((addForm.group || '') + (addForm.item || '')).trim() || tr('មេរៀន', 'Lesson');
+    var group = (addForm.group || '').trim();
+    var item = (addForm.item || '').trim();
+    var title = [group, item].filter(Boolean).join(' ').trim() || tr('មេរៀន', 'Lesson');
     var list = [...scoreSheets(), {
       title,
+      group,
+      item,
       url,
       map: addForm.map || {}
     }];
@@ -19668,14 +19692,14 @@ var ScoresScreen = ({
   }), bp.mobile ? '' : tr('ទាញ​ម្ដង​ទៀត', 'Refresh')))), (() => {
     var groups = [];
     sheets.forEach(s => {
-      var g = scoreGroup(s.title);
+      var g = sheetGroup(s);
       if (!groups.includes(g)) groups.push(g);
     });
-    var curGroup = scoreGroup(cur && cur.title);
+    var curGroup = sheetGroup(cur);
     var items = sheets.map((s, i) => ({
       s,
       i
-    })).filter(x => scoreGroup(x.s.title) === curGroup);
+    })).filter(x => sheetGroup(x.s) === curGroup);
     var selStyle = {
       padding: '7px 11px',
       borderRadius: 9,
@@ -19705,7 +19729,7 @@ var ScoresScreen = ({
       value: curGroup,
       onChange: e => {
         var g = e.target.value;
-        var first = sheets.findIndex(s => scoreGroup(s.title) === g);
+        var first = sheets.findIndex(s => sheetGroup(s) === g);
         if (first >= 0) setSelIdx(first);
       },
       style: {
@@ -19725,14 +19749,19 @@ var ScoresScreen = ({
     }, items.map(x => React.createElement("option", {
       key: x.i,
       value: x.i
-    }, x.s.title || tr('មេរៀន', 'Lesson') + ' ' + (x.i + 1)))), React.createElement("span", {
+    }, sheetItem(x.s) || tr('មេរៀន', 'Lesson') + ' ' + (x.i + 1)))), React.createElement("span", {
       style: {
         fontSize: 11.5,
         opacity: .8,
         marginLeft: 'auto'
       }
     }, loading ? tr('កំពុង​ទាញ...', 'Loading…') : data ? `${data.rows.length} ${tr('ជួរ', 'rows')}` : ''));
-  })()), addMode && React.createElement("div", {
+  })()), React.createElement("datalist", {
+    id: "scoreGroupList"
+  }, allGroups.map((g, i) => React.createElement("option", {
+    key: i,
+    value: g
+  }))), addMode && React.createElement("div", {
     style: {
       background: 'var(--surface)',
       border: '1px solid var(--border)',
@@ -19769,12 +19798,7 @@ var ScoresScreen = ({
     autoComplete: "off",
     placeholder: tr('ឧ. 仮免', 'e.g. 仮免'),
     style: inp
-  }), React.createElement("datalist", {
-    id: "scoreGroupList"
-  }, allGroups.map((g, i) => React.createElement("option", {
-    key: i,
-    value: g
-  })))), React.createElement("div", null, React.createElement("div", {
+  })), React.createElement("div", null, React.createElement("div", {
     style: {
       fontSize: 10.5,
       color: 'var(--ink-3)',
@@ -19944,15 +19968,31 @@ var ScoresScreen = ({
         alignItems: 'center'
       }
     }, React.createElement("input", {
-      value: s.title,
+      value: s.group || '',
       onChange: e => setDraft(d => d.map((x, j) => j === i ? {
         ...x,
-        title: e.target.value
+        group: e.target.value
       } : x)),
-      placeholder: tr('ឈ្មោះ', 'Name'),
+      list: "scoreGroupList",
+      autoComplete: "off",
+      placeholder: tr('ក្រុម', 'Group'),
+      title: tr('ក្រុម', 'Group'),
       style: {
         ...inp,
-        flex: '0 0 110px',
+        flex: '0 0 92px',
+        padding: '7px 9px'
+      }
+    }), React.createElement("input", {
+      value: s.item || '',
+      onChange: e => setDraft(d => d.map((x, j) => j === i ? {
+        ...x,
+        item: e.target.value
+      } : x)),
+      placeholder: tr('ធាតុ', 'Item'),
+      title: tr('ធាតុ', 'Item'),
+      style: {
+        ...inp,
+        flex: '0 0 84px',
         padding: '7px 9px'
       }
     }), React.createElement("input", {
@@ -20053,8 +20093,10 @@ var ScoresScreen = ({
     }
   }, React.createElement("button", {
     onClick: () => setDraft(d => [...(d || []), {
-      title: '',
-      url: ''
+      group: '',
+      item: '',
+      url: '',
+      map: {}
     }]),
     style: {
       border: '1px dashed var(--border-strong)',
