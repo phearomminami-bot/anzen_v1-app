@@ -672,6 +672,8 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   const [instFilter,    setInstFilter]    = React.useState('');
   const [vehFilter,     setVehFilter]     = React.useState('');
   const [studentFilter, setStudentFilter] = React.useState('');
+  const [phaseFilter,   setPhaseFilter]   = React.useState([]);   // [] = all phases; KH/JP/AI/SST multi-select
+  const togglePhase = (k) => setPhaseFilter(p => p.includes(k) ? p.filter(x=>x!==k) : [...p, k]);
   const [activeColor,   setActiveColor]   = React.useState('');
   const [highlights,    setHighlights]    = React.useState(() => {
     try { return JSON.parse(localStorage.getItem('anzen_hl') || '{}'); } catch { return {}; }
@@ -829,14 +831,16 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
     !studentMode || l.studentId === studentId || l.studentId === '—'
   );
 
-  const visibleLessons = !studentMode
+  const phaseOk = (ph) => !phaseFilter.length || phaseFilter.includes(ph || 'KH');
+  const visibleLessons = (!studentMode
     ? baseLessons.filter(l =>
         (!instFilter    || l.instId    === instFilter) &&
         (!vehFilter     || l.veh       === vehFilter) &&
         (!studentFilter || l.studentId === studentFilter))
-    : baseLessons;
+    : baseLessons
+  ).filter(l => phaseOk(lessonPhase(l)));
 
-  const anyFilter = instFilter || vehFilter || studentFilter;
+  const anyFilter = instFilter || vehFilter || studentFilter || phaseFilter.length;
 
   const weekStart = allWeekDates[0] || '';
   const weekEnd   = allWeekDates[6] || '';
@@ -868,7 +872,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   const visNoteSet = new Set(weekDates);
   const visNotes = notes.filter(n => visNoteSet.has(n.date)).sort((a,b)=> noteSortKey(a)<noteSortKey(b)?-1: noteSortKey(a)>noteSortKey(b)?1:0);
   // Exams visible in this view. In student mode show only exams the student is in.
-  const visExams = exams.filter(e => visNoteSet.has(e.date) && (
+  const visExams = exams.filter(e => visNoteSet.has(e.date) && phaseOk(e.phase) && (
     studentMode
       ? (e.studentIds||[]).includes(studentId)
       : (!instFilter    || (e.instIds||[]).includes(instFilter)) &&
@@ -1000,7 +1004,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(o=>o-1)}>{tr('◀ មុន','◀ Prev')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(0)}>{tr('ថ្ងៃ​នេះ','Today')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(o=>o+1)}>{tr('បន្ទាប់ ▶','Next ▶')}</Btn>
-            <Btn kind="ghost" size="md" onClick={()=>generateSchedulePDF({lessons:visibleLessons.filter(l=>l.status!=='cancelled'),weekDates:allWeekDates,viewType:v,labelEn,instFilter,vehFilter,studentFilter,lang})} icon={<Icon name="download" size={14}/>}>{tr('PDF','PDF')}</Btn>
+            <Btn kind="ghost" size="md" onClick={()=>generateSchedulePDF({lessons:visibleLessons.filter(l=>l.status!=='cancelled'),weekDates:allWeekDates,viewType:v,labelEn,instFilter,vehFilter,studentFilter,phaseFilter,lang})} icon={<Icon name="download" size={14}/>}>{tr('PDF','PDF')}</Btn>
             {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:allWeekDates[0]||today,time:'09:00',title:'',description:'',author:meName,invited:[]})} icon={<Icon name="bell" size={14}/>}>{tr('+ ចំណាំ','+ Note')}</Btn>}
             {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setExamModal({kind:'exam',date:allWeekDates[0]||today,time:'08:00',len:2,studentIds:[],instIds:[],note:'',phase:'KH'})} icon={<Icon name="star" size={14}/>} style={{color:'#12A302',borderColor:'#12A302'}}>{tr('+ ប្រឡង','+ Exam')}</Btn>}
             {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setExamModal({kind:'apply',date:allWeekDates[0]||today,time:'08:00',len:2,studentIds:[],instIds:[],note:'',phase:'KH'})} icon={<Icon name="book" size={14}/>} style={{color:'#CA8A04',borderColor:'#CA8A04'}}>{tr('+ ដាក់​ពាក្យ','+ Apply')}</Btn>}
@@ -1064,8 +1068,23 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
             </select>
           </div>
 
+          <div style={{width:1,height:22,background:'var(--border)',margin:'0 4px'}}/>
+
+          {/* Phase filter — KH / JP / AI / SST, multi-select (view + PDF) */}
+          <div style={{display:'flex',alignItems:'center',gap:5}}>
+            <span style={{fontSize:11,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.05em'}}>វគ្គ</span>
+            {(window.STUDENT_PHASES||[]).map(p => { const on = phaseFilter.includes(p.k);
+              return (
+                <button key={p.k} onClick={()=>togglePhase(p.k)} style={{
+                  padding:'5px 10px', borderRadius:7, cursor:'pointer', fontSize:12, fontWeight:700, fontFamily:'inherit',
+                  border:'1px solid '+(on?p.color:'var(--border)'),
+                  background: on ? p.color : 'var(--surface-muted)', color: on ? '#fff' : 'var(--ink-2)' }}>{p.label}</button>
+              );
+            })}
+          </div>
+
           {anyFilter && (
-            <button onClick={()=>{ setInstFilter(''); setVehFilter(''); setStudentFilter(''); }}
+            <button onClick={()=>{ setInstFilter(''); setVehFilter(''); setStudentFilter(''); setPhaseFilter([]); }}
               style={{marginLeft:'auto',padding:'4px 8px',fontSize:11,color:'var(--ink-3)',background:'transparent',border:'none',cursor:'pointer',textDecoration:'underline'}}>
               {tr('ដោះ​ស្រាយ','Clear')}
             </button>
@@ -1073,23 +1092,55 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
         </div>
       )}
 
-      {/* Mobile compact filters */}
-      {!studentMode && bp.mobile && (
-        <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
-          <select value={instFilter} onChange={e=>{ setInstFilter(e.target.value); setStudentFilter(''); }}
-            style={{...selActive(instFilter),flex:1,minWidth:0,fontSize:12}}>
-            <option value="">គ្រូ​ទាំងអស់</option>
-            {INSTRUCTORS.map(i => <option key={i.id} value={i.id}>{i.en}</option>)}
-          </select>
-          <select value={studentFilter} onChange={e=>{ setStudentFilter(e.target.value); setInstFilter(''); setVehFilter(''); }}
-            style={{...selActive(studentFilter),flex:1,minWidth:0,fontSize:12}}>
-            <option value="">សិស្ស​ទាំងអស់</option>
-            {STUDENTS.filter(s=>LESSONS.some(l=>l.studentId===s.id) || (((window.__schoolSettings&&window.__schoolSettings.scheduleExams)||[]).some(e=>(e.studentIds||[]).includes(s.id)))).map(s=>(
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
+      {/* Mobile: blue hero header with icon-dropdowns + phase filter */}
+      {bp.mobile && (() => {
+        const pill = { display:'inline-flex', alignItems:'center', gap:6, background:'rgba(255,255,255,.94)', color:'#1a2032', borderRadius:11, padding:'7px 10px', flex:'1 1 45%', minWidth:0 };
+        const bareSel = { border:'none', background:'transparent', color:'#1a2032', fontSize:12.5, fontWeight:600, fontFamily:'inherit', flex:1, minWidth:0, cursor:'pointer', outline:'none' };
+        return (
+        <div style={{ borderRadius:18, padding:'13px 14px', color:'#fff',
+          background:'linear-gradient(135deg,#243a66,#365a9c 60%,#4f7bc0)', boxShadow:'0 10px 24px rgba(36,58,102,.28)',
+          display:'flex', flexDirection:'column', gap:10 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:9 }}>
+            <Icon name="cal" size={18}/>
+            <div style={{ fontSize:16, fontWeight:800 }}>{tr(studentMode?'កាលវិភាគ​របស់​ខ្ញុំ':'កាលវិភាគ', studentMode?'My Schedule':'Schedule')}</div>
+            <div style={{ marginLeft:'auto', fontSize:11.5, opacity:.9, fontFamily:'var(--font-km)' }}>{labelKm}</div>
+          </div>
+          {!studentMode && (
+            <div style={{ display:'flex', gap:7 }}>
+              {/* Instructor — steering-wheel icon */}
+              <div style={pill} title={tr('គ្រូ','Instructor')}>
+                <Icon name="wheel" size={15} color="#365a9c"/>
+                <select value={instFilter} onChange={e=>{ setInstFilter(e.target.value); setStudentFilter(''); }} style={bareSel}>
+                  <option value="">{tr('គ្រូ​ទាំងអស់','All instructors')}</option>
+                  {INSTRUCTORS.map(i => <option key={i.id} value={i.id}>{i.en}</option>)}
+                </select>
+              </div>
+              {/* Student — graduation-cap icon */}
+              <div style={pill} title={tr('សិស្ស','Student')}>
+                <Icon name="cap" size={15} color="#365a9c"/>
+                <select value={studentFilter} onChange={e=>{ setStudentFilter(e.target.value); setInstFilter(''); setVehFilter(''); }} style={bareSel}>
+                  <option value="">{tr('សិស្ស​ទាំងអស់','All students')}</option>
+                  {STUDENTS.filter(s=>LESSONS.some(l=>l.studentId===s.id) || (((window.__schoolSettings&&window.__schoolSettings.scheduleExams)||[]).some(e=>(e.studentIds||[]).includes(s.id)))).map(s=>(
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+          {/* Phase filter — KH / JP / AI / SST, multi-select (view + PDF) */}
+          <div style={{ display:'flex', gap:6 }}>
+            {(window.STUDENT_PHASES||[]).map(p => { const on = phaseFilter.includes(p.k);
+              return (
+                <button key={p.k} onClick={()=>togglePhase(p.k)} style={{
+                  flex:1, padding:'7px 0', borderRadius:9, border: on?'none':'1px solid rgba(255,255,255,.35)', cursor:'pointer',
+                  fontSize:12.5, fontWeight:800, fontFamily:'inherit', letterSpacing:'.02em',
+                  background: on ? '#fff' : 'rgba(255,255,255,.12)', color: on ? p.color : '#fff' }}>{p.label}</button>
+              );
+            })}
+          </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* Highlight palette — desktop only, week/month view */}
       {!bp.mobile && v !== 'agenda' && (
@@ -1248,7 +1299,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
         <Btn kind="ghost" size="md" style={{justifyContent:'center'}}
           onClick={()=>{
             const mLabel = `${EN_MONTHS[parseInt(mobileDate.slice(5,7))-1]} ${mobileDate.slice(0,4)}`;
-            generateSchedulePDF({lessons:visibleLessons.filter(l=>l.status!=='cancelled'),weekDates:allWeekDates,viewType:'month',monthAnchor:mobileDate,labelEn:mLabel,instFilter,vehFilter,studentFilter,lang});
+            generateSchedulePDF({lessons:visibleLessons.filter(l=>l.status!=='cancelled'),weekDates:allWeekDates,viewType:'month',monthAnchor:mobileDate,labelEn:mLabel,instFilter,vehFilter,studentFilter,phaseFilter,lang});
           }}
           icon={<Icon name="download" size={14}/>}>{tr('ទាញ​យក PDF (ប្រចាំ​ខែ)','Download PDF (month)')}</Btn>
       )}
@@ -1505,7 +1556,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
 };
 
 // ── Schedule PDF Generator ────────────────────────────────────────────────────
-const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter, vehFilter, studentFilter, monthAnchor, lang }) => {
+const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter, vehFilter, studentFilter, phaseFilter, monthAnchor, lang }) => {
   const ss   = window.__schoolSettings || {};
   const name = ss.name || 'Anzen Driving School';
   const HOURS = Array.from({length:12}, (_,i) => i+7);
@@ -1558,6 +1609,7 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
   if (instFilter) { const i = INSTRUCTORS.find(x=>x.id===instFilter); filterInfo = `${L('គ្រូ','Instructor')}: ${i?iName(i):instFilter}`; }
   else if (vehFilter) { const v = VEHICLES.find(x=>x.id===vehFilter); filterInfo = `${L('យានយន្ត','Vehicle')}: ${v?v.plate:vehFilter}`; }
   else if (studentFilter) { const s = STUDENTS.find(x=>x.id===studentFilter); filterInfo = `${L('សិស្ស','Student')}: ${s?sName(s):studentFilter}`; }
+  if (phaseFilter && phaseFilter.length) filterInfo = (filterInfo ? filterInfo + ' · ' : '') + `${L('វគ្គ','Phase')}: ${phaseFilter.join(' / ')}`;
 
   // Exams + applications (not lessons). Respect the same filters; hide when a
   // vehicle filter is set since these have no vehicle.
@@ -1884,7 +1936,7 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
     const mi = host.querySelector('#__pdfMonth');
     if (mi && mi.value) nextMonth = mi.value + '-01';
     cleanup();
-    generateSchedulePDF({ lessons, weekDates, viewType, labelEn, instFilter, vehFilter, studentFilter, monthAnchor: nextMonth, lang: newLang });
+    generateSchedulePDF({ lessons, weekDates, viewType, labelEn, instFilter, vehFilter, studentFilter, phaseFilter, monthAnchor: nextMonth, lang: newLang });
   };
   host.querySelector('#__pdfLangKm').onclick = () => reinvokeLang('km');
   host.querySelector('#__pdfLangEn').onclick = () => reinvokeLang('en');

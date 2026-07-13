@@ -658,6 +658,8 @@ window.__trRegistry = {
   "+ Exam": "+ ប្រឡង",
   "+ Apply": "+ ដាក់​ពាក្យ",
   "New lesson": "មេរៀន​ថ្មី",
+  "All instructors": "គ្រប់​គ្រូ",
+  "All students": "សិស្ស​ទាំងអស់",
   "Stop": "ឈប់",
   "Clear all highlights": "លុប​ highlight​ ទាំង​អស់",
   "Show working hours (7–18)": "បង្ហាញ​តែ​ម៉ោង​ធ្វើ​ការ (៧–៦ល្ងាច)",
@@ -1537,7 +1539,6 @@ window.__trRegistry = {
   "Custom": "ជ្រើស",
   "Print / PDF": "បោះពុម្ព",
   "All branches": "គ្រប់​សាខា",
-  "All instructors": "គ្រប់​គ្រូ",
   "All courses": "គ្រប់​វគ្គ",
   "All status": "គ្រប់​ស្ថានភាព",
   "All genders": "គ្រប់​ភេទ",
@@ -2004,6 +2005,8 @@ window.__trGroups = {
     "+ Exam": "+ ប្រឡង",
     "+ Apply": "+ ដាក់​ពាក្យ",
     "New lesson": "មេរៀន​ថ្មី",
+    "All instructors": "គ្រូ​ទាំងអស់",
+    "All students": "សិស្ស​ទាំងអស់",
     "Stop": "ឈប់",
     "Clear all highlights": "លុប​ highlight​ ទាំង​អស់",
     "Show working hours (7–18)": "បង្ហាញ​តែ​ម៉ោង​ធ្វើ​ការ (៧–៦ល្ងាច)",
@@ -3149,7 +3152,6 @@ window.__trGroups = {
     "Custom": "ជ្រើស",
     "Print / PDF": "បោះពុម្ព",
     "All branches": "គ្រប់​សាខា",
-    "All instructors": "គ្រប់​គ្រូ",
     "All courses": "គ្រប់​វគ្គ",
     "All status": "គ្រប់​ស្ថានភាព",
     "All genders": "គ្រប់​ភេទ",
@@ -3280,7 +3282,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v208";</script>
+<script>window.__ANZEN_VERSION="v209";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -21866,6 +21868,8 @@ var ScheduleScreen = ({
   var [instFilter, setInstFilter] = React.useState('');
   var [vehFilter, setVehFilter] = React.useState('');
   var [studentFilter, setStudentFilter] = React.useState('');
+  var [phaseFilter, setPhaseFilter] = React.useState([]);
+  var togglePhase = k => setPhaseFilter(p => p.includes(k) ? p.filter(x => x !== k) : [...p, k]);
   var [activeColor, setActiveColor] = React.useState('');
   var [highlights, setHighlights] = React.useState(() => {
     try {
@@ -22081,8 +22085,9 @@ var ScheduleScreen = ({
   };
   var weekDates = bp.mobile ? [mobileDate] : allWeekDates;
   var baseLessons = LESSONS.filter(l => !studentMode || l.studentId === studentId || l.studentId === '—');
-  var visibleLessons = !studentMode ? baseLessons.filter(l => (!instFilter || l.instId === instFilter) && (!vehFilter || l.veh === vehFilter) && (!studentFilter || l.studentId === studentFilter)) : baseLessons;
-  var anyFilter = instFilter || vehFilter || studentFilter;
+  var phaseOk = ph => !phaseFilter.length || phaseFilter.includes(ph || 'KH');
+  var visibleLessons = (!studentMode ? baseLessons.filter(l => (!instFilter || l.instId === instFilter) && (!vehFilter || l.veh === vehFilter) && (!studentFilter || l.studentId === studentFilter)) : baseLessons).filter(l => phaseOk(lessonPhase(l)));
+  var anyFilter = instFilter || vehFilter || studentFilter || phaseFilter.length;
   var weekStart = allWeekDates[0] || '';
   var weekEnd = allWeekDates[6] || '';
   var startDay = weekStart ? parseInt(weekStart.slice(8)) : '';
@@ -22113,7 +22118,7 @@ var ScheduleScreen = ({
   var noteSortKey = n => n.date + ' ' + (n.time || '99:99');
   var visNoteSet = new Set(weekDates);
   var visNotes = notes.filter(n => visNoteSet.has(n.date)).sort((a, b) => noteSortKey(a) < noteSortKey(b) ? -1 : noteSortKey(a) > noteSortKey(b) ? 1 : 0);
-  var visExams = exams.filter(e => visNoteSet.has(e.date) && (studentMode ? (e.studentIds || []).includes(studentId) : (!instFilter || (e.instIds || []).includes(instFilter)) && (!studentFilter || (e.studentIds || []).includes(studentFilter)) && !vehFilter));
+  var visExams = exams.filter(e => visNoteSet.has(e.date) && phaseOk(e.phase) && (studentMode ? (e.studentIds || []).includes(studentId) : (!instFilter || (e.instIds || []).includes(instFilter)) && (!studentFilter || (e.studentIds || []).includes(studentFilter)) && !vehFilter));
   var openSlot = (date, hour) => setNoteModal({
     mode: 'lesson',
     date,
@@ -22427,6 +22432,7 @@ var ScheduleScreen = ({
         instFilter,
         vehFilter,
         studentFilter,
+        phaseFilter,
         lang
       }),
       icon: React.createElement(Icon, {
@@ -22613,11 +22619,49 @@ var ScheduleScreen = ({
   }, "\u2014 \u179F\u17B7\u179F\u17D2\u179F\u200B\u1791\u17B6\u17C6\u1784\u17A2\u179F\u17CB All students \u2014"), STUDENTS.filter(s => LESSONS.some(l => l.studentId === s.id) || (window.__schoolSettings && window.__schoolSettings.scheduleExams || []).some(e => (e.studentIds || []).includes(s.id))).map(s => React.createElement("option", {
     key: s.id,
     value: s.id
-  }, s.name, " (", s.id, ")")))), anyFilter && React.createElement("button", {
+  }, s.name, " (", s.id, ")")))), React.createElement("div", {
+    style: {
+      width: 1,
+      height: 22,
+      background: 'var(--border)',
+      margin: '0 4px'
+    }
+  }), React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 5
+    }
+  }, React.createElement("span", {
+    style: {
+      fontSize: 11,
+      color: 'var(--ink-3)',
+      fontFamily: '"JetBrains Mono",monospace',
+      letterSpacing: '.05em'
+    }
+  }, "\u179C\u1782\u17D2\u1782"), (window.STUDENT_PHASES || []).map(p => {
+    var on = phaseFilter.includes(p.k);
+    return React.createElement("button", {
+      key: p.k,
+      onClick: () => togglePhase(p.k),
+      style: {
+        padding: '5px 10px',
+        borderRadius: 7,
+        cursor: 'pointer',
+        fontSize: 12,
+        fontWeight: 700,
+        fontFamily: 'inherit',
+        border: '1px solid ' + (on ? p.color : 'var(--border)'),
+        background: on ? p.color : 'var(--surface-muted)',
+        color: on ? '#fff' : 'var(--ink-2)'
+      }
+    }, p.label);
+  })), anyFilter && React.createElement("button", {
     onClick: () => {
       setInstFilter('');
       setVehFilter('');
       setStudentFilter('');
+      setPhaseFilter([]);
     },
     style: {
       marginLeft: 'auto',
@@ -22629,48 +22673,132 @@ var ScheduleScreen = ({
       cursor: 'pointer',
       textDecoration: 'underline'
     }
-  }, tr('ដោះ​ស្រាយ', 'Clear'))), !studentMode && bp.mobile && React.createElement("div", {
-    style: {
-      display: 'flex',
+  }, tr('ដោះ​ស្រាយ', 'Clear'))), bp.mobile && (() => {
+    var pill = {
+      display: 'inline-flex',
+      alignItems: 'center',
       gap: 6,
-      flexWrap: 'wrap'
-    }
-  }, React.createElement("select", {
-    value: instFilter,
-    onChange: e => {
-      setInstFilter(e.target.value);
-      setStudentFilter('');
-    },
-    style: {
-      ...selActive(instFilter),
+      background: 'rgba(255,255,255,.94)',
+      color: '#1a2032',
+      borderRadius: 11,
+      padding: '7px 10px',
+      flex: '1 1 45%',
+      minWidth: 0
+    };
+    var bareSel = {
+      border: 'none',
+      background: 'transparent',
+      color: '#1a2032',
+      fontSize: 12.5,
+      fontWeight: 600,
+      fontFamily: 'inherit',
       flex: 1,
       minWidth: 0,
-      fontSize: 12
-    }
-  }, React.createElement("option", {
-    value: ""
-  }, "\u1782\u17D2\u179A\u17BC\u200B\u1791\u17B6\u17C6\u1784\u17A2\u179F\u17CB"), INSTRUCTORS.map(i => React.createElement("option", {
-    key: i.id,
-    value: i.id
-  }, i.en))), React.createElement("select", {
-    value: studentFilter,
-    onChange: e => {
-      setStudentFilter(e.target.value);
-      setInstFilter('');
-      setVehFilter('');
-    },
-    style: {
-      ...selActive(studentFilter),
-      flex: 1,
-      minWidth: 0,
-      fontSize: 12
-    }
-  }, React.createElement("option", {
-    value: ""
-  }, "\u179F\u17B7\u179F\u17D2\u179F\u200B\u1791\u17B6\u17C6\u1784\u17A2\u179F\u17CB"), STUDENTS.filter(s => LESSONS.some(l => l.studentId === s.id) || (window.__schoolSettings && window.__schoolSettings.scheduleExams || []).some(e => (e.studentIds || []).includes(s.id))).map(s => React.createElement("option", {
-    key: s.id,
-    value: s.id
-  }, s.name)))), !bp.mobile && v !== 'agenda' && React.createElement("div", {
+      cursor: 'pointer',
+      outline: 'none'
+    };
+    return React.createElement("div", {
+      style: {
+        borderRadius: 18,
+        padding: '13px 14px',
+        color: '#fff',
+        background: 'linear-gradient(135deg,#243a66,#365a9c 60%,#4f7bc0)',
+        boxShadow: '0 10px 24px rgba(36,58,102,.28)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10
+      }
+    }, React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 9
+      }
+    }, React.createElement(Icon, {
+      name: "cal",
+      size: 18
+    }), React.createElement("div", {
+      style: {
+        fontSize: 16,
+        fontWeight: 800
+      }
+    }, tr(studentMode ? 'កាលវិភាគ​របស់​ខ្ញុំ' : 'កាលវិភាគ', studentMode ? 'My Schedule' : 'Schedule')), React.createElement("div", {
+      style: {
+        marginLeft: 'auto',
+        fontSize: 11.5,
+        opacity: .9,
+        fontFamily: 'var(--font-km)'
+      }
+    }, labelKm)), !studentMode && React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 7
+      }
+    }, React.createElement("div", {
+      style: pill,
+      title: tr('គ្រូ', 'Instructor')
+    }, React.createElement(Icon, {
+      name: "wheel",
+      size: 15,
+      color: "#365a9c"
+    }), React.createElement("select", {
+      value: instFilter,
+      onChange: e => {
+        setInstFilter(e.target.value);
+        setStudentFilter('');
+      },
+      style: bareSel
+    }, React.createElement("option", {
+      value: ""
+    }, tr('គ្រូ​ទាំងអស់', 'All instructors')), INSTRUCTORS.map(i => React.createElement("option", {
+      key: i.id,
+      value: i.id
+    }, i.en)))), React.createElement("div", {
+      style: pill,
+      title: tr('សិស្ស', 'Student')
+    }, React.createElement(Icon, {
+      name: "cap",
+      size: 15,
+      color: "#365a9c"
+    }), React.createElement("select", {
+      value: studentFilter,
+      onChange: e => {
+        setStudentFilter(e.target.value);
+        setInstFilter('');
+        setVehFilter('');
+      },
+      style: bareSel
+    }, React.createElement("option", {
+      value: ""
+    }, tr('សិស្ស​ទាំងអស់', 'All students')), STUDENTS.filter(s => LESSONS.some(l => l.studentId === s.id) || (window.__schoolSettings && window.__schoolSettings.scheduleExams || []).some(e => (e.studentIds || []).includes(s.id))).map(s => React.createElement("option", {
+      key: s.id,
+      value: s.id
+    }, s.name))))), React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 6
+      }
+    }, (window.STUDENT_PHASES || []).map(p => {
+      var on = phaseFilter.includes(p.k);
+      return React.createElement("button", {
+        key: p.k,
+        onClick: () => togglePhase(p.k),
+        style: {
+          flex: 1,
+          padding: '7px 0',
+          borderRadius: 9,
+          border: on ? 'none' : '1px solid rgba(255,255,255,.35)',
+          cursor: 'pointer',
+          fontSize: 12.5,
+          fontWeight: 800,
+          fontFamily: 'inherit',
+          letterSpacing: '.02em',
+          background: on ? '#fff' : 'rgba(255,255,255,.12)',
+          color: on ? p.color : '#fff'
+        }
+      }, p.label);
+    })));
+  })(), !bp.mobile && v !== 'agenda' && React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -23038,6 +23166,7 @@ var ScheduleScreen = ({
         instFilter,
         vehFilter,
         studentFilter,
+        phaseFilter,
         lang
       });
     },
@@ -23862,6 +23991,7 @@ var generateSchedulePDF = ({
   instFilter,
   vehFilter,
   studentFilter,
+  phaseFilter,
   monthAnchor,
   lang
 }) => {
@@ -23930,6 +24060,7 @@ var generateSchedulePDF = ({
     var s = STUDENTS.find(x => x.id === studentFilter);
     filterInfo = `${L('សិស្ស', 'Student')}: ${s ? sName(s) : studentFilter}`;
   }
+  if (phaseFilter && phaseFilter.length) filterInfo = (filterInfo ? filterInfo + ' · ' : '') + `${L('វគ្គ', 'Phase')}: ${phaseFilter.join(' / ')}`;
   var exams = (ss.scheduleExams || []).filter(e => (!instFilter || (e.instIds || []).includes(instFilter)) && (!studentFilter || (e.studentIds || []).includes(studentFilter)) && !vehFilter);
   var examByDate = {};
   exams.forEach(e => {
@@ -24277,6 +24408,7 @@ var generateSchedulePDF = ({
       instFilter,
       vehFilter,
       studentFilter,
+      phaseFilter,
       monthAnchor: nextMonth,
       lang: newLang
     });
