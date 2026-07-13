@@ -696,7 +696,6 @@ const VehicleInspectionModal = ({ vehicle, onClose, tr }) => {
       <div onClick={e=>e.stopPropagation()} style={{width:'100%',maxWidth:700,margin:'0 16px 40px',background:'var(--surface)',borderRadius:16,border:'1px solid var(--border)',boxShadow:'0 32px 80px rgba(0,0,0,.25)',overflow:'hidden'}}>
 
         {/* Header */}
-        <input ref={photoRef} type="file" accept="image/*" style={{display:'none'}} onChange={handlePhotoFile} disabled={readOnly}/>
         {bp.mobile ? (
           /* Mobile: title centered top, photo + info row below */
           <div style={{padding:'12px 14px',borderBottom:'1px solid var(--border)',position:'relative'}}>
@@ -707,15 +706,7 @@ const VehicleInspectionModal = ({ vehicle, onClose, tr }) => {
               {tr('ពិនិត្យយានយន្តប្រចាំថ្ងៃ','Daily Vehicle Inspection')}
             </div>
             <div style={{display:'flex',alignItems:'center',gap:10}}>
-              <div onClick={readOnly ? undefined : ()=>photoRef.current?.click()} style={{width:52,height:38,borderRadius:7,overflow:'hidden',flexShrink:0,cursor:readOnly?'default':'pointer',position:'relative',border:'2px solid var(--border)'}}>
-                <Photo tag={vPhoto} w={52} h={38} r={0}/>
-                {!readOnly && (
-                  <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,.4)',display:'flex',alignItems:'center',justifyContent:'center',opacity:0,transition:'opacity .15s'}}
-                    onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='0'}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                  </div>
-                )}
-              </div>
+              <VehicleAvatar v={vehicle} w={52} h={38} r={7} plate={false}/>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontSize:14,fontWeight:700,color:'var(--ink)'}}>{vehicle.make}</div>
                 <div style={{display:'flex',alignItems:'center',gap:8,marginTop:2}}>
@@ -728,15 +719,7 @@ const VehicleInspectionModal = ({ vehicle, onClose, tr }) => {
         ) : (
           /* Desktop: horizontal layout */
           <div style={{padding:'16px 20px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:14}}>
-            <div onClick={readOnly ? undefined : ()=>photoRef.current?.click()} style={{width:56,height:40,borderRadius:8,overflow:'hidden',flexShrink:0,cursor:readOnly?'default':'pointer',position:'relative',border:'2px solid var(--border)'}}>
-              <Photo tag={vPhoto} w={56} h={40} r={0}/>
-              {!readOnly && (
-                <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,.4)',display:'flex',alignItems:'center',justifyContent:'center',opacity:0,transition:'opacity .15s'}}
-                  onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='0'}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                </div>
-              )}
-            </div>
+            <VehicleAvatar v={vehicle} w={56} h={40} r={8} plate={false}/>
             <div style={{flex:1,minWidth:0}}>
               <div style={{fontSize:15,fontWeight:700}}>{vehicle.make}</div>
               <div style={{fontSize:11,color:'var(--ink-2)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.06em',marginTop:1}}>{vehicle.plate}</div>
@@ -1200,7 +1183,7 @@ const FvInspectionLog = ({ vehicles, tr }) => {
               onMouseEnter={e=>e.currentTarget.style.background='var(--surface-muted)'}
               onMouseLeave={e=>e.currentTarget.style.background='var(--surface)'}
             >
-              <div style={{width:40,height:26,borderRadius:5,overflow:'hidden',flexShrink:0}}><Photo tag={v.photo} w={40} h={26} r={0}/></div>
+              <div style={{width:40,height:26,borderRadius:5,overflow:'hidden',flexShrink:0}}><VehicleAvatar v={v} w={40} h={26} r={0} plate={false}/></div>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontSize:12,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{v.plate} · {v.make}</div>
                 {rec ? (
@@ -1385,7 +1368,7 @@ const FvCard = ({ v, onSelect, selectedId, onStatusChange, onSaveDates, onParkin
       <div style={{position:'relative'}}>
         {/* Photo — view only, click opens inspection */}
         <div onClick={e=>{e.stopPropagation();setInspOpen(true);}} style={{position:'relative',cursor:'pointer'}}>
-          <Photo tag={v.photo} w="100%" h={photoH} r={0}/>
+          <VehicleAvatar v={v} w="100%" h={photoH} r={0}/>
           {/* Inspection shortcut overlay */}
           <div style={{position:'absolute',inset:0,display:'flex',alignItems:'flex-end',justifyContent:'flex-end',padding:6,background:'linear-gradient(to top, rgba(0,0,0,.35) 0%, transparent 50%)'}}>
             <div style={{
@@ -1583,7 +1566,7 @@ const FvTable = ({ vehicles, onSelect, selectedId }) => (
         background: selectedId === v.id ? 'var(--surface-muted)' : 'transparent',
         cursor:'pointer',
       }}>
-        <Photo tag={v.photo} w={64} h={40} r={5}/>
+        <VehicleAvatar v={v} w={64} h={40} r={5}/>
         <div>
           <div style={{fontSize:13,fontWeight:500}}>{v.make}</div>
           {(() => { const pc = plateBg(v.trans); return (
@@ -1733,42 +1716,8 @@ const FvDetailRow = ({ v, onEdit, onClose, forceUpdate }) => {
     <Card pad={0}>
       {/* Header */}
       <div style={{padding:'14px 18px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
-        {/* Photo gallery */}
-        <div style={{position:'relative',width:160,height:100,borderRadius:8,overflow:'hidden',flexShrink:0,background:'var(--surface-muted)',border:'1px solid var(--border)'}}
-          onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-          <input ref={uploadRef} type="file" accept="image/*" style={{display:'none'}} onChange={addPhoto}/>
-          <div style={{
-            width:'100%',height:'100%',
-            transform: sliding==='left'?'translateX(-8%)':sliding==='right'?'translateX(8%)':'translateX(0)',
-            transition: sliding ? 'transform .2s ease' : 'none',
-          }}>
-            {curPhoto
-              ? <img src={curPhoto} onClick={()=>{setLbIdx(safeIdx);setLightbox(true);}} title={tr('មើលពេញអេក្រង់','View fullscreen')} style={{width:'100%',height:'100%',objectFit:'cover',display:'block',cursor:'zoom-in'}}/>
-              : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--ink-3)',fontSize:11}}>{tr('គ្មានរូប','No photo')}</div>
-            }
-          </div>
-          {/* Prev / Next */}
-          {safeIdx > 0 && (
-            <button onClick={()=>goTo(safeIdx-1)} style={{position:'absolute',left:4,top:'50%',transform:'translateY(-50%)',width:22,height:22,borderRadius:'50%',border:'none',background:'rgba(0,0,0,.5)',color:'#fff',cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>‹</button>
-          )}
-          {safeIdx < photos.length - 1 && (
-            <button onClick={()=>goTo(safeIdx+1)} style={{position:'absolute',right:4,top:'50%',transform:'translateY(-50%)',width:22,height:22,borderRadius:'50%',border:'none',background:'rgba(0,0,0,.5)',color:'#fff',cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>›</button>
-          )}
-          {/* Add button */}
-          <button onClick={()=>uploadRef.current?.click()} title={tr('បន្ថែមរូប','Add photo')} style={{position:'absolute',bottom:4,right:4,width:22,height:22,borderRadius:'50%',border:'none',background:'rgba(0,0,0,.55)',color:'#fff',cursor:'pointer',fontSize:15,display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>+</button>
-          {/* Delete button */}
-          {photos.length > 0 && (
-            <button onClick={delPhoto} title={tr('លុបរូបនេះ','Delete this photo')} style={{position:'absolute',bottom:4,left:4,width:22,height:22,borderRadius:'50%',border:'none',background:'rgba(160,0,0,.65)',color:'#fff',cursor:'pointer',fontSize:11,display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>✕</button>
-          )}
-          {/* Pill indicators */}
-          {photos.length > 1 && (
-            <div style={{position:'absolute',bottom:4,left:'50%',transform:'translateX(-50%)',display:'flex',gap:3}}>
-              {photos.map((_,i)=>(
-                <div key={i} onClick={()=>goTo(i)} style={{width:i===safeIdx?14:5,height:5,borderRadius:3,background:i===safeIdx?'#fff':'rgba(255,255,255,.5)',transition:'width .2s',cursor:'pointer'}}/>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Vehicle profile — built-in car icon (colour + plate number) */}
+        <VehicleAvatar v={v} w={160} h={100} r={8}/>
         <div style={{flex:1}}>
           <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
             <div style={{fontSize:20,fontWeight:600,fontFamily:'var(--font-display)',letterSpacing:'-.01em'}}>{v.make}</div>
@@ -1918,6 +1867,14 @@ const FvEditPanel = ({ v, onSave, onCancel, onDelete, onSavePhoto }) => {
   const [costMo,   setCostMo]   = React.useState(String(v.cost_mo  || ''));
   const [fuelMo,   setFuelMo]   = React.useState(String(v.fuel_mo  || ''));
   const [confirmDel, setConfirmDel] = React.useState(false);
+  const [iconColor, setIconColor] = React.useState(v.iconColor || '');
+  // Persist the chosen car colour immediately (like the old photo upload did),
+  // so it sticks even if the form is closed without pressing Save.
+  const pickColor = (c) => {
+    setIconColor(c);
+    const i = VEHICLES.findIndex(x => x.id === v.id);
+    if (i !== -1) { VEHICLES[i].iconColor = c; v.iconColor = c; if (window.saveAllData) window.saveAllData(); }
+  };
 
   const clsOptions = ['A · Moto', 'B · Sedan', 'B · SUV', 'B · Van', 'C · Truck', 'C · Bus', 'D · Bus'];
 
@@ -1944,6 +1901,7 @@ const FvEditPanel = ({ v, onSave, onCancel, onDelete, onSavePhoto }) => {
       oil_exp:   oilExp,
       cost_mo:   parseFloat(costMo) || 0,
       fuel_mo:   parseFloat(fuelMo) || 0,
+      iconColor: iconColor || undefined,
     });
   };
 
@@ -1977,10 +1935,19 @@ const FvEditPanel = ({ v, onSave, onCancel, onDelete, onSavePhoto }) => {
       {/* Scrollable body */}
       <div style={{flex:1,minHeight:0,overflowY:'auto',padding:bp.mobile?'14px 16px 18px':'16px 20px 20px'}}>
       {fvSecTitle('ព័ត៌មាន​')}
-      <div style={{marginBottom:14,display:'flex',gap:16,alignItems:'center'}}>
-        <UploadPhoto id={v.id} photo={v.photo} w={140} h={88} r={8} onUpload={onSavePhoto}/>
-        <div style={{fontSize:11,color:'var(--ink-3)',lineHeight:1.5}}>
-          {tr('ចុចលើរូបភាព ដើម្បី upload រូប','Click photo to upload')}
+      <div style={{marginBottom:14,display:'flex',gap:16,alignItems:'center',flexWrap:'wrap'}}>
+        <VehicleAvatar v={{...v, plate, iconColor: iconColor || undefined}} w={140} h={88} r={8}/>
+        <div style={{display:'flex',flexDirection:'column',gap:7}}>
+          <div style={{fontSize:11,color:'var(--ink-3)',lineHeight:1.5}}>{tr('ជ្រើស​ពណ៌​ឡាន​សម្រាប់​ធ្វើ​ជា​ profile','Pick a car colour for the profile')}</div>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap',maxWidth:230}}>
+            {(window.VEHICLE_COLORS||[]).map(c => {
+              const on = (iconColor || vehicleColor(v)) === c;
+              return <button key={c} onClick={()=>pickColor(c)} title={c} style={{
+                width:26,height:26,borderRadius:8,cursor:'pointer',flexShrink:0,padding:0,
+                background:c, border:on?'2px solid var(--ink)':'2px solid transparent',
+                boxShadow:on?'0 0 0 2px var(--surface),0 0 0 4px '+c:'none' }}/>;
+            })}
+          </div>
         </div>
       </div>
       <div {...grid2}>

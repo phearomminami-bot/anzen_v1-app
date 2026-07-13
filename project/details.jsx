@@ -477,7 +477,7 @@ const LessonDetail = ({ lesson, onClose }) => {
       {/* Vehicle */}
       {v && (
         <div style={{padding:14,background:'var(--surface-muted)',borderRadius:10,display:'flex',gap:10,alignItems:'center'}}>
-          <Photo tag={v.photo} w={56} h={42} r={6}/>
+          <VehicleAvatar v={v} w={56} h={42} r={6}/>
           <div style={{flex:1}}>
             <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace'}}>{tr('យានយន្ត','VEHICLE')}</div>
             <div style={{fontSize:13,fontWeight:500,marginTop:2}}>{v.make}</div>
@@ -1515,7 +1515,7 @@ const VehicleDetail = ({ vehicle, onClose }) => {
   const v = vehicle;
   return (
     <div style={{padding:24,display:'flex',flexDirection:'column',gap:18}}>
-      <Photo tag={v.photo} w="100%" h={160} r={10}/>
+      <VehicleAvatar v={v} w="100%" h={160} r={10}/>
       <div>
         <div style={{fontSize:11,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.08em'}}>{v.plate}</div>
         <div style={{fontSize:22,fontWeight:600,marginTop:4,fontFamily:'var(--font-display)'}}>{v.make}</div>

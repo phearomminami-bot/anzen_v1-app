@@ -11,6 +11,37 @@ const Photo = ({ tag, w, h, r = 6, style }) => {
   );
 };
 
+// Vehicle profile = a built-in car icon in one of these colours + the plate
+// number, instead of an uploaded photo. If a vehicle has no chosen colour yet,
+// derive a stable one from its id/plate so each car still looks distinct.
+const VEHICLE_COLORS = ['#2A5DB0','#B0413E','#12A302','#7A45C9','#CA8A04','#0E7490','#DB2777','#475569'];
+const vehicleColor = (v) => {
+  if (v && v.iconColor) return v.iconColor;
+  const key = String((v && (v.id || v.plate)) || '');
+  let h = 0; for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return VEHICLE_COLORS[h % VEHICLE_COLORS.length];
+};
+const VehicleAvatar = ({ v, w, h, r = 6, plate = true, style }) => {
+  const color = vehicleColor(v);
+  const num = (v && (v.plate || v.number || v.id)) || '';
+  const hn = typeof h === 'number' ? h : 40;
+  const iconSize = Math.max(14, Math.round(hn * (hn >= 60 ? 0.42 : 0.5)));
+  const showNum = plate && num && hn >= 34;
+  const fontSize = Math.max(8, Math.min(15, Math.round(hn * 0.17)));
+  return (
+    <div style={{ width: w, height: h, borderRadius: r, flexShrink: 0, boxSizing: 'border-box',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      gap: showNum ? Math.max(1, Math.round(hn * 0.04)) : 0, overflow: 'hidden',
+      background: color + '18', border: '1px solid ' + color + '44', ...style }}>
+      <div style={{ color, display: 'flex' }}><Icon name="car" size={iconSize} stroke={1.7}/></div>
+      {showNum ? <span style={{ fontSize, fontWeight: 800, lineHeight: 1, color, maxWidth: '100%',
+        padding: '0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        fontFamily: '"JetBrains Mono",monospace', letterSpacing: '.02em' }}>{num}</span> : null}
+    </div>
+  );
+};
+if (typeof window !== 'undefined') { window.VehicleAvatar = VehicleAvatar; window.VEHICLE_COLORS = VEHICLE_COLORS; window.vehicleColor = vehicleColor; }
+
 const Avatar = ({ tag, size = 36, ring }) => {
   const isImg = typeof tag === 'string' && (tag.startsWith('data:') || tag.startsWith('http'));
   return isImg ? (

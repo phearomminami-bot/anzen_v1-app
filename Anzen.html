@@ -985,16 +985,12 @@ window.__trRegistry = {
   "Recent inspections (all dates)": "ប្រវត្តិពិនិត្យថ្មីៗ (គ្រប់ថ្ងៃ)",
   "Click to open this date": "ចុចដើម្បីបើកថ្ងៃនេះ",
   "Inspect": "ពិនិត្យ",
-  "View fullscreen": "មើលពេញអេក្រង់",
-  "No photo": "គ្មានរូប",
-  "Add photo": "បន្ថែមរូប",
-  "Delete this photo": "លុបរូបនេះ",
   "Hidden in Vehicle ●": "លាក់ Tab Vehicle ●",
   "Visible in Vehicle ●": "បង្ហាញ Tab Vehicle ●",
   "Use \"Work order\" button above": "សូម​ប្រើ​ \"Work order\" ខាង​ជើង",
   "Are you sure?": "ប្រាកដ​ទេ?",
   "Delete vehicle": "លុប​យានយន្ត",
-  "Click photo to upload": "ចុចលើរូបភាព ដើម្បី upload រូប",
+  "Pick a car colour for the profile": "ជ្រើស​ពណ៌​ឡាន​សម្រាប់​ធ្វើ​ជា​ profile",
   "Plate *": "ផ្លាក",
   "Make / Model": "ម៉ាក ម៉ូដែល",
   "CLASS & SPECS": "ប្រភេទ",
@@ -2210,16 +2206,12 @@ window.__trGroups = {
     "Recent inspections (all dates)": "ប្រវត្តិពិនិត្យថ្មីៗ (គ្រប់ថ្ងៃ)",
     "Click to open this date": "ចុចដើម្បីបើកថ្ងៃនេះ",
     "Inspect": "ពិនិត្យ",
-    "View fullscreen": "មើលពេញអេក្រង់",
-    "No photo": "គ្មានរូប",
-    "Add photo": "បន្ថែមរូប",
-    "Delete this photo": "លុបរូបនេះ",
     "Hidden in Vehicle ●": "លាក់ Tab Vehicle ●",
     "Visible in Vehicle ●": "បង្ហាញ Tab Vehicle ●",
     "Use \"Work order\" button above": "សូម​ប្រើ​ \"Work order\" ខាង​ជើង",
     "Are you sure?": "ប្រាកដ​ទេ?",
     "Delete vehicle": "លុប​យានយន្ត",
-    "Click photo to upload": "ចុចលើរូបភាព ដើម្បី upload រូប",
+    "Pick a car colour for the profile": "ជ្រើស​ពណ៌​ឡាន​សម្រាប់​ធ្វើ​ជា​ profile",
     "Plate *": "ផ្លាក",
     "Make / Model": "ម៉ាក ម៉ូដែល",
     "CLASS & SPECS": "ប្រភេទ",
@@ -3282,7 +3274,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v209";</script>
+<script>window.__ANZEN_VERSION="v210";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -3339,6 +3331,75 @@ var Photo = ({
     }
   }, tag);
 };
+var VEHICLE_COLORS = ['#2A5DB0', '#B0413E', '#12A302', '#7A45C9', '#CA8A04', '#0E7490', '#DB2777', '#475569'];
+var vehicleColor = v => {
+  if (v && v.iconColor) return v.iconColor;
+  var key = String(v && (v.id || v.plate) || '');
+  var h = 0;
+  for (var i = 0; i < key.length; i++) h = h * 31 + key.charCodeAt(i) >>> 0;
+  return VEHICLE_COLORS[h % VEHICLE_COLORS.length];
+};
+var VehicleAvatar = ({
+  v,
+  w,
+  h,
+  r = 6,
+  plate = true,
+  style
+}) => {
+  var color = vehicleColor(v);
+  var num = v && (v.plate || v.number || v.id) || '';
+  var hn = typeof h === 'number' ? h : 40;
+  var iconSize = Math.max(14, Math.round(hn * (hn >= 60 ? 0.42 : 0.5)));
+  var showNum = plate && num && hn >= 34;
+  var fontSize = Math.max(8, Math.min(15, Math.round(hn * 0.17)));
+  return React.createElement("div", {
+    style: {
+      width: w,
+      height: h,
+      borderRadius: r,
+      flexShrink: 0,
+      boxSizing: 'border-box',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: showNum ? Math.max(1, Math.round(hn * 0.04)) : 0,
+      overflow: 'hidden',
+      background: color + '18',
+      border: '1px solid ' + color + '44',
+      ...style
+    }
+  }, React.createElement("div", {
+    style: {
+      color,
+      display: 'flex'
+    }
+  }, React.createElement(Icon, {
+    name: "car",
+    size: iconSize,
+    stroke: 1.7
+  })), showNum ? React.createElement("span", {
+    style: {
+      fontSize,
+      fontWeight: 800,
+      lineHeight: 1,
+      color,
+      maxWidth: '100%',
+      padding: '0 4px',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+      fontFamily: '"JetBrains Mono",monospace',
+      letterSpacing: '.02em'
+    }
+  }, num) : null);
+};
+if (typeof window !== 'undefined') {
+  window.VehicleAvatar = VehicleAvatar;
+  window.VEHICLE_COLORS = VEHICLE_COLORS;
+  window.vehicleColor = vehicleColor;
+}
 var Avatar = ({
   tag,
   size = 36,
@@ -10609,8 +10670,8 @@ var LessonDetail = ({
       gap: 10,
       alignItems: 'center'
     }
-  }, React.createElement(Photo, {
-    tag: v.photo,
+  }, React.createElement(VehicleAvatar, {
+    v: v,
     w: 56,
     h: 42,
     r: 6
@@ -13111,8 +13172,8 @@ var VehicleDetail = ({
       flexDirection: 'column',
       gap: 18
     }
-  }, React.createElement(Photo, {
-    tag: v.photo,
+  }, React.createElement(VehicleAvatar, {
+    v: v,
     w: "100%",
     h: 160,
     r: 10
@@ -24549,8 +24610,8 @@ var FleetScreen = ({
       style: {
         cursor: 'pointer'
       }
-    }, React.createElement(Photo, {
-      tag: v.photo,
+    }, React.createElement(VehicleAvatar, {
+      v: v,
       w: 70,
       h: 48,
       r: 6
@@ -39828,16 +39889,7 @@ var VehicleInspectionModal = ({
       boxShadow: '0 32px 80px rgba(0,0,0,.25)',
       overflow: 'hidden'
     }
-  }, React.createElement("input", {
-    ref: photoRef,
-    type: "file",
-    accept: "image/*",
-    style: {
-      display: 'none'
-    },
-    onChange: handlePhotoFile,
-    disabled: readOnly
-  }), bp.mobile ? React.createElement("div", {
+  }, bp.mobile ? React.createElement("div", {
     style: {
       padding: '12px 14px',
       borderBottom: '1px solid var(--border)',
@@ -39883,51 +39935,13 @@ var VehicleInspectionModal = ({
       alignItems: 'center',
       gap: 10
     }
-  }, React.createElement("div", {
-    onClick: readOnly ? undefined : () => photoRef.current?.click(),
-    style: {
-      width: 52,
-      height: 38,
-      borderRadius: 7,
-      overflow: 'hidden',
-      flexShrink: 0,
-      cursor: readOnly ? 'default' : 'pointer',
-      position: 'relative',
-      border: '2px solid var(--border)'
-    }
-  }, React.createElement(Photo, {
-    tag: vPhoto,
+  }, React.createElement(VehicleAvatar, {
+    v: vehicle,
     w: 52,
     h: 38,
-    r: 0
-  }), !readOnly && React.createElement("div", {
-    style: {
-      position: 'absolute',
-      inset: 0,
-      background: 'rgba(0,0,0,.4)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      opacity: 0,
-      transition: 'opacity .15s'
-    },
-    onMouseEnter: e => e.currentTarget.style.opacity = '1',
-    onMouseLeave: e => e.currentTarget.style.opacity = '0'
-  }, React.createElement("svg", {
-    width: "12",
-    height: "12",
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "#fff",
-    strokeWidth: "2",
-    strokeLinecap: "round"
-  }, React.createElement("path", {
-    d: "M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
-  }), React.createElement("circle", {
-    cx: "12",
-    cy: "13",
-    r: "4"
-  })))), React.createElement("div", {
+    r: 7,
+    plate: false
+  }), React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
@@ -39968,51 +39982,13 @@ var VehicleInspectionModal = ({
       alignItems: 'center',
       gap: 14
     }
-  }, React.createElement("div", {
-    onClick: readOnly ? undefined : () => photoRef.current?.click(),
-    style: {
-      width: 56,
-      height: 40,
-      borderRadius: 8,
-      overflow: 'hidden',
-      flexShrink: 0,
-      cursor: readOnly ? 'default' : 'pointer',
-      position: 'relative',
-      border: '2px solid var(--border)'
-    }
-  }, React.createElement(Photo, {
-    tag: vPhoto,
+  }, React.createElement(VehicleAvatar, {
+    v: vehicle,
     w: 56,
     h: 40,
-    r: 0
-  }), !readOnly && React.createElement("div", {
-    style: {
-      position: 'absolute',
-      inset: 0,
-      background: 'rgba(0,0,0,.4)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      opacity: 0,
-      transition: 'opacity .15s'
-    },
-    onMouseEnter: e => e.currentTarget.style.opacity = '1',
-    onMouseLeave: e => e.currentTarget.style.opacity = '0'
-  }, React.createElement("svg", {
-    width: "14",
-    height: "14",
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "#fff",
-    strokeWidth: "2",
-    strokeLinecap: "round"
-  }, React.createElement("path", {
-    d: "M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
-  }), React.createElement("circle", {
-    cx: "12",
-    cy: "13",
-    r: "4"
-  })))), React.createElement("div", {
+    r: 8,
+    plate: false
+  }), React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
@@ -41203,11 +41179,12 @@ var FvInspectionLog = ({
         overflow: 'hidden',
         flexShrink: 0
       }
-    }, React.createElement(Photo, {
-      tag: v.photo,
+    }, React.createElement(VehicleAvatar, {
+      v: v,
       w: 40,
       h: 26,
-      r: 0
+      r: 0,
+      plate: false
     })), React.createElement("div", {
       style: {
         flex: 1,
@@ -41594,8 +41571,8 @@ var FvCard = ({
       position: 'relative',
       cursor: 'pointer'
     }
-  }, React.createElement(Photo, {
-    tag: v.photo,
+  }, React.createElement(VehicleAvatar, {
+    v: v,
     w: "100%",
     h: photoH,
     r: 0
@@ -42042,8 +42019,8 @@ var FvTable = ({
     background: selectedId === v.id ? 'var(--surface-muted)' : 'transparent',
     cursor: 'pointer'
   }
-}, React.createElement(Photo, {
-  tag: v.photo,
+}, React.createElement(VehicleAvatar, {
+  v: v,
   w: 64,
   h: 40,
   r: 5
@@ -42357,159 +42334,12 @@ var FvDetailRow = ({
       gap: 14,
       flexWrap: 'wrap'
     }
-  }, React.createElement("div", {
-    style: {
-      position: 'relative',
-      width: 160,
-      height: 100,
-      borderRadius: 8,
-      overflow: 'hidden',
-      flexShrink: 0,
-      background: 'var(--surface-muted)',
-      border: '1px solid var(--border)'
-    },
-    onTouchStart: onTouchStart,
-    onTouchEnd: onTouchEnd
-  }, React.createElement("input", {
-    ref: uploadRef,
-    type: "file",
-    accept: "image/*",
-    style: {
-      display: 'none'
-    },
-    onChange: addPhoto
+  }, React.createElement(VehicleAvatar, {
+    v: v,
+    w: 160,
+    h: 100,
+    r: 8
   }), React.createElement("div", {
-    style: {
-      width: '100%',
-      height: '100%',
-      transform: sliding === 'left' ? 'translateX(-8%)' : sliding === 'right' ? 'translateX(8%)' : 'translateX(0)',
-      transition: sliding ? 'transform .2s ease' : 'none'
-    }
-  }, curPhoto ? React.createElement("img", {
-    src: curPhoto,
-    onClick: () => {
-      setLbIdx(safeIdx);
-      setLightbox(true);
-    },
-    title: tr('មើលពេញអេក្រង់', 'View fullscreen'),
-    style: {
-      width: '100%',
-      height: '100%',
-      objectFit: 'cover',
-      display: 'block',
-      cursor: 'zoom-in'
-    }
-  }) : React.createElement("div", {
-    style: {
-      width: '100%',
-      height: '100%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: 'var(--ink-3)',
-      fontSize: 11
-    }
-  }, tr('គ្មានរូប', 'No photo'))), safeIdx > 0 && React.createElement("button", {
-    onClick: () => goTo(safeIdx - 1),
-    style: {
-      position: 'absolute',
-      left: 4,
-      top: '50%',
-      transform: 'translateY(-50%)',
-      width: 22,
-      height: 22,
-      borderRadius: '50%',
-      border: 'none',
-      background: 'rgba(0,0,0,.5)',
-      color: '#fff',
-      cursor: 'pointer',
-      fontSize: 13,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      lineHeight: 1
-    }
-  }, "\u2039"), safeIdx < photos.length - 1 && React.createElement("button", {
-    onClick: () => goTo(safeIdx + 1),
-    style: {
-      position: 'absolute',
-      right: 4,
-      top: '50%',
-      transform: 'translateY(-50%)',
-      width: 22,
-      height: 22,
-      borderRadius: '50%',
-      border: 'none',
-      background: 'rgba(0,0,0,.5)',
-      color: '#fff',
-      cursor: 'pointer',
-      fontSize: 13,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      lineHeight: 1
-    }
-  }, "\u203A"), React.createElement("button", {
-    onClick: () => uploadRef.current?.click(),
-    title: tr('បន្ថែមរូប', 'Add photo'),
-    style: {
-      position: 'absolute',
-      bottom: 4,
-      right: 4,
-      width: 22,
-      height: 22,
-      borderRadius: '50%',
-      border: 'none',
-      background: 'rgba(0,0,0,.55)',
-      color: '#fff',
-      cursor: 'pointer',
-      fontSize: 15,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      lineHeight: 1
-    }
-  }, "+"), photos.length > 0 && React.createElement("button", {
-    onClick: delPhoto,
-    title: tr('លុបរូបនេះ', 'Delete this photo'),
-    style: {
-      position: 'absolute',
-      bottom: 4,
-      left: 4,
-      width: 22,
-      height: 22,
-      borderRadius: '50%',
-      border: 'none',
-      background: 'rgba(160,0,0,.65)',
-      color: '#fff',
-      cursor: 'pointer',
-      fontSize: 11,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      lineHeight: 1
-    }
-  }, "\u2715"), photos.length > 1 && React.createElement("div", {
-    style: {
-      position: 'absolute',
-      bottom: 4,
-      left: '50%',
-      transform: 'translateX(-50%)',
-      display: 'flex',
-      gap: 3
-    }
-  }, photos.map((_, i) => React.createElement("div", {
-    key: i,
-    onClick: () => goTo(i),
-    style: {
-      width: i === safeIdx ? 14 : 5,
-      height: 5,
-      borderRadius: 3,
-      background: i === safeIdx ? '#fff' : 'rgba(255,255,255,.5)',
-      transition: 'width .2s',
-      cursor: 'pointer'
-    }
-  })))), React.createElement("div", {
     style: {
       flex: 1
     }
@@ -42826,6 +42656,16 @@ var FvEditPanel = ({
   var [costMo, setCostMo] = React.useState(String(v.cost_mo || ''));
   var [fuelMo, setFuelMo] = React.useState(String(v.fuel_mo || ''));
   var [confirmDel, setConfirmDel] = React.useState(false);
+  var [iconColor, setIconColor] = React.useState(v.iconColor || '');
+  var pickColor = c => {
+    setIconColor(c);
+    var i = VEHICLES.findIndex(x => x.id === v.id);
+    if (i !== -1) {
+      VEHICLES[i].iconColor = c;
+      v.iconColor = c;
+      if (window.saveAllData) window.saveAllData();
+    }
+  };
   var clsOptions = ['A · Moto', 'B · Sedan', 'B · SUV', 'B · Van', 'C · Truck', 'C · Bus', 'D · Bus'];
   var save = () => {
     if (!plate.trim()) return;
@@ -42849,7 +42689,8 @@ var FvEditPanel = ({
       ins_exp: insExp,
       oil_exp: oilExp,
       cost_mo: parseFloat(costMo) || 0,
-      fuel_mo: parseFloat(fuelMo) || 0
+      fuel_mo: parseFloat(fuelMo) || 0,
+      iconColor: iconColor || undefined
     });
   };
   var inp = {
@@ -42972,22 +42813,56 @@ var FvEditPanel = ({
       marginBottom: 14,
       display: 'flex',
       gap: 16,
-      alignItems: 'center'
+      alignItems: 'center',
+      flexWrap: 'wrap'
     }
-  }, React.createElement(UploadPhoto, {
-    id: v.id,
-    photo: v.photo,
+  }, React.createElement(VehicleAvatar, {
+    v: {
+      ...v,
+      plate,
+      iconColor: iconColor || undefined
+    },
     w: 140,
     h: 88,
-    r: 8,
-    onUpload: onSavePhoto
+    r: 8
   }), React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 7
+    }
+  }, React.createElement("div", {
     style: {
       fontSize: 11,
       color: 'var(--ink-3)',
       lineHeight: 1.5
     }
-  }, tr('ចុចលើរូបភាព ដើម្បី upload រូប', 'Click photo to upload'))), React.createElement("div", grid2, React.createElement(FvField, {
+  }, tr('ជ្រើស​ពណ៌​ឡាន​សម្រាប់​ធ្វើ​ជា​ profile', 'Pick a car colour for the profile')), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      flexWrap: 'wrap',
+      maxWidth: 230
+    }
+  }, (window.VEHICLE_COLORS || []).map(c => {
+    var on = (iconColor || vehicleColor(v)) === c;
+    return React.createElement("button", {
+      key: c,
+      onClick: () => pickColor(c),
+      title: c,
+      style: {
+        width: 26,
+        height: 26,
+        borderRadius: 8,
+        cursor: 'pointer',
+        flexShrink: 0,
+        padding: 0,
+        background: c,
+        border: on ? '2px solid var(--ink)' : '2px solid transparent',
+        boxShadow: on ? '0 0 0 2px var(--surface),0 0 0 4px ' + c : 'none'
+      }
+    });
+  })))), React.createElement("div", grid2, React.createElement(FvField, {
     label: tr('ផ្លាក', 'Plate *')
   }, React.createElement("input", _extends({}, inp, {
     value: plate,

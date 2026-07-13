@@ -2008,7 +2008,7 @@ const FleetScreen = ({ role = 'admin' }) => {
         const todayLessons = LESSONS.filter(l=>l.veh===v.id&&l.date===todayStr()&&l.status!=='cancelled');
         return (
         <div key={v.id} style={{padding:'12px 16px',display:'grid',gridTemplateColumns:'80px 1fr 1fr 1fr 1fr 1fr',gap:14,alignItems:'center',borderTop:i?'1px solid var(--border)':'none'}}>
-          <div onClick={()=>openDetail('vehicle', v)} style={{cursor:'pointer'}}><Photo tag={v.photo} w={70} h={48} r={6}/></div>
+          <div onClick={()=>openDetail('vehicle', v)} style={{cursor:'pointer'}}><VehicleAvatar v={v} w={70} h={48} r={6}/></div>
           <div onClick={()=>openDetail('vehicle', v)} style={{cursor:'pointer'}}>
             <div style={{fontSize:13,fontWeight:500}}>{v.make}</div>
             <div style={{fontSize:11,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',marginTop:2}}>{v.plate}</div>
