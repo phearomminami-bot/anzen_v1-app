@@ -39,6 +39,22 @@ const invStock = (it) => (it.moves || []).reduce((a, m) =>
   a + (m.type === 'in' ? m.qty : (m.type === 'order' && m.received) ? m.qty : m.type === 'out' ? -m.qty : 0), 0);
 const invOnOrder = (it) => (it.moves || []).filter(m => m.type === 'order' && !m.received).reduce((a, m) => a + m.qty, 0);
 const invKhr = (n) => n ? Number(n).toLocaleString('en-US') + '៛' : '';
+// Merchant bookkeeping per item, from the priced movements (all in riel):
+//  • ទិញចូល — units bought in and what they cost.
+//  • លក់ចេញ — units sold out and the revenue earned.
+//  • ចំណេញ/ខាត — revenue minus the cost of the units sold (weighted-average
+//    buy price; falls back to the item's list price when nothing was bought in).
+const invMoneyStats = (it) => {
+  let inQty = 0, inCost = 0, outQty = 0, outRev = 0;
+  (it.moves || []).forEach(m => {
+    const up = Number(m.unitPrice) || 0;
+    if (m.type === 'in')       { inQty  += m.qty; inCost += m.qty * up; }
+    else if (m.type === 'out') { outQty += m.qty; outRev += m.qty * up; }
+  });
+  const avgCost = inQty ? inCost / inQty : (Number(it.priceKHR) || 0);
+  const profit  = outRev - outQty * avgCost;
+  return { inQty, inCost, outQty, outRev, avgCost, profit };
+};
 
 // ── Add / edit item form ─────────────────────────────────────────────────────
 const StockItemForm = ({ item, onSave, onCancel, tr }) => {
@@ -151,16 +167,20 @@ const StockMoveForm = ({ item, type, onSave, onCancel, tr }) => {
   const [party, setParty] = React.useState(type === 'out' ? '' : (item.supplier || ''));
   const [note,  setNote]  = React.useState('');
   const meta = {
-    in:    { km:'ដាក់​ចូល​ស្តុក',  en:'Stock in',    color:'#12873f', party: tr('អ្នក​ផ្គត់ផ្គង់','Supplier') },
-    out:   { km:'ដក​ចេញ​ស្តុក',   en:'Stock out',   color:'#B0413E', party: tr('អ្នក​ទទួល','Recipient') },
-    order: { km:'ដាក់​កម្មង់',     en:'Place order', color:'#C98A12', party: tr('អ្នក​ចែកចាយ','Supplier') },
+    in:    { km:'ដាក់​ចូល​ស្តុក',  en:'Stock in',    color:'#12873f', party: tr('អ្នក​ផ្គត់ផ្គង់','Supplier'),  price: tr('តម្លៃ​ទិញ​ចូល (៛/ឯកតា)','Buy price (៛/unit)') },
+    out:   { km:'ដក​ចេញ​ស្តុក',   en:'Stock out',   color:'#B0413E', party: tr('អ្នក​ទទួល','Recipient'),    price: tr('តម្លៃ​លក់​ចេញ (៛/ឯកតា)','Sell price (៛/unit)') },
+    order: { km:'ដាក់​កម្មង់',     en:'Place order', color:'#C98A12', party: tr('អ្នក​ចែកចាយ','Supplier'),    price: tr('តម្លៃ​ប៉ាន់ស្មាន (៛/ឯកតា)','Est. price (៛/unit)') },
   }[type];
+  // Default the price to the item's list price for buys/orders; sells start blank.
+  const [unitPrice, setUnitPrice] = React.useState(type === 'out' ? '' : (item.priceKHR != null ? String(item.priceKHR) : ''));
   const fld = { width:'100%', padding:'10px 12px', border:'1px solid var(--border)', borderRadius:9, fontSize:14, fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)', boxSizing:'border-box' };
   const lbl = { fontSize:11, fontWeight:600, color:'var(--ink-3)', margin:'0 0 4px' };
+  const upNum = parseInt(String(unitPrice).replace(/[^\d]/g,'')) || 0;
+  const qNum  = parseInt(qty) || 0;
   const save = () => {
     const n = parseInt(qty);
     if (!n || n <= 0) return;
-    onSave({ id: invUid(), type, qty: n, date, party: party.trim(), note: note.trim(), received: type==='order' ? false : undefined });
+    onSave({ id: invUid(), type, qty: n, date, party: party.trim(), note: note.trim(), unitPrice: upNum, received: type==='order' ? false : undefined });
   };
   return (
     <div style={{ padding:'6px 16px 16px', display:'flex', flexDirection:'column', gap:12 }}>
@@ -173,6 +193,16 @@ const StockMoveForm = ({ item, type, onSave, onCancel, tr }) => {
         <div>
           <div style={lbl}>{tr('ថ្ងៃ','Date')}</div>
           <input type="date" value={date} onChange={e=>setDate(e.target.value)} style={fld}/>
+        </div>
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+        <div>
+          <div style={lbl}>{meta.price}</div>
+          <input value={unitPrice} onChange={e=>setUnitPrice(e.target.value)} style={fld} inputMode="numeric" placeholder="0"/>
+        </div>
+        <div>
+          <div style={lbl}>{tr('សរុប','Total')}</div>
+          <div style={{ ...fld, display:'flex', alignItems:'center', color: upNum && qNum ? meta.color : 'var(--ink-3)', fontWeight:700, fontFamily:'"JetBrains Mono",monospace', background:'var(--surface-muted)' }}>{upNum && qNum ? invKhr(upNum*qNum) : '—'}</div>
         </div>
       </div>
       <div>
@@ -239,6 +269,24 @@ const StockItemDetail = ({ item, onClose, onEdit, onMove, onReceive, onDeleteMov
       </div>
       {item.supplier && <div style={{ fontSize:12, color:'var(--ink-2)' }}>🚚 {tr('អ្នក​ចែកចាយ','Supplier')}: <b>{item.supplier}</b></div>}
 
+      {/* Merchant summary — bought in / sold out / profit-loss */}
+      {(() => { const money = invMoneyStats(item); if (!money.inQty && !money.outQty) return null; return (
+        <div style={{ display:'flex', gap:8 }}>
+          <div style={{ flex:1, background:'rgba(18,135,63,.08)', border:'1px solid rgba(18,135,63,.25)', borderRadius:12, padding:'10px 12px' }}>
+            <div style={{ fontSize:10.5, color:'#12873f', fontWeight:700 }}>{tr('ទិញ​ចូល','Bought in')} · {money.inQty}</div>
+            <div style={{ fontSize:14, fontWeight:800, fontFamily:'"JetBrains Mono",monospace', color:'#12873f', marginTop:2 }}>{invKhr(money.inCost)||'—'}</div>
+          </div>
+          <div style={{ flex:1, background:'rgba(176,65,62,.08)', border:'1px solid rgba(176,65,62,.25)', borderRadius:12, padding:'10px 12px' }}>
+            <div style={{ fontSize:10.5, color:'#B0413E', fontWeight:700 }}>{tr('លក់​ចេញ','Sold out')} · {money.outQty}</div>
+            <div style={{ fontSize:14, fontWeight:800, fontFamily:'"JetBrains Mono",monospace', color:'#B0413E', marginTop:2 }}>{invKhr(money.outRev)||'—'}</div>
+          </div>
+          <div style={{ flex:1, background: money.profit>=0?'rgba(18,135,63,.08)':'rgba(176,65,62,.08)', border:'1px solid '+(money.profit>=0?'rgba(18,135,63,.25)':'rgba(176,65,62,.25)'), borderRadius:12, padding:'10px 12px' }}>
+            <div style={{ fontSize:10.5, color: money.profit>=0?'#12873f':'#B0413E', fontWeight:700 }}>{money.profit>=0?tr('ចំណេញ','Profit'):tr('ខាត','Loss')}</div>
+            <div style={{ fontSize:14, fontWeight:800, fontFamily:'"JetBrains Mono",monospace', color: money.profit>=0?'#12873f':'#B0413E', marginTop:2 }}>{money.profit?(money.profit>0?'+':'')+invKhr(money.profit):'—'}</div>
+          </div>
+        </div>
+      ); })()}
+
       {/* Actions */}
       <div style={{ display:'flex', gap:8 }}>
         {actBtn('#12873f', '＋', tr('ដាក់​ចូល','Stock in'),  () => onMove('in'))}
@@ -259,6 +307,7 @@ const StockItemDetail = ({ item, onClose, onEdit, onMove, onReceive, onDeleteMov
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontSize:13, fontWeight:700 }}>
                     <span style={{ color:mt.color }}>{m.type==='out'?'−':'+'}{m.qty}</span> · {tr(mt.km, mt.en)}
+                    {m.unitPrice ? <span style={{ fontSize:11.5, marginLeft:6, color:mt.color, fontWeight:800, fontFamily:'"JetBrains Mono",monospace' }}>{invKhr(m.unitPrice*m.qty)}</span> : null}
                     {pending && <span style={{ fontSize:10, marginLeft:6, background:'rgba(201,138,18,.16)', color:'#C98A12', padding:'1px 7px', borderRadius:5, fontWeight:800 }}>{tr('រង់ចាំ','Pending')}</span>}
                     {m.type==='order' && m.received && <span style={{ fontSize:10, marginLeft:6, color:'#12873f', fontWeight:800 }}>✓ {tr('បាន​ទទួល','Received')}</span>}
                   </div>
@@ -320,6 +369,7 @@ const StockScreen = ({ role }) => {
   const totalUnits = items.reduce((a, it) => a + invStock(it), 0);
   const lowCount   = items.filter(it => it.minStock > 0 && invStock(it) <= it.minStock).length;
   const totalValue = items.reduce((a, it) => a + invStock(it) * (it.price || 0), 0);
+  const totalProfit = items.reduce((a, it) => a + invMoneyStats(it).profit, 0);
 
   // Export the (filtered) stock list as CSV — opens cleanly in Google Sheets / Excel.
   const exportStockCSV = () => {
@@ -334,6 +384,11 @@ const StockScreen = ({ role }) => {
       [tr('តម្លៃ (៛)','Price KHR'),  it => it.priceKHR || 0],
       [tr('តម្លៃសរុប ($)','Value USD'), it => invStock(it) * (it.price || 0)],
       [tr('កម្មង់','On order'),      it => invOnOrder(it)],
+      [tr('ទិញចូល (ចំនួន)','Bought in (qty)'), it => invMoneyStats(it).inQty],
+      [tr('ទិញចូល (៛)','Bought in KHR'),     it => invMoneyStats(it).inCost],
+      [tr('លក់ចេញ (ចំនួន)','Sold out (qty)'), it => invMoneyStats(it).outQty],
+      [tr('លក់ចេញ (៛)','Sold out KHR'),       it => invMoneyStats(it).outRev],
+      [tr('ចំណេញ/ខាត (៛)','Profit/Loss KHR'),  it => invMoneyStats(it).profit],
       [tr('អ្នកចែកចាយ','Supplier'),  it => it.supplier || ''],
       [tr('ស្តុកអប្បបរមា','Min stock'), it => it.minStock || 0],
       [tr('ចំណាំ','Notes'),        it => it.notes || ''],
@@ -384,6 +439,7 @@ const StockScreen = ({ role }) => {
           <div style={stat}><div style={{ display:'flex', alignItems:'center', gap:6 }}><span style={statNum}>{totalUnits}</span></div><div style={statLbl}>{tr('ចំនួន​សរុប','Total units')}</div></div>
           <div style={stat}><div style={{ display:'flex', alignItems:'center', gap:6 }}><span style={{ width:8, height:8, borderRadius:'50%', background: lowCount?'#F0A93B':'#6BE39A' }}/><span style={statNum}>{lowCount}</span></div><div style={statLbl}>{tr('ស្តុក​ជិត​អស់','Low stock')}</div></div>
           <div style={stat}><div style={{ display:'flex', alignItems:'center', gap:6 }}><span style={statNum}>${totalValue.toFixed(0)}</span></div><div style={statLbl}>{tr('តម្លៃ','Value')}</div></div>
+          {totalProfit !== 0 && <div style={stat}><div style={{ display:'flex', alignItems:'center', gap:6 }}><span style={{ ...statNum, color: totalProfit>=0?'#6BE39A':'#F5A3A0' }}>{totalProfit>0?'+':''}{invKhr(totalProfit)}</span></div><div style={statLbl}>{totalProfit>=0?tr('ចំណេញ​សរុប','Total profit'):tr('ខាត​សរុប','Total loss')}</div></div>}
         </div>
       </div>
 
@@ -420,7 +476,7 @@ const StockScreen = ({ role }) => {
           const rowHdr = { border:'1px solid var(--border)', background:'var(--surface-muted)', color:'var(--ink-3)', textAlign:'center', fontFamily:'"JetBrains Mono",monospace', fontSize:11, width:34, padding:'7px 4px', position:'sticky', left:0 };
           return (
             <div style={{ background:'var(--surface)', border:'1px solid var(--border-strong)', borderRadius:10, overflowX:'auto', boxShadow:'0 4px 14px rgba(20,30,60,.05)' }}>
-              <table style={{ borderCollapse:'collapse', width:'100%', minWidth:680, fontSize:12.5 }}>
+              <table style={{ borderCollapse:'collapse', width:'100%', minWidth:960, fontSize:12.5 }}>
                 <thead>
                   <tr>
                     <th style={{ ...th, ...rowHdr, textTransform:'none' }}>#</th>
@@ -430,7 +486,10 @@ const StockScreen = ({ role }) => {
                     <th style={{ ...th, textAlign:'left' }}>{tr('ឯកតា','Unit')}</th>
                     <th style={{ ...th, textAlign:'right' }}>{tr('តម្លៃ','Price')}</th>
                     <th style={{ ...th, textAlign:'right' }}>{tr('តម្លៃ​សរុប','Value')}</th>
-                    <th style={{ ...th, textAlign:'right' }}>{tr('កម្មង់','On order')}</th>
+                    <th style={{ ...th, textAlign:'right', color:'#C98A12' }}>{tr('កម្មង់','On order')}</th>
+                    <th style={{ ...th, textAlign:'right', color:'#12873f' }}>{tr('ទិញ​ចូល','Bought in')}</th>
+                    <th style={{ ...th, textAlign:'right', color:'#B0413E' }}>{tr('លក់​ចេញ','Sold out')}</th>
+                    <th style={{ ...th, textAlign:'right' }}>{tr('ចំណេញ / ខាត','Profit / Loss')}</th>
                     <th style={{ ...th, textAlign:'left' }}>{tr('អ្នក​ចែកចាយ','Supplier')}</th>
                   </tr>
                 </thead>
@@ -439,6 +498,7 @@ const StockScreen = ({ role }) => {
                     const cat = invCatOf(it.category);
                     const stock = invStock(it);
                     const onOrder = invOnOrder(it);
+                    const money = invMoneyStats(it);
                     const low = it.minStock > 0 && stock <= it.minStock;
                     return (
                       <tr key={it.id} onClick={()=>setDetailId(it.id)} style={{ cursor:'pointer' }}>
@@ -450,6 +510,9 @@ const StockScreen = ({ role }) => {
                         <td style={num}>{it.price ? '$'+it.price : (it.priceKHR?'':'—')}{it.priceKHR ? <div style={{ fontSize:10, color:'var(--ink-3)', fontWeight:400 }}>{invKhr(it.priceKHR)}</div> : null}</td>
                         <td style={num}>${(stock*(it.price||0)).toFixed(0)}{it.priceKHR ? <div style={{ fontSize:10, color:'var(--ink-3)', fontWeight:400 }}>{invKhr(stock*it.priceKHR)}</div> : null}</td>
                         <td style={{ ...num, color: onOrder?'#C98A12':'var(--ink-3)' }}>{onOrder || '—'}</td>
+                        <td style={{ ...num, color: money.inQty?'#12873f':'var(--ink-3)' }}>{money.inQty || '—'}{money.inCost ? <div style={{ fontSize:10, color:'var(--ink-3)', fontWeight:400 }}>{invKhr(money.inCost)}</div> : null}</td>
+                        <td style={{ ...num, color: money.outQty?'#B0413E':'var(--ink-3)' }}>{money.outQty || '—'}{money.outRev ? <div style={{ fontSize:10, color:'var(--ink-3)', fontWeight:400 }}>{invKhr(money.outRev)}</div> : null}</td>
+                        <td style={{ ...num, fontWeight:800, color: money.profit>0?'#12873f':money.profit<0?'#B0413E':'var(--ink-3)' }}>{money.profit ? (money.profit>0?'+':'')+invKhr(money.profit) : '—'}</td>
                         <td style={{ ...td, color:'var(--ink-2)' }}>{it.supplier || '—'}</td>
                       </tr>
                     );
