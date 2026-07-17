@@ -241,7 +241,9 @@ const ScoresScreen = ({ role }) => {
   const load = React.useCallback((url, force) => {
     if (!url) return;
     setLoading(true); setErr(null);
-    fetchScoreSheet(url, force).then(d => { setData(d); setLoading(false); }).catch(e => { setErr(e); setLoading(false); });
+    // Tag the loaded rows with the URL they came from so the view can tell when
+    // the on-screen data belongs to the currently-selected sheet (see below).
+    fetchScoreSheet(url, force).then(d => { setData(d ? { ...d, __url: url } : d); setLoading(false); }).catch(e => { setErr(e); setLoading(false); });
   }, []);
   React.useEffect(() => { load(cur && cur.url, false); setCompanyF(''); setFromDate(''); setToDate(''); /* eslint-disable-next-line */ }, [selIdx]);
 
@@ -295,8 +297,16 @@ const ScoresScreen = ({ role }) => {
 
   const inp = { width:'100%', padding:'8px 10px', border:'1px solid var(--border)', borderRadius:8, fontSize:12.5, fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)', boxSizing:'border-box' };
 
+  // The sheet the on-screen `data` actually belongs to. While a group/item
+  // switch is loading, `cur` already points at the new sheet but `data` is still
+  // the old one — deriving columns/companies from `viewSheet` (not `cur`) keeps
+  // the table, filters and column mapping consistent instead of thrashing, so
+  // the swap happens in one clean step rather than reflowing twice (the jitter).
+  const viewSheet = (data && data.__url && sheets.find(s => s.url === data.__url)) || cur;
+  const switching = loading && (!data || data.__url !== (cur && cur.url));
+
   // Filter rows by student name, pass/fail, and company.
-  const fcols = data ? resolveScoreCols(data.headers, cur) : null;
+  const fcols = data ? resolveScoreCols(data.headers, viewSheet) : null;
   const companies = (data && fcols && fcols.company >= 0)
     ? [...new Set(data.rows.map(r => String(r[fcols.company] || '').trim()).filter(Boolean))].sort() : [];
   const filtered = React.useMemo(() => {
@@ -499,7 +509,19 @@ const ScoresScreen = ({ role }) => {
       {loading && !data ? (
         <div style={{ textAlign:'center', padding:'48px', color:'var(--ink-3)', fontSize:13 }}>{tr('កំពុង​ទាញ​តារាង...','Loading the sheet…')}</div>
       ) : err ? <ScoreError err={err} tr={tr}/>
-        : data ? <ScoreTable data={filtered || data} tr={tr} sheet={cur} compact={bp.mobile}/>
+        : data ? (
+          <div style={{ position:'relative' }}>
+            {/* While switching sheets, freeze the current table (dimmed + not
+                clickable) so nothing reflows under the finger; it's replaced in
+                one step when the new sheet's rows arrive. */}
+            <div style={{ opacity: switching ? 0.35 : 1, pointerEvents: switching ? 'none' : 'auto', transition:'opacity .15s ease' }}>
+              <ScoreTable data={filtered || data} tr={tr} sheet={viewSheet} compact={bp.mobile}/>
+            </div>
+            {switching && (
+              <div style={{ position:'absolute', top:10, left:'50%', transform:'translateX(-50%)', background:'var(--surface)', border:'1px solid var(--border)', borderRadius:20, padding:'5px 14px', fontSize:12, color:'var(--ink-3)', boxShadow:'0 4px 14px rgba(20,30,60,.12)', whiteSpace:'nowrap' }}>{tr('កំពុង​ទាញ...','Loading…')}</div>
+            )}
+          </div>
+        )
         : null}
     </div>
   );

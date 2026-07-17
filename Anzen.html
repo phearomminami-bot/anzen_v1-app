@@ -3302,7 +3302,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v211";</script>
+<script>window.__ANZEN_VERSION="v212";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -19498,7 +19498,10 @@ var ScoresScreen = ({
     setLoading(true);
     setErr(null);
     fetchScoreSheet(url, force).then(d => {
-      setData(d);
+      setData(d ? {
+        ...d,
+        __url: url
+      } : d);
       setLoading(false);
     }).catch(e => {
       setErr(e);
@@ -19637,7 +19640,9 @@ var ScoresScreen = ({
     color: 'var(--ink)',
     boxSizing: 'border-box'
   };
-  var fcols = data ? resolveScoreCols(data.headers, cur) : null;
+  var viewSheet = data && data.__url && sheets.find(s => s.url === data.__url) || cur;
+  var switching = loading && (!data || data.__url !== (cur && cur.url));
+  var fcols = data ? resolveScoreCols(data.headers, viewSheet) : null;
   var companies = data && fcols && fcols.company >= 0 ? [...new Set(data.rows.map(r => String(r[fcols.company] || '').trim()).filter(Boolean))].sort() : [];
   var filtered = React.useMemo(() => {
     if (!data || !fcols) return data;
@@ -20395,12 +20400,37 @@ var ScoresScreen = ({
   }, tr('កំពុង​ទាញ​តារាង...', 'Loading the sheet…')) : err ? React.createElement(ScoreError, {
     err: err,
     tr: tr
-  }) : data ? React.createElement(ScoreTable, {
+  }) : data ? React.createElement("div", {
+    style: {
+      position: 'relative'
+    }
+  }, React.createElement("div", {
+    style: {
+      opacity: switching ? 0.35 : 1,
+      pointerEvents: switching ? 'none' : 'auto',
+      transition: 'opacity .15s ease'
+    }
+  }, React.createElement(ScoreTable, {
     data: filtered || data,
     tr: tr,
-    sheet: cur,
+    sheet: viewSheet,
     compact: bp.mobile
-  }) : null);
+  })), switching && React.createElement("div", {
+    style: {
+      position: 'absolute',
+      top: 10,
+      left: '50%',
+      transform: 'translateX(-50%)',
+      background: 'var(--surface)',
+      border: '1px solid var(--border)',
+      borderRadius: 20,
+      padding: '5px 14px',
+      fontSize: 12,
+      color: 'var(--ink-3)',
+      boxShadow: '0 4px 14px rgba(20,30,60,.12)',
+      whiteSpace: 'nowrap'
+    }
+  }, tr('កំពុង​ទាញ...', 'Loading…'))) : null);
 };
 var ScoreSheetForStudent = ({
   student
