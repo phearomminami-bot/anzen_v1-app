@@ -245,10 +245,9 @@ const ScoresScreen = ({ role }) => {
     // the on-screen data belongs to the currently-selected sheet (see below).
     fetchScoreSheet(url, force).then(d => { setData(d ? { ...d, __url: url } : d); setLoading(false); }).catch(e => { setErr(e); setLoading(false); });
   }, []);
-  // Reset only the company filter on an item switch (companies differ per sheet).
-  // Keep the date range — it applies across every sheet and should persist until
-  // the user clears it with the Clear button.
-  React.useEffect(() => { load(cur && cur.url, false); setCompanyF(''); /* eslint-disable-next-line */ }, [selIdx]);
+  // Switching an item only reloads the sheet. The name, company and date
+  // filters all persist across sheets and clear only via the Clear button.
+  React.useEffect(() => { load(cur && cur.url, false); /* eslint-disable-next-line */ }, [selIdx]);
 
   const loadHeadersFor = (i, url) => {
     if (!url) return;
@@ -487,10 +486,11 @@ const ScoresScreen = ({ role }) => {
               ))}
             </div>
           )}
-          {fcols.company >= 0 && companies.length > 0 && (
+          {fcols.company >= 0 && (companies.length > 0 || companyF) && (
             <select value={companyF} onChange={e=>setCompanyF(e.target.value)} style={{ flex: m?'1 1 46%':'0 1 200px', padding:fpad, border:'1px solid var(--border)', borderRadius:9, fontSize:fsz, fontFamily:'inherit', background:'var(--surface)', color:'var(--ink)', cursor:'pointer' }}>
               <option value="">{tr('ក្រុមហ៊ុន​ទាំងអស់','All companies')}</option>
-              {companies.map((c, i) => <option key={i} value={c}>{c}</option>)}
+              {/* Keep the selected company visible even if this sheet doesn't list it. */}
+              {(companyF && !companies.includes(companyF) ? [companyF, ...companies] : companies).map((c, i) => <option key={i} value={c}>{c}</option>)}
             </select>
           )}
           {fcols.date >= 0 && (

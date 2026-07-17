@@ -3302,7 +3302,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v213";</script>
+<script>window.__ANZEN_VERSION="v214";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -19510,7 +19510,6 @@ var ScoresScreen = ({
   }, []);
   React.useEffect(() => {
     load(cur && cur.url, false);
-    setCompanyF('');
   }, [selIdx]);
   var loadHeadersFor = (i, url) => {
     if (!url) return;
@@ -20297,7 +20296,7 @@ var ScoresScreen = ({
         color: passFilter === o.k ? o.c : 'var(--ink-3)',
         boxShadow: passFilter === o.k ? '0 1px 2px rgba(20,30,60,.12)' : 'none'
       }
-    }, o.l))), fcols.company >= 0 && companies.length > 0 && React.createElement("select", {
+    }, o.l))), fcols.company >= 0 && (companies.length > 0 || companyF) && React.createElement("select", {
       value: companyF,
       onChange: e => setCompanyF(e.target.value),
       style: {
@@ -20313,7 +20312,7 @@ var ScoresScreen = ({
       }
     }, React.createElement("option", {
       value: ""
-    }, tr('ក្រុមហ៊ុន​ទាំងអស់', 'All companies')), companies.map((c, i) => React.createElement("option", {
+    }, tr('ក្រុមហ៊ុន​ទាំងអស់', 'All companies')), (companyF && !companies.includes(companyF) ? [companyF, ...companies] : companies).map((c, i) => React.createElement("option", {
       key: i,
       value: c
     }, c))), fcols.date >= 0 && React.createElement("div", {
