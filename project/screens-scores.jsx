@@ -245,7 +245,10 @@ const ScoresScreen = ({ role }) => {
     // the on-screen data belongs to the currently-selected sheet (see below).
     fetchScoreSheet(url, force).then(d => { setData(d ? { ...d, __url: url } : d); setLoading(false); }).catch(e => { setErr(e); setLoading(false); });
   }, []);
-  React.useEffect(() => { load(cur && cur.url, false); setCompanyF(''); setFromDate(''); setToDate(''); /* eslint-disable-next-line */ }, [selIdx]);
+  // Reset only the company filter on an item switch (companies differ per sheet).
+  // Keep the date range — it applies across every sheet and should persist until
+  // the user clears it with the Clear button.
+  React.useEffect(() => { load(cur && cur.url, false); setCompanyF(''); /* eslint-disable-next-line */ }, [selIdx]);
 
   const loadHeadersFor = (i, url) => {
     if (!url) return;
