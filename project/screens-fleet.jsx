@@ -105,7 +105,7 @@ const FleetScreenV2 = () => {
   const selected = vehicles.find(v => v.id === selectedId) || null;
 
   const filtered = vehicles.filter(v =>
-    (cls === 'all' || v.cls.startsWith(cls)) &&
+    (cls === 'all' || (v.cls||'').startsWith(cls)) &&
     (station === 'all' || v.station === station)
   );
 
@@ -180,7 +180,7 @@ const FleetScreenV2 = () => {
   ).length;
   const totalKm        = vehicles.reduce((s, v) => s + (v.km || 0), 0);
   const curMo          = new Date().toISOString().slice(0,7);
-  const totalCost      = expenseLog.filter(e=>e.date.startsWith(curMo)).reduce((s,e)=>s+(e.amount||0), 0);
+  const totalCost      = expenseLog.filter(e=>(e.date||'').startsWith(curMo)).reduce((s,e)=>s+(e.amount||0), 0);
   const stations       = [...new Set(vehicles.map(v => v.station).filter(Boolean))];
 
   const tabs = [
@@ -277,9 +277,9 @@ const FleetScreenV2 = () => {
                 <div style={{padding:'10px 14px',borderBottom:'1px solid var(--border)',display:'flex',gap:6,flexWrap:'wrap',alignItems:'center'}}>
                   {[
                     { id:'all', l:tr('ទាំងអស់','All'),         n: vehicles.length },
-                    { id:'B',   l:tr('ឡានបួនកង់','Class B'),   n: vehicles.filter(v=>v.cls.startsWith('B')).length },
-                    { id:'A',   l:tr('ម៉ូតូ','Class A'),         n: vehicles.filter(v=>v.cls.startsWith('A')).length },
-                    { id:'C',   l:tr('ឡានធំ','Class C'),        n: vehicles.filter(v=>v.cls.startsWith('C')).length },
+                    { id:'B',   l:tr('ឡានបួនកង់','Class B'),   n: vehicles.filter(v=>(v.cls||'').startsWith('B')).length },
+                    { id:'A',   l:tr('ម៉ូតូ','Class A'),         n: vehicles.filter(v=>(v.cls||'').startsWith('A')).length },
+                    { id:'C',   l:tr('ឡានធំ','Class C'),        n: vehicles.filter(v=>(v.cls||'').startsWith('C')).length },
                   ].map(d => (
                     <button key={d.id} onClick={() => setCls(d.id)} style={{
                       padding:'4px 10px',
@@ -577,7 +577,7 @@ const VehicleInspectionModal = ({ vehicle, onClose, tr }) => {
       const vv = VEHICLES.find(x => x.id === vehicle.id);
       if (vv) {
         const mo = date.slice(0,7);
-        const vExp = window.__expenseLog.filter(e => e.vId === vehicle.id && e.date.startsWith(mo));
+        const vExp = window.__expenseLog.filter(e => e.vId === vehicle.id && (e.date||'').startsWith(mo));
         vv.cost_mo = Math.round(vExp.reduce((s,e) => s+(e.amount||0), 0)*100)/100;
         vv.fuel_mo = Math.round(vExp.filter(e=>e.cat==='fuel').reduce((s,e)=>s+(e.amount||0), 0)*100)/100;
       }
@@ -2288,12 +2288,12 @@ const FvUsage = ({ vehicles }) => {
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
         <Card label="ប្រភេទ​">
           {['A','B','C'].map(c => {
-            const sub   = vehicles.filter(v => v.cls.startsWith(c));
+            const sub   = vehicles.filter(v => (v.cls||'').startsWith(c));
             const total = sub.reduce((s,v) => s+(v.lessons_mo||0), 0);
             return sub.length > 0 ? (
               <BarRow key={c}
                 label={`Class ${c} · ${sub.length} vehicle${sub.length>1?'s':''}`}
-                value={total} max={Math.max(...['A','B','C'].map(x=>vehicles.filter(v=>v.cls.startsWith(x)).reduce((s,v)=>s+(v.lessons_mo||0),0)),1)}
+                value={total} max={Math.max(...['A','B','C'].map(x=>vehicles.filter(v=>(v.cls||'').startsWith(x)).reduce((s,v)=>s+(v.lessons_mo||0),0)),1)}
                 sub={`${total} lessons`}
               />
             ) : null;
@@ -2597,6 +2597,23 @@ const EXP_CATS = [
   { v:'other',        km:'ផ្សេងៗ',       en:'Other',        icon:'📦', tone:'neutral' },
 ];
 
+// Remembered repair shops — kept in the cloud-synced settings blob so a shop
+// typed once shows up in the dropdown next time (with its phone + map).
+const repairShops = () => (window.__schoolSettings && Array.isArray(window.__schoolSettings.repairShops))
+  ? window.__schoolSettings.repairShops : [];
+const rememberRepairShop = ({ name, phone, map }) => {
+  const nm = (name || '').trim();
+  if (!nm) return;
+  if (!window.__schoolSettings) window.__schoolSettings = {};
+  const list = [...repairShops()];
+  const i = list.findIndex(s => (s.name || '').toLowerCase() === nm.toLowerCase());
+  const rec = { name: nm, phone: (phone || '').trim(), map: (map || '').trim() };
+  // Keep any earlier phone/map if this entry left them blank.
+  if (i >= 0) list[i] = { name: nm, phone: rec.phone || list[i].phone || '', map: rec.map || list[i].map || '' };
+  else list.push(rec);
+  window.__schoolSettings.repairShops = list;
+};
+
 // ── Add Expense inline form ───────────────────────────────────────────────────
 const FvExpenseForm = ({ vehicles, onClose, forceUpdate }) => {
   const { toast, tr } = useAppActions();
@@ -2606,11 +2623,21 @@ const FvExpenseForm = ({ vehicles, onClose, forceUpdate }) => {
   const [amount, setAmount] = React.useState('');
   const [litres, setLitres] = React.useState('');
   const [notes,  setNotes]  = React.useState('');
+  const [shop,      setShop]      = React.useState('');
+  const [shopPhone, setShopPhone] = React.useState('');
+  const [shopMap,   setShopMap]   = React.useState('');
+  const shops = repairShops();
+  // Picking a remembered shop auto-fills its phone + map.
+  const pickShop = (name) => {
+    setShop(name);
+    const m = shops.find(s => (s.name || '').toLowerCase() === name.trim().toLowerCase());
+    if (m) { setShopPhone(m.phone || ''); setShopMap(m.map || ''); }
+  };
 
   const recomputeVehicleCosts = (vId, month) => {
     const v = VEHICLES.find(x => x.id === vId);
     if (!v) return;
-    const vExp = (window.__expenseLog||[]).filter(e => e.vId === vId && e.date.startsWith(month));
+    const vExp = (window.__expenseLog||[]).filter(e => e.vId === vId && (e.date||'').startsWith(month));
     v.cost_mo = Math.round(vExp.reduce((s,e) => s+(e.amount||0), 0)*100)/100;
     v.fuel_mo = Math.round(vExp.filter(e=>e.cat==='fuel').reduce((s,e)=>s+(e.amount||0), 0)*100)/100;
   };
@@ -2627,10 +2654,13 @@ const FvExpenseForm = ({ vehicles, onClose, forceUpdate }) => {
       amount: amt,
       litres: cat==='fuel' && litres ? parseFloat(litres)||null : null,
       notes: notes.trim(),
+      shop: shop.trim(), shopPhone: shopPhone.trim(), shopMap: shopMap.trim(),
     });
+    rememberRepairShop({ name: shop, phone: shopPhone, map: shopMap });
     recomputeVehicleCosts(vId, date.slice(0,7));
     if (window.saveAllData) window.saveAllData();
     if (window.__notifyVehiclesChanged) window.__notifyVehiclesChanged();
+    if (forceUpdate) forceUpdate();
     toast(tr('បានបន្ថែម · '+id, 'Added · '+id), 'good');
     onClose();
   };
@@ -2680,6 +2710,28 @@ const FvExpenseForm = ({ vehicles, onClose, forceUpdate }) => {
           <input {...inp} value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Details…"/>
         </div>
       </div>
+
+      {/* Repair shop — name (remembered), phone, Google Maps location */}
+      <div style={{borderTop:'1px solid var(--border)',paddingTop:12,marginBottom:10}}>
+        <div style={{fontSize:11.5,fontWeight:700,color:'var(--ink-2)',marginBottom:8}}>🔧 {tr('កន្លែងជួសជុល','Repair shop')}</div>
+        <div style={{display:'grid',gridTemplateColumns:'1.4fr 1fr 1.4fr',gap:10}}>
+          <div>
+            <div style={{fontSize:11,fontWeight:500,marginBottom:4}}>{tr('ឈ្មោះ​កន្លែង','Shop name')}</div>
+            <input {...inp} value={shop} list="repairShopList" autoComplete="off"
+              onChange={e=>pickShop(e.target.value)} placeholder={tr('ឧ. Heng Motor','e.g. Heng Motor')}/>
+            <datalist id="repairShopList">{shops.map((s,i)=><option key={i} value={s.name}/>)}</datalist>
+          </div>
+          <div>
+            <div style={{fontSize:11,fontWeight:500,marginBottom:4}}>{tr('លេខ​ទូរស័ព្ទ','Phone')}</div>
+            <input {...inp} value={shopPhone} onChange={e=>setShopPhone(e.target.value)} inputMode="tel" placeholder="012 345 678"/>
+          </div>
+          <div>
+            <div style={{fontSize:11,fontWeight:500,marginBottom:4}}>{tr('ទីតាំង Google Map','Google Maps link')}</div>
+            <input {...inp} value={shopMap} onChange={e=>setShopMap(e.target.value)} inputMode="url" placeholder="https://maps.google.com/…"/>
+          </div>
+        </div>
+      </div>
+
       <div style={{display:'flex',gap:8,justifyContent:'flex-end'}}>
         <Btn kind="ghost" size="sm" onClick={onClose}>{tr('បោះបង់','Cancel')}</Btn>
         <Btn kind="primary" size="sm" onClick={save}>{tr('រក្សាទុក','Save')}</Btn>
@@ -2704,7 +2756,7 @@ const FvExpenses = ({ vehicles, expenseLog, forceUpdate }) => {
       const v = VEHICLES.find(x=>x.id===ex.vId);
       if (v) {
         const mo = ex.date.slice(0,7);
-        const vExp = window.__expenseLog.filter(e=>e.vId===ex.vId&&e.date.startsWith(mo));
+        const vExp = window.__expenseLog.filter(e=>e.vId===ex.vId&&(e.date||'').startsWith(mo));
         v.cost_mo = Math.round(vExp.reduce((s,e)=>s+(e.amount||0),0)*100)/100;
         v.fuel_mo = Math.round(vExp.filter(e=>e.cat==='fuel').reduce((s,e)=>s+(e.amount||0),0)*100)/100;
       }
@@ -2714,12 +2766,12 @@ const FvExpenses = ({ vehicles, expenseLog, forceUpdate }) => {
     toast(tr('បានលុប','Removed'), 'neutral');
   };
 
-  const moExp      = expenseLog.filter(e=>e.date.startsWith(filterMo));
+  const moExp      = expenseLog.filter(e=>(e.date||'').startsWith(filterMo));
   const totalMTD   = moExp.reduce((s,e)=>s+(e.amount||0), 0);
   const catTotals  = Object.fromEntries(EXP_CATS.map(c=>[c.v, moExp.filter(e=>e.cat===c.v).reduce((s,e)=>s+(e.amount||0),0)]));
 
   const filtered = expenseLog.filter(e=>
-    e.date.startsWith(filterMo) &&
+    (e.date||'').startsWith(filterMo) &&
     (filterV   === 'all' || e.vId === filterV) &&
     (filterCat === 'all' || e.cat === filterCat)
   );
@@ -2791,7 +2843,7 @@ const FvExpenses = ({ vehicles, expenseLog, forceUpdate }) => {
               return (
                 <Card key={vid} pad={12}>
                   <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:8}}>
-                    {veh && <Photo tag={veh.photo} w={44} h={28} r={4}/>}
+                    {veh && <VehicleAvatar v={veh} w={44} h={28} r={4} plate={false}/>}
                     <div>
                       <div style={{fontSize:12,fontWeight:600}}>{veh?.make || vid}</div>
                       <div style={{fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{veh?.plate||''}</div>
@@ -2846,7 +2898,7 @@ const FvExpenses = ({ vehicles, expenseLog, forceUpdate }) => {
                   <div style={{fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',marginTop:1,opacity:.6}}>{e.id}</div>
                 </div>
                 <div style={{display:'flex',gap:8,alignItems:'center',minWidth:0}}>
-                  {veh && <Photo tag={veh.photo} w={36} h={22} r={3}/>}
+                  {veh && <VehicleAvatar v={veh} w={36} h={22} r={3} plate={false}/>}
                   <div style={{minWidth:0}}>
                     <div style={{fontSize:12,fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{veh?.make||e.vId}</div>
                     <div style={{fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{veh?.plate||''}</div>
@@ -2857,8 +2909,16 @@ const FvExpenses = ({ vehicles, expenseLog, forceUpdate }) => {
                 <div style={{fontSize:12,color:'var(--ink-3)',textAlign:'right',fontVariantNumeric:'tabular-nums'}}>
                   {e.litres ? e.litres+'L' : '—'}
                 </div>
-                <div style={{fontSize:11,color:'var(--ink-2)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                  {e.notes||'—'}
+                <div style={{fontSize:11,color:'var(--ink-2)',minWidth:0}}>
+                  {e.notes ? <div style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{e.notes}</div> : null}
+                  {e.shop ? (
+                    <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginTop:e.notes?2:0}}>
+                      <span style={{fontWeight:600}}>🔧 {e.shop}</span>
+                      {e.shopPhone ? <a href={'tel:'+e.shopPhone.replace(/\s+/g,'')} style={{color:'var(--accent)',textDecoration:'none',whiteSpace:'nowrap'}}>📞 {e.shopPhone}</a> : null}
+                      {e.shopMap ? <a href={e.shopMap} target="_blank" rel="noopener noreferrer" style={{color:'var(--accent)',textDecoration:'none'}}>📍 {tr('ផែនទី','Map')}</a> : null}
+                    </div>
+                  ) : null}
+                  {!e.notes && !e.shop ? '—' : null}
                 </div>
                 <button onClick={()=>deleteExpense(e.id)} style={{
                   width:28,height:28,border:'none',background:'transparent',

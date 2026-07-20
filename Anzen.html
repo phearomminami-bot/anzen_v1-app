@@ -1034,9 +1034,14 @@ window.__trRegistry = {
   "Save report": "រក្សាទុក​របាយការណ៍",
   "Enter amount": "សូមបំពេញចំនួនទឹកប្រាក់",
   "Add expense": "បន្ថែម​ការ​ចំណាយ",
+  "Repair shop": "កន្លែងជួសជុល",
+  "Shop name": "ឈ្មោះ​កន្លែង",
+  "e.g. Heng Motor": "ឧ. Heng Motor",
+  "Google Maps link": "តំណ Google Maps",
   "entries": "ធាតុ",
   "All categories": "ប្រភេទ​ទាំងអស់",
   "No expenses recorded": "មិនទាន់មានចំណាយ",
+  "Map": "ផែនទី",
   "Fuel level": "ប្រេងឥន្ធនៈ",
   "Edit docs": "កែឯកសារ",
   "Reg.": "ឆៀក",
@@ -1269,7 +1274,6 @@ window.__trRegistry = {
   "Branch name": "ឈ្មោះ​សាខា",
   "Planned": "គ្រោង​នឹង​បើក",
   "Street, commune, city": "ផ្លូវ ឃុំ/សង្កាត់ ខេត្ត/ក្រុង",
-  "Google Maps link": "តំណ Google Maps",
   "No branches yet": "មិន​ទាន់​មាន​សាខា",
   "map set": "មាន​ផែនទី",
   "Open map": "បើក​ផែនទី",
@@ -2269,9 +2273,14 @@ window.__trGroups = {
     "Save report": "រក្សាទុក​របាយការណ៍",
     "Enter amount": "សូមបញ្ចូលចំនួនទឹកប្រាក់",
     "Add expense": "បានបន្ថែម · '+id, 'Added · '+id), 'good');\n    onClose();\n  };\n\n  const inp = {style:{width:'100%',padding:'7px 10px',border:'1px solid var(--border)',\n    borderRadius:6,fontSize:13,fontFamily:'inherit',background:'var(--surface)',\n    color:'var(--ink)',boxSizing:'border-box'}};\n\n  return (\n    <Card>\n      <div style={{fontSize:14,fontWeight:600,marginBottom:14}}>\n        ➕ {tr('បន្ថែម​ការ​ចំណាយ",
+    "Repair shop": "កន្លែងជួសជុល",
+    "Shop name": "ឈ្មោះ​កន្លែង",
+    "e.g. Heng Motor": "ឧ. Heng Motor",
+    "Google Maps link": "ទីតាំង Google Map",
     "entries": "ធាតុ",
     "All categories": "ប្រភេទ​ទាំងអស់",
     "No expenses recorded": "មិន​ទាន់​មាន​ការ​ចំណាយ",
+    "Map": "ផែនទី",
     "Fuel level": "ប្រេងឥន្ធនៈ",
     "Edit docs": "កែឯកសារ",
     "Reg.": "ឆៀក",
@@ -2617,7 +2626,6 @@ window.__trGroups = {
     "Branch name": "ឈ្មោះ​សាខា",
     "Planned": "គ្រោង​នឹង​បើក",
     "Street, commune, city": "ផ្លូវ ឃុំ/សង្កាត់ ខេត្ត/ក្រុង",
-    "Google Maps link": "តំណ Google Maps",
     "No branches yet": "មិន​ទាន់​មាន​សាខា",
     "map set": "មាន​ផែនទី",
     "Open map": "បើក​ផែនទី",
@@ -3302,7 +3310,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v214";</script>
+<script>window.__ANZEN_VERSION="v215";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -38739,7 +38747,7 @@ var FleetScreenV2 = () => {
   var incidents = window.__incidentData || [];
   var expenseLog = window.__expenseLog || [];
   var selected = vehicles.find(v => v.id === selectedId) || null;
-  var filtered = vehicles.filter(v => (cls === 'all' || v.cls.startsWith(cls)) && (station === 'all' || v.station === station));
+  var filtered = vehicles.filter(v => (cls === 'all' || (v.cls || '').startsWith(cls)) && (station === 'all' || v.station === station));
   var deleteVehicle = id => {
     var i = VEHICLES.findIndex(v => v.id === id);
     if (i !== -1) VEHICLES.splice(i, 1);
@@ -38804,7 +38812,7 @@ var FleetScreenV2 = () => {
   var expCount = vehicles.filter(v => monthsUntil(v.reg_exp) < 3 || monthsUntil(v.road_tax) < 3 || monthsUntil(v.ins_exp) < 3 || monthsUntil(v.oil_exp) < 3).length;
   var totalKm = vehicles.reduce((s, v) => s + (v.km || 0), 0);
   var curMo = new Date().toISOString().slice(0, 7);
-  var totalCost = expenseLog.filter(e => e.date.startsWith(curMo)).reduce((s, e) => s + (e.amount || 0), 0);
+  var totalCost = expenseLog.filter(e => (e.date || '').startsWith(curMo)).reduce((s, e) => s + (e.amount || 0), 0);
   var stations = [...new Set(vehicles.map(v => v.station).filter(Boolean))];
   var tabs = [{
     id: 'directory',
@@ -38988,15 +38996,15 @@ var FleetScreenV2 = () => {
   }, {
     id: 'B',
     l: tr('ឡានបួនកង់', 'Class B'),
-    n: vehicles.filter(v => v.cls.startsWith('B')).length
+    n: vehicles.filter(v => (v.cls || '').startsWith('B')).length
   }, {
     id: 'A',
     l: tr('ម៉ូតូ', 'Class A'),
-    n: vehicles.filter(v => v.cls.startsWith('A')).length
+    n: vehicles.filter(v => (v.cls || '').startsWith('A')).length
   }, {
     id: 'C',
     l: tr('ឡានធំ', 'Class C'),
-    n: vehicles.filter(v => v.cls.startsWith('C')).length
+    n: vehicles.filter(v => (v.cls || '').startsWith('C')).length
   }].map(d => React.createElement("button", {
     key: d.id,
     onClick: () => setCls(d.id),
@@ -39629,7 +39637,7 @@ var VehicleInspectionModal = ({
       var vv = VEHICLES.find(x => x.id === vehicle.id);
       if (vv) {
         var mo = date.slice(0, 7);
-        var vExp = window.__expenseLog.filter(e => e.vId === vehicle.id && e.date.startsWith(mo));
+        var vExp = window.__expenseLog.filter(e => e.vId === vehicle.id && (e.date || '').startsWith(mo));
         vv.cost_mo = Math.round(vExp.reduce((s, e) => s + (e.amount || 0), 0) * 100) / 100;
         vv.fuel_mo = Math.round(vExp.filter(e => e.cat === 'fuel').reduce((s, e) => s + (e.amount || 0), 0) * 100) / 100;
       }
@@ -43592,13 +43600,13 @@ var FvUsage = ({
   }, React.createElement(Card, {
     label: "\u1794\u17D2\u179A\u1797\u17C1\u1791\u200B"
   }, ['A', 'B', 'C'].map(c => {
-    var sub = vehicles.filter(v => v.cls.startsWith(c));
+    var sub = vehicles.filter(v => (v.cls || '').startsWith(c));
     var total = sub.reduce((s, v) => s + (v.lessons_mo || 0), 0);
     return sub.length > 0 ? React.createElement(BarRow, {
       key: c,
       label: `Class ${c} · ${sub.length} vehicle${sub.length > 1 ? 's' : ''}`,
       value: total,
-      max: Math.max(...['A', 'B', 'C'].map(x => vehicles.filter(v => v.cls.startsWith(x)).reduce((s, v) => s + (v.lessons_mo || 0), 0)), 1),
+      max: Math.max(...['A', 'B', 'C'].map(x => vehicles.filter(v => (v.cls || '').startsWith(x)).reduce((s, v) => s + (v.lessons_mo || 0), 0)), 1),
       sub: `${total} lessons`
     }) : null;
   })), React.createElement(Card, {
@@ -44322,6 +44330,29 @@ var EXP_CATS = [{
   icon: '📦',
   tone: 'neutral'
 }];
+var repairShops = () => window.__schoolSettings && Array.isArray(window.__schoolSettings.repairShops) ? window.__schoolSettings.repairShops : [];
+var rememberRepairShop = ({
+  name,
+  phone,
+  map
+}) => {
+  var nm = (name || '').trim();
+  if (!nm) return;
+  if (!window.__schoolSettings) window.__schoolSettings = {};
+  var list = [...repairShops()];
+  var i = list.findIndex(s => (s.name || '').toLowerCase() === nm.toLowerCase());
+  var rec = {
+    name: nm,
+    phone: (phone || '').trim(),
+    map: (map || '').trim()
+  };
+  if (i >= 0) list[i] = {
+    name: nm,
+    phone: rec.phone || list[i].phone || '',
+    map: rec.map || list[i].map || ''
+  };else list.push(rec);
+  window.__schoolSettings.repairShops = list;
+};
 var FvExpenseForm = ({
   vehicles,
   onClose,
@@ -44337,10 +44368,22 @@ var FvExpenseForm = ({
   var [amount, setAmount] = React.useState('');
   var [litres, setLitres] = React.useState('');
   var [notes, setNotes] = React.useState('');
+  var [shop, setShop] = React.useState('');
+  var [shopPhone, setShopPhone] = React.useState('');
+  var [shopMap, setShopMap] = React.useState('');
+  var shops = repairShops();
+  var pickShop = name => {
+    setShop(name);
+    var m = shops.find(s => (s.name || '').toLowerCase() === name.trim().toLowerCase());
+    if (m) {
+      setShopPhone(m.phone || '');
+      setShopMap(m.map || '');
+    }
+  };
   var recomputeVehicleCosts = (vId, month) => {
     var v = VEHICLES.find(x => x.id === vId);
     if (!v) return;
-    var vExp = (window.__expenseLog || []).filter(e => e.vId === vId && e.date.startsWith(month));
+    var vExp = (window.__expenseLog || []).filter(e => e.vId === vId && (e.date || '').startsWith(month));
     v.cost_mo = Math.round(vExp.reduce((s, e) => s + (e.amount || 0), 0) * 100) / 100;
     v.fuel_mo = Math.round(vExp.filter(e => e.cat === 'fuel').reduce((s, e) => s + (e.amount || 0), 0) * 100) / 100;
   };
@@ -44361,11 +44404,20 @@ var FvExpenseForm = ({
       cat,
       amount: amt,
       litres: cat === 'fuel' && litres ? parseFloat(litres) || null : null,
-      notes: notes.trim()
+      notes: notes.trim(),
+      shop: shop.trim(),
+      shopPhone: shopPhone.trim(),
+      shopMap: shopMap.trim()
+    });
+    rememberRepairShop({
+      name: shop,
+      phone: shopPhone,
+      map: shopMap
     });
     recomputeVehicleCosts(vId, date.slice(0, 7));
     if (window.saveAllData) window.saveAllData();
     if (window.__notifyVehiclesChanged) window.__notifyVehiclesChanged();
+    if (forceUpdate) forceUpdate();
     toast(tr('បានបន្ថែម · ' + id, 'Added · ' + id), 'good');
     onClose();
   };
@@ -44473,6 +44525,64 @@ var FvExpenseForm = ({
     placeholder: "Details\u2026"
   })))), React.createElement("div", {
     style: {
+      borderTop: '1px solid var(--border)',
+      paddingTop: 12,
+      marginBottom: 10
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 11.5,
+      fontWeight: 700,
+      color: 'var(--ink-2)',
+      marginBottom: 8
+    }
+  }, "\uD83D\uDD27 ", tr('កន្លែងជួសជុល', 'Repair shop')), React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1.4fr 1fr 1.4fr',
+      gap: 10
+    }
+  }, React.createElement("div", null, React.createElement("div", {
+    style: {
+      fontSize: 11,
+      fontWeight: 500,
+      marginBottom: 4
+    }
+  }, tr('ឈ្មោះ​កន្លែង', 'Shop name')), React.createElement("input", _extends({}, inp, {
+    value: shop,
+    list: "repairShopList",
+    autoComplete: "off",
+    onChange: e => pickShop(e.target.value),
+    placeholder: tr('ឧ. Heng Motor', 'e.g. Heng Motor')
+  })), React.createElement("datalist", {
+    id: "repairShopList"
+  }, shops.map((s, i) => React.createElement("option", {
+    key: i,
+    value: s.name
+  })))), React.createElement("div", null, React.createElement("div", {
+    style: {
+      fontSize: 11,
+      fontWeight: 500,
+      marginBottom: 4
+    }
+  }, tr('លេខ​ទូរស័ព្ទ', 'Phone')), React.createElement("input", _extends({}, inp, {
+    value: shopPhone,
+    onChange: e => setShopPhone(e.target.value),
+    inputMode: "tel",
+    placeholder: "012 345 678"
+  }))), React.createElement("div", null, React.createElement("div", {
+    style: {
+      fontSize: 11,
+      fontWeight: 500,
+      marginBottom: 4
+    }
+  }, tr('ទីតាំង Google Map', 'Google Maps link')), React.createElement("input", _extends({}, inp, {
+    value: shopMap,
+    onChange: e => setShopMap(e.target.value),
+    inputMode: "url",
+    placeholder: "https://maps.google.com/\u2026"
+  }))))), React.createElement("div", {
+    style: {
       display: 'flex',
       gap: 8,
       justifyContent: 'flex-end'
@@ -44508,7 +44618,7 @@ var FvExpenses = ({
       var v = VEHICLES.find(x => x.id === ex.vId);
       if (v) {
         var mo = ex.date.slice(0, 7);
-        var vExp = window.__expenseLog.filter(e => e.vId === ex.vId && e.date.startsWith(mo));
+        var vExp = window.__expenseLog.filter(e => e.vId === ex.vId && (e.date || '').startsWith(mo));
         v.cost_mo = Math.round(vExp.reduce((s, e) => s + (e.amount || 0), 0) * 100) / 100;
         v.fuel_mo = Math.round(vExp.filter(e => e.cat === 'fuel').reduce((s, e) => s + (e.amount || 0), 0) * 100) / 100;
       }
@@ -44517,10 +44627,10 @@ var FvExpenses = ({
     if (window.__notifyVehiclesChanged) window.__notifyVehiclesChanged();
     toast(tr('បានលុប', 'Removed'), 'neutral');
   };
-  var moExp = expenseLog.filter(e => e.date.startsWith(filterMo));
+  var moExp = expenseLog.filter(e => (e.date || '').startsWith(filterMo));
   var totalMTD = moExp.reduce((s, e) => s + (e.amount || 0), 0);
   var catTotals = Object.fromEntries(EXP_CATS.map(c => [c.v, moExp.filter(e => e.cat === c.v).reduce((s, e) => s + (e.amount || 0), 0)]));
-  var filtered = expenseLog.filter(e => e.date.startsWith(filterMo) && (filterV === 'all' || e.vId === filterV) && (filterCat === 'all' || e.cat === filterCat));
+  var filtered = expenseLog.filter(e => (e.date || '').startsWith(filterMo) && (filterV === 'all' || e.vId === filterV) && (filterCat === 'all' || e.cat === filterCat));
   var fmtAmt = n => '$' + (n || 0).toFixed(2).replace(/\.00$/, '');
   var catOf = v => EXP_CATS.find(c => c.v === v) || EXP_CATS[4];
   var vehOf = id => vehicles.find(v => v.id === id);
@@ -44676,11 +44786,12 @@ var FvExpenses = ({
           alignItems: 'center',
           marginBottom: 8
         }
-      }, veh && React.createElement(Photo, {
-        tag: veh.photo,
+      }, veh && React.createElement(VehicleAvatar, {
+        v: veh,
         w: 44,
         h: 28,
-        r: 4
+        r: 4,
+        plate: false
       }), React.createElement("div", null, React.createElement("div", {
         style: {
           fontSize: 12,
@@ -44805,11 +44916,12 @@ var FvExpenses = ({
         alignItems: 'center',
         minWidth: 0
       }
-    }, veh && React.createElement(Photo, {
-      tag: veh.photo,
+    }, veh && React.createElement(VehicleAvatar, {
+      v: veh,
       w: 36,
       h: 22,
-      r: 3
+      r: 3,
+      plate: false
     }), React.createElement("div", {
       style: {
         minWidth: 0
@@ -44849,11 +44961,42 @@ var FvExpenses = ({
       style: {
         fontSize: 11,
         color: 'var(--ink-2)',
+        minWidth: 0
+      }
+    }, e.notes ? React.createElement("div", {
+      style: {
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap'
       }
-    }, e.notes || '—'), React.createElement("button", {
+    }, e.notes) : null, e.shop ? React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 8,
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        marginTop: e.notes ? 2 : 0
+      }
+    }, React.createElement("span", {
+      style: {
+        fontWeight: 600
+      }
+    }, "\uD83D\uDD27 ", e.shop), e.shopPhone ? React.createElement("a", {
+      href: 'tel:' + e.shopPhone.replace(/\s+/g, ''),
+      style: {
+        color: 'var(--accent)',
+        textDecoration: 'none',
+        whiteSpace: 'nowrap'
+      }
+    }, "\uD83D\uDCDE ", e.shopPhone) : null, e.shopMap ? React.createElement("a", {
+      href: e.shopMap,
+      target: "_blank",
+      rel: "noopener noreferrer",
+      style: {
+        color: 'var(--accent)',
+        textDecoration: 'none'
+      }
+    }, "\uD83D\uDCCD ", tr('ផែនទី', 'Map')) : null) : null, !e.notes && !e.shop ? '—' : null), React.createElement("button", {
       onClick: () => deleteExpense(e.id),
       style: {
         width: 28,
