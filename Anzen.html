@@ -3310,7 +3310,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v215";</script>
+<script>window.__ANZEN_VERSION="v216";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -68314,7 +68314,25 @@ var FExpensesTab = ({
         overflow: 'hidden',
         textOverflow: 'ellipsis'
       }
-    }, e.desc || e.notes || '—'), React.createElement("div", {
+    }, e.desc || e.notes || '—'), (() => {
+      var v = e.vId && (window.VEHICLES || []).find(x => x.id === e.vId);
+      return v ? React.createElement("div", {
+        style: {
+          fontSize: 11,
+          color: 'var(--ink-2)',
+          fontWeight: 500,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }
+      }, "\uD83D\uDE97 ", v.make, v.plate ? React.createElement("span", {
+        style: {
+          fontFamily: '"JetBrains Mono",monospace',
+          marginLeft: 5,
+          color: 'var(--ink-3)'
+        }
+      }, v.plate) : null) : null;
+    })(), React.createElement("div", {
       style: {
         fontSize: 11,
         color: 'var(--ink-3)'

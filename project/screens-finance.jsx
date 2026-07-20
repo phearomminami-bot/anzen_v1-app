@@ -553,6 +553,9 @@ const FExpensesTab = ({ salaries, maint, lang, tr, forceUpdate }) => {
               </div>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontSize:13,fontWeight:500,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{e.desc||e.notes||'—'}</div>
+                {(() => { const v = e.vId && (window.VEHICLES||[]).find(x=>x.id===e.vId); return v ? (
+                  <div style={{fontSize:11,color:'var(--ink-2)',fontWeight:500,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>🚗 {v.make}{v.plate ? <span style={{fontFamily:'"JetBrains Mono",monospace',marginLeft:5,color:'var(--ink-3)'}}>{v.plate}</span> : null}</div>
+                ) : null; })()}
                 <div style={{fontSize:11,color:'var(--ink-3)'}}>{e.date} · <span style={{color:cm.color}}>{lang==='km'?cm.km:cm.en}</span> · <span style={{fontFamily:'"JetBrains Mono",monospace',fontSize:10}}>{e.id}</span></div>
               </div>
               <div style={{fontWeight:600,fontSize:13,flexShrink:0}}>{fmtFull(e.amount||0)}</div>
