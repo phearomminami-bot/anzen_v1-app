@@ -1948,6 +1948,9 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
 
     const hoursToBook = startHours.length ? startHours : [hour];
     const studsToBook = studentIds.length ? studentIds : ['—'];
+    // A "class" booking gives every created lesson a shared classId so the
+    // calendar can collapse them into one block (names shown in the detail).
+    const classId = (ctx.classMode && studsToBook.length > 1) ? ('CLS' + Date.now()) : null;
     studsToBook.forEach(sid => dates.forEach(date => hoursToBook.forEach(h => {
       LESSONS.push({
         id: nextLessonId(),
@@ -1965,6 +1968,8 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
         pickup,
         location: locationText.trim(),
         note: note.trim(),
+        classId: classId || undefined,
+        isClass: classId ? true : undefined,
         createdBy: window.__currentUserName || '',
         createdAt: new Date().toISOString(),
       });

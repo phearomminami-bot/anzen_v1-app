@@ -454,7 +454,22 @@ const LessonDetail = ({ lesson, onClose }) => {
 
       {/* Student + Instructor */}
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-        {!isStudent && (
+        {!isStudent && ((lesson._classStudentIds && lesson._classStudentIds.length > 1) ? (
+          <div style={{padding:14,background:'var(--surface-muted)',borderRadius:10,gridColumn:'1 / -1'}}>
+            <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace',marginBottom:8}}>🏫 {tr('ថ្នាក់រៀន','CLASS')} · {lesson._classStudentIds.length} {tr('សិស្ស','students')}</div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))',gap:8,maxHeight:180,overflowY:'auto'}}>
+              {lesson._classStudentIds.map((sid,i)=>{ const st=studentById(sid); return (
+                <div key={i} style={{display:'flex',alignItems:'center',gap:8,minWidth:0}}>
+                  {st ? <Avatar tag={st.photo} size={26}/> : <div style={{width:26,height:26,borderRadius:999,background:'var(--border)'}}/>}
+                  <div style={{minWidth:0}}>
+                    <div style={{fontSize:12.5,fontWeight:500,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{st?.en || st?.name || sid}</div>
+                    {st?.id && <div style={{fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>{st.id}</div>}
+                  </div>
+                </div>
+              ); })}
+            </div>
+          </div>
+        ) : (
           <div style={{padding:14,background:'var(--surface-muted)',borderRadius:10,display:'flex',gap:10,alignItems:'center'}}>
             {s ? <Avatar tag={s.photo} size={40}/> : <div style={{width:40,height:40,borderRadius:999,background:'var(--border)'}}/>}
             <div style={{minWidth:0,flex:1}}>
@@ -463,7 +478,7 @@ const LessonDetail = ({ lesson, onClose }) => {
               <div style={{fontSize:11,color:'var(--ink-3)'}}>{s?.id || '—'}</div>
             </div>
           </div>
-        )}
+        ))}
         <div style={{padding:14,background:'var(--surface-muted)',borderRadius:10,display:'flex',gap:10,alignItems:'center',gridColumn:isStudent?'span 2':undefined}}>
           {it ? <Avatar tag={it.photo} size={40}/> : <div style={{width:40,height:40,borderRadius:999,background:'var(--border)'}}/>}
           <div style={{minWidth:0,flex:1}}>

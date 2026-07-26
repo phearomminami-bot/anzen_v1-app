@@ -152,6 +152,22 @@ const computeLayout = (items) => {
   return result;
 };
 
+// Collapse lessons that belong to the same class booking (shared classId) into
+// one representative block, so a class with many students shows once on the
+// calendar instead of one block per student. The rep carries the full student
+// and lesson-id lists for the detail view.
+const collapseClassLessons = (arr) => {
+  const seen = new Map(); const out = [];
+  for (const l of arr) {
+    if (l.classId) {
+      const g = seen.get(l.classId);
+      if (g) { g._classStudentIds.push(l.studentId); g._classLessonIds.push(l.id); }
+      else { const rep = { ...l, _classStudentIds: [l.studentId], _classLessonIds: [l.id] }; seen.set(l.classId, rep); out.push(rep); }
+    } else out.push(l);
+  }
+  return out;
+};
+
 // Schedule entry kinds that aren't lessons (exam / application). Shared with
 // the detail panel, dashboard, student profile and PDF via window.
 window.__SCHED_KIND = (kind) => ({
@@ -241,7 +257,7 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
         </div>
         {/* Day columns */}
         {weekDates.map((date,dayIdx)=>{
-          const dayLessons = lessons.filter(l => l.date === date); // cancelled shown greyed + struck
+          const dayLessons = collapseClassLessons(lessons.filter(l => l.date === date)); // cancelled shown greyed + struck; class lessons collapse to one block
           // Timed notes join the same overlap layout as lessons, so a note and a
           // lesson at the same time sit side by side instead of covering each
           // other. Give notes a 1-hour span for the overlap math.
@@ -361,7 +377,10 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                     )}
                     <div style={{display:'flex',gap:4,alignItems:'baseline',overflow:'hidden',minWidth:0}}>
                       <span style={{fontWeight:700,color:c.text,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',fontSize:10.5,flexShrink:1,minWidth:0}}>
-                        {studentMode ? (lessonShort(l) || l.type.split('·')[0].trim()) : (s ? (s.en || s.name) : l.type.split('·')[0].trim())}
+                        {studentMode ? (lessonShort(l) || l.type.split('·')[0].trim())
+                          : (l._classStudentIds && l._classStudentIds.length > 1)
+                            ? `🏫 ${tr('ថ្នាក់រៀន','Class')} · ${l._classStudentIds.length} ${tr('នាក់','')}`.trim()
+                            : (s ? (s.en || s.name) : l.type.split('·')[0].trim())}
                       </span>
                     </div>
                     <div style={{display:'flex',gap:3,alignItems:'center',overflow:'hidden',minWidth:0}}>
@@ -486,7 +505,7 @@ const ScheduleMonth = ({ lessons = LESSONS, studentMode = false, weekDates = [],
         {monthDates.map((date, i) => {
           const dayNum = parseInt(date.slice(8));
           const isToday = date === today;
-          const dayLessons = lessons.filter(l => l.date === date && l.status !== 'cancelled');
+          const dayLessons = collapseClassLessons(lessons.filter(l => l.date === date && l.status !== 'cancelled'));
           const dayExams   = (exams || []).filter(e => e.date === date);
           const dayItems = [
             ...dayLessons.map(l => ({ t:'lesson', time:(l.h||0), l })),
@@ -562,7 +581,7 @@ const ScheduleAgenda = ({ lessons = LESSONS, studentMode = false, weekDates = []
   return (
     <div style={{display:'flex',flexDirection:'column',gap:10}}>
       {weekDates.map((date, idx) => {
-        const dayLessons = lessons.filter(l => l.date === date && l.status !== 'cancelled').sort((a,b)=>a.h-b.h);
+        const dayLessons = collapseClassLessons(lessons.filter(l => l.date === date && l.status !== 'cancelled')).sort((a,b)=>a.h-b.h);
         const isToday = date === today;
         const dayNum = parseInt(date.slice(8));
         const monthIdx = parseInt(date.slice(5,7)) - 1;
@@ -601,7 +620,7 @@ const ScheduleAgenda = ({ lessons = LESSONS, studentMode = false, weekDates = []
                   </div>
                   <div style={{width:isTheoryLesson(l)?7:4,height:32,background:c.accent,borderRadius:2}}/>
                   <div>
-                    <div style={{fontSize:13,fontWeight:500}}>{studentMode ? l.type : (s ? s.name : l.type)}</div>
+                    <div style={{fontSize:13,fontWeight:500}}>{studentMode ? l.type : ((l._classStudentIds && l._classStudentIds.length > 1) ? `🏫 ${tr('ថ្នាក់រៀន','Class')} · ${l._classStudentIds.length} ${tr('នាក់','')}`.trim() : (s ? s.name : l.type))}</div>
                     <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2}}>{studentMode ? (l.note||l.type.split('·')[1]?.trim()||'') : l.type}</div>
                   </div>
                   <div style={{fontSize:12,color:'var(--ink-2)'}}>

@@ -405,6 +405,8 @@ window.__trRegistry = {
   "Lesson restored": "បាន​ស្ដារ​មេរៀន​ឡើង​វិញ",
   "Done": "ចប់",
   "Hour": "ម៉ោងទី",
+  "CLASS": "ថ្នាក់រៀន",
+  "students": "សិស្ស",
   "STUDENT": "សិស្ស",
   "INSTRUCTOR": "គ្រូ",
   "LESSONS": "មេរៀន",
@@ -646,8 +648,10 @@ window.__trRegistry = {
   "No scores found for this student": "រក​ពិន្ទុ​សិស្ស​នេះ​មិន​ឃើញ",
   "Copy": "ម៉ូដ​ចម្លង",
   "Move": "ម៉ូដ​ផ្លាស់​ទី",
+  "')}`.trim()\n                            : (s ? (s.en || s.name) : l.type.split('·": "នាក់",
   "today": "ថ្ងៃ​នេះ",
   "No lessons scheduled": "គ្មាន​មេរៀន",
+  "')}`.trim() : (s ? s.name : l.type))}</div>\n                    <div style={{fontSize:11,color:'var(--ink-3)": "នាក់",
   "Available slots": "ម៉ោង​ដែល​អាច​កក់​បាន",
   "Admin": "នាយក",
   "Pasted copy ✓": "បាន​ដាក់​ច្បាប់​ចម្លង ✓",
@@ -1553,7 +1557,6 @@ window.__trRegistry = {
   "Prev year": "ឆ្នាំ​មុន",
   "Registration by Branch": "ចុះ​ឈ្មោះ​តាម​សាខា",
   "Gender Distribution": "ការ​ចែក​ភេទ",
-  "students": "សិស្ស",
   "Age Distribution": "ការ​ចែក​អាយុ",
   "Student Status": "ស្ថានភាព​សិស្ស",
   "Student Source": "ប្រភព​សិស្ស",
@@ -2010,8 +2013,10 @@ window.__trGroups = {
   "កាលវិភាគ · Schedule": {
     "Copy": "ចម្លង",
     "Move": "ផ្លាស់ទី",
+    "')}`.trim()\n                            : (s ? (s.en || s.name) : l.type.split('·": "នាក់",
     "today": "ថ្ងៃ​នេះ",
     "No lessons scheduled": "គ្មាន​មេរៀន",
+    "')}`.trim() : (s ? s.name : l.type))}</div>\n                    <div style={{fontSize:11,color:'var(--ink-3)": "នាក់",
     "Available slots": "ម៉ោង​ដែល​អាច​កក់​បាន",
     "Admin": "នាយក",
     "Pasted copy ✓": "បាន​ដាក់​ច្បាប់​ចម្លង ✓",
@@ -2983,6 +2988,8 @@ window.__trGroups = {
     "Lesson restored": "បាន​ស្ដារ​មេរៀន​ឡើង​វិញ",
     "Done": "រួច​រាល់",
     "Hour": "ម៉ោងទី",
+    "CLASS": "ថ្នាក់រៀន",
+    "students": "សិស្ស",
     "STUDENT": "សិស្ស",
     "INSTRUCTOR": "គ្រូ",
     "LESSONS": "មេរៀន",
@@ -3184,7 +3191,6 @@ window.__trGroups = {
     "Prev year": "ឆ្នាំ​មុន",
     "Registration by Branch": "ចុះ​ឈ្មោះ​តាម​សាខា",
     "Gender Distribution": "ការ​ចែក​ភេទ",
-    "students": "សិស្ស",
     "Age Distribution": "ការ​ចែក​អាយុ",
     "Student Status": "ស្ថានភាព​សិស្ស",
     "Student Source": "ប្រភព​សិស្ស",
@@ -3318,7 +3324,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v217";</script>
+<script>window.__ANZEN_VERSION="v218";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -7789,6 +7795,7 @@ var NewLessonForm = ({
     }
     var hoursToBook = startHours.length ? startHours : [hour];
     var studsToBook = studentIds.length ? studentIds : ['—'];
+    var classId = ctx.classMode && studsToBook.length > 1 ? 'CLS' + Date.now() : null;
     studsToBook.forEach(sid => dates.forEach(date => hoursToBook.forEach(h => {
       LESSONS.push({
         id: nextLessonId(),
@@ -7808,6 +7815,8 @@ var NewLessonForm = ({
         pickup,
         location: locationText.trim(),
         note: note.trim(),
+        classId: classId || undefined,
+        isClass: classId ? true : undefined,
         createdBy: window.__currentUserName || '',
         createdAt: new Date().toISOString()
       });
@@ -10638,7 +10647,69 @@ var LessonDetail = ({
       gridTemplateColumns: '1fr 1fr',
       gap: 10
     }
-  }, !isStudent && React.createElement("div", {
+  }, !isStudent && (lesson._classStudentIds && lesson._classStudentIds.length > 1 ? React.createElement("div", {
+    style: {
+      padding: 14,
+      background: 'var(--surface-muted)',
+      borderRadius: 10,
+      gridColumn: '1 / -1'
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: 'var(--ink-3)',
+      letterSpacing: '.05em',
+      fontFamily: '"JetBrains Mono",monospace',
+      marginBottom: 8
+    }
+  }, "\uD83C\uDFEB ", tr('ថ្នាក់រៀន', 'CLASS'), " \xB7 ", lesson._classStudentIds.length, " ", tr('សិស្ស', 'students')), React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))',
+      gap: 8,
+      maxHeight: 180,
+      overflowY: 'auto'
+    }
+  }, lesson._classStudentIds.map((sid, i) => {
+    var st = studentById(sid);
+    return React.createElement("div", {
+      key: i,
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        minWidth: 0
+      }
+    }, st ? React.createElement(Avatar, {
+      tag: st.photo,
+      size: 26
+    }) : React.createElement("div", {
+      style: {
+        width: 26,
+        height: 26,
+        borderRadius: 999,
+        background: 'var(--border)'
+      }
+    }), React.createElement("div", {
+      style: {
+        minWidth: 0
+      }
+    }, React.createElement("div", {
+      style: {
+        fontSize: 12.5,
+        fontWeight: 500,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      }
+    }, st?.en || st?.name || sid), st?.id && React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: 'var(--ink-3)',
+        fontFamily: '"JetBrains Mono",monospace'
+      }
+    }, st.id)));
+  }))) : React.createElement("div", {
     style: {
       padding: 14,
       background: 'var(--surface-muted)',
@@ -10680,7 +10751,7 @@ var LessonDetail = ({
       fontSize: 11,
       color: 'var(--ink-3)'
     }
-  }, s?.id || '—'))), React.createElement("div", {
+  }, s?.id || '—')))), React.createElement("div", {
     style: {
       padding: 14,
       background: 'var(--surface-muted)',
@@ -20817,6 +20888,28 @@ var computeLayout = items => {
   if (cluster.length) flush();
   return result;
 };
+var collapseClassLessons = arr => {
+  var seen = new Map();
+  var out = [];
+  for (var l of arr) {
+    if (l.classId) {
+      var g = seen.get(l.classId);
+      if (g) {
+        g._classStudentIds.push(l.studentId);
+        g._classLessonIds.push(l.id);
+      } else {
+        var rep = {
+          ...l,
+          _classStudentIds: [l.studentId],
+          _classLessonIds: [l.id]
+        };
+        seen.set(l.classId, rep);
+        out.push(rep);
+      }
+    } else out.push(l);
+  }
+  return out;
+};
 window.__SCHED_KIND = kind => ({
   exam: {
     km: 'ប្រឡង',
@@ -21080,7 +21173,7 @@ var ScheduleWeek = ({
       } : undefined
     }, String(h).padStart(2, '0'), ":00");
   })), weekDates.map((date, dayIdx) => {
-    var dayLessons = lessons.filter(l => l.date === date);
+    var dayLessons = collapseClassLessons(lessons.filter(l => l.date === date));
     var dayNotes = notes.filter(n => n.date === date && n.time).map(n => {
       var [hh, mm] = n.time.split(':').map(Number);
       return {
@@ -21358,7 +21451,7 @@ var ScheduleWeek = ({
           flexShrink: 1,
           minWidth: 0
         }
-      }, studentMode ? lessonShort(l) || l.type.split('·')[0].trim() : s ? s.en || s.name : l.type.split('·')[0].trim())), React.createElement("div", {
+      }, studentMode ? lessonShort(l) || l.type.split('·')[0].trim() : l._classStudentIds && l._classStudentIds.length > 1 ? `🏫 ${tr('ថ្នាក់រៀន', 'Class')} · ${l._classStudentIds.length} ${tr('នាក់', '')}`.trim() : s ? s.en || s.name : l.type.split('·')[0].trim())), React.createElement("div", {
         style: {
           display: 'flex',
           gap: 3,
@@ -21652,7 +21745,7 @@ var ScheduleMonth = ({
   }, monthDates.map((date, i) => {
     var dayNum = parseInt(date.slice(8));
     var isToday = date === today;
-    var dayLessons = lessons.filter(l => l.date === date && l.status !== 'cancelled');
+    var dayLessons = collapseClassLessons(lessons.filter(l => l.date === date && l.status !== 'cancelled'));
     var dayExams = (exams || []).filter(e => e.date === date);
     var dayItems = [...dayLessons.map(l => ({
       t: 'lesson',
@@ -21803,7 +21896,7 @@ var ScheduleAgenda = ({
       gap: 10
     }
   }, weekDates.map((date, idx) => {
-    var dayLessons = lessons.filter(l => l.date === date && l.status !== 'cancelled').sort((a, b) => a.h - b.h);
+    var dayLessons = collapseClassLessons(lessons.filter(l => l.date === date && l.status !== 'cancelled')).sort((a, b) => a.h - b.h);
     var isToday = date === today;
     var dayNum = parseInt(date.slice(8));
     var monthIdx = parseInt(date.slice(5, 7)) - 1;
@@ -21894,7 +21987,7 @@ var ScheduleAgenda = ({
           fontSize: 13,
           fontWeight: 500
         }
-      }, studentMode ? l.type : s ? s.name : l.type), React.createElement("div", {
+      }, studentMode ? l.type : l._classStudentIds && l._classStudentIds.length > 1 ? `🏫 ${tr('ថ្នាក់រៀន', 'Class')} · ${l._classStudentIds.length} ${tr('នាក់', '')}`.trim() : s ? s.name : l.type), React.createElement("div", {
         style: {
           fontSize: 11,
           color: 'var(--ink-3)',
