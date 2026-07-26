@@ -89,25 +89,32 @@ const LessonEditForm = ({ lesson, onSave, onCancel }) => {
     const selLabel = selObjs.map(u => u.no ? `${u.no} ${tr(u.km,u.en)}` : tr(u.km,u.en)).join(', ');
     const typeName = `${tr(catObj.km, catObj.en)}${selLabel ? ' · ' + selLabel : ''}`;
     const lessonNo = selObjs.map(u => u.no).filter(Boolean).join(', ');
-    Object.assign(lesson, {
+    // Shared fields — for a class these apply to every student's lesson; the
+    // per-lesson studentId is kept as-is so the roster stays intact.
+    const shared = {
       date, h: parseInt(hour), len: parseFloat(len),
-      studentId: studentId || '—',
       instId:    instId    || '—',
       guests:    guests.length > 0 ? [...guests] : undefined,
       veh:       vehId     || '—',
       type: typeName, color: catObj.color,
       lessonIds: [...selLessons], lessonNo,
       pickup, location: locationText.trim(), note: note.trim(), status,
-    });
-    // When marked done, tick the matching lessons in the student's Progress checklist
-    if (status === 'done' && studentId) {
-      const stu = STUDENTS.find(x => x.id === studentId);
-      if (stu && selLessons.length) {
-        if (!stu.lessonProgress) stu.lessonProgress = {};
-        selLessons.forEach(id => {
-          stu.lessonProgress[id] = { ...(stu.lessonProgress[id]||{}), done: true, doneAt: date || (typeof todayStr==='function'?todayStr():'') };
-        });
-      }
+    };
+    const classIds = (lesson._classLessonIds && lesson._classLessonIds.length > 1) ? lesson._classLessonIds : null;
+    const tickProgress = (sid) => {
+      if (status !== 'done' || !sid || !selLessons.length) return;
+      const stu = STUDENTS.find(x => x.id === sid); if (!stu) return;
+      if (!stu.lessonProgress) stu.lessonProgress = {};
+      selLessons.forEach(id => { stu.lessonProgress[id] = { ...(stu.lessonProgress[id]||{}), done: true, doneAt: date || (typeof todayStr==='function'?todayStr():'') }; });
+    };
+    if (classIds) {
+      // Edit the whole class at once — one save updates every student's lesson.
+      (typeof LESSONS !== 'undefined' ? LESSONS : []).forEach(l => {
+        if (classIds.includes(l.id)) { Object.assign(l, shared); tickProgress(l.studentId); }
+      });
+    } else {
+      Object.assign(lesson, { ...shared, studentId: studentId || '—' });
+      tickProgress(studentId);
     }
     if (window.__notifyLessonsChanged)  window.__notifyLessonsChanged();
     if (window.__notifyStudentsChanged) window.__notifyStudentsChanged();
@@ -199,12 +206,22 @@ const LessonEditForm = ({ lesson, onSave, onCancel }) => {
       {/* ── PEOPLE ── */}
       <FormSection title={tr('អ្នក​ពាក់​ព័ន្ធ','PEOPLE')}>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-          <Field label={tr('សិស្ស','Student')}>
-            <Select value={studentId} onChange={e=>setStudentId(e.target.value)}>
-              <option value="">{tr('ក្រុម / មិន​ផ្ទាល់​ខ្លួន','Group / not individual')}</option>
-              {STUDENTS.map(s=><option key={s.id} value={s.id}>{s.name} · {s.id}</option>)}
-            </Select>
-          </Field>
+          {(lesson._classStudentIds && lesson._classStudentIds.length > 1) ? (
+            <Field label={`🏫 ${tr('ថ្នាក់រៀន','Class')} · ${lesson._classStudentIds.length} ${tr('សិស្ស','students')}`}>
+              <div style={{display:'flex',flexWrap:'wrap',gap:5,padding:'6px 0'}}>
+                {lesson._classStudentIds.map((sid,i)=>{ const st=studentById(sid); return (
+                  <span key={i} style={{fontSize:12,fontWeight:600,padding:'3px 9px',borderRadius:20,background:'var(--surface-muted)',border:'1px solid var(--border)'}}>{st?.name || st?.en || sid}</span>
+                ); })}
+              </div>
+            </Field>
+          ) : (
+            <Field label={tr('សិស្ស','Student')}>
+              <Select value={studentId} onChange={e=>setStudentId(e.target.value)}>
+                <option value="">{tr('ក្រុម / មិន​ផ្ទាល់​ខ្លួន','Group / not individual')}</option>
+                {STUDENTS.map(s=><option key={s.id} value={s.id}>{s.name} · {s.id}</option>)}
+              </Select>
+            </Field>
+          )}
           <Field label={tr('គ្រូ *','Instructor *')}
             sub={hasConflict ? tr('⚠ គ្រូ​នេះ​រវល់​ម៉ោង​នេះ','⚠ Instructor busy') : ''}>
             <Select value={instId} onChange={e=>setInstId(e.target.value)}
@@ -379,19 +396,24 @@ const LessonDetail = ({ lesson, onClose }) => {
     },
   });
 
-  // Permanently delete — removes the lesson and its data from the schedule.
+  // Permanently delete — removes the lesson(s) from the schedule. For a class,
+  // one delete removes every student's lesson in that class at once.
+  const isClass = !!(lesson._classLessonIds && lesson._classLessonIds.length > 1);
   const deleteLesson = () => confirm?.({
-    title: tr('លុប​មេរៀន​ចេញ?', 'Delete this lesson?'),
-    body:  tr('ទិន្នន័យ​មេរៀន​នេះ​នឹង​ត្រូវ​លុប​ចេញ​ទាំងស្រុង — មិន​អាច​យក​មក​វិញ​បាន​ទេ។',
-              'This lesson and its data will be permanently removed — this cannot be undone.'),
+    title: isClass ? tr('លុប​ថ្នាក់រៀន​ចេញ?', 'Delete this class?') : tr('លុប​មេរៀន​ចេញ?', 'Delete this lesson?'),
+    body:  isClass
+      ? tr(`ថ្នាក់​នេះ​មាន​សិស្ស ${lesson._classLessonIds.length} នាក់ — មេរៀន​របស់​ពួកគេ​ទាំង​អស់​នឹង​ត្រូវ​លុប​ចេញ។`,
+           `This class has ${lesson._classLessonIds.length} students — all of their lessons will be removed.`)
+      : tr('ទិន្នន័យ​មេរៀន​នេះ​នឹង​ត្រូវ​លុប​ចេញ​ទាំងស្រុង — មិន​អាច​យក​មក​វិញ​បាន​ទេ។',
+           'This lesson and its data will be permanently removed — this cannot be undone.'),
     confirmText: tr('លុប', 'Delete'), danger: true,
     onConfirm: () => {
-      const i = (typeof LESSONS !== 'undefined' ? LESSONS : []).findIndex(l => l.id === lesson.id);
-      if (i !== -1) LESSONS.splice(i, 1);
-      if (window.__logActivity) window.__logActivity('delete', 'lesson', (lesson.date||'') + ' ' + String(lesson.h).padStart(2,'0') + ':00');
+      const ids = isClass ? lesson._classLessonIds : [lesson.id];
+      if (typeof LESSONS !== 'undefined') { for (let k = LESSONS.length - 1; k >= 0; k--) if (ids.includes(LESSONS[k].id)) LESSONS.splice(k, 1); }
+      if (window.__logActivity) window.__logActivity('delete', 'lesson', (lesson.date||'') + ' ' + String(lesson.h).padStart(2,'0') + ':00' + (isClass ? ' · ' + ids.length + ' students' : ''));
       if (window.__notifyLessonsChanged) window.__notifyLessonsChanged();
       if (window.saveAllData) window.saveAllData();
-      toast(tr('បាន​លុប​មេរៀន​ចេញ', 'Lesson deleted'), 'neutral');
+      toast(isClass ? tr('បាន​លុប​ថ្នាក់រៀន​ចេញ', 'Class deleted') : tr('បាន​លុប​មេរៀន​ចេញ', 'Lesson deleted'), 'neutral');
       onClose();
     },
   });
