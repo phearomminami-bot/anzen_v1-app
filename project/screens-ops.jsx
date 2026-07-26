@@ -1334,29 +1334,34 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
               {noteModal.id ? tr('កែ​ចំណាំ','Edit note') : noteModal.mode ? tr('បន្ថែម​នៅ​ម៉ោង​នេះ','Add at this time') : tr('ចំណាំ​ថ្មី','New note')}
             </div>
 
-            {/* Lesson / Note toggle — only when creating from a time slot */}
+            {/* Type selector — a dropdown so it stays compact with 5 options */}
             {noteModal.mode && !noteModal.id && (
-              <div style={{display:'flex',background:'var(--surface-muted)',borderRadius:9,padding:3,gap:3}}>
-                {[{k:'lesson',km:'មេរៀន',en:'Lesson',icon:'plus'},{k:'note',km:'ចំណាំ',en:'Note',icon:'bell'},{k:'exam',km:'ប្រឡង',en:'Exam',icon:'star'},{k:'apply',km:'ដាក់ពាក្យ',en:'Apply',icon:'book'}].map(t=>(
-                  <button key={t.k} onClick={()=>setNoteModal(m=>({...m,mode:t.k}))} style={{
-                    flex:1,padding:'8px 10px',border:'none',borderRadius:7,cursor:'pointer',fontSize:13,fontWeight:600,
-                    display:'flex',alignItems:'center',justifyContent:'center',gap:6,
-                    background: noteModal.mode===t.k ? 'var(--surface)' : 'transparent',
-                    color: noteModal.mode===t.k ? 'var(--accent)' : 'var(--ink-3)',
-                    boxShadow: noteModal.mode===t.k ? '0 1px 3px rgba(0,0,0,.12)' : 'none',
-                  }}><Icon name={t.icon} size={13}/>{tr(t.km,t.en)}</button>
-                ))}
+              <div>
+                <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5}}>{tr('ប្រភេទ','Type')}</label>
+                <select value={noteModal.mode} onChange={e=>setNoteModal(m=>({...m,mode:e.target.value}))}
+                  style={{width:'100%',padding:'10px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:14,fontWeight:600,boxSizing:'border-box',colorScheme:'light dark',cursor:'pointer'}}>
+                  <option value="class">🏫 {tr('ថ្នាក់រៀន','Class')}</option>
+                  <option value="lesson">📘 {tr('មេរៀន','Lesson')}</option>
+                  <option value="apply">📄 {tr('ដាក់ពាក្យ','Apply')}</option>
+                  <option value="exam">🎓 {tr('ប្រឡង','Exam')}</option>
+                  <option value="note">🔔 {tr('ចំណាំ','Note')}</option>
+                </select>
               </div>
             )}
 
-            {noteModal.mode === 'lesson' ? (
+            {(noteModal.mode === 'lesson' || noteModal.mode === 'class') ? (
               <div style={{display:'flex',flexDirection:'column',gap:14}}>
                 <div style={{fontSize:13,color:'var(--ink-2)',background:'var(--surface-muted)',borderRadius:8,padding:'11px 13px',fontFamily:'"JetBrains Mono",monospace'}}>
                   📅 {noteModal.date}　🕒 {noteModal.time}
                 </div>
+                {noteModal.mode === 'class' && (
+                  <div style={{fontSize:12,color:'var(--ink-2)',background:'var(--accent-soft)',border:'1px solid var(--accent)',borderRadius:8,padding:'10px 12px',lineHeight:1.5}}>
+                    🏫 {tr('ថ្នាក់រៀន — ដាក់​សិស្ស​ច្រើន​នាក់​ក្នុង​ម៉ោង​តែ​មួយ។ មេរៀន​នឹង​ចូល​ក្នុង​កំណត់ត្រា​សិស្ស​ម្នាក់ៗ​ដាច់​ដោយ​ឡែក។','Class — book many students at one time. A lesson is recorded in each student\'s own record.')}
+                  </div>
+                )}
                 <Btn kind="primary" size="lg" icon={<Icon name="plus" size={15}/>} style={{justifyContent:'center'}}
-                  onClick={()=>{ const d=noteModal.date, h=noteModal.hour; setNoteModal(null); openForm('newLesson',{date:d,hour:h}); }}>
-                  {tr('កក់​មេរៀន​ថ្មី','Book new lesson')}
+                  onClick={()=>{ const d=noteModal.date, h=noteModal.hour, isClass=noteModal.mode==='class'; setNoteModal(null); openForm('newLesson',{date:d,hour:h,classMode:isClass}); }}>
+                  {tr('បង្កើត​កាលវិភាគ','Create schedule')}
                 </Btn>
                 <Btn kind="ghost" size="md" onClick={()=>setNoteModal(null)} style={{justifyContent:'center'}}>{tr('បោះបង់','Cancel')}</Btn>
               </div>

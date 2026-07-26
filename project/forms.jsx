@@ -2009,7 +2009,15 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
   const activeVehs = VEHICLES.filter(v => v.visible !== false);
 
   return (
-    <FormShell onCancel={onClose} onSave={save} saveLabel={editLesson ? tr('រក្សាទុក','Save changes') : tr('កក់​មេរៀន','Schedule lesson')}>
+    <FormShell onCancel={onClose} onSave={save} saveLabel={editLesson ? tr('រក្សាទុក','Save changes') : (ctx.classMode ? tr('បង្កើត​ថ្នាក់រៀន','Create class') : tr('កក់​មេរៀន','Schedule lesson'))}>
+
+      {/* Class mode — booking many students at once (one lesson each) */}
+      {ctx.classMode && !editLesson && (
+        <div style={{marginBottom:12,fontSize:12.5,color:'var(--ink-2)',background:'var(--accent-soft)',border:'1px solid var(--accent)',borderRadius:10,padding:'11px 13px',lineHeight:1.5,display:'flex',gap:8}}>
+          <span style={{fontSize:16,flexShrink:0}}>🏫</span>
+          <span>{tr('ថ្នាក់រៀន — ជ្រើស​សិស្ស​ច្រើន​នាក់​ខាង​ក្រោម។ មេរៀន​នឹង​បង្កើត​ដាច់​ដោយ​ឡែក​ក្នុង​កំណត់ត្រា​សិស្ស​ម្នាក់ៗ។','Class — pick several students below. A separate lesson is created in each student\'s record.')}</span>
+        </div>
+      )}
 
       {/* ── LESSON ── */}
       <FormSection title="LESSON">
