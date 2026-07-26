@@ -34,7 +34,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Moul&family=Battambang:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Khmer:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Moul&family=Battambang:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
   :root{
@@ -53,12 +53,14 @@
     --warn: #C66A2E;
     --good: #3B7A57;
     --danger: #B0413E;
-    /* Two Khmer typefaces only — Khmer OS (body) + Khmer OS Muol (titles).
-       local() uses the installed fonts; Google Moul / Battambang are the web fallbacks. */
-    --font-en: 'Inter', system-ui, sans-serif;
-    --font-km: 'Khmer OS', 'Battambang', sans-serif;
-    --font-title: 'Khmer OS Muol', 'Moul', serif;
-    --font-display: 'Inter', 'Khmer OS Muol', 'Moul', system-ui, sans-serif;
+    /* Prefer the web fonts (Noto Sans Khmer, Inter) — they always render
+       upright. The local 'Khmer OS' is kept only as a last fallback: on some
+       machines its installed face renders slanted/oblique, which made the whole
+       UI look italic, so it must never be the first choice. */
+    --font-en: 'Inter', system-ui, 'Segoe UI', Arial, sans-serif;
+    --font-km: 'Noto Sans Khmer', 'Battambang', 'Khmer OS', system-ui, sans-serif;
+    --font-title: 'Moul', 'Noto Serif Khmer', 'Khmer OS Muol', serif;
+    --font-display: 'Inter', 'Noto Sans Khmer', system-ui, sans-serif;
     --radius: 10px;
     --radius-sm: 6px;
   }
@@ -83,6 +85,7 @@
   html,body{margin:0;background:var(--bg);color:var(--ink);
     font-family:var(--font-en),var(--font-km);
     font-size:var(--font-size-base,15px);line-height:1.5;
+    font-style:normal;font-synthesis:none;
     -webkit-font-smoothing:antialiased}
   /* Khmer (Battambang) reads thin at small sizes — default to a medium weight
      so body text is heavier/easier to read. Inline fontWeight still overrides. */
@@ -3328,7 +3331,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v219";</script>
+<script>window.__ANZEN_VERSION="v220";</script>
 
 <script>
 function useTweaks(defaults) {
