@@ -1303,7 +1303,10 @@ const StudentsScreenV2 = () => {
               const examItems = studentExams.filter(e => examPhase(e) === p.k)
                 .map(e => ({ type:'exam', e, k:(e.date||'')+' '+String(e.time||'').slice(0,5) }));
               const items = [...lessonItems, ...examItems].sort((a,b)=> a.k<b.k ? -1 : a.k>b.k ? 1 : 0);
-              return { p, items, hours: lessonItems.length, hourMap: buildHourNumbering(phaseLessons) };
+              // Split the phase hours into theory / practical (color c/e = theory).
+              const thHours = lessonItems.filter(it => it.l.color==='c' || it.l.color==='e').length;
+              const prHours = lessonItems.length - thHours;
+              return { p, items, hours: lessonItems.length, thHours, prHours, hourMap: buildHourNumbering(phaseLessons) };
             }).filter(g => g.items.length > 0);
             const totalHrs = groups.reduce((a,g)=>a+g.hours,0);
             const curPhase = (viewPhase && groups.some(g=>g.p.k===viewPhase)) ? viewPhase : ((groups[0] && groups[0].p.k) || '');
@@ -1341,7 +1344,7 @@ const StudentsScreenV2 = () => {
                             flexShrink:0,display:'inline-flex',alignItems:'center',gap:6,padding:'6px 13px',borderRadius:999,cursor:'pointer',fontFamily:'inherit',
                             border:'1.5px solid '+(active?g.p.color:'var(--border)'),
                             background: active?g.p.color:'var(--surface)', color: active?'#fff':'var(--ink-2)',fontSize:12.5,fontWeight:700}}>
-                            {g.p.label} <span style={{opacity:.85,fontFamily:'"JetBrains Mono",monospace',fontWeight:600}}>{g.hours}</span>
+                            {g.p.label} <span style={{opacity:.85,fontFamily:'"JetBrains Mono",monospace',fontWeight:600}} title={tr('ទ្រឹស្ដី / អនុវត្ត','Theory / Practical')}>{g.thHours} / {g.prHours}</span>
                           </button>
                         ); })}
                       </div>

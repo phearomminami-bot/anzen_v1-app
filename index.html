@@ -1125,6 +1125,7 @@ window.__trRegistry = {
   "Lessons & Comments": "បញ្ជីមេរៀន និង មតិគ្រូ",
   "Book new lesson": "ណាត់​មេរៀន​ថ្មី",
   "Lessons": "មេរៀន",
+  "Theory / Practical": "ទ្រឹស្ដី / អនុវត្ត",
   "Download PDF — choose phase": "ទាញយក PDF — ជ្រើសវគ្គ",
   "Enroll student": "ចុះឈ្មោះ​សិស្ស",
   "Filter": "តម្រង",
@@ -1900,6 +1901,7 @@ window.__trGroups = {
     "Lessons & Comments": "បញ្ជីមេរៀន និង មតិគ្រូ",
     "Book new lesson": "ណាត់​មេរៀន​ថ្មី",
     "Lessons": "បញ្ជីមេរៀន",
+    "Theory / Practical": "ទ្រឹស្ដី / អនុវត្ត",
     "Download PDF — choose phase": "ទាញយក PDF — ជ្រើសវគ្គ",
     "Enroll student": "ចុះឈ្មោះ​សិស្ស",
     "Filter": "តម្រង",
@@ -3331,7 +3333,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v220";</script>
+<script>window.__ANZEN_VERSION="v221";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -48824,10 +48826,14 @@ var StudentsScreenV2 = () => {
             k: (e.date || '') + ' ' + String(e.time || '').slice(0, 5)
           }));
           var items = [...lessonItems, ...examItems].sort((a, b) => a.k < b.k ? -1 : a.k > b.k ? 1 : 0);
+          var thHours = lessonItems.filter(it => it.l.color === 'c' || it.l.color === 'e').length;
+          var prHours = lessonItems.length - thHours;
           return {
             p,
             items,
             hours: lessonItems.length,
+            thHours,
+            prHours,
             hourMap: buildHourNumbering(phaseLessons)
           };
         }).filter(g => g.items.length > 0);
@@ -48979,8 +48985,9 @@ var StudentsScreenV2 = () => {
               opacity: .85,
               fontFamily: '"JetBrains Mono",monospace',
               fontWeight: 600
-            }
-          }, g.hours));
+            },
+            title: tr('ទ្រឹស្ដី / អនុវត្ត', 'Theory / Practical')
+          }, g.thHours, " / ", g.prHours));
         }))), React.createElement("div", {
           style: {
             padding: '8px 14px 14px'
