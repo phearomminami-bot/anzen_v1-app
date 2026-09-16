@@ -690,10 +690,11 @@ window.__trRegistry = {
   "New note": "ចំណាំ​ថ្មី",
   "Class — book many students at one time. A lesson is recorded in each student\\'s own record.": "ថ្នាក់រៀន — ដាក់​សិស្ស​ច្រើន​នាក់​ក្នុង​ម៉ោង​តែ​មួយ។ មេរៀន​នឹង​ចូល​ក្នុង​កំណត់ត្រា​សិស្ស​ម្នាក់ៗ​ដាច់​ដោយ​ឡែក។",
   "Create schedule": "បង្កើត​កាលវិភាគ",
-  "Date from": "កាល​បរិច្ឆេទ ចាប់ពី",
-  "To": "ដល់",
+  "Multi-day": "ច្រើន​ថ្ងៃ",
+  "Single day": "ថ្ងៃ​តែ​មួយ",
   "Time (optional)": "ម៉ោង (ស្រេចចិត្ត)",
   "— none": "— ទំនេរ",
+  "To": "ដល់",
   "Content": "ខ្លឹមសារ",
   "e.g. On leave": "ឧ. ឈប់សម្រាក",
   "e.g. Travelling to province": "ឧ. ធ្វើ​ដំណើរ​ទៅ​ខេត្ត",
@@ -2065,10 +2066,11 @@ window.__trGroups = {
     "New note": "ចំណាំ​ថ្មី",
     "Class — book many students at one time. A lesson is recorded in each student\\'s own record.": "ថ្នាក់រៀន — ដាក់​សិស្ស​ច្រើន​នាក់​ក្នុង​ម៉ោង​តែ​មួយ។ មេរៀន​នឹង​ចូល​ក្នុង​កំណត់ត្រា​សិស្ស​ម្នាក់ៗ​ដាច់​ដោយ​ឡែក។",
     "Create schedule": "បង្កើត​កាលវិភាគ",
-    "Date from": "កាល​បរិច្ឆេទ ចាប់ពី",
-    "To": "ដល់",
+    "Multi-day": "ច្រើន​ថ្ងៃ",
+    "Single day": "ថ្ងៃ​តែ​មួយ",
     "Time (optional)": "ម៉ោង (ស្រេចចិត្ត)",
     "— none": "— ទំនេរ",
+    "To": "ដល់",
     "Content": "ខ្លឹមសារ",
     "e.g. On leave": "ឧ. ឈប់សម្រាក",
     "e.g. Travelling to province": "ឧ. ធ្វើ​ដំណើរ​ទៅ​ខេត្ត",
@@ -3357,7 +3359,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v234";</script>
+<script>window.__ANZEN_VERSION="v235";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -22328,7 +22330,7 @@ var ScheduleScreen = ({
       return;
     }
     var fromDate = noteModal.fromDate || noteModal.date || '';
-    var toDate = noteModal.toDate || fromDate;
+    var toDate = noteModal._multiDay && noteModal.toDate ? noteModal.toDate : fromDate;
     var fromTime = noteModal.fromTime || noteModal.time || '';
     var toTime = noteModal.toTime || '';
     var invited = noteModal.invited || [];
@@ -22565,6 +22567,7 @@ var ScheduleScreen = ({
     date: n.fromDate || n.date,
     fromDate: n.fromDate || n.date || '',
     toDate: n.toDate || n.fromDate || n.date || '',
+    _multiDay: !!(n.toDate && (n.fromDate || n.date) && n.toDate !== (n.fromDate || n.date)),
     fromTime: n.fromTime || n.time || '',
     toTime: n.toTime || '',
     time: n.fromTime || n.time || '',
@@ -23976,26 +23979,68 @@ var ScheduleScreen = ({
       f: '13:00',
       t: '17:00'
     }];
-    return React.createElement(React.Fragment, null, React.createElement("div", {
+    return React.createElement(React.Fragment, null, React.createElement("div", null, React.createElement("div", {
+      style: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'baseline',
+        marginBottom: 5
+      }
+    }, React.createElement("label", {
+      style: {
+        ...nLbl,
+        marginBottom: 0
+      }
+    }, tr('កាល​បរិច្ឆេទ', 'Date')), !noteModal._multiDay ? React.createElement("button", {
+      type: "button",
+      onClick: () => setNoteModal(m => ({
+        ...m,
+        _multiDay: true,
+        toDate: m.toDate || m.fromDate
+      })),
+      style: {
+        border: 'none',
+        background: 'none',
+        color: 'var(--accent)',
+        fontSize: 11,
+        fontWeight: 700,
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+        padding: 0
+      }
+    }, "+ ", tr('ច្រើន​ថ្ងៃ', 'Multi-day')) : React.createElement("button", {
+      type: "button",
+      onClick: () => setNoteModal(m => ({
+        ...m,
+        _multiDay: false,
+        toDate: m.fromDate
+      })),
+      style: {
+        border: 'none',
+        background: 'none',
+        color: 'var(--ink-3)',
+        fontSize: 11,
+        fontWeight: 700,
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+        padding: 0
+      }
+    }, "\u2715 ", tr('ថ្ងៃ​តែ​មួយ', 'Single day'))), React.createElement("div", {
       style: {
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
+        gridTemplateColumns: noteModal._multiDay ? '1fr 1fr' : '1fr',
         gap: 10
       }
-    }, React.createElement("div", null, React.createElement("label", {
-      style: nLbl
-    }, tr('កាល​បរិច្ឆេទ ចាប់ពី', 'Date from')), React.createElement("input", {
+    }, React.createElement("input", {
       type: "date",
       value: noteModal.fromDate || '',
       onChange: e => setNoteModal(m => ({
         ...m,
         fromDate: e.target.value,
-        toDate: !m.toDate || m.toDate < e.target.value ? e.target.value : m.toDate
+        toDate: m._multiDay && m.toDate && m.toDate >= e.target.value ? m.toDate : e.target.value
       })),
       style: nInp
-    })), React.createElement("div", null, React.createElement("label", {
-      style: nLbl
-    }, tr('ដល់', 'To')), React.createElement("input", {
+    }), noteModal._multiDay && React.createElement("input", {
       type: "date",
       value: noteModal.toDate || noteModal.fromDate || '',
       min: noteModal.fromDate || '',
@@ -34529,7 +34574,7 @@ var printInstructorNotesPDF = (inst, notes, lang) => {
     @media print{body{padding:0}}</style></head><body>
     <h1>${esc(ss.name || 'Anzen')}</h1><div class="sub">${L('ចំណាំ', 'Notes')} · ${esc(inst.en || inst.name || '')}${inst.id ? ' · ' + esc(inst.id) : ''}　·　${L('បោះពុម្ព', 'Printed')}: ${tday}</div>
     <div class="secbar">📝 ${L('ចំណាំ', 'Notes')}<span>${sorted.length}</span></div>
-    <table class="lt"><thead><tr><th style="width:96px">${L('ថ្ងៃ/ម៉ោង', 'Date / Time')}</th><th>${L('ខ្លឹមសារ', 'Content')}</th><th style="width:26%">${L('មូលហេតុ', 'Reason')}</th><th style="width:88px">${L('អ្នកកត់ត្រា', 'Author')}</th></tr></thead><tbody>${rows}</tbody></table>
+    <table class="lt"><thead><tr><th style="width:96px">${L('ថ្ងៃ/ម៉ោង', 'Date / Time')}</th><th style="width:24%">${L('ខ្លឹមសារ', 'Content')}</th><th>${L('មូលហេតុ', 'Reason')}</th><th style="width:88px">${L('អ្នកកត់ត្រា', 'Author')}</th></tr></thead><tbody>${rows}</tbody></table>
     </body></html>`;
   try {
     var idoc = iframe.contentWindow.document;
@@ -47963,7 +48008,7 @@ var printStudentLessonsPDF = (s, lessons, exams, lang, notesOnly) => {
     </tr>`;
       }).join('');
       return `<div class="secbar" style="background:#CA8A04">📝 ${L('ចំណាំ', 'Notes')}<span class="r">${ntes.length}</span></div>
-    <table class="lt"><thead><tr><th style="width:96px">${L('ថ្ងៃ/ម៉ោង', 'Date / Time')}</th><th>${L('ខ្លឹមសារ', 'Content')}</th><th style="width:26%">${L('មូលហេតុ', 'Reason')}</th><th style="width:84px">${L('អ្នកកត់ត្រា', 'Author')}</th></tr></thead><tbody>${rows}</tbody></table>`;
+    <table class="lt"><thead><tr><th style="width:96px">${L('ថ្ងៃ/ម៉ោង', 'Date / Time')}</th><th style="width:24%">${L('ខ្លឹមសារ', 'Content')}</th><th>${L('មូលហេតុ', 'Reason')}</th><th style="width:84px">${L('អ្នកកត់ត្រា', 'Author')}</th></tr></thead><tbody>${rows}</tbody></table>`;
     })()}
 </div>
 </body></html>`;

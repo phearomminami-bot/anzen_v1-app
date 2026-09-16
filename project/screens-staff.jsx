@@ -535,7 +535,7 @@ const printInstructorNotesPDF = (inst, notes, lang) => {
     @media print{body{padding:0}}</style></head><body>
     <h1>${esc(ss.name||'Anzen')}</h1><div class="sub">${L('ចំណាំ','Notes')} · ${esc(inst.en||inst.name||'')}${inst.id?' · '+esc(inst.id):''}　·　${L('បោះពុម្ព','Printed')}: ${tday}</div>
     <div class="secbar">📝 ${L('ចំណាំ','Notes')}<span>${sorted.length}</span></div>
-    <table class="lt"><thead><tr><th style="width:96px">${L('ថ្ងៃ/ម៉ោង','Date / Time')}</th><th>${L('ខ្លឹមសារ','Content')}</th><th style="width:26%">${L('មូលហេតុ','Reason')}</th><th style="width:88px">${L('អ្នកកត់ត្រា','Author')}</th></tr></thead><tbody>${rows}</tbody></table>
+    <table class="lt"><thead><tr><th style="width:96px">${L('ថ្ងៃ/ម៉ោង','Date / Time')}</th><th style="width:24%">${L('ខ្លឹមសារ','Content')}</th><th>${L('មូលហេតុ','Reason')}</th><th style="width:88px">${L('អ្នកកត់ត្រា','Author')}</th></tr></thead><tbody>${rows}</tbody></table>
     </body></html>`;
   try { const idoc = iframe.contentWindow.document; idoc.open(); idoc.write(doc); idoc.close(); } catch(e){}
 };

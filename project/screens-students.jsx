@@ -584,7 +584,7 @@ const printStudentLessonsPDF = (s, lessons, exams, lang, notesOnly) => {
       <td style="color:#666;white-space:nowrap">${n.author?esc(n.author):'—'}</td>
     </tr>`; }).join('');
     return `<div class="secbar" style="background:#CA8A04">📝 ${L('ចំណាំ','Notes')}<span class="r">${ntes.length}</span></div>
-    <table class="lt"><thead><tr><th style="width:96px">${L('ថ្ងៃ/ម៉ោង','Date / Time')}</th><th>${L('ខ្លឹមសារ','Content')}</th><th style="width:26%">${L('មូលហេតុ','Reason')}</th><th style="width:84px">${L('អ្នកកត់ត្រា','Author')}</th></tr></thead><tbody>${rows}</tbody></table>`;
+    <table class="lt"><thead><tr><th style="width:96px">${L('ថ្ងៃ/ម៉ោង','Date / Time')}</th><th style="width:24%">${L('ខ្លឹមសារ','Content')}</th><th>${L('មូលហេតុ','Reason')}</th><th style="width:84px">${L('អ្នកកត់ត្រា','Author')}</th></tr></thead><tbody>${rows}</tbody></table>`;
   })()}
 </div>
 </body></html>`;
