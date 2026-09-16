@@ -3337,7 +3337,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v224";</script>
+<script>window.__ANZEN_VERSION="v225";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -46720,8 +46720,8 @@ var CvLessonRow = ({
   }, "(", cumNo, ")")), React.createElement("div", {
     style: {
       fontSize: 12,
-      fontWeight: 700,
-      color: isTheory ? '#7A3FC4' : '#1F8A50',
+      fontWeight: 800,
+      color: isTheory ? '#2A5DB0' : 'var(--ink)',
       marginTop: 1
     }
   }, lessonTypeKm(l), total > 1 ? ` · ${tr('ម៉ោងទី', 'Hr')} ${offset + 1}/${total}` : ''), covered.length > 0 && React.createElement("div", {
@@ -47108,7 +47108,7 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
     var logo = ss.logo || '';
     var isUrl = x => typeof x === 'string' && /^(data:|https?:)/.test(x);
     var typeKm = l => l.color === 'c' || l.color === 'e' ? L('ទ្រឹស្ដី', 'Theory') : L('អនុវត្តន៍', 'Practical');
-    var typeColor = l => l.color === 'c' || l.color === 'e' ? '#5B2EA0' : '#1A6B3C';
+    var typeColor = l => l.color === 'c' || l.color === 'e' ? '#14387A' : '#111111';
     var stars = n => '★'.repeat(n || 0) + '☆'.repeat(5 - (n || 0));
     var trGender = g => g === 'M' ? L('ប្រុស', 'Male') : g === 'F' ? L('ស្រី', 'Female') : g || '';
     var trNat = v => {

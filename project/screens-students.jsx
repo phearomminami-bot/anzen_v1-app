@@ -147,7 +147,7 @@ const CvLessonRow = ({ l, offset = 0, h, total = 1, cumNo, tr, onSave, readOnly 
             {/* Running Theory/Practical hour count — italic so it isn't read as a date. */}
             {cumNo != null && <span style={{fontSize:12,fontStyle:'italic',fontWeight:700,color:'var(--accent)'}}>({cumNo})</span>}
           </div>
-          <div style={{fontSize:12,fontWeight:700,color:isTheory?'#7A3FC4':'#1F8A50',marginTop:1}}>{lessonTypeKm(l)}{total > 1 ? ` · ${tr('ម៉ោងទី','Hr')} ${offset+1}/${total}` : ''}</div>
+          <div style={{fontSize:12,fontWeight:800,color:isTheory?'#2A5DB0':'var(--ink)',marginTop:1}}>{lessonTypeKm(l)}{total > 1 ? ` · ${tr('ម៉ោងទី','Hr')} ${offset+1}/${total}` : ''}</div>
           {covered.length > 0 && (
             <div style={{display:'flex',flexWrap:'wrap',gap:4,marginTop:3}}>
               {covered.map((c,i)=>(
@@ -343,7 +343,7 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
   const isUrl = (x) => typeof x === 'string' && /^(data:|https?:)/.test(x);
   const typeKm = (l) => (l.color==='c'||l.color==='e') ? L('ទ្រឹស្ដី','Theory') : L('អនុវត្តន៍','Practical');
   // Distinct colours so Theory vs Practical are easy to tell apart at a glance.
-  const typeColor = (l) => (l.color==='c'||l.color==='e') ? '#5B2EA0' : '#1A6B3C';
+  const typeColor = (l) => (l.color==='c'||l.color==='e') ? '#14387A' : '#111111';
   const stars = (n) => '★'.repeat(n||0) + '☆'.repeat(5-(n||0));
 
   // Translate enumerable data values (not free text) to the chosen language.
