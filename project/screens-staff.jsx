@@ -515,15 +515,14 @@ const printInstructorNotesPDF = (inst, notes, lang) => {
     const from = n.fromDate||n.date||'', to = n.toDate||from;
     const col = to && to < tday ? '#111' : (from && from > tday ? '#1A4F96' : '#B0413E');
     const dLabel = esc(from) + (to && to!==from ? '<br>→ '+esc(to) : '');
-    const tLabel = n.fromTime ? esc(String(n.fromTime).slice(0,5)) + (n.toTime?'<br>–'+esc(String(n.toTime).slice(0,5)):'') : (n.time?esc(String(n.time).slice(0,5)):'—');
+    const tLabel = n.fromTime ? esc(String(n.fromTime).slice(0,5)) + (n.toTime?'–'+esc(String(n.toTime).slice(0,5)):'') : (n.time?esc(String(n.time).slice(0,5)):'');
     const studs = (n.studentIds||[]).map(id=>{ const st=(window.STUDENTS||[]).find(x=>x.id===id); return st?esc(st.name||st.en):null; }).filter(Boolean).join(', ');
     return `<tr>
-      <td style="white-space:nowrap;font-family:monospace;font-weight:700;color:${col}">${dLabel||'—'}</td>
-      <td style="white-space:nowrap;font-family:monospace;color:${col}">${tLabel}</td>
+      <td style="white-space:nowrap;font-family:monospace;font-weight:700;color:${col}">${dLabel||'—'}${tLabel?'<div style="font-weight:400;font-size:11px;margin-top:1px">'+tLabel+'</div>':''}</td>
       <td><b style="color:${col}">${esc(n.content||n.title||'')||'—'}</b>${n.location?'<div style="color:#555;margin-top:2px">📍 '+esc(n.location)+'</div>':''}${(n.remark||n.description)?'<div style="color:#555;margin-top:2px;white-space:pre-wrap">'+esc(n.remark||n.description)+'</div>':''}${studs?'<div style="color:#777;margin-top:3px;font-size:11px">👥 '+studs+'</div>':''}</td>
       <td style="color:#444">${n.reason?esc(n.reason):'—'}</td>
       <td style="color:#666;white-space:nowrap">${n.author?esc(n.author):'—'}</td>
-    </tr>`; }).join('') : `<tr><td colspan="5" style="text-align:center;color:#999;padding:18px">${L('គ្មាន​ទិន្នន័យ','No data')}</td></tr>`;
+    </tr>`; }).join('') : `<tr><td colspan="4" style="text-align:center;color:#999;padding:18px">${L('គ្មាន​ទិន្នន័យ','No data')}</td></tr>`;
   const doc = `<!DOCTYPE html><html><head><meta charset="utf-8">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -536,7 +535,7 @@ const printInstructorNotesPDF = (inst, notes, lang) => {
     @media print{body{padding:0}}</style></head><body>
     <h1>${esc(ss.name||'Anzen')}</h1><div class="sub">${L('ចំណាំ','Notes')} · ${esc(inst.en||inst.name||'')}${inst.id?' · '+esc(inst.id):''}　·　${L('បោះពុម្ព','Printed')}: ${tday}</div>
     <div class="secbar">📝 ${L('ចំណាំ','Notes')}<span>${sorted.length}</span></div>
-    <table class="lt"><thead><tr><th style="width:92px">${L('ថ្ងៃទី','Date')}</th><th style="width:58px">${L('ម៉ោង','Time')}</th><th>${L('ខ្លឹមសារ','Content')}</th><th style="width:24%">${L('មូលហេតុ','Reason')}</th><th style="width:88px">${L('អ្នកកត់ត្រា','Author')}</th></tr></thead><tbody>${rows}</tbody></table>
+    <table class="lt"><thead><tr><th style="width:96px">${L('ថ្ងៃ/ម៉ោង','Date / Time')}</th><th>${L('ខ្លឹមសារ','Content')}</th><th style="width:26%">${L('មូលហេតុ','Reason')}</th><th style="width:88px">${L('អ្នកកត់ត្រា','Author')}</th></tr></thead><tbody>${rows}</tbody></table>
     </body></html>`;
   try { const idoc = iframe.contentWindow.document; idoc.open(); idoc.write(doc); idoc.close(); } catch(e){}
 };
