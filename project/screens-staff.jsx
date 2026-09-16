@@ -491,7 +491,7 @@ const SfStatusDot = ({ status }) => {
 
 // ── Detail panel ──
 // ── Instructor notes PDF (mirrors the student notes PDF, notes-only) ──────────
-const printInstructorNotesPDF = (inst, notes, lang) => {
+const printInstructorNotesPDF = (inst, notes, lang, month) => {
   const HOST = '__instNotesPdf';
   const ex = document.getElementById(HOST); if (ex) ex.remove();
   const esc = (x) => String(x==null?'':x).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -536,7 +536,7 @@ const printInstructorNotesPDF = (inst, notes, lang) => {
     table.lt th{background:#f0f0ee;text-align:left;padding:7px 10px;font-size:11px;color:#555;border-bottom:2px solid #ddd}
     table.lt td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:top}
     @media print{body{padding:0}}</style></head><body>
-    <h1>${esc(ss.name||'Anzen')}</h1><div class="sub">${L('ចំណាំ','Notes')} · ${esc(inst.en||inst.name||'')}${inst.id?' · '+esc(inst.id):''}　·　${L('បោះពុម្ព','Printed')}: ${tday}</div>
+    <h1>${esc(ss.name||'Anzen')}</h1><div class="sub">${L('ចំណាំ','Notes')} · ${esc(inst.en||inst.name||'')}${inst.id?' · '+esc(inst.id):''}${month?'　·　'+L('ខែ','Month')+': '+esc(month):''}　·　${L('បោះពុម្ព','Printed')}: ${tday}</div>
     <div class="secbar">📝 ${L('ចំណាំ','Notes')}<span>${sorted.length}</span></div>
     <table class="lt"><thead><tr><th style="width:96px">${L('ថ្ងៃ/ម៉ោង','Date / Time')}</th><th style="width:24%">${L('ខ្លឹមសារ','Content')}</th><th>${L('មូលហេតុ','Reason')}</th><th style="width:88px">${L('អ្នកកត់ត្រា','Author')}</th></tr></thead><tbody>${rows}</tbody></table>
     </body></html>`;
@@ -548,9 +548,11 @@ const printInstructorNotesPDF = (inst, notes, lang) => {
 const InstructorNotes = ({ inst }) => {
   const { tr } = useAppActions();
   const [open, setOpen] = React.useState(false);
+  const [month, setMonth] = React.useState('');   // '' = all months; else 'YYYY-MM'
   const instNotes = React.useMemo(() => (window.__scheduleNotes || (window.__schoolSettings && window.__schoolSettings.scheduleNotes) || [])
     .filter(n => (n.invited||[]).includes(inst.id))
     .sort((a,b)=>String(a.fromDate||a.date||'').localeCompare(String(b.fromDate||b.date||'')) || String(a.fromTime||a.time||'').localeCompare(String(b.fromTime||b.time||''))), [inst.id, open]);
+  const shown = month ? instNotes.filter(n => String(n.fromDate||n.date||'').startsWith(month)) : instNotes;
   const tday = (typeof todayStr==='function'?todayStr():new Date().toISOString().slice(0,10));
   return (<>
     <Btn kind="ghost" size="sm" icon={<Icon name="bell" size={13}/>} onClick={()=>setOpen(true)} style={{color:'#CA8A04',borderColor:'#CA8A04'}}>
@@ -559,14 +561,22 @@ const InstructorNotes = ({ inst }) => {
     {open && (
       <Modal open onClose={()=>setOpen(false)}>
         <div style={{display:'flex',flexDirection:'column'}}>
-          <div style={{position:'sticky',top:0,zIndex:2,background:'var(--surface)',borderBottom:'1px solid var(--border)',padding:'12px 14px',display:'flex',alignItems:'center',gap:8}}>
-            <div style={{flex:1,minWidth:0,fontSize:15,fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>📝 {tr('ចំណាំ','Notes')} · {inst.en||inst.name}</div>
-            <button onClick={()=>setOpen(false)} aria-label={tr('បិទ','Close')} style={{border:'none',background:'var(--surface-muted)',borderRadius:8,width:30,height:30,cursor:'pointer',color:'var(--ink-2)',fontSize:15,lineHeight:1,flexShrink:0}}>✕</button>
+          <div style={{position:'sticky',top:0,zIndex:2,background:'var(--surface)',borderBottom:'1px solid var(--border)',padding:'12px 14px'}}>
+            <div style={{display:'flex',alignItems:'center',gap:8}}>
+              <div style={{flex:1,minWidth:0,fontSize:15,fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>📝 {tr('ចំណាំ','Notes')} · {inst.en||inst.name}</div>
+              <button onClick={()=>setOpen(false)} aria-label={tr('បិទ','Close')} style={{border:'none',background:'var(--surface-muted)',borderRadius:8,width:30,height:30,cursor:'pointer',color:'var(--ink-2)',fontSize:15,lineHeight:1,flexShrink:0}}>✕</button>
+            </div>
+            {/* Month filter — pick a month to view / download just that month */}
+            <div style={{display:'flex',alignItems:'center',gap:8,marginTop:9}}>
+              <span style={{fontSize:11.5,color:'var(--ink-3)',fontWeight:600,flexShrink:0}}>{tr('ខែ','Month')}</span>
+              <input type="month" value={month} onChange={e=>setMonth(e.target.value)} style={{flex:1,minWidth:0,padding:'7px 10px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',colorScheme:'light dark'}}/>
+              <button onClick={()=>setMonth('')} style={{flexShrink:0,padding:'7px 12px',borderRadius:8,cursor:'pointer',fontSize:12,fontWeight:700,fontFamily:'inherit',border:'1.5px solid '+(month?'var(--border)':'var(--accent)'),background:month?'var(--surface)':'var(--accent-soft)',color:month?'var(--ink-2)':'var(--accent)'}}>{tr('ទាំងអស់','All')}</button>
+            </div>
           </div>
           <div style={{padding:'8px 14px 14px'}}>
-            {instNotes.length===0 ? (
-              <div style={{fontSize:13,color:'var(--ink-3)',textAlign:'center',padding:'28px 0'}}>{tr('មិន​ទាន់​មាន​ចំណាំ','No notes yet')}</div>
-            ) : instNotes.map((n,i) => {
+            {shown.length===0 ? (
+              <div style={{fontSize:13,color:'var(--ink-3)',textAlign:'center',padding:'28px 0'}}>{month ? tr('គ្មាន​ចំណាំ​ក្នុង​ខែ​នេះ','No notes this month') : tr('មិន​ទាន់​មាន​ចំណាំ','No notes yet')}</div>
+            ) : shown.map((n,i) => {
               const from = n.fromDate||n.date||'', to = n.toDate||from;
               const col = to && to < tday ? 'var(--ink)' : (from && from > tday ? '#2A5DB0' : '#B0413E');
               const dLabel = from + (to && to!==from ? ' → ' + to : '');
@@ -588,10 +598,10 @@ const InstructorNotes = ({ inst }) => {
             ); })}
           </div>
           <div style={{position:'sticky',bottom:0,zIndex:2,background:'var(--surface)',borderTop:'1px solid var(--border)',padding:'10px 14px calc(12px + env(safe-area-inset-bottom,0px))'}}>
-            <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:6}}>⬇ {tr('ទាញយក PDF','Download PDF')}</div>
+            <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:6}}>⬇ {tr('ទាញយក PDF','Download PDF')}{month?' · '+month:''} ({shown.length})</div>
             <div style={{display:'flex',gap:8}}>
-              <button onClick={()=>printInstructorNotesPDF(inst, instNotes, 'km')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600}}>🇰🇭 {tr('ខ្មែរ','Khmer')}</button>
-              <button onClick={()=>printInstructorNotesPDF(inst, instNotes, 'en')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600}}>🇬🇧 English</button>
+              <button onClick={()=>printInstructorNotesPDF(inst, shown, 'km', month)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600}}>🇰🇭 {tr('ខ្មែរ','Khmer')}</button>
+              <button onClick={()=>printInstructorNotesPDF(inst, shown, 'en', month)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600}}>🇬🇧 English</button>
             </div>
           </div>
         </div>
