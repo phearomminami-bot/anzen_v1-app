@@ -307,7 +307,7 @@ const translateFeedbackTexts = async (texts, target) => {
   } catch (e) { return {}; }
 };
 
-const printStudentLessonsPDF = (s, lessons, exams, lang) => {
+const printStudentLessonsPDF = (s, lessons, exams, lang, notesOnly) => {
   if (!s) return;
   lang = lang === 'en' ? 'en' : 'km';
   // Render in an in-app overlay with a Back button — NOT a new tab/window, which
@@ -558,23 +558,29 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
     ${aptBox('ស្ថានភាពភ្នែក','Eye condition', trGlasses(s.glasses))}
   </div>
 
-  ${phaseSections.length ? phaseSections.map(sec => `
+  ${notesOnly ? '' : (phaseSections.length ? phaseSections.map(sec => `
   <div class="secbar" style="background:${sec.p.color}">${L('វគ្គ','Phase')} ${sec.p.label}<span class="r">${L('ទ្រឹស្ដី','Theory')} ${sec.thHrs} · ${L('អនុវត្តន៍','Practical')} ${sec.prHrs}</span></div>
   <table class="lt">
     <thead><tr><th style="width:124px">${L('ថ្ងៃ/ម៉ោង','Date / Time')}</th><th style="width:36%">${L('ប្រភេទ · គ្រូ','Type · Instructor')}</th><th>${L('លទ្ធផល · មតិគ្រូ','Result · Feedback')}</th></tr></thead>
     <tbody>${sec.body}</tbody>
   </table>`).join('') : `
   <div class="secbar">${L('ប្រវត្តិសិក្សា','Lesson Records')}</div>
-  <table class="lt"><tbody><tr><td colspan="3" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr></tbody></table>`}
+  <table class="lt"><tbody><tr><td colspan="3" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr></tbody></table>`)}
 
   ${(() => {
+    const tday = (typeof todayStr==='function'?todayStr():new Date().toISOString().slice(0,10));
     const ntes = (window.__scheduleNotes||[]).filter(n => (n.studentIds||[]).includes(sid))
-      .sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')) || String(a.time||'').localeCompare(String(b.time||'')));
-    if (!ntes.length) return '';
-    const rows = ntes.map(n => `<tr>
-      <td style="white-space:nowrap;font-family:monospace;color:#444;font-weight:700">${esc(n.date||'')}${n.time?'<br>'+esc(String(n.time).slice(0,5)):''}</td>
-      <td><b>${esc(n.title||'')}</b>${n.description?'<div style="color:#555;margin-top:2px;white-space:pre-wrap">'+esc(n.description)+'</div>':''}${n.author?'<div style="color:#999;margin-top:3px;font-size:11px">👤 '+esc(n.author)+'</div>':''}</td>
-    </tr>`).join('');
+      .sort((a,b)=>String(a.fromDate||a.date||'').localeCompare(String(b.fromDate||b.date||'')) || String(a.fromTime||a.time||'').localeCompare(String(b.fromTime||b.time||'')));
+    if (!ntes.length) return notesOnly ? `<div class="secbar" style="background:#CA8A04">📝 ${L('ចំណាំ','Notes')}</div><table class="lt"><tbody><tr><td colspan="2" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr></tbody></table>` : '';
+    const rows = ntes.map(n => {
+      const from = n.fromDate||n.date||'', to = n.toDate||from;
+      const col = to && to < tday ? '#111' : (from && from > tday ? '#1A4F96' : '#B0413E');   // past black / future blue / today red
+      const dLabel = esc(from) + (to && to!==from ? ' → '+esc(to) : '');
+      const tLabel = n.fromTime ? esc(String(n.fromTime).slice(0,5)) + (n.toTime?'–'+esc(String(n.toTime).slice(0,5)):'') : (n.time?esc(String(n.time).slice(0,5)):'');
+      return `<tr>
+      <td style="white-space:nowrap;font-family:monospace;font-weight:700;color:${col}">${dLabel}${tLabel?'<br>'+tLabel:''}</td>
+      <td><b style="color:${col}">${esc(n.content||n.title||'')}</b>${n.reason?'<div style="color:#555;margin-top:2px"><span style="color:#999">'+L('មូលហេតុ','Reason')+': </span>'+esc(n.reason)+'</div>':''}${n.location?'<div style="color:#555;margin-top:2px">📍 '+esc(n.location)+'</div>':''}${(n.remark||n.description)?'<div style="color:#555;margin-top:2px;white-space:pre-wrap">'+esc(n.remark||n.description)+'</div>':''}${n.author?'<div style="color:#999;margin-top:3px;font-size:11px">👤 '+esc(n.author)+'</div>':''}</td>
+    </tr>`; }).join('');
     return `<div class="secbar" style="background:#CA8A04">📝 ${L('ចំណាំ','Notes')}<span class="r">${ntes.length}</span></div>
     <table class="lt"><thead><tr><th style="width:124px">${L('ថ្ងៃ/ម៉ោង','Date / Time')}</th><th>${L('ចំណាំ','Note')}</th></tr></thead><tbody>${rows}</tbody></table>`;
   })()}
@@ -1332,7 +1338,7 @@ const StudentsScreenV2 = () => {
             const curGroup = groups.find(g => g.p.k === curPhase);
             const pdfLessons = studentLessons.filter(l => pdfPhase === 'all' || lessonPhase(l) === pdfPhase);
             const pdfExams   = studentExams.filter(e => pdfPhase === 'all' || (e.phase||'KH') === pdfPhase);
-            const PHASE_OPTS = [{k:'all', label:tr('ទាំងអស់','All')}, ...(window.STUDENT_PHASES||[]).map(p=>({k:p.k,label:p.label,color:p.color}))];
+            const PHASE_OPTS = [{k:'all', label:tr('ទាំងអស់','All')}, ...(window.STUDENT_PHASES||[]).map(p=>({k:p.k,label:p.label,color:p.color})), {k:'__note', label:'📝 '+tr('ចំណាំ','Note'), color:'#CA8A04'}];
 
             return (<>
               {/* Trigger row — looks like a section header; opens the popup */}
@@ -1356,7 +1362,7 @@ const StudentsScreenV2 = () => {
                       <div style={{flex:1,minWidth:0,fontSize:15,fontWeight:700,fontFamily:'var(--font-km)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{tr('បញ្ជីមេរៀន','Lessons')} · {s.en||s.name}</div>
                       <button onClick={()=>setLessonsOpen(false)} aria-label={tr('បិទ','Close')} style={{border:'none',background:'var(--surface-muted)',borderRadius:8,width:30,height:30,cursor:'pointer',color:'var(--ink-2)',fontSize:15,lineHeight:1,flexShrink:0}}>✕</button>
                     </div>
-                    {(groups.length>0 || studentNotes.length>0) && (
+                    {(groups.length>0 || true) && (
                       <div style={{display:'flex',gap:6,overflowX:'auto',paddingBottom:2}}>
                         {groups.map(g => { const active = g.p.k===curPhase; return (
                           <button key={g.p.k} onClick={()=>setViewPhase(g.p.k)} style={{
@@ -1366,7 +1372,7 @@ const StudentsScreenV2 = () => {
                             {g.p.label} <span style={{opacity:.85,fontFamily:'"JetBrains Mono",monospace',fontWeight:600}} title={tr('ទ្រឹស្ដី / អនុវត្ត','Theory / Practical')}>{g.thHours} / {g.prHours}</span>
                           </button>
                         ); })}
-                        {studentNotes.length>0 && (() => { const active = noteView; return (
+                        {(() => { const active = noteView; return (
                           <button onClick={()=>setViewPhase('__note')} style={{
                             flexShrink:0,display:'inline-flex',alignItems:'center',gap:6,padding:'6px 13px',borderRadius:999,cursor:'pointer',fontFamily:'inherit',
                             border:'1.5px solid '+(active?'#CA8A04':'var(--border)'),
@@ -1383,17 +1389,26 @@ const StudentsScreenV2 = () => {
                     {noteView ? (
                       studentNotes.length===0 ? (
                         <div style={{fontSize:13,color:'var(--ink-3)',textAlign:'center',padding:'28px 0'}}>{tr('មិន​ទាន់​មាន​ចំណាំ','No notes yet')}</div>
-                      ) : studentNotes.map((n,i) => (
+                      ) : studentNotes.map((n,i) => {
+                        const tday = (typeof todayStr==='function'?todayStr():new Date().toISOString().slice(0,10));
+                        const from = n.fromDate || n.date || '', to = n.toDate || from;
+                        // past → black, today/active → red, future → blue
+                        const col = to && to < tday ? 'var(--ink)' : (from && from > tday ? '#2A5DB0' : '#B0413E');
+                        const dateLabel = from + (to && to!==from ? ' → ' + to : '');
+                        const timeLabel = n.fromTime ? String(n.fromTime).slice(0,5) + (n.toTime ? '–'+String(n.toTime).slice(0,5) : '') : (n.time ? String(n.time).slice(0,5) : '');
+                        return (
                         <div key={n.id||('nt'+i)} style={{borderBottom:'1px solid var(--border)',padding:'11px 0'}}>
                           <div style={{display:'flex',alignItems:'baseline',gap:8,flexWrap:'wrap'}}>
-                            <span style={{fontSize:12.5,fontWeight:700,color:'var(--ink)',fontFamily:'monospace'}}>{n.date}{n.time?' '+String(n.time).slice(0,5):''}</span>
+                            <span style={{fontSize:12.5,fontWeight:800,color:col,fontFamily:'monospace'}}>{dateLabel}{timeLabel?' · '+timeLabel:''}</span>
                             <span style={{fontSize:10.5,fontWeight:700,padding:'1px 8px',borderRadius:20,background:'rgba(202,138,4,.15)',color:'#8a6200'}}>📝 {tr('ចំណាំ','Note')}</span>
                           </div>
-                          {n.title && <div style={{fontSize:13.5,fontWeight:700,color:'var(--ink)',marginTop:4}}>{n.title}</div>}
-                          {n.description && <div style={{fontSize:12.5,color:'var(--ink-2)',marginTop:2,whiteSpace:'pre-wrap',lineHeight:1.5}}>{n.description}</div>}
+                          {(n.content||n.title) && <div style={{fontSize:13.5,fontWeight:700,color:col,marginTop:4}}>{n.content||n.title}</div>}
+                          {n.reason && <div style={{fontSize:12.5,color:'var(--ink-2)',marginTop:2}}><span style={{color:'var(--ink-3)'}}>{tr('មូលហេតុ','Reason')}: </span>{n.reason}</div>}
+                          {n.location && <div style={{fontSize:12.5,color:'var(--ink-2)',marginTop:2}}>📍 {n.location}</div>}
+                          {(n.remark||n.description) && <div style={{fontSize:12.5,color:'var(--ink-2)',marginTop:2,whiteSpace:'pre-wrap',lineHeight:1.5}}>{n.remark||n.description}</div>}
                           {n.author && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:4}}>👤 {n.author}</div>}
                         </div>
-                      ))
+                      ); })
                     ) : groups.length===0 ? (
                       <div style={{fontSize:13,color:'var(--ink-3)',textAlign:'center',padding:'28px 0'}}>{tr('មិន​ទាន់​មាន​មេរៀន','No lessons yet')}</div>
                     ) : curGroup ? curGroup.items.map((it,i) => it.type === 'exam'
@@ -1414,8 +1429,8 @@ const StudentsScreenV2 = () => {
                       })}
                     </div>
                     <div style={{display:'flex',gap:8}}>
-                      <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, pdfExams, 'km')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>🇰🇭 {tr('ខ្មែរ','Khmer')}</button>
-                      <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, pdfExams, 'en')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>🇬🇧 English</button>
+                      <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, pdfExams, 'km', pdfPhase==='__note')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>🇰🇭 {tr('ខ្មែរ','Khmer')}</button>
+                      <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, pdfExams, 'en', pdfPhase==='__note')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>🇬🇧 English</button>
                     </div>
                   </div>
                 </div>

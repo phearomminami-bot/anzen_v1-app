@@ -305,6 +305,23 @@ const computeAlerts = (lang, tr, opts = {}) => {
     });
   });
 
+  // ── Note reminders (a note that starts tomorrow) — fires 1 day before ──
+  (window.__scheduleNotes || []).filter(n => (n.fromDate || n.date) === tomorrow).forEach(n => {
+    const label = n.content || n.title || n.text || tr('ចំណាំ','Note');
+    const extra = n.reason ? ' — ' + n.reason : (n.location ? ' — '+n.location : '');
+    const sids = n.studentIds || [];
+    if (sids.length) {
+      sids.forEach(sid => { if (isStudent && sid !== myId) return; const nm = sName(sid); if (!nm) return;
+        out.push({ id:`note-${n.id||n.fromDate}-${sid}`, kind:'schedule', severity:'info', icon:'📝',
+          title:`${nm} · ${tr('ចំណាំ','Note')}`,
+          body:`${label}${extra} · ${notifDateLabel(tomorrow,lang)}` });
+      });
+    } else if (!isStudent) {
+      out.push({ id:`note-${n.id||n.fromDate}`, kind:'schedule', severity:'info', icon:'📝',
+        title:tr('ចំណាំ','Note'), body:`${label}${extra} · ${notifDateLabel(tomorrow,lang)}` });
+    }
+  });
+
   // Students only ever see their own schedule — stop here for them.
   if (isStudent) { const rank1 = { danger:0, warn:1, info:2 }; return out.sort((a,b)=> (rank1[a.severity]-rank1[b.severity])); }
 

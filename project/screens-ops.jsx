@@ -731,18 +731,23 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
     if (window.saveAllData) window.saveAllData();         // persist + push to cloud (shared)
   };
   const submitNote = () => {
-    const title = (noteModal?.title || '').trim();
-    const description = (noteModal?.description || '').trim();
-    if (!title && !description) { setNoteModal(null); return; }
-    const time = noteModal.time || '';
+    const content  = (noteModal?.content ?? noteModal?.title ?? '').trim();
+    const reason   = (noteModal?.reason ?? '').trim();
+    const location = (noteModal?.location ?? '').trim();
+    const remark   = (noteModal?.remark ?? noteModal?.description ?? '').trim();
+    if (!content && !reason && !remark && !location) { setNoteModal(null); return; }
+    const fromDate = noteModal.fromDate || noteModal.date || '';
+    const toDate   = noteModal.toDate || fromDate;
+    const fromTime = noteModal.fromTime || noteModal.time || '';
+    const toTime   = noteModal.toTime || '';
     const invited = noteModal.invited || [];
     const studentIds = noteModal.studentIds || [];
-    const len = Math.max(1, parseInt(noteModal.len) || 1);
-    // keep `text` mirrored to the title so any older consumer / cloud reader still works
-    const text = title || description;
-    if (noteModal.id) saveNotes(notes.map(n => n.id === noteModal.id ? { ...n, date: noteModal.date, time, len, title, description, text, invited, studentIds } : n));
-    else              saveNotes([...notes, { id: 'N' + Date.now(), date: noteModal.date, time, len, title, description, text, author: noteModal.author || meName, invited, studentIds }]);
-    if (window.__logActivity) window.__logActivity(noteModal.id ? 'edit' : 'create', 'note', (title || description || '').slice(0,60));
+    const rec = { fromDate, toDate, fromTime, toTime, content, reason, location, remark, invited, studentIds,
+      // mirrors so the calendar block and older readers still work:
+      date: fromDate, time: fromTime, len: Math.max(1, parseInt(noteModal.len)||1), title: content, description: reason || remark, text: content };
+    if (noteModal.id) saveNotes(notes.map(n => n.id === noteModal.id ? { ...n, ...rec } : n));
+    else              saveNotes([...notes, { id: 'N' + Date.now(), author: noteModal.author || meName, ...rec }]);
+    if (window.__logActivity) window.__logActivity(noteModal.id ? 'edit' : 'create', 'note', (content || reason || '').slice(0,60));
     setNoteModal(null);
   };
   const removeNote = (id) => {
@@ -905,8 +910,8 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   ));
   // Click a time slot → open the create modal defaulting to the lesson tab,
   // pre-filled with that slot's date+hour (switchable to a note).
-  const openSlot = (date, hour) => setNoteModal({ mode:'lesson', date, hour, time:String(hour).padStart(2,'0')+':00', title:'', description:'', author:meName, invited:[], studentIds:[] });
-  const editNote = (n) => setNoteModal({ id:n.id, date:n.date, time:n.time||'', len:n.len||1, title:n.title||n.text||'', description:n.description||'', author:n.author, invited:n.invited||[], studentIds:n.studentIds||[] });
+  const openSlot = (date, hour) => setNoteModal({ mode:'lesson', date, hour, time:String(hour).padStart(2,'0')+':00', fromDate:date, toDate:date, fromTime:String(hour).padStart(2,'0')+':00', toTime:'', content:'', reason:'', location:'', remark:'', title:'', description:'', author:meName, invited:[], studentIds:[] });
+  const editNote = (n) => setNoteModal({ id:n.id, date:n.fromDate||n.date, fromDate:n.fromDate||n.date||'', toDate:n.toDate||n.fromDate||n.date||'', fromTime:n.fromTime||n.time||'', toTime:n.toTime||'', time:n.fromTime||n.time||'', len:n.len||1, content:n.content||n.title||n.text||'', reason:n.reason||'', location:n.location||'', remark:n.remark||n.description||'', author:n.author, invited:n.invited||[], studentIds:n.studentIds||[] });
   // Clicking a note opens a read-only detail (like the lesson detail); its
   // Edit/Delete buttons call back into these handlers.
   React.useEffect(() => {
@@ -1038,7 +1043,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(0)}>{tr('ថ្ងៃ​នេះ','Today')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(o=>o+1)}>{tr('បន្ទាប់ ▶','Next ▶')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>generateSchedulePDF({lessons:visibleLessons.filter(l=>l.status!=='cancelled'),weekDates:allWeekDates,viewType:v,labelEn,instFilter,vehFilter,studentFilter,phaseFilter,lang})} icon={<Icon name="download" size={14}/>}>{tr('PDF','PDF')}</Btn>
-            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:allWeekDates[0]||today,time:'09:00',title:'',description:'',author:meName,invited:[],studentIds:[]})} icon={<Icon name="bell" size={14}/>}>{tr('+ ចំណាំ','+ Note')}</Btn>}
+            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:allWeekDates[0]||today,fromDate:allWeekDates[0]||today,toDate:allWeekDates[0]||today,time:'09:00',fromTime:'09:00',toTime:'',content:'',reason:'',location:'',remark:'',title:'',description:'',author:meName,invited:[],studentIds:[]})} icon={<Icon name="bell" size={14}/>}>{tr('+ ចំណាំ','+ Note')}</Btn>}
             {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setExamModal({kind:'exam',date:allWeekDates[0]||today,time:'08:00',len:2,studentIds:[],instIds:[],note:'',phase:'KH'})} icon={<Icon name="star" size={14}/>} style={{color:'#12A302',borderColor:'#12A302'}}>{tr('+ ប្រឡង','+ Exam')}</Btn>}
             {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setExamModal({kind:'apply',date:allWeekDates[0]||today,time:'08:00',len:2,studentIds:[],instIds:[],note:'',phase:'KH'})} icon={<Icon name="book" size={14}/>} style={{color:'#CA8A04',borderColor:'#CA8A04'}}>{tr('+ ដាក់​ពាក្យ','+ Apply')}</Btn>}
             {can(role,'create','lesson') && <Btn kind="primary" size="md" onClick={()=>openForm('newLesson')} icon={<Icon name="plus" size={14}/>}>{tr('មេរៀន​ថ្មី','New lesson')}</Btn>}
@@ -1415,37 +1420,48 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
               );
             })() : (
             <>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 96px 104px',gap:10}}>
+            {(() => { const nInp = {width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',colorScheme:'light dark',fontFamily:'var(--font-km),var(--font-en),inherit'};
+              const nLbl = {fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5};
+              return (<>
+            {/* Date range (from → to) */}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
               <div>
-                <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5}}>{tr('កាល​បរិច្ឆេទ','Date')}</label>
-                <input type="date" value={noteModal.date} onChange={e=>setNoteModal(m=>({...m,date:e.target.value}))}
-                  style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',colorScheme:'light dark'}}/>
+                <label style={nLbl}>{tr('កាល​បរិច្ឆេទ ចាប់ពី','Date from')}</label>
+                <input type="date" value={noteModal.fromDate||''} onChange={e=>setNoteModal(m=>({...m,fromDate:e.target.value, toDate:(!m.toDate||m.toDate<e.target.value)?e.target.value:m.toDate}))} style={nInp}/>
               </div>
               <div>
-                <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5}}>{tr('ម៉ោង','Time')}</label>
-                <input type="time" value={noteModal.time || ''} onChange={e=>setNoteModal(m=>({...m,time:e.target.value}))}
-                  style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',colorScheme:'light dark',fontFamily:'"JetBrains Mono",monospace'}}/>
+                <label style={nLbl}>{tr('ដល់','To')}</label>
+                <input type="date" value={noteModal.toDate||noteModal.fromDate||''} min={noteModal.fromDate||''} onChange={e=>setNoteModal(m=>({...m,toDate:e.target.value}))} style={nInp}/>
+              </div>
+            </div>
+            {/* Time range (from → to) */}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+              <div>
+                <label style={nLbl}>{tr('ម៉ោង ចាប់ពី','Time from')}</label>
+                <input type="time" value={noteModal.fromTime||''} onChange={e=>setNoteModal(m=>({...m,fromTime:e.target.value}))} style={{...nInp,fontFamily:'"JetBrains Mono",monospace'}}/>
               </div>
               <div>
-                <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5}}>{tr('ចំនួន​ម៉ោង','Hours')}</label>
-                <select value={noteModal.len||1} onChange={e=>setNoteModal(m=>({...m,len:parseInt(e.target.value)||1}))}
-                  style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',colorScheme:'light dark'}}>
-                  {[1,2,3,4,5,6,7,8].map(n=><option key={n} value={n}>{n} {tr('ម៉ោង','h')}</option>)}
-                </select>
+                <label style={nLbl}>{tr('ដល់','To')}</label>
+                <input type="time" value={noteModal.toTime||''} onChange={e=>setNoteModal(m=>({...m,toTime:e.target.value}))} style={{...nInp,fontFamily:'"JetBrains Mono",monospace'}}/>
               </div>
             </div>
             <div>
-              <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5}}>Title</label>
-              <input value={noteModal.title||''} onChange={e=>setNoteModal(m=>({...m,title:e.target.value}))}
-                placeholder={tr('ឧ. ប្រជុំគ្រូ','e.g. Teacher meeting')} autoFocus
-                style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',fontFamily:'var(--font-km),var(--font-en),inherit'}}/>
+              <label style={nLbl}>{tr('ខ្លឹមសារ','Content')}</label>
+              <input value={noteModal.content||''} onChange={e=>setNoteModal(m=>({...m,content:e.target.value}))} placeholder={tr('ឧ. ឈប់សម្រាក','e.g. On leave')} autoFocus style={nInp}/>
             </div>
             <div>
-              <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5}}>Description</label>
-              <textarea value={noteModal.description||''} onChange={e=>setNoteModal(m=>({...m,description:e.target.value}))} rows={3}
-                placeholder={tr('ឧ. ប្រជុំគ្រូទាំងអស់ នៅបន្ទប់ប្រជុំ ម៉ោង ២ រសៀល','e.g. All-instructor meeting in the conference room at 2pm')}
-                style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',resize:'vertical',fontFamily:'var(--font-km),var(--font-en),inherit'}}/>
+              <label style={nLbl}>{tr('មូលហេតុ','Reason')}</label>
+              <input value={noteModal.reason||''} onChange={e=>setNoteModal(m=>({...m,reason:e.target.value}))} placeholder={tr('ឧ. ធ្វើ​ដំណើរ​ទៅ​ខេត្ត','e.g. Travelling to province')} style={nInp}/>
             </div>
+            <div>
+              <label style={nLbl}>{tr('ទីតាំង','Location')}</label>
+              <input value={noteModal.location||''} onChange={e=>setNoteModal(m=>({...m,location:e.target.value}))} placeholder={tr('ឧ. ភ្នំពេញ','e.g. Phnom Penh')} style={nInp}/>
+            </div>
+            <div>
+              <label style={nLbl}>{tr('ចំណាំ','Remark')}</label>
+              <textarea value={noteModal.remark||''} onChange={e=>setNoteModal(m=>({...m,remark:e.target.value}))} rows={2} placeholder={tr('ព័ត៌មាន​បន្ថែម','Extra details')} style={{...nInp,resize:'vertical'}}/>
+            </div>
+            </>); })()}
 
             {/* Students — attach this note to one or more students (shows in their
                 lessons popup under the Note tab, and in their PDF). */}
