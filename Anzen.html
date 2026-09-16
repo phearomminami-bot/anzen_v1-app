@@ -692,7 +692,8 @@ window.__trRegistry = {
   "Create schedule": "បង្កើត​កាលវិភាគ",
   "Date from": "កាល​បរិច្ឆេទ ចាប់ពី",
   "To": "ដល់",
-  "Time from": "ម៉ោង ចាប់ពី",
+  "Time (optional)": "ម៉ោង (ស្រេចចិត្ត)",
+  "— none": "— ទំនេរ",
   "Content": "ខ្លឹមសារ",
   "e.g. On leave": "ឧ. ឈប់សម្រាក",
   "e.g. Travelling to province": "ឧ. ធ្វើ​ដំណើរ​ទៅ​ខេត្ត",
@@ -2066,7 +2067,8 @@ window.__trGroups = {
     "Create schedule": "បង្កើត​កាលវិភាគ",
     "Date from": "កាល​បរិច្ឆេទ ចាប់ពី",
     "To": "ដល់",
-    "Time from": "ម៉ោង ចាប់ពី",
+    "Time (optional)": "ម៉ោង (ស្រេចចិត្ត)",
+    "— none": "— ទំនេរ",
     "Content": "ខ្លឹមសារ",
     "e.g. On leave": "ឧ. ឈប់សម្រាក",
     "e.g. Travelling to province": "ឧ. ធ្វើ​ដំណើរ​ទៅ​ខេត្ត",
@@ -3355,7 +3357,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v233";</script>
+<script>window.__ANZEN_VERSION="v234";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -22346,7 +22348,7 @@ var ScheduleScreen = ({
       time: fromTime,
       len: Math.max(1, parseInt(noteModal.len) || 1),
       title: content,
-      description: reason || remark,
+      description: remark,
       text: content
     };
     if (noteModal.id) saveNotes(notes.map(n => n.id === noteModal.id ? {
@@ -22570,7 +22572,7 @@ var ScheduleScreen = ({
     content: n.content || n.title || n.text || '',
     reason: n.reason || '',
     location: n.location || '',
-    remark: n.remark || n.description || '',
+    remark: n.remark || '',
     author: n.author,
     invited: n.invited || [],
     studentIds: n.studentIds || []
@@ -23947,6 +23949,33 @@ var ScheduleScreen = ({
       display: 'block',
       marginBottom: 5
     };
+    var TIME_OPTS = (() => {
+      var a = [];
+      for (var h = 6; h <= 20; h++) {
+        a.push(String(h).padStart(2, '0') + ':00');
+        a.push(String(h).padStart(2, '0') + ':30');
+      }
+      return a;
+    })();
+    var TIME_PRESETS = [{
+      k: 'full',
+      km: 'ពេញ​ថ្ងៃ',
+      en: 'Full day',
+      f: '08:00',
+      t: '17:00'
+    }, {
+      k: 'am',
+      km: 'ព្រឹក',
+      en: 'Half AM',
+      f: '08:00',
+      t: '12:00'
+    }, {
+      k: 'pm',
+      km: 'រសៀល',
+      en: 'Half PM',
+      f: '13:00',
+      t: '17:00'
+    }];
     return React.createElement(React.Fragment, null, React.createElement("div", {
       style: {
         display: 'grid',
@@ -23975,16 +24004,50 @@ var ScheduleScreen = ({
         toDate: e.target.value
       })),
       style: nInp
-    }))), React.createElement("div", {
+    }))), React.createElement("div", null, React.createElement("label", {
+      style: nLbl
+    }, tr('ម៉ោង (ស្រេចចិត្ត)', 'Time (optional)')), React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 6,
+        marginBottom: 8
+      }
+    }, TIME_PRESETS.map(p => {
+      var active = noteModal.fromTime === p.f && noteModal.toTime === p.t;
+      return React.createElement("button", {
+        key: p.k,
+        type: "button",
+        onClick: () => setNoteModal(m => ({
+          ...m,
+          fromTime: p.f,
+          toTime: p.t
+        })),
+        style: {
+          flex: 1,
+          padding: '8px 6px',
+          borderRadius: 8,
+          cursor: 'pointer',
+          fontSize: 12,
+          fontWeight: 700,
+          fontFamily: 'inherit',
+          border: '1.5px solid ' + (active ? 'var(--accent)' : 'var(--border)'),
+          background: active ? 'var(--accent-soft)' : 'var(--surface)',
+          color: active ? 'var(--accent)' : 'var(--ink-2)'
+        }
+      }, tr(p.km, p.en));
+    })), React.createElement("div", {
       style: {
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
         gap: 10
       }
     }, React.createElement("div", null, React.createElement("label", {
-      style: nLbl
-    }, tr('ម៉ោង ចាប់ពី', 'Time from')), React.createElement("input", {
-      type: "time",
+      style: {
+        ...nLbl,
+        fontSize: 10.5,
+        marginBottom: 3
+      }
+    }, tr('ចាប់ពី', 'From')), React.createElement("select", {
       value: noteModal.fromTime || '',
       onChange: e => setNoteModal(m => ({
         ...m,
@@ -23994,10 +24057,18 @@ var ScheduleScreen = ({
         ...nInp,
         fontFamily: '"JetBrains Mono",monospace'
       }
-    })), React.createElement("div", null, React.createElement("label", {
-      style: nLbl
-    }, tr('ដល់', 'To')), React.createElement("input", {
-      type: "time",
+    }, React.createElement("option", {
+      value: ""
+    }, tr('— ទំនេរ', '— none')), TIME_OPTS.map(t => React.createElement("option", {
+      key: t,
+      value: t
+    }, t)))), React.createElement("div", null, React.createElement("label", {
+      style: {
+        ...nLbl,
+        fontSize: 10.5,
+        marginBottom: 3
+      }
+    }, tr('ដល់', 'To')), React.createElement("select", {
       value: noteModal.toTime || '',
       onChange: e => setNoteModal(m => ({
         ...m,
@@ -24007,7 +24078,12 @@ var ScheduleScreen = ({
         ...nInp,
         fontFamily: '"JetBrains Mono",monospace'
       }
-    }))), React.createElement("div", null, React.createElement("label", {
+    }, React.createElement("option", {
+      value: ""
+    }, tr('— ទំនេរ', '— none')), TIME_OPTS.map(t => React.createElement("option", {
+      key: t,
+      value: t
+    }, t)))))), React.createElement("div", null, React.createElement("label", {
       style: nLbl
     }, tr('ខ្លឹមសារ', 'Content')), React.createElement("input", {
       value: noteModal.content || '',

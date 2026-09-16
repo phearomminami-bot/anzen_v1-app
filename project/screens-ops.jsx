@@ -750,7 +750,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
     const studentIds = noteModal.studentIds || [];
     const rec = { fromDate, toDate, fromTime, toTime, content, reason, location, remark, invited, studentIds,
       // mirrors so the calendar block and older readers still work:
-      date: fromDate, time: fromTime, len: Math.max(1, parseInt(noteModal.len)||1), title: content, description: reason || remark, text: content };
+      date: fromDate, time: fromTime, len: Math.max(1, parseInt(noteModal.len)||1), title: content, description: remark, text: content };
     if (noteModal.id) saveNotes(notes.map(n => n.id === noteModal.id ? { ...n, ...rec } : n));
     else              saveNotes([...notes, { id: 'N' + Date.now(), author: noteModal.author || meName, ...rec }]);
     if (window.__logActivity) window.__logActivity(noteModal.id ? 'edit' : 'create', 'note', (content || reason || '').slice(0,60));
@@ -917,7 +917,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   // Click a time slot → open the create modal defaulting to the lesson tab,
   // pre-filled with that slot's date+hour (switchable to a note).
   const openSlot = (date, hour) => setNoteModal({ mode:'lesson', date, hour, time:String(hour).padStart(2,'0')+':00', fromDate:date, toDate:date, fromTime:String(hour).padStart(2,'0')+':00', toTime:'', content:'', reason:'', location:'', remark:'', title:'', description:'', author:meName, invited:[], studentIds:[] });
-  const editNote = (n) => setNoteModal({ id:n.id, date:n.fromDate||n.date, fromDate:n.fromDate||n.date||'', toDate:n.toDate||n.fromDate||n.date||'', fromTime:n.fromTime||n.time||'', toTime:n.toTime||'', time:n.fromTime||n.time||'', len:n.len||1, content:n.content||n.title||n.text||'', reason:n.reason||'', location:n.location||'', remark:n.remark||n.description||'', author:n.author, invited:n.invited||[], studentIds:n.studentIds||[] });
+  const editNote = (n) => setNoteModal({ id:n.id, date:n.fromDate||n.date, fromDate:n.fromDate||n.date||'', toDate:n.toDate||n.fromDate||n.date||'', fromTime:n.fromTime||n.time||'', toTime:n.toTime||'', time:n.fromTime||n.time||'', len:n.len||1, content:n.content||n.title||n.text||'', reason:n.reason||'', location:n.location||'', remark:n.remark||'', author:n.author, invited:n.invited||[], studentIds:n.studentIds||[] });
   // Clicking a note opens a read-only detail (like the lesson detail); its
   // Edit/Delete buttons call back into these handlers.
   React.useEffect(() => {
@@ -1428,6 +1428,8 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
             <>
             {(() => { const nInp = {width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',colorScheme:'light dark',fontFamily:'var(--font-km),var(--font-en),inherit'};
               const nLbl = {fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5};
+              const TIME_OPTS = (() => { const a=[]; for(let h=6;h<=20;h++){ a.push(String(h).padStart(2,'0')+':00'); a.push(String(h).padStart(2,'0')+':30'); } return a; })();
+              const TIME_PRESETS = [{k:'full',km:'ពេញ​ថ្ងៃ',en:'Full day',f:'08:00',t:'17:00'},{k:'am',km:'ព្រឹក',en:'Half AM',f:'08:00',t:'12:00'},{k:'pm',km:'រសៀល',en:'Half PM',f:'13:00',t:'17:00'}];
               return (<>
             {/* Date range (from → to) */}
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
@@ -1440,15 +1442,32 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
                 <input type="date" value={noteModal.toDate||noteModal.fromDate||''} min={noteModal.fromDate||''} onChange={e=>setNoteModal(m=>({...m,toDate:e.target.value}))} style={nInp}/>
               </div>
             </div>
-            {/* Time range (from → to) */}
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-              <div>
-                <label style={nLbl}>{tr('ម៉ោង ចាប់ពី','Time from')}</label>
-                <input type="time" value={noteModal.fromTime||''} onChange={e=>setNoteModal(m=>({...m,fromTime:e.target.value}))} style={{...nInp,fontFamily:'"JetBrains Mono",monospace'}}/>
+            {/* Time — quick presets + optional from/to (scroll pickers) */}
+            <div>
+              <label style={nLbl}>{tr('ម៉ោង (ស្រេចចិត្ត)','Time (optional)')}</label>
+              <div style={{display:'flex',gap:6,marginBottom:8}}>
+                {TIME_PRESETS.map(p => { const active = noteModal.fromTime===p.f && noteModal.toTime===p.t; return (
+                  <button key={p.k} type="button" onClick={()=>setNoteModal(m=>({...m,fromTime:p.f,toTime:p.t}))} style={{
+                    flex:1,padding:'8px 6px',borderRadius:8,cursor:'pointer',fontSize:12,fontWeight:700,fontFamily:'inherit',
+                    border:'1.5px solid '+(active?'var(--accent)':'var(--border)'),
+                    background:active?'var(--accent-soft)':'var(--surface)', color:active?'var(--accent)':'var(--ink-2)'}}>{tr(p.km,p.en)}</button>
+                ); })}
               </div>
-              <div>
-                <label style={nLbl}>{tr('ដល់','To')}</label>
-                <input type="time" value={noteModal.toTime||''} onChange={e=>setNoteModal(m=>({...m,toTime:e.target.value}))} style={{...nInp,fontFamily:'"JetBrains Mono",monospace'}}/>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+                <div>
+                  <label style={{...nLbl,fontSize:10.5,marginBottom:3}}>{tr('ចាប់ពី','From')}</label>
+                  <select value={noteModal.fromTime||''} onChange={e=>setNoteModal(m=>({...m,fromTime:e.target.value}))} style={{...nInp,fontFamily:'"JetBrains Mono",monospace'}}>
+                    <option value="">{tr('— ទំនេរ','— none')}</option>
+                    {TIME_OPTS.map(t=><option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{...nLbl,fontSize:10.5,marginBottom:3}}>{tr('ដល់','To')}</label>
+                  <select value={noteModal.toTime||''} onChange={e=>setNoteModal(m=>({...m,toTime:e.target.value}))} style={{...nInp,fontFamily:'"JetBrains Mono",monospace'}}>
+                    <option value="">{tr('— ទំនេរ','— none')}</option>
+                    {TIME_OPTS.map(t=><option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
               </div>
             </div>
             <div>
