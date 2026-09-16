@@ -3359,7 +3359,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v238";</script>
+<script>window.__ANZEN_VERSION="v239";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -23114,7 +23114,7 @@ var ScheduleScreen = ({
   }, "\u2014 \u179F\u17B7\u179F\u17D2\u179F\u200B\u1791\u17B6\u17C6\u1784\u17A2\u179F\u17CB All students \u2014"), STUDENTS.filter(s => LESSONS.some(l => l.studentId === s.id) || (window.__schoolSettings && window.__schoolSettings.scheduleExams || []).some(e => (e.studentIds || []).includes(s.id))).map(s => React.createElement("option", {
     key: s.id,
     value: s.id
-  }, s.name, " (", s.id, ")")))), React.createElement("div", {
+  }, s.en || s.name, " (", s.id, ")")))), React.createElement("div", {
     style: {
       width: 1,
       height: 22,
@@ -23268,7 +23268,7 @@ var ScheduleScreen = ({
     }, tr('សិស្ស​ទាំងអស់', 'All students')), STUDENTS.filter(s => LESSONS.some(l => l.studentId === s.id) || (window.__schoolSettings && window.__schoolSettings.scheduleExams || []).some(e => (e.studentIds || []).includes(s.id))).map(s => React.createElement("option", {
       key: s.id,
       value: s.id
-    }, s.name))))), React.createElement("div", {
+    }, s.en || s.name))))), React.createElement("div", {
       style: {
         display: 'flex',
         gap: 6
@@ -24199,7 +24199,7 @@ var ScheduleScreen = ({
   }, tr('+ ជ្រើស​សិស្ស', '+ Select student')), STUDENTS.filter(s => !(noteModal.studentIds || []).includes(s.id) && !(window.__isGraduated && window.__isGraduated(s))).map(s => React.createElement("option", {
     key: s.id,
     value: s.id
-  }, s.name || s.en, s.id ? ' · ' + s.id : ''))), (noteModal.studentIds || []).length > 0 && React.createElement("div", {
+  }, s.en || s.name, s.id ? ' · ' + s.id : ''))), (noteModal.studentIds || []).length > 0 && React.createElement("div", {
     style: {
       display: 'flex',
       flexWrap: 'wrap',

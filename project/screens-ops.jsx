@@ -1127,7 +1127,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
               style={selActive(studentFilter)}>
               <option value="">— សិស្ស​ទាំងអស់ All students —</option>
               {STUDENTS.filter(s => LESSONS.some(l=>l.studentId===s.id) || (((window.__schoolSettings&&window.__schoolSettings.scheduleExams)||[]).some(e=>(e.studentIds||[]).includes(s.id)))).map(s => (
-                <option key={s.id} value={s.id}>{s.name} ({s.id})</option>
+                <option key={s.id} value={s.id}>{s.en||s.name} ({s.id})</option>
               ))}
             </select>
           </div>
@@ -1185,7 +1185,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
                 <select value={studentFilter} onChange={e=>{ setStudentFilter(e.target.value); setInstFilter(''); setVehFilter(''); }} style={bareSel}>
                   <option value="">{tr('សិស្ស​ទាំងអស់','All students')}</option>
                   {STUDENTS.filter(s=>LESSONS.some(l=>l.studentId===s.id) || (((window.__schoolSettings&&window.__schoolSettings.scheduleExams)||[]).some(e=>(e.studentIds||[]).includes(s.id)))).map(s=>(
-                    <option key={s.id} value={s.id}>{s.name}</option>
+                    <option key={s.id} value={s.id}>{s.en||s.name}</option>
                   ))}
                 </select>
               </div>
@@ -1519,7 +1519,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
                 style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',colorScheme:'light dark'}}>
                 <option value="">{tr('+ ជ្រើស​សិស្ស','+ Select student')}</option>
                 {STUDENTS.filter(s => !(noteModal.studentIds||[]).includes(s.id) && !(window.__isGraduated && window.__isGraduated(s))).map(s => (
-                  <option key={s.id} value={s.id}>{s.name || s.en}{s.id?' · '+s.id:''}</option>
+                  <option key={s.id} value={s.id}>{s.en||s.name}{s.id?' · '+s.id:''}</option>
                 ))}
               </select>
               {(noteModal.studentIds||[]).length > 0 && (
