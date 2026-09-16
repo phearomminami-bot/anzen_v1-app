@@ -1819,6 +1819,12 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
   // Edit mode: when a lesson is passed, pre-fill every field and update it on
   // save (instead of creating new ones) — so editing uses this same form.
   const editLesson = ctx.lesson || null;
+  // Editing a class: gather every lesson that shares this class's classId so the
+  // whole roster (not just one student) can be edited together.
+  const editClassId = editLesson && editLesson.classId;
+  const editClassLessons = editClassId ? (typeof LESSONS!=='undefined'?LESSONS:[]).filter(l => l.classId === editClassId) : [];
+  const isClassEdit = !!editLesson && editClassLessons.length > 1;
+  const editClassStudentIds = [...new Set(editClassLessons.map(l => l.studentId).filter(x => x && x !== '—'))];
   const defaultDate = ctx.date || (editLesson && editLesson.date) || todayStr();
 
   // Display a lesson code as its number only ("学科1" → "1").
@@ -1853,7 +1859,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
 
   // ── People ────────────────────────────────────────────────────────────────
   const [studentIds, setStudentIds] = React.useState(
-    editLesson ? (editLesson.studentId && editLesson.studentId !== '—' ? [editLesson.studentId] : [])
+    editLesson ? (isClassEdit ? editClassStudentIds : (editLesson.studentId && editLesson.studentId !== '—' ? [editLesson.studentId] : []))
                : (ctx.studentId ? [ctx.studentId] : [])
   );
   const [instId,    setInstId]    = React.useState(editLesson ? editLesson.instId : (ctx.instId || ''));
@@ -1924,6 +1930,33 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
 
     // ── Edit mode: update the existing lesson in place, then close ──
     if (editLesson) {
+      // Class edit: apply shared fields to every student in the class, add lessons
+      // for newly-added students, and remove lessons for de-selected students.
+      if (isClassEdit) {
+        const shared = {
+          date: dates[0] || editLesson.date, h: parseInt(hour), len: parseFloat(len),
+          instId, guests: guests.length > 0 ? [...guests] : undefined, veh: vehId || '—',
+          type: typeName, color: catObj.color, phase, lessonIds: [...selLessons], lessonNo,
+          pickup, location: locationText.trim(), note: note.trim(),
+          className: className.trim() || undefined, classId: editClassId, isClass: true,
+        };
+        const roster = studentIds.length ? studentIds : editClassStudentIds;
+        const existingByStu = {}; editClassLessons.forEach(l => { existingByStu[l.studentId] = l; });
+        roster.forEach(sid => {
+          const ex = existingByStu[sid];
+          if (ex) { const i = LESSONS.findIndex(l => l.id === ex.id); if (i !== -1) LESSONS[i] = { ...LESSONS[i], ...shared, studentId: sid }; }
+          else { LESSONS.push({ id: nextLessonId(), studentId: sid, ...shared, status: 'scheduled', createdBy: window.__currentUserName||'', createdAt: new Date().toISOString() }); }
+        });
+        // remove de-selected students' lessons
+        editClassLessons.forEach(l => { if (!roster.includes(l.studentId)) { const i = LESSONS.findIndex(x => x.id === l.id); if (i !== -1) LESSONS.splice(i, 1); } });
+        if (window.__notifyLessonsChanged)  window.__notifyLessonsChanged();
+        if (window.__notifyStudentsChanged) window.__notifyStudentsChanged();
+        if (window.__logActivity) window.__logActivity('edit','lesson', (className.trim()||typeName)+' · '+roster.length+' students');
+        if (window.saveAllData) window.saveAllData();
+        toast(tr('បាន​រក្សាទុក​ថ្នាក់រៀន ✓','Class updated ✓'),'good');
+        onClose();
+        return;
+      }
       const idx = LESSONS.findIndex(l => l.id === editLesson.id);
       if (idx !== -1) {
         LESSONS[idx] = { ...LESSONS[idx],
@@ -2019,11 +2052,11 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
     <FormShell onCancel={onClose} onSave={save} saveLabel={editLesson ? tr('រក្សាទុក','Save changes') : (ctx.classMode ? tr('បង្កើត​ថ្នាក់រៀន','Create class') : tr('កក់​មេរៀន','Schedule lesson'))}>
 
       {/* Class mode — booking many students at once (one lesson each) */}
-      {ctx.classMode && !editLesson && (
+      {((ctx.classMode && !editLesson) || isClassEdit) && (
         <div style={{marginBottom:12}}>
           <div style={{fontSize:12.5,color:'var(--ink-2)',background:'var(--accent-soft)',border:'1px solid var(--accent)',borderRadius:10,padding:'11px 13px',lineHeight:1.5,display:'flex',gap:8,marginBottom:10}}>
             <span style={{fontSize:16,flexShrink:0}}>🏫</span>
-            <span>{tr('ថ្នាក់រៀន — ជ្រើស​សិស្ស​ច្រើន​នាក់​ខាង​ក្រោម។ មេរៀន​នឹង​បង្កើត​ដាច់​ដោយ​ឡែក​ក្នុង​កំណត់ត្រា​សិស្ស​ម្នាក់ៗ។','Class — pick several students below. A separate lesson is created in each student\'s record.')}</span>
+            <span>{isClassEdit ? tr('ថ្នាក់រៀន — កែ​ឈ្មោះ/ម៉ោង/សិស្ស។ ការ​ផ្លាស់ប្ដូរ​អនុវត្ត​ទៅ​សិស្ស​គ្រប់​នាក់​ក្នុង​ថ្នាក់។','Class — edit name/time/students. Changes apply to everyone in the class.') : tr('ថ្នាក់រៀន — ជ្រើស​សិស្ស​ច្រើន​នាក់​ខាង​ក្រោម។ មេរៀន​នឹង​បង្កើត​ដាច់​ដោយ​ឡែក​ក្នុង​កំណត់ត្រា​សិស្ស​ម្នាក់ៗ។','Class — pick several students below. A separate lesson is created in each student\'s record.')}</span>
           </div>
           <label style={{fontSize:11,fontWeight:700,color:'var(--ink-2)',display:'block',marginBottom:5}}>{tr('ឈ្មោះ​ថ្នាក់រៀន','Class name')}</label>
           <input value={className} onChange={e=>setClassName(e.target.value)} placeholder={tr('ឧ. ច្បាប់​ចរាចរណ៍','e.g. Traffic Law')}

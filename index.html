@@ -295,12 +295,14 @@ window.__trRegistry = {
   "Please select at least one time": "សូម​ជ្រើស​ម៉ោង",
   "Instructor has a conflict": "គ្រូ​ រវល់​ម៉ោង​នេះ",
   "Vehicle already booked": "ឡាន​ជាន់​ម៉ោង​គ្នា",
+  "Class updated ✓": "បាន​រក្សាទុក​ថ្នាក់រៀន ✓",
   "Lesson updated ✓": "បាន​រក្សាទុក​ការ​កែ ✓",
   "📨 Sent to student Telegram ✓": "📨 បានផ្ញើទៅ Telegram សិស្ស ✓",
   "Group": "ក្រុម",
   "Save changes": "រក្សា​ទុក",
   "Create class": "បង្កើត​ថ្នាក់រៀន",
   "Schedule lesson": "កក់​មេរៀន",
+  "Class — edit name/time/students. Changes apply to everyone in the class.": "ថ្នាក់រៀន — កែ​ឈ្មោះ/ម៉ោង/សិស្ស។ ការ​ផ្លាស់ប្ដូរ​អនុវត្ត​ទៅ​សិស្ស​គ្រប់​នាក់​ក្នុង​ថ្នាក់។",
   "Class — pick several students below. A separate lesson is created in each student\\'s record.": "ថ្នាក់រៀន — ជ្រើស​សិស្ស​ច្រើន​នាក់​ខាង​ក្រោម។ មេរៀន​នឹង​បង្កើត​ដាច់​ដោយ​ឡែក​ក្នុង​កំណត់ត្រា​សិស្ស​ម្នាក់ៗ។",
   "Class name": "ឈ្មោះ​ថ្នាក់រៀន",
   "e.g. Traffic Law": "ឧ. ច្បាប់​ចរាចរណ៍",
@@ -2904,12 +2906,14 @@ window.__trGroups = {
     "Please select at least one time": "សូម​ជ្រើស​ម៉ោង",
     "Instructor has a conflict": "គ្រូ​ រវល់​ម៉ោង​នេះ",
     "Vehicle already booked": "ឡាន​ជាន់​ម៉ោង​គ្នា",
+    "Class updated ✓": "បាន​រក្សាទុក​ថ្នាក់រៀន ✓",
     "Lesson updated ✓": "បាន​រក្សាទុក​ការ​កែ ✓",
     "📨 Sent to student Telegram ✓": "📨 បានផ្ញើទៅ Telegram សិស្ស ✓",
     "Group": "ក្រុម",
     "Save changes": "រក្សាទុក",
     "Create class": "បង្កើត​ថ្នាក់រៀន",
     "Schedule lesson": "កក់​មេរៀន",
+    "Class — edit name/time/students. Changes apply to everyone in the class.": "ថ្នាក់រៀន — កែ​ឈ្មោះ/ម៉ោង/សិស្ស។ ការ​ផ្លាស់ប្ដូរ​អនុវត្ត​ទៅ​សិស្ស​គ្រប់​នាក់​ក្នុង​ថ្នាក់។",
     "Class — pick several students below. A separate lesson is created in each student\\'s record.": "ថ្នាក់រៀន — ជ្រើស​សិស្ស​ច្រើន​នាក់​ខាង​ក្រោម។ មេរៀន​នឹង​បង្កើត​ដាច់​ដោយ​ឡែក​ក្នុង​កំណត់ត្រា​សិស្ស​ម្នាក់ៗ។",
     "Class name": "ឈ្មោះ​ថ្នាក់រៀន",
     "e.g. Traffic Law": "ឧ. ច្បាប់​ចរាចរណ៍",
@@ -3363,7 +3367,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v240";</script>
+<script>window.__ANZEN_VERSION="v241";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -7672,6 +7676,10 @@ var NewLessonForm = ({
     tr
   } = useAppActions();
   var editLesson = ctx.lesson || null;
+  var editClassId = editLesson && editLesson.classId;
+  var editClassLessons = editClassId ? (typeof LESSONS !== 'undefined' ? LESSONS : []).filter(l => l.classId === editClassId) : [];
+  var isClassEdit = !!editLesson && editClassLessons.length > 1;
+  var editClassStudentIds = [...new Set(editClassLessons.map(l => l.studentId).filter(x => x && x !== '—'))];
   var defaultDate = ctx.date || editLesson && editLesson.date || todayStr();
   var lessonNum = no => {
     var m = String(no || '').match(/\d+/);
@@ -7710,7 +7718,7 @@ var NewLessonForm = ({
     setAddingDate('');
   };
   var removeDate = d => setDates(prev => prev.filter(x => x !== d));
-  var [studentIds, setStudentIds] = React.useState(editLesson ? editLesson.studentId && editLesson.studentId !== '—' ? [editLesson.studentId] : [] : ctx.studentId ? [ctx.studentId] : []);
+  var [studentIds, setStudentIds] = React.useState(editLesson ? isClassEdit ? editClassStudentIds : editLesson.studentId && editLesson.studentId !== '—' ? [editLesson.studentId] : [] : ctx.studentId ? [ctx.studentId] : []);
   var [instId, setInstId] = React.useState(editLesson ? editLesson.instId : ctx.instId || '');
   var [guests, setGuests] = React.useState(editLesson && Array.isArray(editLesson.guests) ? [...editLesson.guests] : []);
   var [vehId, setVehId] = React.useState(editLesson ? editLesson.veh === '—' ? '' : editLesson.veh : '');
@@ -7804,6 +7812,65 @@ var NewLessonForm = ({
     var typeName = `${tr(catObj.km, catObj.en)}${selLabel ? ' · ' + selLabel : ''}`;
     var lessonNo = selObjs.map(u => u.no).filter(Boolean).join(', ');
     if (editLesson) {
+      if (isClassEdit) {
+        var shared = {
+          date: dates[0] || editLesson.date,
+          h: parseInt(hour),
+          len: parseFloat(len),
+          instId,
+          guests: guests.length > 0 ? [...guests] : undefined,
+          veh: vehId || '—',
+          type: typeName,
+          color: catObj.color,
+          phase,
+          lessonIds: [...selLessons],
+          lessonNo,
+          pickup,
+          location: locationText.trim(),
+          note: note.trim(),
+          className: className.trim() || undefined,
+          classId: editClassId,
+          isClass: true
+        };
+        var roster = studentIds.length ? studentIds : editClassStudentIds;
+        var existingByStu = {};
+        editClassLessons.forEach(l => {
+          existingByStu[l.studentId] = l;
+        });
+        roster.forEach(sid => {
+          var ex = existingByStu[sid];
+          if (ex) {
+            var i = LESSONS.findIndex(l => l.id === ex.id);
+            if (i !== -1) LESSONS[i] = {
+              ...LESSONS[i],
+              ...shared,
+              studentId: sid
+            };
+          } else {
+            LESSONS.push({
+              id: nextLessonId(),
+              studentId: sid,
+              ...shared,
+              status: 'scheduled',
+              createdBy: window.__currentUserName || '',
+              createdAt: new Date().toISOString()
+            });
+          }
+        });
+        editClassLessons.forEach(l => {
+          if (!roster.includes(l.studentId)) {
+            var i = LESSONS.findIndex(x => x.id === l.id);
+            if (i !== -1) LESSONS.splice(i, 1);
+          }
+        });
+        if (window.__notifyLessonsChanged) window.__notifyLessonsChanged();
+        if (window.__notifyStudentsChanged) window.__notifyStudentsChanged();
+        if (window.__logActivity) window.__logActivity('edit', 'lesson', (className.trim() || typeName) + ' · ' + roster.length + ' students');
+        if (window.saveAllData) window.saveAllData();
+        toast(tr('បាន​រក្សាទុក​ថ្នាក់រៀន ✓', 'Class updated ✓'), 'good');
+        onClose();
+        return;
+      }
       var idx = LESSONS.findIndex(l => l.id === editLesson.id);
       if (idx !== -1) {
         LESSONS[idx] = {
@@ -7893,7 +7960,7 @@ var NewLessonForm = ({
     onCancel: onClose,
     onSave: save,
     saveLabel: editLesson ? tr('រក្សាទុក', 'Save changes') : ctx.classMode ? tr('បង្កើត​ថ្នាក់រៀន', 'Create class') : tr('កក់​មេរៀន', 'Schedule lesson')
-  }, ctx.classMode && !editLesson && React.createElement("div", {
+  }, (ctx.classMode && !editLesson || isClassEdit) && React.createElement("div", {
     style: {
       marginBottom: 12
     }
@@ -7915,7 +7982,7 @@ var NewLessonForm = ({
       fontSize: 16,
       flexShrink: 0
     }
-  }, "\uD83C\uDFEB"), React.createElement("span", null, tr('ថ្នាក់រៀន — ជ្រើស​សិស្ស​ច្រើន​នាក់​ខាង​ក្រោម។ មេរៀន​នឹង​បង្កើត​ដាច់​ដោយ​ឡែក​ក្នុង​កំណត់ត្រា​សិស្ស​ម្នាក់ៗ។', 'Class — pick several students below. A separate lesson is created in each student\'s record.'))), React.createElement("label", {
+  }, "\uD83C\uDFEB"), React.createElement("span", null, isClassEdit ? tr('ថ្នាក់រៀន — កែ​ឈ្មោះ/ម៉ោង/សិស្ស។ ការ​ផ្លាស់ប្ដូរ​អនុវត្ត​ទៅ​សិស្ស​គ្រប់​នាក់​ក្នុង​ថ្នាក់។', 'Class — edit name/time/students. Changes apply to everyone in the class.') : tr('ថ្នាក់រៀន — ជ្រើស​សិស្ស​ច្រើន​នាក់​ខាង​ក្រោម។ មេរៀន​នឹង​បង្កើត​ដាច់​ដោយ​ឡែក​ក្នុង​កំណត់ត្រា​សិស្ស​ម្នាក់ៗ។', 'Class — pick several students below. A separate lesson is created in each student\'s record.'))), React.createElement("label", {
     style: {
       fontSize: 11,
       fontWeight: 700,
