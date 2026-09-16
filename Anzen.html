@@ -862,6 +862,8 @@ window.__trRegistry = {
   "Former": "អតីត​បុគ្គលិក",
   "Joined": "ចូល",
   "Leave": "ឈប់​សល់",
+  "No notes yet": "មិន​ទាន់​មាន​ចំណាំ",
+  "Download PDF": "ទាញយក PDF",
   "Login saved ✓": "បាន​រក្សា​ទុក​គណនី ✓",
   "Former staff": "អតីត​បុគ្គលិក",
   "hr": "ម៉ោង",
@@ -883,8 +885,6 @@ window.__trRegistry = {
   "Used": "បានប្រើ",
   "days": "ថ្ងៃ",
   "DOCS": "ឯកសារ",
-  "No notes yet": "មិន​ទាន់​មាន​ចំណាំ",
-  "Download PDF": "ទាញយក PDF",
   "ACCOUNT / LOGIN": "គណនីប្រើប្រាស់",
   "Change ID / Password": "ផ្លាស់​ប្ដូរ ID / ពាក្យ​សម្ងាត់",
   "ID (Username) — can be long": "ID (Username) — អាច​វែង",
@@ -2349,6 +2349,8 @@ window.__trGroups = {
     "Former": "អតីត​បុគ្គលិក",
     "Joined": "ចូល",
     "Leave": "ឈប់​សល់",
+    "No notes yet": "មិន​ទាន់​មាន​ចំណាំ",
+    "Download PDF": "ទាញយក PDF",
     "Login saved ✓": "បាន​រក្សា​ទុក​គណនី ✓",
     "Former staff": "អតីត​បុគ្គលិក",
     "hr": "ម៉ោង",
@@ -2370,8 +2372,6 @@ window.__trGroups = {
     "Used": "បានប្រើ",
     "days": "ថ្ងៃ",
     "DOCS": "ឯកសារ",
-    "No notes yet": "មិន​ទាន់​មាន​ចំណាំ",
-    "Download PDF": "ទាញយក PDF",
     "ACCOUNT / LOGIN": "គណនីប្រើប្រាស់",
     "Change ID / Password": "ផ្លាស់​ប្ដូរ ID / ពាក្យ​សម្ងាត់",
     "ID (Username) — can be long": "ID (Username) — អាច​វែង",
@@ -3355,7 +3355,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v229";</script>
+<script>window.__ANZEN_VERSION="v230";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -34460,6 +34460,214 @@ var printInstructorNotesPDF = (inst, notes, lang) => {
     idoc.close();
   } catch (e) {}
 };
+var InstructorNotes = ({
+  inst
+}) => {
+  var {
+    tr
+  } = useAppActions();
+  var [open, setOpen] = React.useState(false);
+  var instNotes = React.useMemo(() => (window.__scheduleNotes || []).filter(n => (n.invited || []).includes(inst.id)).sort((a, b) => String(a.fromDate || a.date || '').localeCompare(String(b.fromDate || b.date || '')) || String(a.fromTime || a.time || '').localeCompare(String(b.fromTime || b.time || ''))), [inst.id, open]);
+  var tday = typeof todayStr === 'function' ? todayStr() : new Date().toISOString().slice(0, 10);
+  return React.createElement(React.Fragment, null, React.createElement(Btn, {
+    kind: "ghost",
+    size: "sm",
+    icon: React.createElement(Icon, {
+      name: "bell",
+      size: 13
+    }),
+    onClick: () => setOpen(true),
+    style: {
+      color: '#CA8A04',
+      borderColor: '#CA8A04'
+    }
+  }, "\uD83D\uDCDD ", tr('ចំណាំ', 'Note')), open && React.createElement(Modal, {
+    open: true,
+    onClose: () => setOpen(false)
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column'
+    }
+  }, React.createElement("div", {
+    style: {
+      position: 'sticky',
+      top: 0,
+      zIndex: 2,
+      background: 'var(--surface)',
+      borderBottom: '1px solid var(--border)',
+      padding: '12px 14px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8
+    }
+  }, React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0,
+      fontSize: 15,
+      fontWeight: 700,
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis'
+    }
+  }, "\uD83D\uDCDD ", tr('ចំណាំ', 'Notes'), " \xB7 ", inst.en || inst.name), React.createElement("button", {
+    onClick: () => setOpen(false),
+    "aria-label": tr('បិទ', 'Close'),
+    style: {
+      border: 'none',
+      background: 'var(--surface-muted)',
+      borderRadius: 8,
+      width: 30,
+      height: 30,
+      cursor: 'pointer',
+      color: 'var(--ink-2)',
+      fontSize: 15,
+      lineHeight: 1,
+      flexShrink: 0
+    }
+  }, "\u2715")), React.createElement("div", {
+    style: {
+      padding: '8px 14px 14px'
+    }
+  }, instNotes.length === 0 ? React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: 'var(--ink-3)',
+      textAlign: 'center',
+      padding: '28px 0'
+    }
+  }, tr('មិន​ទាន់​មាន​ចំណាំ', 'No notes yet')) : instNotes.map((n, i) => {
+    var from = n.fromDate || n.date || '',
+      to = n.toDate || from;
+    var col = to && to < tday ? 'var(--ink)' : from && from > tday ? '#2A5DB0' : '#B0413E';
+    var dLabel = from + (to && to !== from ? ' → ' + to : '');
+    var tLabel = n.fromTime ? String(n.fromTime).slice(0, 5) + (n.toTime ? '–' + String(n.toTime).slice(0, 5) : '') : n.time ? String(n.time).slice(0, 5) : '';
+    var studs = (n.studentIds || []).map(id => {
+      var st = (window.STUDENTS || []).find(x => x.id === id);
+      return st ? st.name || st.en : null;
+    }).filter(Boolean).join(', ');
+    return React.createElement("div", {
+      key: n.id || 'nt' + i,
+      style: {
+        borderBottom: '1px solid var(--border)',
+        padding: '11px 0'
+      }
+    }, React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'baseline',
+        gap: 8,
+        flexWrap: 'wrap'
+      }
+    }, React.createElement("span", {
+      style: {
+        fontSize: 12.5,
+        fontWeight: 800,
+        color: col,
+        fontFamily: 'monospace'
+      }
+    }, dLabel, tLabel ? ' · ' + tLabel : ''), React.createElement("span", {
+      style: {
+        fontSize: 10.5,
+        fontWeight: 700,
+        padding: '1px 8px',
+        borderRadius: 20,
+        background: 'rgba(202,138,4,.15)',
+        color: '#8a6200'
+      }
+    }, "\uD83D\uDCDD ", tr('ចំណាំ', 'Note'))), (n.content || n.title) && React.createElement("div", {
+      style: {
+        fontSize: 13.5,
+        fontWeight: 700,
+        color: col,
+        marginTop: 4
+      }
+    }, n.content || n.title), n.reason && React.createElement("div", {
+      style: {
+        fontSize: 12.5,
+        color: 'var(--ink-2)',
+        marginTop: 2
+      }
+    }, React.createElement("span", {
+      style: {
+        color: 'var(--ink-3)'
+      }
+    }, tr('មូលហេតុ', 'Reason'), ": "), n.reason), n.location && React.createElement("div", {
+      style: {
+        fontSize: 12.5,
+        color: 'var(--ink-2)',
+        marginTop: 2
+      }
+    }, "\uD83D\uDCCD ", n.location), (n.remark || n.description) && React.createElement("div", {
+      style: {
+        fontSize: 12.5,
+        color: 'var(--ink-2)',
+        marginTop: 2,
+        whiteSpace: 'pre-wrap',
+        lineHeight: 1.5
+      }
+    }, n.remark || n.description), studs && React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: 'var(--ink-3)',
+        marginTop: 4
+      }
+    }, "\uD83D\uDC65 ", studs), n.author && React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: 'var(--ink-3)',
+        marginTop: 2
+      }
+    }, "\uD83D\uDC64 ", n.author));
+  })), React.createElement("div", {
+    style: {
+      position: 'sticky',
+      bottom: 0,
+      zIndex: 2,
+      background: 'var(--surface)',
+      borderTop: '1px solid var(--border)',
+      padding: '10px 14px calc(12px + env(safe-area-inset-bottom,0px))'
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--ink-3)',
+      marginBottom: 6
+    }
+  }, "\u2B07 ", tr('ទាញយក PDF', 'Download PDF')), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8
+    }
+  }, React.createElement("button", {
+    onClick: () => printInstructorNotesPDF(inst, instNotes, 'km'),
+    style: {
+      flex: 1,
+      padding: '10px',
+      borderRadius: 8,
+      border: '1px solid var(--border-strong)',
+      background: 'var(--surface)',
+      color: 'var(--ink-2)',
+      cursor: 'pointer',
+      fontSize: 13,
+      fontWeight: 600
+    }
+  }, "\uD83C\uDDF0\uD83C\uDDED ", tr('ខ្មែរ', 'Khmer')), React.createElement("button", {
+    onClick: () => printInstructorNotesPDF(inst, instNotes, 'en'),
+    style: {
+      flex: 1,
+      padding: '10px',
+      borderRadius: 8,
+      border: '1px solid var(--border-strong)',
+      background: 'var(--surface)',
+      color: 'var(--ink-2)',
+      cursor: 'pointer',
+      fontSize: 13,
+      fontWeight: 600
+    }
+  }, "\uD83C\uDDEC\uD83C\uDDE7 English"))))));
+};
 var SfDetailRow = ({
   s,
   onEdit,
@@ -34473,7 +34681,6 @@ var SfDetailRow = ({
     tr,
     lang
   } = useAppActions();
-  var [notesOpen, setNotesOpen] = React.useState(false);
   var [showPw, setShowPw] = React.useState(false);
   var [settingPw, setSettingPw] = React.useState(false);
   var [newPw, setNewPw] = React.useState('');
@@ -34483,9 +34690,10 @@ var SfDetailRow = ({
   var docCount = Object.values(docs).filter(v => v).length;
   var docTotal = Object.keys(docs).length;
   var inst = (typeof INSTRUCTORS !== 'undefined' ? INSTRUCTORS : []).find(i => i.id === s.instId || i.en === s.en);
-  var todayLessons = inst ? LESSONS.filter(l => l.instId === inst.id && l.date === todayStr() && l.status !== 'cancelled') : [];
-  var weekLessons = inst ? LESSONS.filter(l => l.instId === inst.id && l.status !== 'cancelled') : [];
-  var myStudents = inst ? STUDENTS.filter(st => st.inst === inst.en || st.inst === inst.name) : [];
+  var instId = inst ? inst.id : null;
+  var todayLessons = React.useMemo(() => inst ? LESSONS.filter(l => l.instId === instId && l.date === todayStr() && l.status !== 'cancelled') : [], [instId]);
+  var weekLessons = React.useMemo(() => inst ? LESSONS.filter(l => l.instId === instId && l.status !== 'cancelled') : [], [instId]);
+  var myStudents = React.useMemo(() => inst ? STUDENTS.filter(st => st.inst === inst.en || st.inst === inst.name) : [], [instId]);
   var loginId = s.username || inst?.username || inst?.id || s.id;
   var displayPw = s.password || inst?.password;
   var openCreds = () => {
@@ -34652,19 +34860,9 @@ var SfDetailRow = ({
       if (inst) window.__scheduleInstFilter = inst.id;
       navigate('schedule');
     }
-  }, "\u1794\u17BE\u1780\u200B\u1780\u17B6\u179B\u200B\u179C\u17B7\u1797\u17B6\u1782"), inst && React.createElement(Btn, {
-    kind: "ghost",
-    size: "sm",
-    icon: React.createElement(Icon, {
-      name: "bell",
-      size: 13
-    }),
-    onClick: () => setNotesOpen(true),
-    style: {
-      color: '#CA8A04',
-      borderColor: '#CA8A04'
-    }
-  }, "\uD83D\uDCDD ", tr('ចំណាំ', 'Note')), s.offboarded ? React.createElement(Btn, {
+  }, "\u1794\u17BE\u1780\u200B\u1780\u17B6\u179B\u200B\u179C\u17B7\u1797\u17B6\u1782"), inst && React.createElement(InstructorNotes, {
+    inst: inst
+  }), s.offboarded ? React.createElement(Btn, {
     kind: "ghost",
     size: "sm",
     icon: React.createElement(Icon, {
@@ -34934,196 +35132,7 @@ var SfDetailRow = ({
     }
   }, "No documents tracked yet."))), React.createElement(SfExtendedInfo, {
     s: s
-  }), notesOpen && inst && (() => {
-    var tday = typeof todayStr === 'function' ? todayStr() : new Date().toISOString().slice(0, 10);
-    var instNotes = (window.__scheduleNotes || []).filter(n => (n.invited || []).includes(inst.id)).sort((a, b) => String(a.fromDate || a.date || '').localeCompare(String(b.fromDate || b.date || '')) || String(a.fromTime || a.time || '').localeCompare(String(b.fromTime || b.time || '')));
-    return React.createElement(Modal, {
-      open: true,
-      onClose: () => setNotesOpen(false)
-    }, React.createElement("div", {
-      style: {
-        display: 'flex',
-        flexDirection: 'column'
-      }
-    }, React.createElement("div", {
-      style: {
-        position: 'sticky',
-        top: 0,
-        zIndex: 2,
-        background: 'var(--surface)',
-        borderBottom: '1px solid var(--border)',
-        padding: '12px 14px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8
-      }
-    }, React.createElement("div", {
-      style: {
-        flex: 1,
-        minWidth: 0,
-        fontSize: 15,
-        fontWeight: 700,
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
-      }
-    }, "\uD83D\uDCDD ", tr('ចំណាំ', 'Notes'), " \xB7 ", inst.en || inst.name), React.createElement("button", {
-      onClick: () => setNotesOpen(false),
-      "aria-label": tr('បិទ', 'Close'),
-      style: {
-        border: 'none',
-        background: 'var(--surface-muted)',
-        borderRadius: 8,
-        width: 30,
-        height: 30,
-        cursor: 'pointer',
-        color: 'var(--ink-2)',
-        fontSize: 15,
-        lineHeight: 1,
-        flexShrink: 0
-      }
-    }, "\u2715")), React.createElement("div", {
-      style: {
-        padding: '8px 14px 14px'
-      }
-    }, instNotes.length === 0 ? React.createElement("div", {
-      style: {
-        fontSize: 13,
-        color: 'var(--ink-3)',
-        textAlign: 'center',
-        padding: '28px 0'
-      }
-    }, tr('មិន​ទាន់​មាន​ចំណាំ', 'No notes yet')) : instNotes.map((n, i) => {
-      var from = n.fromDate || n.date || '',
-        to = n.toDate || from;
-      var col = to && to < tday ? 'var(--ink)' : from && from > tday ? '#2A5DB0' : '#B0413E';
-      var dLabel = from + (to && to !== from ? ' → ' + to : '');
-      var tLabel = n.fromTime ? String(n.fromTime).slice(0, 5) + (n.toTime ? '–' + String(n.toTime).slice(0, 5) : '') : n.time ? String(n.time).slice(0, 5) : '';
-      var studs = (n.studentIds || []).map(id => {
-        var st = (window.STUDENTS || []).find(x => x.id === id);
-        return st ? st.name || st.en : null;
-      }).filter(Boolean).join(', ');
-      return React.createElement("div", {
-        key: n.id || 'nt' + i,
-        style: {
-          borderBottom: '1px solid var(--border)',
-          padding: '11px 0'
-        }
-      }, React.createElement("div", {
-        style: {
-          display: 'flex',
-          alignItems: 'baseline',
-          gap: 8,
-          flexWrap: 'wrap'
-        }
-      }, React.createElement("span", {
-        style: {
-          fontSize: 12.5,
-          fontWeight: 800,
-          color: col,
-          fontFamily: 'monospace'
-        }
-      }, dLabel, tLabel ? ' · ' + tLabel : ''), React.createElement("span", {
-        style: {
-          fontSize: 10.5,
-          fontWeight: 700,
-          padding: '1px 8px',
-          borderRadius: 20,
-          background: 'rgba(202,138,4,.15)',
-          color: '#8a6200'
-        }
-      }, "\uD83D\uDCDD ", tr('ចំណាំ', 'Note'))), (n.content || n.title) && React.createElement("div", {
-        style: {
-          fontSize: 13.5,
-          fontWeight: 700,
-          color: col,
-          marginTop: 4
-        }
-      }, n.content || n.title), n.reason && React.createElement("div", {
-        style: {
-          fontSize: 12.5,
-          color: 'var(--ink-2)',
-          marginTop: 2
-        }
-      }, React.createElement("span", {
-        style: {
-          color: 'var(--ink-3)'
-        }
-      }, tr('មូលហេតុ', 'Reason'), ": "), n.reason), n.location && React.createElement("div", {
-        style: {
-          fontSize: 12.5,
-          color: 'var(--ink-2)',
-          marginTop: 2
-        }
-      }, "\uD83D\uDCCD ", n.location), (n.remark || n.description) && React.createElement("div", {
-        style: {
-          fontSize: 12.5,
-          color: 'var(--ink-2)',
-          marginTop: 2,
-          whiteSpace: 'pre-wrap',
-          lineHeight: 1.5
-        }
-      }, n.remark || n.description), studs && React.createElement("div", {
-        style: {
-          fontSize: 11,
-          color: 'var(--ink-3)',
-          marginTop: 4
-        }
-      }, "\uD83D\uDC65 ", studs), n.author && React.createElement("div", {
-        style: {
-          fontSize: 11,
-          color: 'var(--ink-3)',
-          marginTop: 2
-        }
-      }, "\uD83D\uDC64 ", n.author));
-    })), React.createElement("div", {
-      style: {
-        position: 'sticky',
-        bottom: 0,
-        zIndex: 2,
-        background: 'var(--surface)',
-        borderTop: '1px solid var(--border)',
-        padding: '10px 14px calc(12px + env(safe-area-inset-bottom,0px))'
-      }
-    }, React.createElement("div", {
-      style: {
-        fontSize: 11,
-        color: 'var(--ink-3)',
-        marginBottom: 6
-      }
-    }, "\u2B07 ", tr('ទាញយក PDF', 'Download PDF')), React.createElement("div", {
-      style: {
-        display: 'flex',
-        gap: 8
-      }
-    }, React.createElement("button", {
-      onClick: () => printInstructorNotesPDF(inst, instNotes, 'km'),
-      style: {
-        flex: 1,
-        padding: '10px',
-        borderRadius: 8,
-        border: '1px solid var(--border-strong)',
-        background: 'var(--surface)',
-        color: 'var(--ink-2)',
-        cursor: 'pointer',
-        fontSize: 13,
-        fontWeight: 600
-      }
-    }, "\uD83C\uDDF0\uD83C\uDDED ", tr('ខ្មែរ', 'Khmer')), React.createElement("button", {
-      onClick: () => printInstructorNotesPDF(inst, instNotes, 'en'),
-      style: {
-        flex: 1,
-        padding: '10px',
-        borderRadius: 8,
-        border: '1px solid var(--border-strong)',
-        background: 'var(--surface)',
-        color: 'var(--ink-2)',
-        cursor: 'pointer',
-        fontSize: 13,
-        fontWeight: 600
-      }
-    }, "\uD83C\uDDEC\uD83C\uDDE7 English")))));
-  })(), React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '14px 18px',
       borderTop: '1px solid var(--border)'

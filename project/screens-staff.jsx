@@ -538,9 +538,65 @@ const printInstructorNotesPDF = (inst, notes, lang) => {
   try { const idoc = iframe.contentWindow.document; idoc.open(); idoc.write(doc); idoc.close(); } catch(e){}
 };
 
+// Self-contained so opening the notes popup doesn't re-render the whole (heavy)
+// staff detail — keeping the button snappy.
+const InstructorNotes = ({ inst }) => {
+  const { tr } = useAppActions();
+  const [open, setOpen] = React.useState(false);
+  const instNotes = React.useMemo(() => (window.__scheduleNotes||[])
+    .filter(n => (n.invited||[]).includes(inst.id))
+    .sort((a,b)=>String(a.fromDate||a.date||'').localeCompare(String(b.fromDate||b.date||'')) || String(a.fromTime||a.time||'').localeCompare(String(b.fromTime||b.time||''))), [inst.id, open]);
+  const tday = (typeof todayStr==='function'?todayStr():new Date().toISOString().slice(0,10));
+  return (<>
+    <Btn kind="ghost" size="sm" icon={<Icon name="bell" size={13}/>} onClick={()=>setOpen(true)} style={{color:'#CA8A04',borderColor:'#CA8A04'}}>
+      📝 {tr('ចំណាំ','Note')}
+    </Btn>
+    {open && (
+      <Modal open onClose={()=>setOpen(false)}>
+        <div style={{display:'flex',flexDirection:'column'}}>
+          <div style={{position:'sticky',top:0,zIndex:2,background:'var(--surface)',borderBottom:'1px solid var(--border)',padding:'12px 14px',display:'flex',alignItems:'center',gap:8}}>
+            <div style={{flex:1,minWidth:0,fontSize:15,fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>📝 {tr('ចំណាំ','Notes')} · {inst.en||inst.name}</div>
+            <button onClick={()=>setOpen(false)} aria-label={tr('បិទ','Close')} style={{border:'none',background:'var(--surface-muted)',borderRadius:8,width:30,height:30,cursor:'pointer',color:'var(--ink-2)',fontSize:15,lineHeight:1,flexShrink:0}}>✕</button>
+          </div>
+          <div style={{padding:'8px 14px 14px'}}>
+            {instNotes.length===0 ? (
+              <div style={{fontSize:13,color:'var(--ink-3)',textAlign:'center',padding:'28px 0'}}>{tr('មិន​ទាន់​មាន​ចំណាំ','No notes yet')}</div>
+            ) : instNotes.map((n,i) => {
+              const from = n.fromDate||n.date||'', to = n.toDate||from;
+              const col = to && to < tday ? 'var(--ink)' : (from && from > tday ? '#2A5DB0' : '#B0413E');
+              const dLabel = from + (to && to!==from ? ' → ' + to : '');
+              const tLabel = n.fromTime ? String(n.fromTime).slice(0,5) + (n.toTime?'–'+String(n.toTime).slice(0,5):'') : (n.time?String(n.time).slice(0,5):'');
+              const studs = (n.studentIds||[]).map(id=>{ const st=(window.STUDENTS||[]).find(x=>x.id===id); return st?(st.name||st.en):null; }).filter(Boolean).join(', ');
+              return (
+              <div key={n.id||('nt'+i)} style={{borderBottom:'1px solid var(--border)',padding:'11px 0'}}>
+                <div style={{display:'flex',alignItems:'baseline',gap:8,flexWrap:'wrap'}}>
+                  <span style={{fontSize:12.5,fontWeight:800,color:col,fontFamily:'monospace'}}>{dLabel}{tLabel?' · '+tLabel:''}</span>
+                  <span style={{fontSize:10.5,fontWeight:700,padding:'1px 8px',borderRadius:20,background:'rgba(202,138,4,.15)',color:'#8a6200'}}>📝 {tr('ចំណាំ','Note')}</span>
+                </div>
+                {(n.content||n.title) && <div style={{fontSize:13.5,fontWeight:700,color:col,marginTop:4}}>{n.content||n.title}</div>}
+                {n.reason && <div style={{fontSize:12.5,color:'var(--ink-2)',marginTop:2}}><span style={{color:'var(--ink-3)'}}>{tr('មូលហេតុ','Reason')}: </span>{n.reason}</div>}
+                {n.location && <div style={{fontSize:12.5,color:'var(--ink-2)',marginTop:2}}>📍 {n.location}</div>}
+                {(n.remark||n.description) && <div style={{fontSize:12.5,color:'var(--ink-2)',marginTop:2,whiteSpace:'pre-wrap',lineHeight:1.5}}>{n.remark||n.description}</div>}
+                {studs && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:4}}>👥 {studs}</div>}
+                {n.author && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2}}>👤 {n.author}</div>}
+              </div>
+            ); })}
+          </div>
+          <div style={{position:'sticky',bottom:0,zIndex:2,background:'var(--surface)',borderTop:'1px solid var(--border)',padding:'10px 14px calc(12px + env(safe-area-inset-bottom,0px))'}}>
+            <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:6}}>⬇ {tr('ទាញយក PDF','Download PDF')}</div>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={()=>printInstructorNotesPDF(inst, instNotes, 'km')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600}}>🇰🇭 {tr('ខ្មែរ','Khmer')}</button>
+              <button onClick={()=>printInstructorNotesPDF(inst, instNotes, 'en')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600}}>🇬🇧 English</button>
+            </div>
+          </div>
+        </div>
+      </Modal>
+    )}
+  </>);
+};
+
 const SfDetailRow = ({ s, onEdit, onSavePhoto, onOffboard, onRestore }) => {
   const { toast, navigate, tr, lang } = useAppActions();
-  const [notesOpen, setNotesOpen] = React.useState(false);
   const [showPw, setShowPw] = React.useState(false);
   const [settingPw, setSettingPw] = React.useState(false);   // editing credentials (ID + password)
   const [newPw, setNewPw] = React.useState('');
@@ -550,9 +606,10 @@ const SfDetailRow = ({ s, onEdit, onSavePhoto, onOffboard, onRestore }) => {
   const docCount = Object.values(docs).filter(v=>v).length;
   const docTotal = Object.keys(docs).length;
   const inst = (typeof INSTRUCTORS !== 'undefined' ? INSTRUCTORS : []).find(i => i.id === s.instId || i.en === s.en);
-  const todayLessons = inst ? LESSONS.filter(l=>l.instId===inst.id&&l.date===todayStr()&&l.status!=='cancelled') : [];
-  const weekLessons  = inst ? LESSONS.filter(l=>l.instId===inst.id&&l.status!=='cancelled') : [];
-  const myStudents   = inst ? STUDENTS.filter(st => st.inst===inst.en || st.inst===inst.name) : [];
+  const instId = inst ? inst.id : null;
+  const todayLessons = React.useMemo(() => inst ? LESSONS.filter(l=>l.instId===instId&&l.date===todayStr()&&l.status!=='cancelled') : [], [instId]);
+  const weekLessons  = React.useMemo(() => inst ? LESSONS.filter(l=>l.instId===instId&&l.status!=='cancelled') : [], [instId]);
+  const myStudents   = React.useMemo(() => inst ? STUDENTS.filter(st => st.inst===inst.en || st.inst===inst.name) : [], [instId]);
   // Login ID: a custom username (can be long) overrides the record id.
   const loginId = s.username || inst?.username || inst?.id || s.id;
   const displayPw = s.password || inst?.password;
@@ -626,13 +683,7 @@ const SfDetailRow = ({ s, onEdit, onSavePhoto, onOffboard, onRestore }) => {
             បើក​កាល​វិភាគ
           </Btn>
         )}
-        {inst && (
-          <Btn kind="ghost" size="sm" icon={<Icon name="bell" size={13}/>}
-            onClick={()=>setNotesOpen(true)}
-            style={{color:'#CA8A04',borderColor:'#CA8A04'}}>
-            📝 {tr('ចំណាំ','Note')}
-          </Btn>
-        )}
+        {inst && <InstructorNotes inst={inst}/>}
         {s.offboarded
           ? <Btn kind="ghost" size="sm" icon={<Icon name="refresh" size={13}/>}
               onClick={()=>onRestore && onRestore(s.id)}
@@ -712,56 +763,6 @@ const SfDetailRow = ({ s, onEdit, onSavePhoto, onOffboard, onRestore }) => {
         </div>
       </div>
       <SfExtendedInfo s={s}/>
-
-      {/* Instructor notes popup — notes attached to this instructor (invited),
-          same look as the student notes, with PDF download. */}
-      {notesOpen && inst && (() => {
-        const tday = (typeof todayStr==='function'?todayStr():new Date().toISOString().slice(0,10));
-        const instNotes = (window.__scheduleNotes||[])
-          .filter(n => (n.invited||[]).includes(inst.id))
-          .sort((a,b)=>String(a.fromDate||a.date||'').localeCompare(String(b.fromDate||b.date||'')) || String(a.fromTime||a.time||'').localeCompare(String(b.fromTime||b.time||'')));
-        return (
-        <Modal open onClose={()=>setNotesOpen(false)}>
-          <div style={{display:'flex',flexDirection:'column'}}>
-            <div style={{position:'sticky',top:0,zIndex:2,background:'var(--surface)',borderBottom:'1px solid var(--border)',padding:'12px 14px',display:'flex',alignItems:'center',gap:8}}>
-              <div style={{flex:1,minWidth:0,fontSize:15,fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>📝 {tr('ចំណាំ','Notes')} · {inst.en||inst.name}</div>
-              <button onClick={()=>setNotesOpen(false)} aria-label={tr('បិទ','Close')} style={{border:'none',background:'var(--surface-muted)',borderRadius:8,width:30,height:30,cursor:'pointer',color:'var(--ink-2)',fontSize:15,lineHeight:1,flexShrink:0}}>✕</button>
-            </div>
-            <div style={{padding:'8px 14px 14px'}}>
-              {instNotes.length===0 ? (
-                <div style={{fontSize:13,color:'var(--ink-3)',textAlign:'center',padding:'28px 0'}}>{tr('មិន​ទាន់​មាន​ចំណាំ','No notes yet')}</div>
-              ) : instNotes.map((n,i) => {
-                const from = n.fromDate||n.date||'', to = n.toDate||from;
-                const col = to && to < tday ? 'var(--ink)' : (from && from > tday ? '#2A5DB0' : '#B0413E');
-                const dLabel = from + (to && to!==from ? ' → ' + to : '');
-                const tLabel = n.fromTime ? String(n.fromTime).slice(0,5) + (n.toTime?'–'+String(n.toTime).slice(0,5):'') : (n.time?String(n.time).slice(0,5):'');
-                const studs = (n.studentIds||[]).map(id=>{ const st=(window.STUDENTS||[]).find(x=>x.id===id); return st?(st.name||st.en):null; }).filter(Boolean).join(', ');
-                return (
-                <div key={n.id||('nt'+i)} style={{borderBottom:'1px solid var(--border)',padding:'11px 0'}}>
-                  <div style={{display:'flex',alignItems:'baseline',gap:8,flexWrap:'wrap'}}>
-                    <span style={{fontSize:12.5,fontWeight:800,color:col,fontFamily:'monospace'}}>{dLabel}{tLabel?' · '+tLabel:''}</span>
-                    <span style={{fontSize:10.5,fontWeight:700,padding:'1px 8px',borderRadius:20,background:'rgba(202,138,4,.15)',color:'#8a6200'}}>📝 {tr('ចំណាំ','Note')}</span>
-                  </div>
-                  {(n.content||n.title) && <div style={{fontSize:13.5,fontWeight:700,color:col,marginTop:4}}>{n.content||n.title}</div>}
-                  {n.reason && <div style={{fontSize:12.5,color:'var(--ink-2)',marginTop:2}}><span style={{color:'var(--ink-3)'}}>{tr('មូលហេតុ','Reason')}: </span>{n.reason}</div>}
-                  {n.location && <div style={{fontSize:12.5,color:'var(--ink-2)',marginTop:2}}>📍 {n.location}</div>}
-                  {(n.remark||n.description) && <div style={{fontSize:12.5,color:'var(--ink-2)',marginTop:2,whiteSpace:'pre-wrap',lineHeight:1.5}}>{n.remark||n.description}</div>}
-                  {studs && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:4}}>👥 {studs}</div>}
-                  {n.author && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2}}>👤 {n.author}</div>}
-                </div>
-              ); })}
-            </div>
-            <div style={{position:'sticky',bottom:0,zIndex:2,background:'var(--surface)',borderTop:'1px solid var(--border)',padding:'10px 14px calc(12px + env(safe-area-inset-bottom,0px))'}}>
-              <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:6}}>⬇ {tr('ទាញយក PDF','Download PDF')}</div>
-              <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>printInstructorNotesPDF(inst, instNotes, 'km')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600}}>🇰🇭 {tr('ខ្មែរ','Khmer')}</button>
-                <button onClick={()=>printInstructorNotesPDF(inst, instNotes, 'en')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600}}>🇬🇧 English</button>
-              </div>
-            </div>
-          </div>
-        </Modal>
-        );
-      })()}
 
       {/* Account credentials section */}
       <div style={{padding:'14px 18px',borderTop:'1px solid var(--border)'}}>
