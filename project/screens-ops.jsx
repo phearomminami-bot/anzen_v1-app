@@ -261,10 +261,30 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
           // Timed notes join the same overlap layout as lessons, so a note and a
           // lesson at the same time sit side by side instead of covering each
           // other. Give notes a 1-hour span for the overlap math.
-          const dayNotes = notes.filter(n => n.date === date && n.time).map(n => {
-            const [hh,mm] = n.time.split(':').map(Number);
-            return { ...n, h: hh + (mm||0)/60, len: Math.max(1, Math.round(n.len||1)), _note: true };
-          }).filter(n => n.h >= startHour && n.h < endHour);
+          // Notes fill their time range (fromTime→toTime). Multi-day notes show on
+          // every day in the range: first day from its start to the grid end, middle
+          // days full, last day up to its end time.
+          const _hm = (s) => { const [a,b]=String(s||'').split(':').map(Number); return (a||0)+((b||0)/60); };
+          const dayNotes = notes.filter(n => {
+            const nf = n.fromDate || n.date || '', nto = n.toDate || nf;
+            if (!nf) return false;
+            if (nf !== nto) return date >= nf && date <= nto;          // multi-day: any day in range
+            return n.date === date && (n.fromTime || n.time);          // single day: needs a time to place
+          }).map(n => {
+            const nf = n.fromDate || n.date || '', nto = n.toDate || nf;
+            let sH, eH;
+            if (nf === nto) {                                          // single day
+              sH = _hm(n.fromTime || n.time);
+              eH = n.toTime ? _hm(n.toTime) : sH + Math.max(1, Math.round(n.len||1));
+            } else if (date === nf) {                                  // first day
+              sH = (n.fromTime||n.time) ? _hm(n.fromTime||n.time) : startHour; eH = endHour;
+            } else if (date === nto) {                                 // last day
+              sH = startHour; eH = n.toTime ? _hm(n.toTime) : endHour;
+            } else { sH = startHour; eH = endHour; }                   // middle day (full)
+            if (!(eH > sH)) eH = sH + 1;
+            sH = Math.max(startHour, sH); eH = Math.min(endHour, eH);
+            return { ...n, h: sH, len: Math.max(0.5, eH - sH), _note: true };
+          }).filter(n => n.h < endHour && (n.h + n.len) > startHour);
           // Exams: separate from lessons, render green; join the overlap layout.
           const dayExams = exams.filter(e => e.date === date && e.time).map(e => {
             const [hh,mm] = String(e.time).split(':').map(Number);
@@ -414,7 +434,7 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                 const studentNames = (n.studentIds||[]).map(id=>{ const s=STUDENTS.find(x=>x.id===id); return s?(s.name||s.en):null; }).filter(Boolean);
                 return (
                   <button key={n.id} onClick={e=>{ e.stopPropagation(); onNoteClick ? onNoteClick(n) : null; }}
-                    title={`${n.time} · ${n.title||n.text||''}`}
+                    title={`${n.fromTime||n.time||''} · ${n.content||n.title||n.text||''}`}
                     style={{
                       position:'absolute', top,
                       left:`calc(${col * pct}% + 4px)`,
@@ -426,7 +446,7 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                     }}>
                     <div style={{display:'flex',alignItems:'center',gap:4,minWidth:0}}>
                       <span style={{flexShrink:0}}>📌</span>
-                      <span style={{fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',minWidth:0}}>{n.title||n.text}</span>
+                      <span style={{fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',minWidth:0}}>{n.content||n.title||n.text}</span>
                     </div>
                     {studentNames.length > 0 && (
                       <div style={{fontSize:9,color:'#92700a',fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
@@ -1230,8 +1250,8 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
                     {n.date.slice(5)}{n.time ? ' · ' + n.time : ''}
                   </span>
                   <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column',gap:3}}>
-                    <span style={{fontSize:13,fontWeight:600,color:'var(--ink)',whiteSpace:'pre-wrap',wordBreak:'break-word'}}>{n.title||n.text}</span>
-                    {n.description && <span style={{fontSize:12,color:'var(--ink-2)',whiteSpace:'pre-wrap',wordBreak:'break-word'}}>{n.description}</span>}
+                    <span style={{fontSize:13,fontWeight:600,color:'var(--ink)',whiteSpace:'pre-wrap',wordBreak:'break-word'}}>{n.content||n.title||n.text}</span>
+                    {(n.reason||n.description) && <span style={{fontSize:12,color:'var(--ink-2)',whiteSpace:'pre-wrap',wordBreak:'break-word'}}>{n.reason||n.description}</span>}
                     <div style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:'2px 10px',fontSize:10.5,color:'var(--ink-3)'}}>
                       {n.author && <span>👤 {n.author}</span>}
                       {(n.invited||[]).length > 0 && (
