@@ -569,7 +569,7 @@ const printStudentLessonsPDF = (s, lessons, exams, lang, notesOnly) => {
 
   ${(() => {
     const tday = (typeof todayStr==='function'?todayStr():new Date().toISOString().slice(0,10));
-    const ntes = (window.__scheduleNotes||[]).filter(n => (n.studentIds||[]).includes(sid))
+    const ntes = (window.__scheduleNotes || (window.__schoolSettings && window.__schoolSettings.scheduleNotes) || []).filter(n => (n.studentIds||[]).includes(sid))
       .sort((a,b)=>String(a.fromDate||a.date||'').localeCompare(String(b.fromDate||b.date||'')) || String(a.fromTime||a.time||'').localeCompare(String(b.fromTime||b.time||'')));
     if (!ntes.length) return notesOnly ? `<div class="secbar" style="background:#CA8A04">📝 ${L('ចំណាំ','Notes')}</div><table class="lt"><tbody><tr><td colspan="2" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr></tbody></table>` : '';
     const rows = ntes.map(n => {
@@ -1330,7 +1330,7 @@ const StudentsScreenV2 = () => {
             }).filter(g => g.items.length > 0);
             const totalHrs = groups.reduce((a,g)=>a+g.hours,0);
             // Notes attached to this student (leave, reasons, plans — not lessons).
-            const studentNotes = (window.__scheduleNotes || [])
+            const studentNotes = (window.__scheduleNotes || (window.__schoolSettings && window.__schoolSettings.scheduleNotes) || [])
               .filter(n => (n.studentIds || []).includes(s.id))
               .sort((a,b) => String(a.date||'').localeCompare(String(b.date||'')) || String(a.time||'').localeCompare(String(b.time||'')));
             const curPhase = (viewPhase && (viewPhase==='__note' ? studentNotes.length>0 : groups.some(g=>g.p.k===viewPhase))) ? viewPhase : ((groups[0] && groups[0].p.k) || (studentNotes.length ? '__note' : ''));

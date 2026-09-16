@@ -306,7 +306,7 @@ const computeAlerts = (lang, tr, opts = {}) => {
   });
 
   // ── Note reminders (a note that starts tomorrow) — fires 1 day before ──
-  (window.__scheduleNotes || []).filter(n => (n.fromDate || n.date) === tomorrow).forEach(n => {
+  ((window.__scheduleNotes || (window.__schoolSettings && window.__schoolSettings.scheduleNotes) || [])).filter(n => (n.fromDate || n.date) === tomorrow).forEach(n => {
     const label = n.content || n.title || n.text || tr('ចំណាំ','Note');
     const extra = n.reason ? ' — ' + n.reason : (n.location ? ' — '+n.location : '');
     const sids = n.studentIds || [];

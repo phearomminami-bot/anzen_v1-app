@@ -543,7 +543,7 @@ const printInstructorNotesPDF = (inst, notes, lang) => {
 const InstructorNotes = ({ inst }) => {
   const { tr } = useAppActions();
   const [open, setOpen] = React.useState(false);
-  const instNotes = React.useMemo(() => (window.__scheduleNotes||[])
+  const instNotes = React.useMemo(() => (window.__scheduleNotes || (window.__schoolSettings && window.__schoolSettings.scheduleNotes) || [])
     .filter(n => (n.invited||[]).includes(inst.id))
     .sort((a,b)=>String(a.fromDate||a.date||'').localeCompare(String(b.fromDate||b.date||'')) || String(a.fromTime||a.time||'').localeCompare(String(b.fromTime||b.time||''))), [inst.id, open]);
   const tday = (typeof todayStr==='function'?todayStr():new Date().toISOString().slice(0,10));

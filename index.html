@@ -3355,7 +3355,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v230";</script>
+<script>window.__ANZEN_VERSION="v231";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -14953,7 +14953,7 @@ var computeAlerts = (lang, tr, opts = {}) => {
       });
     });
   });
-  (window.__scheduleNotes || []).filter(n => (n.fromDate || n.date) === tomorrow).forEach(n => {
+  (window.__scheduleNotes || window.__schoolSettings && window.__schoolSettings.scheduleNotes || []).filter(n => (n.fromDate || n.date) === tomorrow).forEach(n => {
     var label = n.content || n.title || n.text || tr('ចំណាំ', 'Note');
     var extra = n.reason ? ' — ' + n.reason : n.location ? ' — ' + n.location : '';
     var sids = n.studentIds || [];
@@ -34467,7 +34467,7 @@ var InstructorNotes = ({
     tr
   } = useAppActions();
   var [open, setOpen] = React.useState(false);
-  var instNotes = React.useMemo(() => (window.__scheduleNotes || []).filter(n => (n.invited || []).includes(inst.id)).sort((a, b) => String(a.fromDate || a.date || '').localeCompare(String(b.fromDate || b.date || '')) || String(a.fromTime || a.time || '').localeCompare(String(b.fromTime || b.time || ''))), [inst.id, open]);
+  var instNotes = React.useMemo(() => (window.__scheduleNotes || window.__schoolSettings && window.__schoolSettings.scheduleNotes || []).filter(n => (n.invited || []).includes(inst.id)).sort((a, b) => String(a.fromDate || a.date || '').localeCompare(String(b.fromDate || b.date || '')) || String(a.fromTime || a.time || '').localeCompare(String(b.fromTime || b.time || ''))), [inst.id, open]);
   var tday = typeof todayStr === 'function' ? todayStr() : new Date().toISOString().slice(0, 10);
   return React.createElement(React.Fragment, null, React.createElement(Btn, {
     kind: "ghost",
@@ -47869,7 +47869,7 @@ var printStudentLessonsPDF = (s, lessons, exams, lang, notesOnly) => {
 
   ${(() => {
       var tday = typeof todayStr === 'function' ? todayStr() : new Date().toISOString().slice(0, 10);
-      var ntes = (window.__scheduleNotes || []).filter(n => (n.studentIds || []).includes(sid)).sort((a, b) => String(a.fromDate || a.date || '').localeCompare(String(b.fromDate || b.date || '')) || String(a.fromTime || a.time || '').localeCompare(String(b.fromTime || b.time || '')));
+      var ntes = (window.__scheduleNotes || window.__schoolSettings && window.__schoolSettings.scheduleNotes || []).filter(n => (n.studentIds || []).includes(sid)).sort((a, b) => String(a.fromDate || a.date || '').localeCompare(String(b.fromDate || b.date || '')) || String(a.fromTime || a.time || '').localeCompare(String(b.fromTime || b.time || '')));
       if (!ntes.length) return notesOnly ? `<div class="secbar" style="background:#CA8A04">📝 ${L('ចំណាំ', 'Notes')}</div><table class="lt"><tbody><tr><td colspan="2" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr></tbody></table>` : '';
       var rows = ntes.map(n => {
         var from = n.fromDate || n.date || '',
@@ -49392,7 +49392,7 @@ var StudentsScreenV2 = () => {
           };
         }).filter(g => g.items.length > 0);
         var totalHrs = groups.reduce((a, g) => a + g.hours, 0);
-        var studentNotes = (window.__scheduleNotes || []).filter(n => (n.studentIds || []).includes(s.id)).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')) || String(a.time || '').localeCompare(String(b.time || '')));
+        var studentNotes = (window.__scheduleNotes || window.__schoolSettings && window.__schoolSettings.scheduleNotes || []).filter(n => (n.studentIds || []).includes(s.id)).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')) || String(a.time || '').localeCompare(String(b.time || '')));
         var curPhase = viewPhase && (viewPhase === '__note' ? studentNotes.length > 0 : groups.some(g => g.p.k === viewPhase)) ? viewPhase : groups[0] && groups[0].p.k || (studentNotes.length ? '__note' : '');
         var noteView = curPhase === '__note';
         var curGroup = groups.find(g => g.p.k === curPhase);
