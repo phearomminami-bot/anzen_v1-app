@@ -411,6 +411,7 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                 const { col, total } = layout.get(n) || { col:0, total:1 };
                 const pct = 100 / total;
                 const invitedNames = (n.invited||[]).map(id=>{ const i=INSTRUCTORS.find(x=>x.id===id); return i?(i.en||i.name):null; }).filter(Boolean);
+                const studentNames = (n.studentIds||[]).map(id=>{ const s=STUDENTS.find(x=>x.id===id); return s?(s.name||s.en):null; }).filter(Boolean);
                 return (
                   <button key={n.id} onClick={e=>{ e.stopPropagation(); onNoteClick ? onNoteClick(n) : null; }}
                     title={`${n.time} · ${n.title||n.text||''}`}
@@ -427,6 +428,11 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                       <span style={{flexShrink:0}}>📌</span>
                       <span style={{fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',minWidth:0}}>{n.title||n.text}</span>
                     </div>
+                    {studentNames.length > 0 && (
+                      <div style={{fontSize:9,color:'#92700a',fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+                        🎓 {studentNames.join(' · ')}
+                      </div>
+                    )}
                     {invitedNames.length > 0 && (
                       <div style={{fontSize:9,color:'#92700a',fontStyle:'italic',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
                         👥 {invitedNames.join(' · ')}

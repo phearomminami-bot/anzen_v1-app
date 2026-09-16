@@ -426,6 +426,9 @@ window.__trRegistry = {
   "Mark done ✓": "ចប់​មេរៀន ✓",
   "Delete this note?": "លុប​ចំណាំ?",
   "Are you sure? This note will be removed.": "អ្នក​ប្រាកដ​ទេ? ចំណាំ​នេះ​នឹង​ត្រូវ​លុប។",
+  "Reason": "មូលហេតុ",
+  "STUDENTS": "សិស្ស",
+  "INSTRUCTORS": "គ្រូ",
   "Delete this '+km.en.toLowerCase()+'?": "លុប​'+km.km+'?",
   "Are you sure? This entry will be removed.": "អ្នក​ប្រាកដ​ទេ? កាលវិភាគ​នេះ​នឹង​ត្រូវ​លុប។",
   "h": "ម៉ោង",
@@ -692,7 +695,6 @@ window.__trRegistry = {
   "Time from": "ម៉ោង ចាប់ពី",
   "Content": "ខ្លឹមសារ",
   "e.g. On leave": "ឧ. ឈប់សម្រាក",
-  "Reason": "មូលហេតុ",
   "e.g. Travelling to province": "ឧ. ធ្វើ​ដំណើរ​ទៅ​ខេត្ត",
   "Location": "ទីតាំង",
   "Remark": "ចំណាំ",
@@ -2067,7 +2069,6 @@ window.__trGroups = {
     "Time from": "ម៉ោង ចាប់ពី",
     "Content": "ខ្លឹមសារ",
     "e.g. On leave": "ឧ. ឈប់សម្រាក",
-    "Reason": "មូលហេតុ",
     "e.g. Travelling to province": "ឧ. ធ្វើ​ដំណើរ​ទៅ​ខេត្ត",
     "Location": "ទីតាំង",
     "Remark": "ចំណាំ",
@@ -3030,6 +3031,9 @@ window.__trGroups = {
     "Mark done ✓": "ចប់​មេរៀន ✓",
     "Delete this note?": "លុប​ចំណាំ?",
     "Are you sure? This note will be removed.": "អ្នក​ប្រាកដ​ទេ? ចំណាំ​នេះ​នឹង​ត្រូវ​លុប។",
+    "Reason": "មូលហេតុ",
+    "STUDENTS": "សិស្ស",
+    "INSTRUCTORS": "គ្រូ",
     "Delete this '+km.en.toLowerCase()+'?": "លុប​'+km.km+'?",
     "Are you sure? This entry will be removed.": "អ្នក​ប្រាកដ​ទេ? កាលវិភាគ​នេះ​នឹង​ត្រូវ​លុប។",
     "h": "ម៉ោង",
@@ -3351,7 +3355,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v228";</script>
+<script>window.__ANZEN_VERSION="v229";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -11184,7 +11188,11 @@ var NoteDetail = ({
   } = useAppActions();
   if (!note) return null;
   var invited = (note.invited || []).map(id => instById(id)).filter(Boolean);
-  var dateLabel = note.date ? formatDateShort(note.date, 'en') : '';
+  var students = (note.studentIds || []).map(id => studentById(id)).filter(Boolean);
+  var from = note.fromDate || note.date || '',
+    to = note.toDate || from;
+  var dateLabel = (from ? formatDateShort(from, 'en') : '') + (to && to !== from ? ' → ' + formatDateShort(to, 'en') : '');
+  var timeLabel = note.fromTime ? String(note.fromTime).slice(0, 5) + (note.toTime ? '–' + String(note.toTime).slice(0, 5) : '') : note.time ? String(note.time).slice(0, 5) : '';
   var doEdit = () => {
     if (window.__editScheduleNote) window.__editScheduleNote(note);
     onClose && onClose();
@@ -11214,7 +11222,7 @@ var NoteDetail = ({
     }
   }, React.createElement(Badge, {
     tone: "warn"
-  }, "\uD83D\uDCCC ", tr('ចំណាំ', 'Note'))), (note.title || note.text) && React.createElement("div", {
+  }, "\uD83D\uDCCC ", tr('ចំណាំ', 'Note'))), (note.content || note.title || note.text) && React.createElement("div", {
     style: {
       fontSize: 24,
       fontWeight: 700,
@@ -11222,36 +11230,46 @@ var NoteDetail = ({
       letterSpacing: '-.01em',
       fontFamily: 'var(--font-display)'
     }
-  }, note.title || note.text), React.createElement("div", {
+  }, note.content || note.title || note.text), React.createElement("div", {
     style: {
       fontSize: 13,
       color: 'var(--ink-3)',
       marginTop: 6
     }
-  }, [dateLabel, note.time].filter(Boolean).join(' · '))), (note.description || !note.title && note.text) && React.createElement("div", {
+  }, [dateLabel, timeLabel].filter(Boolean).join(' · '))), (note.reason || note.location || note.remark || note.description) && React.createElement("div", {
     style: {
       padding: 14,
       background: 'rgba(250,204,21,.12)',
       border: '1px solid rgba(250,204,21,.5)',
-      borderRadius: 10
+      borderRadius: 10,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 8
     }
-  }, React.createElement("div", {
+  }, note.reason && React.createElement("div", {
     style: {
-      fontSize: 10,
-      color: 'var(--ink-3)',
-      letterSpacing: '.05em',
-      fontFamily: '"JetBrains Mono",monospace',
-      marginBottom: 6
+      fontSize: 14,
+      color: 'var(--ink)'
     }
-  }, "DESCRIPTION \xB7 \u1780\u17B6\u179A\u200B\u1796\u17B7\u1796\u178E\u17CC\u1793\u17B6"), React.createElement("div", {
+  }, React.createElement("span", {
     style: {
-      fontSize: 15,
+      fontSize: 11,
+      color: 'var(--ink-3)'
+    }
+  }, tr('មូលហេតុ', 'Reason'), ": "), note.reason), note.location && React.createElement("div", {
+    style: {
+      fontSize: 14,
+      color: 'var(--ink)'
+    }
+  }, "\uD83D\uDCCD ", note.location), (note.remark || note.description) && React.createElement("div", {
+    style: {
+      fontSize: 14,
       color: 'var(--ink)',
       whiteSpace: 'pre-wrap',
       wordBreak: 'break-word',
       lineHeight: 1.6
     }
-  }, note.description || note.text)), invited.length > 0 && React.createElement("div", {
+  }, note.remark || note.description)), students.length > 0 && React.createElement("div", {
     style: {
       padding: 14,
       background: 'var(--surface-muted)',
@@ -11265,7 +11283,41 @@ var NoteDetail = ({
       fontFamily: '"JetBrains Mono",monospace',
       marginBottom: 8
     }
-  }, "INVITED \xB7 \u1782\u17D2\u179A\u17BC\u200B\u178A\u17C2\u179B\u200B\u1794\u17B6\u1793\u200B\u17A2\u1789\u17D2\u1787\u17BE\u1789"), React.createElement("div", {
+  }, "\uD83C\uDF93 ", tr('សិស្ស', 'STUDENTS')), React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: 8
+    }
+  }, students.map(st => React.createElement("span", {
+    key: st.id,
+    style: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 6,
+      padding: '6px 11px',
+      borderRadius: 20,
+      border: '1px solid var(--accent)',
+      background: 'var(--accent-soft)',
+      color: 'var(--accent)',
+      fontSize: 12.5,
+      fontWeight: 600
+    }
+  }, st.name || st.en)))), invited.length > 0 && React.createElement("div", {
+    style: {
+      padding: 14,
+      background: 'var(--surface-muted)',
+      borderRadius: 10
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: 'var(--ink-3)',
+      letterSpacing: '.05em',
+      fontFamily: '"JetBrains Mono",monospace',
+      marginBottom: 8
+    }
+  }, "\uD83D\uDC65 ", tr('គ្រូ', 'INSTRUCTORS')), React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
@@ -21629,6 +21681,10 @@ var ScheduleWeek = ({
         var i = INSTRUCTORS.find(x => x.id === id);
         return i ? i.en || i.name : null;
       }).filter(Boolean);
+      var studentNames = (n.studentIds || []).map(id => {
+        var s = STUDENTS.find(x => x.id === id);
+        return s ? s.name || s.en : null;
+      }).filter(Boolean);
       return React.createElement("button", {
         key: n.id,
         onClick: e => {
@@ -21676,7 +21732,16 @@ var ScheduleWeek = ({
           textOverflow: 'ellipsis',
           minWidth: 0
         }
-      }, n.title || n.text)), invitedNames.length > 0 && React.createElement("div", {
+      }, n.title || n.text)), studentNames.length > 0 && React.createElement("div", {
+        style: {
+          fontSize: 9,
+          color: '#92700a',
+          fontWeight: 600,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }
+      }, "\uD83C\uDF93 ", studentNames.join(' · ')), invitedNames.length > 0 && React.createElement("div", {
         style: {
           fontSize: 9,
           color: '#92700a',

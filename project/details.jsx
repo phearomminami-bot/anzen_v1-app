@@ -621,7 +621,10 @@ const NoteDetail = ({ note, onClose }) => {
   const { tr, confirm } = useAppActions();
   if (!note) return null;
   const invited = (note.invited || []).map(id => instById(id)).filter(Boolean);
-  const dateLabel = note.date ? formatDateShort(note.date, 'en') : '';
+  const students = (note.studentIds || []).map(id => studentById(id)).filter(Boolean);
+  const from = note.fromDate || note.date || '', to = note.toDate || from;
+  const dateLabel = (from ? formatDateShort(from, 'en') : '') + (to && to!==from ? ' → ' + formatDateShort(to, 'en') : '');
+  const timeLabel = note.fromTime ? String(note.fromTime).slice(0,5) + (note.toTime ? '–'+String(note.toTime).slice(0,5) : '') : (note.time ? String(note.time).slice(0,5) : '');
   const doEdit = () => { if (window.__editScheduleNote) window.__editScheduleNote(note); onClose && onClose(); };
   const doDelete = () => confirm?.({
     title: tr('លុប​ចំណាំ?', 'Delete this note?'),
@@ -636,26 +639,41 @@ const NoteDetail = ({ note, onClose }) => {
         <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
           <Badge tone="warn">📌 {tr('ចំណាំ','Note')}</Badge>
         </div>
-        {(note.title || note.text) && (
+        {(note.content || note.title || note.text) && (
           <div style={{fontSize:24,fontWeight:700,marginTop:10,letterSpacing:'-.01em',fontFamily:'var(--font-display)'}}>
-            {note.title || note.text}
+            {note.content || note.title || note.text}
           </div>
         )}
-        <div style={{fontSize:13,color:'var(--ink-3)',marginTop:6}}>{[dateLabel, note.time].filter(Boolean).join(' · ')}</div>
+        <div style={{fontSize:13,color:'var(--ink-3)',marginTop:6}}>{[dateLabel, timeLabel].filter(Boolean).join(' · ')}</div>
       </div>
 
-      {/* Description */}
-      {(note.description || (!note.title && note.text)) && (
-        <div style={{padding:14,background:'rgba(250,204,21,.12)',border:'1px solid rgba(250,204,21,.5)',borderRadius:10}}>
-          <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace',marginBottom:6}}>DESCRIPTION · ការ​ពិពណ៌នា</div>
-          <div style={{fontSize:15,color:'var(--ink)',whiteSpace:'pre-wrap',wordBreak:'break-word',lineHeight:1.6}}>{note.description || note.text}</div>
+      {/* Reason / location / remark */}
+      {(note.reason || note.location || note.remark || note.description) && (
+        <div style={{padding:14,background:'rgba(250,204,21,.12)',border:'1px solid rgba(250,204,21,.5)',borderRadius:10,display:'flex',flexDirection:'column',gap:8}}>
+          {note.reason && <div style={{fontSize:14,color:'var(--ink)'}}><span style={{fontSize:11,color:'var(--ink-3)'}}>{tr('មូលហេតុ','Reason')}: </span>{note.reason}</div>}
+          {note.location && <div style={{fontSize:14,color:'var(--ink)'}}>📍 {note.location}</div>}
+          {(note.remark || note.description) && <div style={{fontSize:14,color:'var(--ink)',whiteSpace:'pre-wrap',wordBreak:'break-word',lineHeight:1.6}}>{note.remark || note.description}</div>}
+        </div>
+      )}
+
+      {/* Students */}
+      {students.length > 0 && (
+        <div style={{padding:14,background:'var(--surface-muted)',borderRadius:10}}>
+          <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace',marginBottom:8}}>🎓 {tr('សិស្ស','STUDENTS')}</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+            {students.map(st => (
+              <span key={st.id} style={{display:'inline-flex',alignItems:'center',gap:6,padding:'6px 11px',borderRadius:20,border:'1px solid var(--accent)',background:'var(--accent-soft)',color:'var(--accent)',fontSize:12.5,fontWeight:600}}>
+                {st.name || st.en}
+              </span>
+            ))}
+          </div>
         </div>
       )}
 
       {/* Invited instructors */}
       {invited.length > 0 && (
         <div style={{padding:14,background:'var(--surface-muted)',borderRadius:10}}>
-          <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace',marginBottom:8}}>INVITED · គ្រូ​ដែល​បាន​អញ្ជើញ</div>
+          <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace',marginBottom:8}}>👥 {tr('គ្រូ','INSTRUCTORS')}</div>
           <div style={{display:'flex',flexDirection:'column',gap:8}}>
             {invited.map(gi => (
               <div key={gi.id} style={{display:'flex',gap:10,alignItems:'center'}}>
