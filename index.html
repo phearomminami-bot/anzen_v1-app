@@ -3337,7 +3337,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v223";</script>
+<script>window.__ANZEN_VERSION="v224";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -46720,7 +46720,8 @@ var CvLessonRow = ({
   }, "(", cumNo, ")")), React.createElement("div", {
     style: {
       fontSize: 12,
-      color: 'var(--ink-2)',
+      fontWeight: 700,
+      color: isTheory ? '#7A3FC4' : '#1F8A50',
       marginTop: 1
     }
   }, lessonTypeKm(l), total > 1 ? ` · ${tr('ម៉ោងទី', 'Hr')} ${offset + 1}/${total}` : ''), covered.length > 0 && React.createElement("div", {
@@ -47107,6 +47108,7 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
     var logo = ss.logo || '';
     var isUrl = x => typeof x === 'string' && /^(data:|https?:)/.test(x);
     var typeKm = l => l.color === 'c' || l.color === 'e' ? L('ទ្រឹស្ដី', 'Theory') : L('អនុវត្តន៍', 'Practical');
+    var typeColor = l => l.color === 'c' || l.color === 'e' ? '#5B2EA0' : '#1A6B3C';
     var stars = n => '★'.repeat(n || 0) + '☆'.repeat(5 - (n || 0));
     var trGender = g => g === 'M' ? L('ប្រុស', 'Male') : g === 'F' ? L('ស្រី', 'Female') : g || '';
     var trNat = v => {
@@ -47214,7 +47216,7 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
       var timeStr = `${String(hh).padStart(2, '0')}:00-${String(hh + 1).padStart(2, '0')}:00`;
       return `<tr>
       <td style="white-space:nowrap;font-family:monospace;color:#444;font-weight:700">${esc(l.date)}<br>${timeStr}${hrLabel}</td>
-      <td><b>${typeKm(l)}</b>${coveredHtml}<div style="color:#888;margin-top:2px">${inst}</div></td>
+      <td><b style="color:${typeColor(l)}">${typeKm(l)}</b>${coveredHtml}<div style="color:#888;margin-top:2px">${inst}</div></td>
       <td>${status}${fb.length ? '<div style="margin-top:3px;color:#333">' + fb.join('') + '</div>' : ''}</td>
     </tr>`;
     };
