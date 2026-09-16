@@ -582,7 +582,7 @@ window.__trRegistry = {
   "hrs": "ម៉ោង",
   "lessons done": "មេរៀន​បាន​រៀន",
   "left": "នៅ​សល់",
-  "—": "រង់ចាំ",
+  "—": "—",
   "EXAM · APPLICATION": "ការ​ប្រឡង / ដាក់​ពាក្យ",
   "more upcoming": "ការ​ណាត់​បន្ថែម",
   "No exam scheduled yet.": "មិន​ទាន់​មាន​ការ​ណាត់​ប្រឡង​ទេ។",
@@ -697,7 +697,6 @@ window.__trRegistry = {
   "Date from": "កាល​បរិច្ឆេទ ចាប់ពី",
   "To": "ដល់",
   "Time (optional)": "ម៉ោង (ស្រេចចិត្ត)",
-  "— none": "— ទំនេរ",
   "Content": "ខ្លឹមសារ",
   "e.g. On leave": "ឧ. ឈប់សម្រាក",
   "e.g. Travelling to province": "ឧ. ធ្វើ​ដំណើរ​ទៅ​ខេត្ត",
@@ -2073,7 +2072,6 @@ window.__trGroups = {
     "Date from": "កាល​បរិច្ឆេទ ចាប់ពី",
     "To": "ដល់",
     "Time (optional)": "ម៉ោង (ស្រេចចិត្ត)",
-    "— none": "— ទំនេរ",
     "Content": "ខ្លឹមសារ",
     "e.g. On leave": "ឧ. ឈប់សម្រាក",
     "e.g. Travelling to province": "ឧ. ធ្វើ​ដំណើរ​ទៅ​ខេត្ត",
@@ -3367,7 +3365,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v241";</script>
+<script>window.__ANZEN_VERSION="v242";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -24108,6 +24106,23 @@ var ScheduleScreen = ({
       f: '13:00',
       t: '17:00'
     }];
+    var HOURS = Array.from({
+      length: 18
+    }, (_, i) => String(i + 5).padStart(2, '0'));
+    var MINS = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'];
+    var hOf = t => t ? String(t).split(':')[0] : '';
+    var mOf = t => t ? String(t).split(':')[1] || '00' : '00';
+    var setTP = (which, part, val) => setNoteModal(m => {
+      var cur = m[which] || '';
+      var h = cur ? cur.split(':')[0] : '',
+        mi = cur ? cur.split(':')[1] || '00' : '00';
+      if (part === 'h') h = val;
+      if (part === 'm') mi = val;
+      return {
+        ...m,
+        [which]: h === '' ? '' : h + ':' + mi
+      };
+    });
     return React.createElement(React.Fragment, null, React.createElement("div", {
       style: {
         display: 'grid',
@@ -24173,49 +24188,58 @@ var ScheduleScreen = ({
         gridTemplateColumns: '1fr 1fr',
         gap: 10
       }
-    }, React.createElement("div", null, React.createElement("label", {
+    }, [{
+      k: 'fromTime',
+      l: tr('ចាប់ពី', 'From')
+    }, {
+      k: 'toTime',
+      l: tr('ដល់', 'To')
+    }].map(f => React.createElement("div", {
+      key: f.k
+    }, React.createElement("label", {
       style: {
         ...nLbl,
         fontSize: 10.5,
         marginBottom: 3
       }
-    }, tr('ចាប់ពី', 'From')), React.createElement("select", {
-      value: noteModal.fromTime || '',
-      onChange: e => setNoteModal(m => ({
-        ...m,
-        fromTime: e.target.value
-      })),
+    }, f.l), React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 5,
+        alignItems: 'center'
+      }
+    }, React.createElement("select", {
+      value: hOf(noteModal[f.k]),
+      onChange: e => setTP(f.k, 'h', e.target.value),
       style: {
         ...nInp,
+        padding: '9px 6px',
         fontFamily: '"JetBrains Mono",monospace'
       }
     }, React.createElement("option", {
       value: ""
-    }, tr('— ទំនេរ', '— none')), TIME_OPTS.map(t => React.createElement("option", {
-      key: t,
-      value: t
-    }, t)))), React.createElement("div", null, React.createElement("label", {
+    }, tr('—', '—')), HOURS.map(h => React.createElement("option", {
+      key: h,
+      value: h
+    }, h))), React.createElement("span", {
       style: {
-        ...nLbl,
-        fontSize: 10.5,
-        marginBottom: 3
+        fontWeight: 800,
+        color: 'var(--ink-3)'
       }
-    }, tr('ដល់', 'To')), React.createElement("select", {
-      value: noteModal.toTime || '',
-      onChange: e => setNoteModal(m => ({
-        ...m,
-        toTime: e.target.value
-      })),
+    }, ":"), React.createElement("select", {
+      value: mOf(noteModal[f.k]),
+      onChange: e => setTP(f.k, 'm', e.target.value),
+      disabled: !noteModal[f.k],
       style: {
         ...nInp,
-        fontFamily: '"JetBrains Mono",monospace'
+        padding: '9px 6px',
+        fontFamily: '"JetBrains Mono",monospace',
+        opacity: noteModal[f.k] ? 1 : 0.5
       }
-    }, React.createElement("option", {
-      value: ""
-    }, tr('— ទំនេរ', '— none')), TIME_OPTS.map(t => React.createElement("option", {
-      key: t,
-      value: t
-    }, t)))))), React.createElement("div", null, React.createElement("label", {
+    }, MINS.map(m => React.createElement("option", {
+      key: m,
+      value: m
+    }, m)))))))), React.createElement("div", null, React.createElement("label", {
       style: nLbl
     }, tr('ខ្លឹមសារ', 'Content')), React.createElement("input", {
       value: noteModal.content || '',

@@ -1450,6 +1450,15 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
               const nLbl = {fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5};
               const TIME_OPTS = (() => { const a=[]; for(let h=6;h<=20;h++){ a.push(String(h).padStart(2,'0')+':00'); a.push(String(h).padStart(2,'0')+':30'); } return a; })();
               const TIME_PRESETS = [{k:'full',km:'ពេញ​ថ្ងៃ',en:'Full day',f:'08:00',t:'17:00'},{k:'am',km:'ព្រឹក',en:'Half AM',f:'08:00',t:'12:00'},{k:'pm',km:'រសៀល',en:'Half PM',f:'13:00',t:'17:00'}];
+              const HOURS = Array.from({length:18},(_,i)=>String(i+5).padStart(2,'0'));   // 05..22
+              const MINS  = ['00','05','10','15','20','25','30','35','40','45','50','55'];
+              const hOf = (t)=> t ? String(t).split(':')[0] : '';
+              const mOf = (t)=> t ? (String(t).split(':')[1]||'00') : '00';
+              const setTP = (which, part, val) => setNoteModal(m => {
+                const cur = m[which] || ''; let h = cur?cur.split(':')[0]:'', mi = cur?(cur.split(':')[1]||'00'):'00';
+                if (part==='h') h = val; if (part==='m') mi = val;
+                return { ...m, [which]: h==='' ? '' : (h+':'+mi) };
+              });
               return (<>
             {/* Date range (from → to; single day = same date) */}
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
@@ -1474,20 +1483,21 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
                 ); })}
               </div>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-                <div>
-                  <label style={{...nLbl,fontSize:10.5,marginBottom:3}}>{tr('ចាប់ពី','From')}</label>
-                  <select value={noteModal.fromTime||''} onChange={e=>setNoteModal(m=>({...m,fromTime:e.target.value}))} style={{...nInp,fontFamily:'"JetBrains Mono",monospace'}}>
-                    <option value="">{tr('— ទំនេរ','— none')}</option>
-                    {TIME_OPTS.map(t=><option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={{...nLbl,fontSize:10.5,marginBottom:3}}>{tr('ដល់','To')}</label>
-                  <select value={noteModal.toTime||''} onChange={e=>setNoteModal(m=>({...m,toTime:e.target.value}))} style={{...nInp,fontFamily:'"JetBrains Mono",monospace'}}>
-                    <option value="">{tr('— ទំនេរ','— none')}</option>
-                    {TIME_OPTS.map(t=><option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
+                {[{k:'fromTime',l:tr('ចាប់ពី','From')},{k:'toTime',l:tr('ដល់','To')}].map(f => (
+                  <div key={f.k}>
+                    <label style={{...nLbl,fontSize:10.5,marginBottom:3}}>{f.l}</label>
+                    <div style={{display:'flex',gap:5,alignItems:'center'}}>
+                      <select value={hOf(noteModal[f.k])} onChange={e=>setTP(f.k,'h',e.target.value)} style={{...nInp,padding:'9px 6px',fontFamily:'"JetBrains Mono",monospace'}}>
+                        <option value="">{tr('—','—')}</option>
+                        {HOURS.map(h=><option key={h} value={h}>{h}</option>)}
+                      </select>
+                      <span style={{fontWeight:800,color:'var(--ink-3)'}}>:</span>
+                      <select value={mOf(noteModal[f.k])} onChange={e=>setTP(f.k,'m',e.target.value)} disabled={!noteModal[f.k]} style={{...nInp,padding:'9px 6px',fontFamily:'"JetBrains Mono",monospace',opacity:noteModal[f.k]?1:0.5}}>
+                        {MINS.map(m=><option key={m} value={m}>{m}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
             <div>
