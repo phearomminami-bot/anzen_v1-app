@@ -154,6 +154,9 @@
   ::-webkit-scrollbar-thumb{ background:var(--border-strong);border-radius:8px; }
   ::-webkit-scrollbar-track{ background:transparent; }
   @media (max-width:1100px){ ::-webkit-scrollbar{ width:0;height:0; } }
+  /* wheel/drum time picker: hide its scrollbar entirely */
+  .wheel-col{ -ms-overflow-style:none; scrollbar-width:none; }
+  .wheel-col::-webkit-scrollbar{ width:0;height:0;display:none; }
   @media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms!important;transition-duration:.01ms!important;} }
 </style>
 </head>
@@ -582,7 +585,7 @@ window.__trRegistry = {
   "hrs": "ម៉ោង",
   "lessons done": "មេរៀន​បាន​រៀន",
   "left": "នៅ​សល់",
-  "—": "—",
+  "—": "រង់ចាំ",
   "EXAM · APPLICATION": "ការ​ប្រឡង / ដាក់​ពាក្យ",
   "more upcoming": "ការ​ណាត់​បន្ថែម",
   "No exam scheduled yet.": "មិន​ទាន់​មាន​ការ​ណាត់​ប្រឡង​ទេ។",
@@ -697,6 +700,7 @@ window.__trRegistry = {
   "Date from": "កាល​បរិច្ឆេទ ចាប់ពី",
   "To": "ដល់",
   "Time (optional)": "ម៉ោង (ស្រេចចិត្ត)",
+  "clear": "សម្អាត",
   "Content": "ខ្លឹមសារ",
   "e.g. On leave": "ឧ. ឈប់សម្រាក",
   "e.g. Travelling to province": "ឧ. ធ្វើ​ដំណើរ​ទៅ​ខេត្ត",
@@ -2072,6 +2076,7 @@ window.__trGroups = {
     "Date from": "កាល​បរិច្ឆេទ ចាប់ពី",
     "To": "ដល់",
     "Time (optional)": "ម៉ោង (ស្រេចចិត្ត)",
+    "clear": "សម្អាត",
     "Content": "ខ្លឹមសារ",
     "e.g. On leave": "ឧ. ឈប់សម្រាក",
     "e.g. Travelling to province": "ឧ. ធ្វើ​ដំណើរ​ទៅ​ខេត្ត",
@@ -3365,7 +3370,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v242";</script>
+<script>window.__ANZEN_VERSION="v243";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -20960,6 +20965,163 @@ var lessonShort = l => {
   return (l.type || '').split('·')[1]?.trim() || '';
 };
 var isSunday = dateStr => !!dateStr && new Date(dateStr + 'T00:00:00').getDay() === 0;
+function WheelPicker({
+  items,
+  value,
+  onChange,
+  itemHeight,
+  visible
+}) {
+  itemHeight = itemHeight || 38;
+  visible = visible || 5;
+  var ref = React.useRef(null);
+  var settleRef = React.useRef(null);
+  var rafRef = React.useRef(0);
+  var idx = Math.max(0, items.indexOf(value));
+  var [active, setActive] = React.useState(idx);
+  React.useEffect(() => {
+    var el = ref.current;
+    if (!el) return;
+    var t = idx * itemHeight;
+    if (Math.abs(el.scrollTop - t) > 2) el.scrollTop = t;
+    setActive(idx);
+  }, [value, items.length]);
+  var onScroll = () => {
+    var el = ref.current;
+    if (!el) return;
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      var ci = Math.max(0, Math.min(items.length - 1, Math.round(el.scrollTop / itemHeight)));
+      setActive(ci);
+    });
+    if (settleRef.current) clearTimeout(settleRef.current);
+    settleRef.current = setTimeout(() => {
+      var ci = Math.max(0, Math.min(items.length - 1, Math.round(el.scrollTop / itemHeight)));
+      var t = ci * itemHeight;
+      if (Math.abs(el.scrollTop - t) > 1) el.scrollTo({
+        top: t,
+        behavior: 'smooth'
+      });
+      if (items[ci] !== value) onChange(items[ci]);
+    }, 110);
+  };
+  var pad = (visible - 1) / 2 * itemHeight;
+  return React.createElement("div", {
+    ref: ref,
+    onScroll: onScroll,
+    className: "wheel-col",
+    style: {
+      height: itemHeight * visible,
+      overflowY: 'scroll',
+      scrollSnapType: 'y mandatory',
+      WebkitOverflowScrolling: 'touch',
+      scrollbarWidth: 'none',
+      flex: 1,
+      position: 'relative'
+    }
+  }, React.createElement("div", {
+    style: {
+      height: pad
+    }
+  }), items.map((it, i) => {
+    var dist = Math.abs(i - active),
+      on = dist === 0;
+    return React.createElement("div", {
+      key: it,
+      onClick: () => {
+        var el = ref.current;
+        if (el) el.scrollTo({
+          top: i * itemHeight,
+          behavior: 'smooth'
+        });
+        if (it !== value) onChange(it);
+      },
+      style: {
+        height: itemHeight,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        scrollSnapAlign: 'center',
+        fontFamily: '"JetBrains Mono",ui-monospace,monospace',
+        fontSize: on ? 23 : Math.max(13, 18 - dist * 1.6),
+        fontWeight: on ? 800 : 500,
+        color: 'var(--ink)',
+        opacity: on ? 1 : Math.max(0.16, 0.52 - dist * 0.13),
+        transition: 'font-size .12s ease, opacity .12s ease',
+        cursor: 'pointer',
+        userSelect: 'none'
+      }
+    }, it);
+  }), React.createElement("div", {
+    style: {
+      height: pad
+    }
+  }));
+}
+function TimeWheel({
+  value,
+  placeholder,
+  onChange,
+  hours
+}) {
+  var M = Array.from({
+    length: 60
+  }, (_, i) => String(i).padStart(2, '0'));
+  var base = value || placeholder || hours[0] + ':00';
+  var hVal = base.split(':')[0];
+  var mVal = base.split(':')[1] || '00';
+  var ih = 38,
+    vis = 5;
+  return React.createElement("div", {
+    style: {
+      position: 'relative',
+      borderRadius: 12,
+      overflow: 'hidden',
+      background: 'var(--surface)'
+    }
+  }, React.createElement("div", {
+    style: {
+      position: 'absolute',
+      left: 6,
+      right: 6,
+      top: '50%',
+      transform: 'translateY(-50%)',
+      height: ih,
+      background: 'var(--accent-soft,rgba(127,127,127,.16))',
+      borderRadius: 10,
+      pointerEvents: 'none',
+      zIndex: 0
+    }
+  }), React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'stretch',
+      position: 'relative',
+      zIndex: 1
+    }
+  }, React.createElement(WheelPicker, {
+    items: hours,
+    value: hVal,
+    onChange: nh => onChange(nh + ':' + mVal),
+    itemHeight: ih,
+    visible: vis
+  }), React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      fontWeight: 800,
+      fontSize: 20,
+      color: 'var(--ink-3)',
+      padding: '0 2px'
+    }
+  }, ":"), React.createElement(WheelPicker, {
+    items: M,
+    value: mVal,
+    onChange: nm => onChange(hVal + ':' + nm),
+    itemHeight: ih,
+    visible: vis
+  })));
+}
 var STUDENT_PALETTE = [{
   bg: '#D6E4F5',
   fg: '#1A4F96',
@@ -24110,6 +24272,12 @@ var ScheduleScreen = ({
       length: 18
     }, (_, i) => String(i + 5).padStart(2, '0'));
     var MINS = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'];
+    var addHour = t => {
+      if (!t) return '';
+      var [h, mi] = String(t).split(':');
+      var nh = Math.min(22, (parseInt(h, 10) || 0) + 1);
+      return String(nh).padStart(2, '0') + ':' + (mi || '00');
+    };
     var hOf = t => t ? String(t).split(':')[0] : '';
     var mOf = t => t ? String(t).split(':')[1] || '00' : '00';
     var setTP = (which, part, val) => setNoteModal(m => {
@@ -24190,56 +24358,51 @@ var ScheduleScreen = ({
       }
     }, [{
       k: 'fromTime',
-      l: tr('ចាប់ពី', 'From')
+      l: tr('ចាប់ពី', 'From'),
+      ph: '09:00'
     }, {
       k: 'toTime',
-      l: tr('ដល់', 'To')
+      l: tr('ដល់', 'To'),
+      ph: addHour(noteModal.fromTime) || '10:00'
     }].map(f => React.createElement("div", {
       key: f.k
+    }, React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'baseline',
+        justifyContent: 'space-between',
+        marginBottom: 3
+      }
     }, React.createElement("label", {
       style: {
         ...nLbl,
         fontSize: 10.5,
-        marginBottom: 3
+        margin: 0
       }
-    }, f.l), React.createElement("div", {
+    }, f.l), noteModal[f.k] ? React.createElement("button", {
+      type: "button",
+      onClick: () => setNoteModal(m => ({
+        ...m,
+        [f.k]: ''
+      })),
       style: {
-        display: 'flex',
-        gap: 5,
-        alignItems: 'center'
+        background: 'none',
+        border: 'none',
+        color: 'var(--ink-3)',
+        fontSize: 10.5,
+        cursor: 'pointer',
+        padding: 0,
+        fontFamily: 'inherit'
       }
-    }, React.createElement("select", {
-      value: hOf(noteModal[f.k]),
-      onChange: e => setTP(f.k, 'h', e.target.value),
-      style: {
-        ...nInp,
-        padding: '9px 6px',
-        fontFamily: '"JetBrains Mono",monospace'
-      }
-    }, React.createElement("option", {
-      value: ""
-    }, tr('—', '—')), HOURS.map(h => React.createElement("option", {
-      key: h,
-      value: h
-    }, h))), React.createElement("span", {
-      style: {
-        fontWeight: 800,
-        color: 'var(--ink-3)'
-      }
-    }, ":"), React.createElement("select", {
-      value: mOf(noteModal[f.k]),
-      onChange: e => setTP(f.k, 'm', e.target.value),
-      disabled: !noteModal[f.k],
-      style: {
-        ...nInp,
-        padding: '9px 6px',
-        fontFamily: '"JetBrains Mono",monospace',
-        opacity: noteModal[f.k] ? 1 : 0.5
-      }
-    }, MINS.map(m => React.createElement("option", {
-      key: m,
-      value: m
-    }, m)))))))), React.createElement("div", null, React.createElement("label", {
+    }, tr('សម្អាត', 'clear')) : null), React.createElement(TimeWheel, {
+      value: noteModal[f.k] || '',
+      placeholder: f.ph,
+      hours: HOURS,
+      onChange: v => setNoteModal(m => ({
+        ...m,
+        [f.k]: v
+      }))
+    }))))), React.createElement("div", null, React.createElement("label", {
       style: nLbl
     }, tr('ខ្លឹមសារ', 'Content')), React.createElement("input", {
       value: noteModal.content || '',

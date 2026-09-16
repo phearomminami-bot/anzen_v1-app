@@ -28,6 +28,85 @@ const lessonShort = (l) => {
 
 const isSunday = (dateStr) => !!dateStr && new Date(dateStr + 'T00:00:00').getDay() === 0;
 
+// ── Scroll wheel (iOS-style drum) ────────────────────────────────────────────
+// A single scrolling column; the item snapped to the centre band is selected.
+function WheelPicker({ items, value, onChange, itemHeight, visible }){
+  itemHeight = itemHeight || 38; visible = visible || 5;
+  const ref = React.useRef(null);
+  const settleRef = React.useRef(null);
+  const rafRef = React.useRef(0);
+  const idx = Math.max(0, items.indexOf(value));
+  const [active, setActive] = React.useState(idx);
+  // Sync scroll position when the value is changed from outside (presets, edit…)
+  React.useEffect(() => {
+    const el = ref.current; if (!el) return;
+    const t = idx * itemHeight;
+    if (Math.abs(el.scrollTop - t) > 2) el.scrollTop = t;
+    setActive(idx);
+  }, [value, items.length]);
+  const onScroll = () => {
+    const el = ref.current; if (!el) return;
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      const ci = Math.max(0, Math.min(items.length - 1, Math.round(el.scrollTop / itemHeight)));
+      setActive(ci);
+    });
+    if (settleRef.current) clearTimeout(settleRef.current);
+    settleRef.current = setTimeout(() => {
+      const ci = Math.max(0, Math.min(items.length - 1, Math.round(el.scrollTop / itemHeight)));
+      const t = ci * itemHeight;
+      if (Math.abs(el.scrollTop - t) > 1) el.scrollTo({ top: t, behavior: 'smooth' });
+      if (items[ci] !== value) onChange(items[ci]);
+    }, 110);
+  };
+  const pad = (visible - 1) / 2 * itemHeight;
+  return (
+    <div ref={ref} onScroll={onScroll} className="wheel-col" style={{
+      height: itemHeight * visible, overflowY: 'scroll', scrollSnapType: 'y mandatory',
+      WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', flex: 1, position: 'relative'
+    }}>
+      <div style={{ height: pad }} />
+      {items.map((it, i) => {
+        const dist = Math.abs(i - active), on = dist === 0;
+        return (
+          <div key={it}
+            onClick={() => { const el = ref.current; if (el) el.scrollTo({ top: i * itemHeight, behavior: 'smooth' }); if (it !== value) onChange(it); }}
+            style={{
+              height: itemHeight, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              scrollSnapAlign: 'center', fontFamily: '"JetBrains Mono",ui-monospace,monospace',
+              fontSize: on ? 23 : Math.max(13, 18 - dist * 1.6), fontWeight: on ? 800 : 500,
+              color: 'var(--ink)', opacity: on ? 1 : Math.max(0.16, 0.52 - dist * 0.13),
+              transition: 'font-size .12s ease, opacity .12s ease', cursor: 'pointer', userSelect: 'none'
+            }}>{it}</div>
+        );
+      })}
+      <div style={{ height: pad }} />
+    </div>
+  );
+}
+
+// Hour + minute drum picker. value / placeholder are "HH:MM". Minutes step by 1.
+function TimeWheel({ value, placeholder, onChange, hours }){
+  const M = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
+  const base = value || placeholder || (hours[0] + ':00');
+  const hVal = base.split(':')[0];
+  const mVal = base.split(':')[1] || '00';
+  const ih = 38, vis = 5;
+  return (
+    <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', background: 'var(--surface)' }}>
+      <div style={{
+        position: 'absolute', left: 6, right: 6, top: '50%', transform: 'translateY(-50%)',
+        height: ih, background: 'var(--accent-soft,rgba(127,127,127,.16))', borderRadius: 10, pointerEvents: 'none', zIndex: 0
+      }} />
+      <div style={{ display: 'flex', alignItems: 'stretch', position: 'relative', zIndex: 1 }}>
+        <WheelPicker items={hours} value={hVal} onChange={nh => onChange(nh + ':' + mVal)} itemHeight={ih} visible={vis} />
+        <div style={{ display: 'flex', alignItems: 'center', fontWeight: 800, fontSize: 20, color: 'var(--ink-3)', padding: '0 2px' }}>:</div>
+        <WheelPicker items={M} value={mVal} onChange={nm => onChange(hVal + ':' + nm)} itemHeight={ih} visible={vis} />
+      </div>
+    </div>
+  );
+}
+
 // ── Per-student schedule colours (auto-assigned, recycled on graduation) ─────
 // Per-student palette. Deliberately excludes green and amber/yellow so student
 // colours never clash with the schedule's Exam (green) and Application (amber).
@@ -1452,6 +1531,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
               const TIME_PRESETS = [{k:'full',km:'ពេញ​ថ្ងៃ',en:'Full day',f:'08:00',t:'17:00'},{k:'am',km:'ព្រឹក',en:'Half AM',f:'08:00',t:'12:00'},{k:'pm',km:'រសៀល',en:'Half PM',f:'13:00',t:'17:00'}];
               const HOURS = Array.from({length:18},(_,i)=>String(i+5).padStart(2,'0'));   // 05..22
               const MINS  = ['00','05','10','15','20','25','30','35','40','45','50','55'];
+              const addHour = (t)=>{ if(!t) return ''; const [h,mi]=String(t).split(':'); const nh=Math.min(22,(parseInt(h,10)||0)+1); return String(nh).padStart(2,'0')+':'+(mi||'00'); };
               const hOf = (t)=> t ? String(t).split(':')[0] : '';
               const mOf = (t)=> t ? (String(t).split(':')[1]||'00') : '00';
               const setTP = (which, part, val) => setNoteModal(m => {
@@ -1483,19 +1563,16 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
                 ); })}
               </div>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-                {[{k:'fromTime',l:tr('ចាប់ពី','From')},{k:'toTime',l:tr('ដល់','To')}].map(f => (
+                {[{k:'fromTime',l:tr('ចាប់ពី','From'),ph:'09:00'},
+                  {k:'toTime',l:tr('ដល់','To'),ph:addHour(noteModal.fromTime)||'10:00'}].map(f => (
                   <div key={f.k}>
-                    <label style={{...nLbl,fontSize:10.5,marginBottom:3}}>{f.l}</label>
-                    <div style={{display:'flex',gap:5,alignItems:'center'}}>
-                      <select value={hOf(noteModal[f.k])} onChange={e=>setTP(f.k,'h',e.target.value)} style={{...nInp,padding:'9px 6px',fontFamily:'"JetBrains Mono",monospace'}}>
-                        <option value="">{tr('—','—')}</option>
-                        {HOURS.map(h=><option key={h} value={h}>{h}</option>)}
-                      </select>
-                      <span style={{fontWeight:800,color:'var(--ink-3)'}}>:</span>
-                      <select value={mOf(noteModal[f.k])} onChange={e=>setTP(f.k,'m',e.target.value)} disabled={!noteModal[f.k]} style={{...nInp,padding:'9px 6px',fontFamily:'"JetBrains Mono",monospace',opacity:noteModal[f.k]?1:0.5}}>
-                        {MINS.map(m=><option key={m} value={m}>{m}</option>)}
-                      </select>
+                    <div style={{display:'flex',alignItems:'baseline',justifyContent:'space-between',marginBottom:3}}>
+                      <label style={{...nLbl,fontSize:10.5,margin:0}}>{f.l}</label>
+                      {noteModal[f.k] ? <button type="button" onClick={()=>setNoteModal(m=>({...m,[f.k]:''}))}
+                        style={{background:'none',border:'none',color:'var(--ink-3)',fontSize:10.5,cursor:'pointer',padding:0,fontFamily:'inherit'}}>{tr('សម្អាត','clear')}</button> : null}
                     </div>
+                    <TimeWheel value={noteModal[f.k]||''} placeholder={f.ph} hours={HOURS}
+                      onChange={v=>setNoteModal(m=>({...m,[f.k]:v}))} />
                   </div>
                 ))}
               </div>

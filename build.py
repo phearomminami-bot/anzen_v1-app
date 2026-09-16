@@ -309,6 +309,9 @@ HEAD = """<!doctype html>
   ::-webkit-scrollbar-thumb{ background:var(--border-strong);border-radius:8px; }
   ::-webkit-scrollbar-track{ background:transparent; }
   @media (max-width:1100px){ ::-webkit-scrollbar{ width:0;height:0; } }
+  /* wheel/drum time picker: hide its scrollbar entirely */
+  .wheel-col{ -ms-overflow-style:none; scrollbar-width:none; }
+  .wheel-col::-webkit-scrollbar{ width:0;height:0;display:none; }
   @media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms!important;transition-duration:.01ms!important;} }
 </style>
 </head>
