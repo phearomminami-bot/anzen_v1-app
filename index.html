@@ -302,6 +302,8 @@ window.__trRegistry = {
   "Create class": "បង្កើត​ថ្នាក់រៀន",
   "Schedule lesson": "កក់​មេរៀន",
   "Class — pick several students below. A separate lesson is created in each student\\'s record.": "ថ្នាក់រៀន — ជ្រើស​សិស្ស​ច្រើន​នាក់​ខាង​ក្រោម។ មេរៀន​នឹង​បង្កើត​ដាច់​ដោយ​ឡែក​ក្នុង​កំណត់ត្រា​សិស្ស​ម្នាក់ៗ។",
+  "Class name": "ឈ្មោះ​ថ្នាក់រៀន",
+  "e.g. Traffic Law": "ឧ. ច្បាប់​ចរាចរណ៍",
   "Phase": "វគ្គ",
   "Select lessons (from Tab Lessons)": "ជ្រើស​មេរៀន (ពី Tab Lessons)",
   "No lessons defined in Tab Lessons": "មិនទាន់មានមេរៀននៅ Tab Lessons",
@@ -2909,6 +2911,8 @@ window.__trGroups = {
     "Create class": "បង្កើត​ថ្នាក់រៀន",
     "Schedule lesson": "កក់​មេរៀន",
     "Class — pick several students below. A separate lesson is created in each student\\'s record.": "ថ្នាក់រៀន — ជ្រើស​សិស្ស​ច្រើន​នាក់​ខាង​ក្រោម។ មេរៀន​នឹង​បង្កើត​ដាច់​ដោយ​ឡែក​ក្នុង​កំណត់ត្រា​សិស្ស​ម្នាក់ៗ។",
+    "Class name": "ឈ្មោះ​ថ្នាក់រៀន",
+    "e.g. Traffic Law": "ឧ. ច្បាប់​ចរាចរណ៍",
     "Phase": "វគ្គ",
     "Select lessons (from Tab Lessons)": "ជ្រើស​មេរៀន (ពី Tab Lessons)",
     "No lessons defined in Tab Lessons": "មិនទាន់មានមេរៀននៅ Tab Lessons",
@@ -3359,7 +3363,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v239";</script>
+<script>window.__ANZEN_VERSION="v240";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -7711,6 +7715,7 @@ var NewLessonForm = ({
   var [guests, setGuests] = React.useState(editLesson && Array.isArray(editLesson.guests) ? [...editLesson.guests] : []);
   var [vehId, setVehId] = React.useState(editLesson ? editLesson.veh === '—' ? '' : editLesson.veh : '');
   var [note, setNote] = React.useState(editLesson ? editLesson.note || '' : '');
+  var [className, setClassName] = React.useState(editLesson ? editLesson.className || '' : '');
   var [touched, setTouched] = React.useState({});
   var [pickup, setPickup] = React.useState(editLesson ? editLesson.pickup || 'school' : 'school');
   var [locationText, setLocationText] = React.useState(editLesson ? editLesson.location || '' : '');
@@ -7848,6 +7853,7 @@ var NewLessonForm = ({
         lessonNo,
         status: 'scheduled',
         pickup,
+        className: classId && className.trim() ? className.trim() : undefined,
         location: locationText.trim(),
         note: note.trim(),
         classId: classId || undefined,
@@ -7889,7 +7895,10 @@ var NewLessonForm = ({
     saveLabel: editLesson ? tr('រក្សាទុក', 'Save changes') : ctx.classMode ? tr('បង្កើត​ថ្នាក់រៀន', 'Create class') : tr('កក់​មេរៀន', 'Schedule lesson')
   }, ctx.classMode && !editLesson && React.createElement("div", {
     style: {
-      marginBottom: 12,
+      marginBottom: 12
+    }
+  }, React.createElement("div", {
+    style: {
       fontSize: 12.5,
       color: 'var(--ink-2)',
       background: 'var(--accent-soft)',
@@ -7898,14 +7907,40 @@ var NewLessonForm = ({
       padding: '11px 13px',
       lineHeight: 1.5,
       display: 'flex',
-      gap: 8
+      gap: 8,
+      marginBottom: 10
     }
   }, React.createElement("span", {
     style: {
       fontSize: 16,
       flexShrink: 0
     }
-  }, "\uD83C\uDFEB"), React.createElement("span", null, tr('ថ្នាក់រៀន — ជ្រើស​សិស្ស​ច្រើន​នាក់​ខាង​ក្រោម។ មេរៀន​នឹង​បង្កើត​ដាច់​ដោយ​ឡែក​ក្នុង​កំណត់ត្រា​សិស្ស​ម្នាក់ៗ។', 'Class — pick several students below. A separate lesson is created in each student\'s record.'))), React.createElement(FormSection, {
+  }, "\uD83C\uDFEB"), React.createElement("span", null, tr('ថ្នាក់រៀន — ជ្រើស​សិស្ស​ច្រើន​នាក់​ខាង​ក្រោម។ មេរៀន​នឹង​បង្កើត​ដាច់​ដោយ​ឡែក​ក្នុង​កំណត់ត្រា​សិស្ស​ម្នាក់ៗ។', 'Class — pick several students below. A separate lesson is created in each student\'s record.'))), React.createElement("label", {
+    style: {
+      fontSize: 11,
+      fontWeight: 700,
+      color: 'var(--ink-2)',
+      display: 'block',
+      marginBottom: 5
+    }
+  }, tr('ឈ្មោះ​ថ្នាក់រៀន', 'Class name')), React.createElement("input", {
+    value: className,
+    onChange: e => setClassName(e.target.value),
+    placeholder: tr('ឧ. ច្បាប់​ចរាចរណ៍', 'e.g. Traffic Law'),
+    style: {
+      width: '100%',
+      padding: '10px 12px',
+      border: '1.5px solid var(--border)',
+      borderRadius: 8,
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      font: 'inherit',
+      fontSize: 14,
+      fontWeight: 600,
+      boxSizing: 'border-box',
+      fontFamily: 'var(--font-km),var(--font-en),inherit'
+    }
+  })), React.createElement(FormSection, {
     title: "LESSON"
   }, React.createElement("div", {
     style: {
@@ -10736,7 +10771,7 @@ var LessonDetail = ({
       fontFamily: '"JetBrains Mono",monospace',
       marginBottom: 8
     }
-  }, "\uD83C\uDFEB ", tr('ថ្នាក់រៀន', 'CLASS'), " \xB7 ", lesson._classStudentIds.length, " ", tr('សិស្ស', 'students')), React.createElement("div", {
+  }, "\uD83C\uDFEB ", lesson.className || tr('ថ្នាក់រៀន', 'CLASS'), " \xB7 ", lesson._classStudentIds.length, " ", tr('សិស្ស', 'students')), React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))',
@@ -21630,7 +21665,7 @@ var ScheduleWeek = ({
           flexShrink: 1,
           minWidth: 0
         }
-      }, studentMode ? lessonShort(l) || l.type.split('·')[0].trim() : l._classStudentIds && l._classStudentIds.length > 1 ? `🏫 ${tr('ថ្នាក់រៀន', 'Class')} · ${l._classStudentIds.length} ${tr('នាក់', '')}`.trim() : s ? s.en || s.name : l.type.split('·')[0].trim())), React.createElement("div", {
+      }, studentMode ? lessonShort(l) || l.type.split('·')[0].trim() : l._classStudentIds && l._classStudentIds.length > 1 ? `🏫 ${l.className || tr('ថ្នាក់រៀន', 'Class')} · ${l._classStudentIds.length} ${tr('នាក់', '')}`.trim() : s ? s.en || s.name : l.type.split('·')[0].trim())), React.createElement("div", {
         style: {
           display: 'flex',
           gap: 3,
@@ -22179,7 +22214,7 @@ var ScheduleAgenda = ({
           fontSize: 13,
           fontWeight: 500
         }
-      }, studentMode ? l.type : l._classStudentIds && l._classStudentIds.length > 1 ? `🏫 ${tr('ថ្នាក់រៀន', 'Class')} · ${l._classStudentIds.length} ${tr('នាក់', '')}`.trim() : s ? s.name : l.type), React.createElement("div", {
+      }, studentMode ? l.type : l._classStudentIds && l._classStudentIds.length > 1 ? `🏫 ${l.className || tr('ថ្នាក់រៀន', 'Class')} · ${l._classStudentIds.length} ${tr('នាក់', '')}`.trim() : s ? s.name : l.type), React.createElement("div", {
         style: {
           fontSize: 11,
           color: 'var(--ink-3)',

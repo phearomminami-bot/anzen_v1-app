@@ -478,7 +478,7 @@ const LessonDetail = ({ lesson, onClose }) => {
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
         {!isStudent && ((lesson._classStudentIds && lesson._classStudentIds.length > 1) ? (
           <div style={{padding:14,background:'var(--surface-muted)',borderRadius:10,gridColumn:'1 / -1'}}>
-            <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace',marginBottom:8}}>🏫 {tr('ថ្នាក់រៀន','CLASS')} · {lesson._classStudentIds.length} {tr('សិស្ស','students')}</div>
+            <div style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'.05em',fontFamily:'"JetBrains Mono",monospace',marginBottom:8}}>🏫 {lesson.className || tr('ថ្នាក់រៀន','CLASS')} · {lesson._classStudentIds.length} {tr('សិស្ស','students')}</div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))',gap:8,maxHeight:180,overflowY:'auto'}}>
               {lesson._classStudentIds.map((sid,i)=>{ const st=studentById(sid); return (
                 <div key={i} style={{display:'flex',alignItems:'center',gap:8,minWidth:0}}>

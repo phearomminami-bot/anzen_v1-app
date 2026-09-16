@@ -399,7 +399,7 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                       <span style={{fontWeight:700,color:c.text,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',fontSize:10.5,flexShrink:1,minWidth:0}}>
                         {studentMode ? (lessonShort(l) || l.type.split('·')[0].trim())
                           : (l._classStudentIds && l._classStudentIds.length > 1)
-                            ? `🏫 ${tr('ថ្នាក់រៀន','Class')} · ${l._classStudentIds.length} ${tr('នាក់','')}`.trim()
+                            ? `🏫 ${l.className || tr('ថ្នាក់រៀន','Class')} · ${l._classStudentIds.length} ${tr('នាក់','')}`.trim()
                             : (s ? (s.en || s.name) : l.type.split('·')[0].trim())}
                       </span>
                     </div>
@@ -646,7 +646,7 @@ const ScheduleAgenda = ({ lessons = LESSONS, studentMode = false, weekDates = []
                   </div>
                   <div style={{width:isTheoryLesson(l)?7:4,height:32,background:c.accent,borderRadius:2}}/>
                   <div>
-                    <div style={{fontSize:13,fontWeight:500}}>{studentMode ? l.type : ((l._classStudentIds && l._classStudentIds.length > 1) ? `🏫 ${tr('ថ្នាក់រៀន','Class')} · ${l._classStudentIds.length} ${tr('នាក់','')}`.trim() : (s ? s.name : l.type))}</div>
+                    <div style={{fontSize:13,fontWeight:500}}>{studentMode ? l.type : ((l._classStudentIds && l._classStudentIds.length > 1) ? `🏫 ${l.className || tr('ថ្នាក់រៀន','Class')} · ${l._classStudentIds.length} ${tr('នាក់','')}`.trim() : (s ? s.name : l.type))}</div>
                     <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2}}>{studentMode ? (l.note||l.type.split('·')[1]?.trim()||'') : l.type}</div>
                   </div>
                   <div style={{fontSize:12,color:'var(--ink-2)'}}>

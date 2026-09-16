@@ -1860,6 +1860,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
   const [guests,    setGuests]    = React.useState(editLesson && Array.isArray(editLesson.guests) ? [...editLesson.guests] : []);
   const [vehId,     setVehId]     = React.useState(editLesson ? (editLesson.veh==='—' ? '' : editLesson.veh) : '');
   const [note,      setNote]      = React.useState(editLesson ? (editLesson.note || '') : '');
+  const [className, setClassName] = React.useState(editLesson ? (editLesson.className || '') : '');
   const [touched,   setTouched]   = React.useState({});
 
   // ── Location ──────────────────────────────────────────────────────────────
@@ -1966,6 +1967,7 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
         lessonNo,
         status: 'scheduled',
         pickup,
+        className: (classId && className.trim()) ? className.trim() : undefined,
         location: locationText.trim(),
         note: note.trim(),
         classId: classId || undefined,
@@ -2018,9 +2020,14 @@ const NewLessonForm = ({ onClose, ctx = {} }) => {
 
       {/* Class mode — booking many students at once (one lesson each) */}
       {ctx.classMode && !editLesson && (
-        <div style={{marginBottom:12,fontSize:12.5,color:'var(--ink-2)',background:'var(--accent-soft)',border:'1px solid var(--accent)',borderRadius:10,padding:'11px 13px',lineHeight:1.5,display:'flex',gap:8}}>
-          <span style={{fontSize:16,flexShrink:0}}>🏫</span>
-          <span>{tr('ថ្នាក់រៀន — ជ្រើស​សិស្ស​ច្រើន​នាក់​ខាង​ក្រោម។ មេរៀន​នឹង​បង្កើត​ដាច់​ដោយ​ឡែក​ក្នុង​កំណត់ត្រា​សិស្ស​ម្នាក់ៗ។','Class — pick several students below. A separate lesson is created in each student\'s record.')}</span>
+        <div style={{marginBottom:12}}>
+          <div style={{fontSize:12.5,color:'var(--ink-2)',background:'var(--accent-soft)',border:'1px solid var(--accent)',borderRadius:10,padding:'11px 13px',lineHeight:1.5,display:'flex',gap:8,marginBottom:10}}>
+            <span style={{fontSize:16,flexShrink:0}}>🏫</span>
+            <span>{tr('ថ្នាក់រៀន — ជ្រើស​សិស្ស​ច្រើន​នាក់​ខាង​ក្រោម។ មេរៀន​នឹង​បង្កើត​ដាច់​ដោយ​ឡែក​ក្នុង​កំណត់ត្រា​សិស្ស​ម្នាក់ៗ។','Class — pick several students below. A separate lesson is created in each student\'s record.')}</span>
+          </div>
+          <label style={{fontSize:11,fontWeight:700,color:'var(--ink-2)',display:'block',marginBottom:5}}>{tr('ឈ្មោះ​ថ្នាក់រៀន','Class name')}</label>
+          <input value={className} onChange={e=>setClassName(e.target.value)} placeholder={tr('ឧ. ច្បាប់​ចរាចរណ៍','e.g. Traffic Law')}
+            style={{width:'100%',padding:'10px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:14,fontWeight:600,boxSizing:'border-box',fontFamily:'var(--font-km),var(--font-en),inherit'}}/>
         </div>
       )}
 
