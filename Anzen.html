@@ -3355,7 +3355,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v231";</script>
+<script>window.__ANZEN_VERSION="v232";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -34428,17 +34428,20 @@ var printInstructorNotesPDF = (inst, notes, lang) => {
     var from = n.fromDate || n.date || '',
       to = n.toDate || from;
     var col = to && to < tday ? '#111' : from && from > tday ? '#1A4F96' : '#B0413E';
-    var dLabel = esc(from) + (to && to !== from ? ' → ' + esc(to) : '');
-    var tLabel = n.fromTime ? esc(String(n.fromTime).slice(0, 5)) + (n.toTime ? '–' + esc(String(n.toTime).slice(0, 5)) : '') : n.time ? esc(String(n.time).slice(0, 5)) : '';
+    var dLabel = esc(from) + (to && to !== from ? '<br>→ ' + esc(to) : '');
+    var tLabel = n.fromTime ? esc(String(n.fromTime).slice(0, 5)) + (n.toTime ? '<br>–' + esc(String(n.toTime).slice(0, 5)) : '') : n.time ? esc(String(n.time).slice(0, 5)) : '—';
     var studs = (n.studentIds || []).map(id => {
       var st = (window.STUDENTS || []).find(x => x.id === id);
       return st ? esc(st.name || st.en) : null;
     }).filter(Boolean).join(', ');
     return `<tr>
-      <td style="white-space:nowrap;font-family:monospace;font-weight:700;color:${col}">${dLabel}${tLabel ? '<br>' + tLabel : ''}</td>
-      <td><b style="color:${col}">${esc(n.content || n.title || '')}</b>${n.reason ? '<div style="color:#555;margin-top:2px"><span style="color:#999">' + L('មូលហេតុ', 'Reason') + ': </span>' + esc(n.reason) + '</div>' : ''}${n.location ? '<div style="color:#555;margin-top:2px">📍 ' + esc(n.location) + '</div>' : ''}${n.remark || n.description ? '<div style="color:#555;margin-top:2px;white-space:pre-wrap">' + esc(n.remark || n.description) + '</div>' : ''}${studs ? '<div style="color:#777;margin-top:3px;font-size:11px">👥 ' + studs + '</div>' : ''}${n.author ? '<div style="color:#999;margin-top:2px;font-size:11px">👤 ' + esc(n.author) + '</div>' : ''}</td>
+      <td style="white-space:nowrap;font-family:monospace;font-weight:700;color:${col}">${dLabel || '—'}</td>
+      <td style="white-space:nowrap;font-family:monospace;color:${col}">${tLabel}</td>
+      <td><b style="color:${col}">${esc(n.content || n.title || '') || '—'}</b>${n.location ? '<div style="color:#555;margin-top:2px">📍 ' + esc(n.location) + '</div>' : ''}${n.remark || n.description ? '<div style="color:#555;margin-top:2px;white-space:pre-wrap">' + esc(n.remark || n.description) + '</div>' : ''}${studs ? '<div style="color:#777;margin-top:3px;font-size:11px">👥 ' + studs + '</div>' : ''}</td>
+      <td style="color:#444">${n.reason ? esc(n.reason) : '—'}</td>
+      <td style="color:#666;white-space:nowrap">${n.author ? esc(n.author) : '—'}</td>
     </tr>`;
-  }).join('') : `<tr><td colspan="2" style="text-align:center;color:#999;padding:18px">${L('គ្មាន​ទិន្នន័យ', 'No data')}</td></tr>`;
+  }).join('') : `<tr><td colspan="5" style="text-align:center;color:#999;padding:18px">${L('គ្មាន​ទិន្នន័យ', 'No data')}</td></tr>`;
   var doc = `<!DOCTYPE html><html><head><meta charset="utf-8">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -34451,7 +34454,7 @@ var printInstructorNotesPDF = (inst, notes, lang) => {
     @media print{body{padding:0}}</style></head><body>
     <h1>${esc(ss.name || 'Anzen')}</h1><div class="sub">${L('ចំណាំ', 'Notes')} · ${esc(inst.en || inst.name || '')}${inst.id ? ' · ' + esc(inst.id) : ''}　·　${L('បោះពុម្ព', 'Printed')}: ${tday}</div>
     <div class="secbar">📝 ${L('ចំណាំ', 'Notes')}<span>${sorted.length}</span></div>
-    <table class="lt"><thead><tr><th style="width:130px">${L('ថ្ងៃ/ម៉ោង', 'Date / Time')}</th><th>${L('ចំណាំ', 'Note')}</th></tr></thead><tbody>${rows}</tbody></table>
+    <table class="lt"><thead><tr><th style="width:92px">${L('ថ្ងៃទី', 'Date')}</th><th style="width:58px">${L('ម៉ោង', 'Time')}</th><th>${L('ខ្លឹមសារ', 'Content')}</th><th style="width:24%">${L('មូលហេតុ', 'Reason')}</th><th style="width:88px">${L('អ្នកកត់ត្រា', 'Author')}</th></tr></thead><tbody>${rows}</tbody></table>
     </body></html>`;
   try {
     var idoc = iframe.contentWindow.document;
@@ -47870,20 +47873,23 @@ var printStudentLessonsPDF = (s, lessons, exams, lang, notesOnly) => {
   ${(() => {
       var tday = typeof todayStr === 'function' ? todayStr() : new Date().toISOString().slice(0, 10);
       var ntes = (window.__scheduleNotes || window.__schoolSettings && window.__schoolSettings.scheduleNotes || []).filter(n => (n.studentIds || []).includes(sid)).sort((a, b) => String(a.fromDate || a.date || '').localeCompare(String(b.fromDate || b.date || '')) || String(a.fromTime || a.time || '').localeCompare(String(b.fromTime || b.time || '')));
-      if (!ntes.length) return notesOnly ? `<div class="secbar" style="background:#CA8A04">📝 ${L('ចំណាំ', 'Notes')}</div><table class="lt"><tbody><tr><td colspan="2" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr></tbody></table>` : '';
+      if (!ntes.length) return notesOnly ? `<div class="secbar" style="background:#CA8A04">📝 ${L('ចំណាំ', 'Notes')}</div><table class="lt"><tbody><tr><td colspan="5" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr></tbody></table>` : '';
       var rows = ntes.map(n => {
         var from = n.fromDate || n.date || '',
           to = n.toDate || from;
         var col = to && to < tday ? '#111' : from && from > tday ? '#1A4F96' : '#B0413E';
-        var dLabel = esc(from) + (to && to !== from ? ' → ' + esc(to) : '');
-        var tLabel = n.fromTime ? esc(String(n.fromTime).slice(0, 5)) + (n.toTime ? '–' + esc(String(n.toTime).slice(0, 5)) : '') : n.time ? esc(String(n.time).slice(0, 5)) : '';
+        var dLabel = esc(from) + (to && to !== from ? '<br>→ ' + esc(to) : '');
+        var tLabel = n.fromTime ? esc(String(n.fromTime).slice(0, 5)) + (n.toTime ? '<br>–' + esc(String(n.toTime).slice(0, 5)) : '') : n.time ? esc(String(n.time).slice(0, 5)) : '—';
         return `<tr>
-      <td style="white-space:nowrap;font-family:monospace;font-weight:700;color:${col}">${dLabel}${tLabel ? '<br>' + tLabel : ''}</td>
-      <td><b style="color:${col}">${esc(n.content || n.title || '')}</b>${n.reason ? '<div style="color:#555;margin-top:2px"><span style="color:#999">' + L('មូលហេតុ', 'Reason') + ': </span>' + esc(n.reason) + '</div>' : ''}${n.location ? '<div style="color:#555;margin-top:2px">📍 ' + esc(n.location) + '</div>' : ''}${n.remark || n.description ? '<div style="color:#555;margin-top:2px;white-space:pre-wrap">' + esc(n.remark || n.description) + '</div>' : ''}${n.author ? '<div style="color:#999;margin-top:3px;font-size:11px">👤 ' + esc(n.author) + '</div>' : ''}</td>
+      <td style="white-space:nowrap;font-family:monospace;font-weight:700;color:${col}">${dLabel || '—'}</td>
+      <td style="white-space:nowrap;font-family:monospace;color:${col}">${tLabel}</td>
+      <td><b style="color:${col}">${esc(n.content || n.title || '') || '—'}</b>${n.location ? '<div style="color:#555;margin-top:2px">📍 ' + esc(n.location) + '</div>' : ''}${n.remark || n.description ? '<div style="color:#555;margin-top:2px;white-space:pre-wrap">' + esc(n.remark || n.description) + '</div>' : ''}</td>
+      <td style="color:#444">${n.reason ? esc(n.reason) : '—'}</td>
+      <td style="color:#666;white-space:nowrap">${n.author ? esc(n.author) : '—'}</td>
     </tr>`;
       }).join('');
       return `<div class="secbar" style="background:#CA8A04">📝 ${L('ចំណាំ', 'Notes')}<span class="r">${ntes.length}</span></div>
-    <table class="lt"><thead><tr><th style="width:124px">${L('ថ្ងៃ/ម៉ោង', 'Date / Time')}</th><th>${L('ចំណាំ', 'Note')}</th></tr></thead><tbody>${rows}</tbody></table>`;
+    <table class="lt"><thead><tr><th style="width:92px">${L('ថ្ងៃទី', 'Date')}</th><th style="width:58px">${L('ម៉ោង', 'Time')}</th><th>${L('ខ្លឹមសារ', 'Content')}</th><th style="width:24%">${L('មូលហេតុ', 'Reason')}</th><th style="width:84px">${L('អ្នកកត់ត្រា', 'Author')}</th></tr></thead><tbody>${rows}</tbody></table>`;
     })()}
 </div>
 </body></html>`;

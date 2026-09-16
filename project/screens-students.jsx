@@ -571,18 +571,21 @@ const printStudentLessonsPDF = (s, lessons, exams, lang, notesOnly) => {
     const tday = (typeof todayStr==='function'?todayStr():new Date().toISOString().slice(0,10));
     const ntes = (window.__scheduleNotes || (window.__schoolSettings && window.__schoolSettings.scheduleNotes) || []).filter(n => (n.studentIds||[]).includes(sid))
       .sort((a,b)=>String(a.fromDate||a.date||'').localeCompare(String(b.fromDate||b.date||'')) || String(a.fromTime||a.time||'').localeCompare(String(b.fromTime||b.time||'')));
-    if (!ntes.length) return notesOnly ? `<div class="secbar" style="background:#CA8A04">📝 ${L('ចំណាំ','Notes')}</div><table class="lt"><tbody><tr><td colspan="2" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr></tbody></table>` : '';
+    if (!ntes.length) return notesOnly ? `<div class="secbar" style="background:#CA8A04">📝 ${L('ចំណាំ','Notes')}</div><table class="lt"><tbody><tr><td colspan="5" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr></tbody></table>` : '';
     const rows = ntes.map(n => {
       const from = n.fromDate||n.date||'', to = n.toDate||from;
       const col = to && to < tday ? '#111' : (from && from > tday ? '#1A4F96' : '#B0413E');   // past black / future blue / today red
-      const dLabel = esc(from) + (to && to!==from ? ' → '+esc(to) : '');
-      const tLabel = n.fromTime ? esc(String(n.fromTime).slice(0,5)) + (n.toTime?'–'+esc(String(n.toTime).slice(0,5)):'') : (n.time?esc(String(n.time).slice(0,5)):'');
+      const dLabel = esc(from) + (to && to!==from ? '<br>→ '+esc(to) : '');
+      const tLabel = n.fromTime ? esc(String(n.fromTime).slice(0,5)) + (n.toTime?'<br>–'+esc(String(n.toTime).slice(0,5)):'') : (n.time?esc(String(n.time).slice(0,5)):'—');
       return `<tr>
-      <td style="white-space:nowrap;font-family:monospace;font-weight:700;color:${col}">${dLabel}${tLabel?'<br>'+tLabel:''}</td>
-      <td><b style="color:${col}">${esc(n.content||n.title||'')}</b>${n.reason?'<div style="color:#555;margin-top:2px"><span style="color:#999">'+L('មូលហេតុ','Reason')+': </span>'+esc(n.reason)+'</div>':''}${n.location?'<div style="color:#555;margin-top:2px">📍 '+esc(n.location)+'</div>':''}${(n.remark||n.description)?'<div style="color:#555;margin-top:2px;white-space:pre-wrap">'+esc(n.remark||n.description)+'</div>':''}${n.author?'<div style="color:#999;margin-top:3px;font-size:11px">👤 '+esc(n.author)+'</div>':''}</td>
+      <td style="white-space:nowrap;font-family:monospace;font-weight:700;color:${col}">${dLabel||'—'}</td>
+      <td style="white-space:nowrap;font-family:monospace;color:${col}">${tLabel}</td>
+      <td><b style="color:${col}">${esc(n.content||n.title||'')||'—'}</b>${n.location?'<div style="color:#555;margin-top:2px">📍 '+esc(n.location)+'</div>':''}${(n.remark||n.description)?'<div style="color:#555;margin-top:2px;white-space:pre-wrap">'+esc(n.remark||n.description)+'</div>':''}</td>
+      <td style="color:#444">${n.reason?esc(n.reason):'—'}</td>
+      <td style="color:#666;white-space:nowrap">${n.author?esc(n.author):'—'}</td>
     </tr>`; }).join('');
     return `<div class="secbar" style="background:#CA8A04">📝 ${L('ចំណាំ','Notes')}<span class="r">${ntes.length}</span></div>
-    <table class="lt"><thead><tr><th style="width:124px">${L('ថ្ងៃ/ម៉ោង','Date / Time')}</th><th>${L('ចំណាំ','Note')}</th></tr></thead><tbody>${rows}</tbody></table>`;
+    <table class="lt"><thead><tr><th style="width:92px">${L('ថ្ងៃទី','Date')}</th><th style="width:58px">${L('ម៉ោង','Time')}</th><th>${L('ខ្លឹមសារ','Content')}</th><th style="width:24%">${L('មូលហេតុ','Reason')}</th><th style="width:84px">${L('អ្នកកត់ត្រា','Author')}</th></tr></thead><tbody>${rows}</tbody></table>`;
   })()}
 </div>
 </body></html>`;
