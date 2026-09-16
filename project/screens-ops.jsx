@@ -68,13 +68,15 @@ function WheelPicker({ items, value, onChange, itemHeight, visible }){
       <div style={{ height: pad }} />
       {items.map((it, i) => {
         const dist = Math.abs(i - active), on = dist === 0;
+        const af = Math.round(itemHeight * 0.6);                        // active font scales with row height
+        const bf = Math.max(12, Math.round(itemHeight * 0.47) - dist * 1.6);
         return (
           <div key={it}
             onClick={() => { const el = ref.current; if (el) el.scrollTo({ top: i * itemHeight, behavior: 'smooth' }); if (it !== value) onChange(it); }}
             style={{
               height: itemHeight, display: 'flex', alignItems: 'center', justifyContent: 'center',
               scrollSnapAlign: 'center', fontFamily: '"JetBrains Mono",ui-monospace,monospace',
-              fontSize: on ? 23 : Math.max(13, 18 - dist * 1.6), fontWeight: on ? 800 : 500,
+              fontSize: on ? af : bf, fontWeight: on ? 800 : 500,
               color: 'var(--ink)', opacity: on ? 1 : Math.max(0.16, 0.52 - dist * 0.13),
               transition: 'font-size .12s ease, opacity .12s ease', cursor: 'pointer', userSelect: 'none'
             }}>{it}</div>
@@ -86,21 +88,23 @@ function WheelPicker({ items, value, onChange, itemHeight, visible }){
 }
 
 // Hour + minute drum picker. value / placeholder are "HH:MM". Minutes step by 1.
-function TimeWheel({ value, placeholder, onChange, hours }){
+// `ih` sets the row height (bigger = a more prominent, iOS-style drum); `bare`
+// drops the card background/band so several drums can share one container band.
+function TimeWheel({ value, placeholder, onChange, hours, ih, bare }){
   const M = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
   const base = value || placeholder || (hours[0] + ':00');
   const hVal = base.split(':')[0];
   const mVal = base.split(':')[1] || '00';
-  const ih = 38, vis = 5;
+  ih = ih || 38; const vis = 5;
   return (
-    <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', background: 'var(--surface)' }}>
-      <div style={{
+    <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', background: bare ? 'transparent' : 'var(--surface)' }}>
+      {!bare && <div style={{
         position: 'absolute', left: 6, right: 6, top: '50%', transform: 'translateY(-50%)',
         height: ih, background: 'var(--accent-soft,rgba(127,127,127,.16))', borderRadius: 10, pointerEvents: 'none', zIndex: 0
-      }} />
+      }} />}
       <div style={{ display: 'flex', alignItems: 'stretch', position: 'relative', zIndex: 1 }}>
         <WheelPicker items={hours} value={hVal} onChange={nh => onChange(nh + ':' + mVal)} itemHeight={ih} visible={vis} />
-        <div style={{ display: 'flex', alignItems: 'center', fontWeight: 800, fontSize: 20, color: 'var(--ink-3)', padding: '0 2px' }}>:</div>
+        <div style={{ display: 'flex', alignItems: 'center', fontWeight: 800, fontSize: Math.round(ih * 0.5), color: 'var(--ink-3)', padding: '0 2px' }}>:</div>
         <WheelPicker items={M} value={mVal} onChange={nm => onChange(hVal + ':' + nm)} itemHeight={ih} visible={vis} />
       </div>
     </div>
@@ -1525,154 +1529,155 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
               );
             })() : (
             <>
-            {(() => { const nInp = {width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',colorScheme:'light dark',fontFamily:'var(--font-km),var(--font-en),inherit'};
-              const nLbl = {fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'block',marginBottom:5};
-              const TIME_OPTS = (() => { const a=[]; for(let h=6;h<=20;h++){ a.push(String(h).padStart(2,'0')+':00'); a.push(String(h).padStart(2,'0')+':30'); } return a; })();
+            {(() => {
               const TIME_PRESETS = [{k:'full',km:'ពេញ​ថ្ងៃ',en:'Full day',f:'08:00',t:'17:00'},{k:'am',km:'ព្រឹក',en:'Half AM',f:'08:00',t:'12:00'},{k:'pm',km:'រសៀល',en:'Half PM',f:'13:00',t:'17:00'}];
               const HOURS = Array.from({length:18},(_,i)=>String(i+5).padStart(2,'0'));   // 05..22
-              const MINS  = ['00','05','10','15','20','25','30','35','40','45','50','55'];
               const addHour = (t)=>{ if(!t) return ''; const [h,mi]=String(t).split(':'); const nh=Math.min(22,(parseInt(h,10)||0)+1); return String(nh).padStart(2,'0')+':'+(mi||'00'); };
-              const hOf = (t)=> t ? String(t).split(':')[0] : '';
-              const mOf = (t)=> t ? (String(t).split(':')[1]||'00') : '00';
-              const setTP = (which, part, val) => setNoteModal(m => {
-                const cur = m[which] || ''; let h = cur?cur.split(':')[0]:'', mi = cur?(cur.split(':')[1]||'00'):'00';
-                if (part==='h') h = val; if (part==='m') mi = val;
-                return { ...m, [which]: h==='' ? '' : (h+':'+mi) };
-              });
-              return (<>
-            {/* Date range (from → to; single day = same date) */}
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+              // iOS-style grouped-sheet tokens
+              const panel = {background:'var(--surface-muted)',margin:'2px -20px 0',padding:'14px 12px 6px',display:'flex',flexDirection:'column',gap:16};
+              const cap   = {fontSize:11,fontWeight:700,letterSpacing:'.02em',color:'var(--ink-3)',textTransform:'uppercase',margin:'0 6px 7px',display:'flex',alignItems:'center',gap:6};
+              const card  = {background:'var(--surface)',border:'1px solid var(--border)',borderRadius:14,overflow:'hidden'};
+              const rowS  = {display:'flex',alignItems:'center',gap:10,padding:'11px 14px'};
+              const rowLbl= {fontSize:13,color:'var(--ink-2)',fontWeight:500,flex:'0 0 auto',minWidth:64};
+              const rowInp= {flex:1,minWidth:0,border:'none',background:'transparent',color:'var(--ink)',font:'inherit',fontSize:14,fontWeight:600,textAlign:'right',outline:'none',padding:0};
+              const hair  = {borderTop:'1px solid var(--border)'};
+              const mono  = '"JetBrains Mono",ui-monospace,monospace';
+              const IcnCal = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>;
+              const IcnClk = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>;
+              const IcnLst = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg>;
+              return (
+            <div style={panel}>
+              {/* Date group */}
               <div>
-                <label style={nLbl}>{tr('កាល​បរិច្ឆេទ ចាប់ពី','Date from')}</label>
-                <input type="date" value={noteModal.fromDate||''} onChange={e=>setNoteModal(m=>({...m,fromDate:e.target.value, toDate:(!m.toDate||m.toDate<e.target.value)?e.target.value:m.toDate}))} style={nInp}/>
+                <div style={cap}>{IcnCal}{tr('កាល​បរិច្ឆេទ','Date')}</div>
+                <div style={card}>
+                  <label style={rowS}><span style={rowLbl}>{tr('ចាប់ពី','From')}</span>
+                    <input type="date" value={noteModal.fromDate||''} onChange={e=>setNoteModal(m=>({...m,fromDate:e.target.value, toDate:(!m.toDate||m.toDate<e.target.value)?e.target.value:m.toDate}))} style={{...rowInp,fontFamily:mono,color:'var(--accent)'}}/></label>
+                  <label style={{...rowS,...hair}}><span style={rowLbl}>{tr('ដល់','To')}</span>
+                    <input type="date" value={noteModal.toDate||noteModal.fromDate||''} min={noteModal.fromDate||''} onChange={e=>setNoteModal(m=>({...m,toDate:e.target.value}))} style={{...rowInp,fontFamily:mono,color:'var(--accent)'}}/></label>
+                </div>
               </div>
+
+              {/* Time group — segmented presets + big centred drum */}
               <div>
-                <label style={nLbl}>{tr('ដល់','To')}</label>
-                <input type="date" value={noteModal.toDate||noteModal.fromDate||''} min={noteModal.fromDate||''} onChange={e=>setNoteModal(m=>({...m,toDate:e.target.value}))} style={nInp}/>
-              </div>
-            </div>
-            {/* Time — quick presets + optional from/to (scroll pickers) */}
-            <div>
-              <label style={nLbl}>{tr('ម៉ោង (ស្រេចចិត្ត)','Time (optional)')}</label>
-              <div style={{display:'flex',gap:6,marginBottom:8}}>
-                {TIME_PRESETS.map(p => { const active = noteModal.fromTime===p.f && noteModal.toTime===p.t; return (
-                  <button key={p.k} type="button" onClick={()=>setNoteModal(m=>({...m,fromTime:p.f,toTime:p.t}))} style={{
-                    flex:1,padding:'8px 6px',borderRadius:8,cursor:'pointer',fontSize:12,fontWeight:700,fontFamily:'inherit',
-                    border:'1.5px solid '+(active?'var(--accent)':'var(--border)'),
-                    background:active?'var(--accent-soft)':'var(--surface)', color:active?'var(--accent)':'var(--ink-2)'}}>{tr(p.km,p.en)}</button>
-                ); })}
-              </div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-                {[{k:'fromTime',l:tr('ចាប់ពី','From'),ph:'09:00'},
-                  {k:'toTime',l:tr('ដល់','To'),ph:addHour(noteModal.fromTime)||'10:00'}].map(f => (
-                  <div key={f.k}>
-                    <div style={{display:'flex',alignItems:'baseline',justifyContent:'space-between',marginBottom:3}}>
-                      <label style={{...nLbl,fontSize:10.5,margin:0}}>{f.l}</label>
-                      {noteModal[f.k] ? <button type="button" onClick={()=>setNoteModal(m=>({...m,[f.k]:''}))}
-                        style={{background:'none',border:'none',color:'var(--ink-3)',fontSize:10.5,cursor:'pointer',padding:0,fontFamily:'inherit'}}>{tr('សម្អាត','clear')}</button> : null}
-                    </div>
-                    <TimeWheel value={noteModal[f.k]||''} placeholder={f.ph} hours={HOURS}
-                      onChange={v=>setNoteModal(m=>({...m,[f.k]:v}))} />
+                <div style={cap}>{IcnClk}{tr('ម៉ោង','Time')}<span style={{textTransform:'none',letterSpacing:0,fontWeight:500,color:'var(--ink-3)'}}>({tr('ស្រេចចិត្ត','optional')})</span></div>
+                <div style={{...card,padding:'12px 12px 14px'}}>
+                  <div style={{display:'flex',background:'var(--surface-muted)',borderRadius:10,padding:3,marginBottom:14}}>
+                    {TIME_PRESETS.map(p => { const active = noteModal.fromTime===p.f && noteModal.toTime===p.t; return (
+                      <button key={p.k} type="button" onClick={()=>setNoteModal(m=>({...m,fromTime:p.f,toTime:p.t}))} style={{
+                        flex:1,textAlign:'center',padding:'7px 4px',borderRadius:8,border:'none',cursor:'pointer',fontSize:12.5,
+                        fontWeight:active?700:600,fontFamily:'inherit',background:active?'var(--surface)':'transparent',
+                        color:active?'var(--accent)':'var(--ink-3)',boxShadow:active?'0 1px 3px rgba(0,0,0,.10)':'none'}}>{tr(p.km,p.en)}</button>
+                    ); })}
                   </div>
-                ))}
+                  <div style={{display:'flex',marginBottom:2}}>
+                    {[{k:'fromTime',l:tr('ចាប់ពី','From')},{k:'toTime',l:tr('ដល់','To')}].map(f => (
+                      <div key={f.k} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+                        <span style={{fontSize:11,color:'var(--ink-3)'}}>{f.l}</span>
+                        {noteModal[f.k] ? <button type="button" onClick={()=>setNoteModal(m=>({...m,[f.k]:''}))} title={tr('សម្អាត','clear')}
+                          style={{background:'none',border:'none',color:'var(--ink-3)',fontSize:13,lineHeight:1,cursor:'pointer',padding:0,fontFamily:'inherit'}}>×</button> : null}
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{position:'relative',borderRadius:12,overflow:'hidden'}}>
+                    <div style={{position:'absolute',left:0,right:0,top:'50%',transform:'translateY(-50%)',height:44,background:'var(--surface-muted)',borderRadius:12,pointerEvents:'none'}}/>
+                    <div style={{position:'relative',display:'flex',alignItems:'stretch'}}>
+                      <div style={{flex:1}}><TimeWheel value={noteModal.fromTime||''} placeholder={'09:00'} hours={HOURS} ih={44} bare onChange={v=>setNoteModal(m=>({...m,fromTime:v}))}/></div>
+                      <div style={{width:1,alignSelf:'center',height:120,background:'var(--border)'}}/>
+                      <div style={{flex:1}}><TimeWheel value={noteModal.toTime||''} placeholder={addHour(noteModal.fromTime)||'10:00'} hours={HOURS} ih={44} bare onChange={v=>setNoteModal(m=>({...m,toTime:v}))}/></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Info group */}
+              <div>
+                <div style={cap}>{IcnLst}{tr('ព័ត៌មាន','Details')}</div>
+                <div style={card}>
+                  <label style={rowS}><span style={rowLbl}>{tr('ខ្លឹមសារ','Content')}</span>
+                    <input value={noteModal.content||''} onChange={e=>setNoteModal(m=>({...m,content:e.target.value}))} placeholder={tr('ឧ. ឈប់សម្រាក','e.g. On leave')} autoFocus style={rowInp}/></label>
+                  <label style={{...rowS,...hair}}><span style={rowLbl}>{tr('មូលហេតុ','Reason')}</span>
+                    <input value={noteModal.reason||''} onChange={e=>setNoteModal(m=>({...m,reason:e.target.value}))} placeholder={tr('ឧ. ធ្វើ​ដំណើរ','e.g. Travelling')} style={{...rowInp,fontWeight:500}}/></label>
+                  <label style={{...rowS,...hair}}><span style={rowLbl}>{tr('ទីតាំង','Location')}</span>
+                    <input value={noteModal.location||''} onChange={e=>setNoteModal(m=>({...m,location:e.target.value}))} placeholder={tr('ឧ. ភ្នំពេញ','e.g. Phnom Penh')} style={{...rowInp,fontWeight:500}}/></label>
+                  <div style={{...hair,padding:'10px 14px'}}>
+                    <textarea value={noteModal.remark||''} onChange={e=>setNoteModal(m=>({...m,remark:e.target.value}))} rows={2} placeholder={tr('ចំណាំ​បន្ថែម','Extra note')}
+                      style={{width:'100%',border:'none',background:'transparent',color:'var(--ink)',font:'inherit',fontSize:14,fontWeight:500,resize:'vertical',outline:'none',boxSizing:'border-box'}}/>
+                  </div>
+                </div>
               </div>
             </div>
-            <div>
-              <label style={nLbl}>{tr('ខ្លឹមសារ','Content')}</label>
-              <input value={noteModal.content||''} onChange={e=>setNoteModal(m=>({...m,content:e.target.value}))} placeholder={tr('ឧ. ឈប់សម្រាក','e.g. On leave')} autoFocus style={nInp}/>
-            </div>
-            <div>
-              <label style={nLbl}>{tr('មូលហេតុ','Reason')}</label>
-              <input value={noteModal.reason||''} onChange={e=>setNoteModal(m=>({...m,reason:e.target.value}))} placeholder={tr('ឧ. ធ្វើ​ដំណើរ​ទៅ​ខេត្ត','e.g. Travelling to province')} style={nInp}/>
-            </div>
-            <div>
-              <label style={nLbl}>{tr('ទីតាំង','Location')}</label>
-              <input value={noteModal.location||''} onChange={e=>setNoteModal(m=>({...m,location:e.target.value}))} placeholder={tr('ឧ. ភ្នំពេញ','e.g. Phnom Penh')} style={nInp}/>
-            </div>
-            <div>
-              <label style={nLbl}>{tr('ចំណាំ','Remark')}</label>
-              <textarea value={noteModal.remark||''} onChange={e=>setNoteModal(m=>({...m,remark:e.target.value}))} rows={2} placeholder={tr('ព័ត៌មាន​បន្ថែម','Extra details')} style={{...nInp,resize:'vertical'}}/>
-            </div>
-            </>); })()}
+              ); })()}
 
-            {/* Students — attach this note to one or more students (shows in their
-                lessons popup under the Note tab, and in their PDF). */}
-            <div>
-              <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'flex',alignItems:'center',gap:5,marginBottom:7}}>
-                <Icon name="users" size={13}/> {tr('សិស្ស','Students')}
-                {(noteModal.studentIds||[]).length>0 && <span style={{color:'var(--accent)',fontWeight:700}}>· {(noteModal.studentIds||[]).length}</span>}
-              </label>
-              <select value="" onChange={e=>{ if(e.target.value) toggleNoteStudent(e.target.value); }}
-                style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',colorScheme:'light dark'}}>
-                <option value="">{tr('+ ជ្រើស​សិស្ស','+ Select student')}</option>
-                {STUDENTS.filter(s => !(noteModal.studentIds||[]).includes(s.id) && !(window.__isGraduated && window.__isGraduated(s))).map(s => (
-                  <option key={s.id} value={s.id}>{s.en||s.name}{s.id?' · '+s.id:''}</option>
-                ))}
-              </select>
-              {(noteModal.studentIds||[]).length > 0 && (
-                <div style={{display:'flex',flexWrap:'wrap',gap:6,marginTop:8}}>
-                  {(noteModal.studentIds||[]).map(id => {
-                    const s = STUDENTS.find(x => x.id === id);
-                    return (
-                      <span key={id} style={{display:'inline-flex',alignItems:'center',gap:6,padding:'6px 11px',borderRadius:20,
-                        border:'1px solid var(--accent)',background:'var(--accent-soft)',color:'var(--accent)',fontSize:12,fontWeight:600}}>
-                        {s ? (s.name || s.en) : id}
-                        <button onClick={()=>toggleNoteStudent(id)} title={tr('ដក​ចេញ','Remove')}
-                          style={{border:'none',background:'none',cursor:'pointer',color:'var(--accent)',fontSize:15,lineHeight:1,padding:0}}>×</button>
-                      </span>
-                    );
-                  })}
+            {(() => {
+              const panelB = {background:'var(--surface-muted)',margin:'-14px -20px -20px',padding:'6px 12px 16px',display:'flex',flexDirection:'column',gap:16};
+              const cap    = {fontSize:11,fontWeight:700,letterSpacing:'.02em',color:'var(--ink-3)',textTransform:'uppercase',margin:'0 6px 7px',display:'flex',alignItems:'center',gap:6};
+              const card   = {background:'var(--surface)',border:'1px solid var(--border)',borderRadius:14,overflow:'hidden'};
+              const sel    = {width:'100%',padding:'12px 14px',border:'none',background:'transparent',color:'var(--ink-2)',font:'inherit',fontSize:14,boxSizing:'border-box',colorScheme:'light dark',cursor:'pointer'};
+              const chipsWrap = {borderTop:'1px solid var(--border)',padding:'10px 12px',display:'flex',flexWrap:'wrap',gap:6};
+              const chip   = {display:'inline-flex',alignItems:'center',gap:6,padding:'6px 11px',borderRadius:20,border:'1px solid var(--accent)',background:'var(--accent-soft)',color:'var(--accent)',fontSize:12,fontWeight:600};
+              const cx     = {border:'none',background:'none',cursor:'pointer',color:'var(--accent)',fontSize:15,lineHeight:1,padding:0};
+              const nStu = (noteModal.studentIds||[]).length, nIns = (noteModal.invited||[]).length;
+              return (
+            <div style={panelB}>
+              {/* Students */}
+              <div>
+                <div style={cap}><Icon name="users" size={13}/>{tr('សិស្ស','Students')}{nStu>0 && <span style={{color:'var(--accent)',fontWeight:700}}>· {nStu}</span>}</div>
+                <div style={card}>
+                  <select value="" onChange={e=>{ if(e.target.value) toggleNoteStudent(e.target.value); }} style={sel}>
+                    <option value="">{tr('+ ជ្រើស​សិស្ស','+ Select student')}</option>
+                    {STUDENTS.filter(s => !(noteModal.studentIds||[]).includes(s.id) && !(window.__isGraduated && window.__isGraduated(s))).map(s => (
+                      <option key={s.id} value={s.id}>{s.en||s.name}{s.id?' · '+s.id:''}</option>
+                    ))}
+                  </select>
+                  {nStu > 0 && (
+                    <div style={chipsWrap}>
+                      {(noteModal.studentIds||[]).map(id => { const s = STUDENTS.find(x => x.id === id); return (
+                        <span key={id} style={chip}>{s ? (s.en || s.name) : id}
+                          <button onClick={()=>toggleNoteStudent(id)} title={tr('ដក​ចេញ','Remove')} style={cx}>×</button></span>
+                      ); })}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-
-            {/* Invite instructors (Google-Calendar style guests) */}
-            <div>
-              <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'flex',alignItems:'center',gap:5,marginBottom:7}}>
-                <Icon name="users" size={13}/> {tr('អញ្ជើញ​គ្រូ','Invite instructors')}
-                {(noteModal.invited||[]).length>0 && <span style={{color:'var(--accent)',fontWeight:700}}>· {(noteModal.invited||[]).length}</span>}
-              </label>
-              {/* Dropdown — instructor names always shown in English */}
-              <select value="" onChange={e=>{ if(e.target.value) toggleInvite(e.target.value); }}
-                style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',colorScheme:'light dark'}}>
-                <option value="">{tr('+ ជ្រើស​គ្រូ','+ Select instructor')}</option>
-                {INSTRUCTORS.filter(i => !(noteModal.invited||[]).includes(i.id)).map(i => (
-                  <option key={i.id} value={i.id}>{i.en || i.name}</option>
-                ))}
-              </select>
-              {(noteModal.invited||[]).length > 0 && (
-                <div style={{display:'flex',flexWrap:'wrap',gap:6,marginTop:8}}>
-                  {(noteModal.invited||[]).map(id => {
-                    const i = INSTRUCTORS.find(x => x.id === id);
-                    if (!i) return null;
-                    return (
-                      <span key={id} style={{display:'inline-flex',alignItems:'center',gap:6,padding:'6px 11px',borderRadius:20,
-                        border:'1px solid var(--accent)',background:'var(--accent-soft)',color:'var(--accent)',fontSize:12,fontWeight:600}}>
-                        {i.en || i.name}
-                        <button onClick={()=>toggleInvite(id)} title={tr('ដក​ចេញ','Remove')}
-                          style={{border:'none',background:'none',cursor:'pointer',color:'var(--accent)',fontSize:15,lineHeight:1,padding:0}}>×</button>
-                      </span>
-                    );
-                  })}
-                </div>
-              )}
-              {INSTRUCTORS.length===0 && <span style={{fontSize:12,color:'var(--ink-3)'}}>{tr('មិន​មាន​គ្រូ','No instructors')}</span>}
-            </div>
-
-            {/* Author (creator) */}
-            <div style={{fontSize:11,color:'var(--ink-3)',display:'flex',alignItems:'center',gap:5,borderTop:'1px dashed var(--border)',paddingTop:10}}>
-              👤 {tr('បង្កើត​ដោយ','Created by')}: <span style={{fontWeight:600,color:'var(--ink-2)'}}>{noteModal.author || meName}</span>
-            </div>
-
-            <div style={{display:'flex',gap:8,justifyContent:'space-between',alignItems:'center'}}>
-              {noteModal.id
-                ? <Btn kind="ghost" size="md" style={{color:'var(--danger)'}} onClick={()=>{ removeNote(noteModal.id); setNoteModal(null); }}>{tr('លុប','Delete')}</Btn>
-                : <span/>}
-              <div style={{display:'flex',gap:8}}>
-                <Btn kind="ghost" size="md" onClick={()=>setNoteModal(null)}>{tr('បោះបង់','Cancel')}</Btn>
-                <Btn kind="primary" size="md" onClick={submitNote}>{tr('រក្សាទុក','Save')}</Btn>
               </div>
+
+              {/* Instructors */}
+              <div>
+                <div style={cap}><Icon name="users" size={13}/>{tr('អញ្ជើញ​គ្រូ','Invite instructors')}{nIns>0 && <span style={{color:'var(--accent)',fontWeight:700}}>· {nIns}</span>}</div>
+                <div style={card}>
+                  <select value="" onChange={e=>{ if(e.target.value) toggleInvite(e.target.value); }} style={sel}>
+                    <option value="">{tr('+ ជ្រើស​គ្រូ','+ Select instructor')}</option>
+                    {INSTRUCTORS.filter(i => !(noteModal.invited||[]).includes(i.id)).map(i => (
+                      <option key={i.id} value={i.id}>{i.en || i.name}</option>
+                    ))}
+                  </select>
+                  {nIns > 0 && (
+                    <div style={chipsWrap}>
+                      {(noteModal.invited||[]).map(id => { const i = INSTRUCTORS.find(x => x.id === id); if (!i) return null; return (
+                        <span key={id} style={chip}>{i.en || i.name}
+                          <button onClick={()=>toggleInvite(id)} title={tr('ដក​ចេញ','Remove')} style={cx}>×</button></span>
+                      ); })}
+                    </div>
+                  )}
+                  {INSTRUCTORS.length===0 && <div style={{padding:'0 14px 12px',fontSize:12,color:'var(--ink-3)'}}>{tr('មិន​មាន​គ្រូ','No instructors')}</div>}
+                </div>
+              </div>
+
+              {/* Author */}
+              <div style={{fontSize:11,color:'var(--ink-3)',display:'flex',alignItems:'center',justifyContent:'center',gap:5}}>
+                👤 {tr('បង្កើត​ដោយ','By')}: <span style={{fontWeight:600,color:'var(--ink-2)'}}>{noteModal.author || meName}</span>
+              </div>
+
+              {/* Actions */}
+              <div style={{display:'flex',gap:10}}>
+                <Btn kind="ghost" size="lg" onClick={()=>setNoteModal(null)} style={{flex:'0 0 auto'}}>{tr('បោះបង់','Cancel')}</Btn>
+                <Btn kind="primary" size="lg" onClick={submitNote} style={{flex:1,justifyContent:'center'}}>{tr('រក្សាទុក','Save')}</Btn>
+              </div>
+              {noteModal.id && (
+                <Btn kind="ghost" size="md" style={{color:'var(--danger)',justifyContent:'center'}} onClick={()=>{ removeNote(noteModal.id); setNoteModal(null); }}>{tr('លុប​ចំណាំ​នេះ','Delete note')}</Btn>
+              )}
             </div>
+              ); })()}
             </>
             )}
           </div>
