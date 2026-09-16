@@ -566,6 +566,18 @@ const printStudentLessonsPDF = (s, lessons, exams, lang) => {
   </table>`).join('') : `
   <div class="secbar">${L('ប្រវត្តិសិក្សា','Lesson Records')}</div>
   <table class="lt"><tbody><tr><td colspan="3" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr></tbody></table>`}
+
+  ${(() => {
+    const ntes = (window.__scheduleNotes||[]).filter(n => (n.studentIds||[]).includes(sid))
+      .sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')) || String(a.time||'').localeCompare(String(b.time||'')));
+    if (!ntes.length) return '';
+    const rows = ntes.map(n => `<tr>
+      <td style="white-space:nowrap;font-family:monospace;color:#444;font-weight:700">${esc(n.date||'')}${n.time?'<br>'+esc(String(n.time).slice(0,5)):''}</td>
+      <td><b>${esc(n.title||'')}</b>${n.description?'<div style="color:#555;margin-top:2px;white-space:pre-wrap">'+esc(n.description)+'</div>':''}${n.author?'<div style="color:#999;margin-top:3px;font-size:11px">👤 '+esc(n.author)+'</div>':''}</td>
+    </tr>`).join('');
+    return `<div class="secbar" style="background:#CA8A04">📝 ${L('ចំណាំ','Notes')}<span class="r">${ntes.length}</span></div>
+    <table class="lt"><thead><tr><th style="width:124px">${L('ថ្ងៃ/ម៉ោង','Date / Time')}</th><th>${L('ចំណាំ','Note')}</th></tr></thead><tbody>${rows}</tbody></table>`;
+  })()}
 </div>
 </body></html>`;
   try { const idoc = iframe.contentWindow.document; idoc.open(); idoc.write(doc); idoc.close(); } catch(e){}
@@ -1311,7 +1323,12 @@ const StudentsScreenV2 = () => {
               return { p, items, hours: lessonItems.length, thHours, prHours, hourMap: buildHourNumbering(phaseLessons) };
             }).filter(g => g.items.length > 0);
             const totalHrs = groups.reduce((a,g)=>a+g.hours,0);
-            const curPhase = (viewPhase && groups.some(g=>g.p.k===viewPhase)) ? viewPhase : ((groups[0] && groups[0].p.k) || '');
+            // Notes attached to this student (leave, reasons, plans — not lessons).
+            const studentNotes = (window.__scheduleNotes || [])
+              .filter(n => (n.studentIds || []).includes(s.id))
+              .sort((a,b) => String(a.date||'').localeCompare(String(b.date||'')) || String(a.time||'').localeCompare(String(b.time||'')));
+            const curPhase = (viewPhase && (viewPhase==='__note' ? studentNotes.length>0 : groups.some(g=>g.p.k===viewPhase))) ? viewPhase : ((groups[0] && groups[0].p.k) || (studentNotes.length ? '__note' : ''));
+            const noteView = curPhase === '__note';
             const curGroup = groups.find(g => g.p.k === curPhase);
             const pdfLessons = studentLessons.filter(l => pdfPhase === 'all' || lessonPhase(l) === pdfPhase);
             const pdfExams   = studentExams.filter(e => pdfPhase === 'all' || (e.phase||'KH') === pdfPhase);
@@ -1339,7 +1356,7 @@ const StudentsScreenV2 = () => {
                       <div style={{flex:1,minWidth:0,fontSize:15,fontWeight:700,fontFamily:'var(--font-km)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{tr('បញ្ជីមេរៀន','Lessons')} · {s.en||s.name}</div>
                       <button onClick={()=>setLessonsOpen(false)} aria-label={tr('បិទ','Close')} style={{border:'none',background:'var(--surface-muted)',borderRadius:8,width:30,height:30,cursor:'pointer',color:'var(--ink-2)',fontSize:15,lineHeight:1,flexShrink:0}}>✕</button>
                     </div>
-                    {groups.length>0 && (
+                    {(groups.length>0 || studentNotes.length>0) && (
                       <div style={{display:'flex',gap:6,overflowX:'auto',paddingBottom:2}}>
                         {groups.map(g => { const active = g.p.k===curPhase; return (
                           <button key={g.p.k} onClick={()=>setViewPhase(g.p.k)} style={{
@@ -1349,13 +1366,35 @@ const StudentsScreenV2 = () => {
                             {g.p.label} <span style={{opacity:.85,fontFamily:'"JetBrains Mono",monospace',fontWeight:600}} title={tr('ទ្រឹស្ដី / អនុវត្ត','Theory / Practical')}>{g.thHours} / {g.prHours}</span>
                           </button>
                         ); })}
+                        {studentNotes.length>0 && (() => { const active = noteView; return (
+                          <button onClick={()=>setViewPhase('__note')} style={{
+                            flexShrink:0,display:'inline-flex',alignItems:'center',gap:6,padding:'6px 13px',borderRadius:999,cursor:'pointer',fontFamily:'inherit',
+                            border:'1.5px solid '+(active?'#CA8A04':'var(--border)'),
+                            background: active?'#CA8A04':'var(--surface)', color: active?'#fff':'var(--ink-2)',fontSize:12.5,fontWeight:700}}>
+                            📝 {tr('ចំណាំ','Note')} <span style={{opacity:.85,fontFamily:'"JetBrains Mono",monospace',fontWeight:600}}>{studentNotes.length}</span>
+                          </button>
+                        ); })()}
                       </div>
                     )}
                   </div>
 
-                  {/* Body — the selected phase's lessons */}
+                  {/* Body — the selected phase's lessons, or the student's notes */}
                   <div style={{padding:'8px 14px 14px'}}>
-                    {groups.length===0 ? (
+                    {noteView ? (
+                      studentNotes.length===0 ? (
+                        <div style={{fontSize:13,color:'var(--ink-3)',textAlign:'center',padding:'28px 0'}}>{tr('មិន​ទាន់​មាន​ចំណាំ','No notes yet')}</div>
+                      ) : studentNotes.map((n,i) => (
+                        <div key={n.id||('nt'+i)} style={{borderBottom:'1px solid var(--border)',padding:'11px 0'}}>
+                          <div style={{display:'flex',alignItems:'baseline',gap:8,flexWrap:'wrap'}}>
+                            <span style={{fontSize:12.5,fontWeight:700,color:'var(--ink)',fontFamily:'monospace'}}>{n.date}{n.time?' '+String(n.time).slice(0,5):''}</span>
+                            <span style={{fontSize:10.5,fontWeight:700,padding:'1px 8px',borderRadius:20,background:'rgba(202,138,4,.15)',color:'#8a6200'}}>📝 {tr('ចំណាំ','Note')}</span>
+                          </div>
+                          {n.title && <div style={{fontSize:13.5,fontWeight:700,color:'var(--ink)',marginTop:4}}>{n.title}</div>}
+                          {n.description && <div style={{fontSize:12.5,color:'var(--ink-2)',marginTop:2,whiteSpace:'pre-wrap',lineHeight:1.5}}>{n.description}</div>}
+                          {n.author && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:4}}>👤 {n.author}</div>}
+                        </div>
+                      ))
+                    ) : groups.length===0 ? (
                       <div style={{fontSize:13,color:'var(--ink-3)',textAlign:'center',padding:'28px 0'}}>{tr('មិន​ទាន់​មាន​មេរៀន','No lessons yet')}</div>
                     ) : curGroup ? curGroup.items.map((it,i) => it.type === 'exam'
                       ? <ExamFeedbackRow key={it.e.id||('ex'+i)} e={it.e} sid={s.id} tr={tr} onSave={saveExamResult}/>

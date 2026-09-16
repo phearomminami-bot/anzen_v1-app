@@ -691,6 +691,7 @@ window.__trRegistry = {
   "Hours": "ចំនួន​ម៉ោង",
   "e.g. Teacher meeting": "ឧ. ប្រជុំគ្រូ",
   "e.g. All-instructor meeting in the conference room at 2pm": "ឧ. ប្រជុំគ្រូទាំងអស់ នៅបន្ទប់ប្រជុំ ម៉ោង ២ រសៀល",
+  "+ Select student": "+ ជ្រើស​សិស្ស",
   "Invite instructors": "អញ្ជើញ​គ្រូ",
   "+ Select instructor": "+ ជ្រើស​គ្រូ",
   "No instructors": "មិន​មាន​គ្រូ",
@@ -1128,6 +1129,7 @@ window.__trRegistry = {
   "Book new lesson": "ណាត់​មេរៀន​ថ្មី",
   "Lessons": "មេរៀន",
   "Theory / Practical": "ទ្រឹស្ដី / អនុវត្ត",
+  "No notes yet": "មិន​ទាន់​មាន​ចំណាំ",
   "Download PDF — choose phase": "ទាញយក PDF — ជ្រើសវគ្គ",
   "Enroll student": "ចុះឈ្មោះ​សិស្ស",
   "Filter": "តម្រង",
@@ -1904,6 +1906,7 @@ window.__trGroups = {
     "Book new lesson": "ណាត់​មេរៀន​ថ្មី",
     "Lessons": "បញ្ជីមេរៀន",
     "Theory / Practical": "ទ្រឹស្ដី / អនុវត្ត",
+    "No notes yet": "មិន​ទាន់​មាន​ចំណាំ",
     "Download PDF — choose phase": "ទាញយក PDF — ជ្រើសវគ្គ",
     "Enroll student": "ចុះឈ្មោះ​សិស្ស",
     "Filter": "តម្រង",
@@ -2059,6 +2062,7 @@ window.__trGroups = {
     "Hours": "ចំនួន​ម៉ោង",
     "e.g. Teacher meeting": "ឧ. ប្រជុំគ្រូ",
     "e.g. All-instructor meeting in the conference room at 2pm": "ឧ. ប្រជុំគ្រូទាំងអស់ នៅបន្ទប់ប្រជុំ ម៉ោង ២ រសៀល",
+    "+ Select student": "+ ជ្រើស​សិស្ស",
     "Invite instructors": "អញ្ជើញ​គ្រូ",
     "+ Select instructor": "+ ជ្រើស​គ្រូ",
     "No instructors": "មិន​មាន​គ្រូ",
@@ -3337,7 +3341,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v225";</script>
+<script>window.__ANZEN_VERSION="v226";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -22217,6 +22221,7 @@ var ScheduleScreen = ({
     }
     var time = noteModal.time || '';
     var invited = noteModal.invited || [];
+    var studentIds = noteModal.studentIds || [];
     var len = Math.max(1, parseInt(noteModal.len) || 1);
     var text = title || description;
     if (noteModal.id) saveNotes(notes.map(n => n.id === noteModal.id ? {
@@ -22227,7 +22232,8 @@ var ScheduleScreen = ({
       title,
       description,
       text,
-      invited
+      invited,
+      studentIds
     } : n));else saveNotes([...notes, {
       id: 'N' + Date.now(),
       date: noteModal.date,
@@ -22237,7 +22243,8 @@ var ScheduleScreen = ({
       description,
       text,
       author: noteModal.author || meName,
-      invited
+      invited,
+      studentIds
     }]);
     if (window.__logActivity) window.__logActivity(noteModal.id ? 'edit' : 'create', 'note', (title || description || '').slice(0, 60));
     setNoteModal(null);
@@ -22252,6 +22259,13 @@ var ScheduleScreen = ({
     return {
       ...m,
       invited: cur.includes(instId) ? cur.filter(x => x !== instId) : [...cur, instId]
+    };
+  });
+  var toggleNoteStudent = sid => setNoteModal(m => {
+    var cur = m.studentIds || [];
+    return {
+      ...m,
+      studentIds: cur.includes(sid) ? cur.filter(x => x !== sid) : [...cur, sid]
     };
   });
   var [exams, setExams] = React.useState(() => {
@@ -22422,7 +22436,8 @@ var ScheduleScreen = ({
     title: '',
     description: '',
     author: meName,
-    invited: []
+    invited: [],
+    studentIds: []
   });
   var editNote = n => setNoteModal({
     id: n.id,
@@ -22432,7 +22447,8 @@ var ScheduleScreen = ({
     title: n.title || n.text || '',
     description: n.description || '',
     author: n.author,
-    invited: n.invited || []
+    invited: n.invited || [],
+    studentIds: n.studentIds || []
   });
   React.useEffect(() => {
     window.__editScheduleNote = n => editNote(n);
@@ -22761,7 +22777,8 @@ var ScheduleScreen = ({
         title: '',
         description: '',
         author: meName,
-        invited: []
+        invited: [],
+        studentIds: []
       }),
       icon: React.createElement(Icon, {
         name: "bell",
@@ -23924,6 +23941,82 @@ var ScheduleScreen = ({
       fontFamily: 'var(--font-km),var(--font-en),inherit'
     }
   })), React.createElement("div", null, React.createElement("label", {
+    style: {
+      fontSize: 11,
+      fontWeight: 600,
+      color: 'var(--ink-2)',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 5,
+      marginBottom: 7
+    }
+  }, React.createElement(Icon, {
+    name: "users",
+    size: 13
+  }), " ", tr('សិស្ស', 'Students'), (noteModal.studentIds || []).length > 0 && React.createElement("span", {
+    style: {
+      color: 'var(--accent)',
+      fontWeight: 700
+    }
+  }, "\xB7 ", (noteModal.studentIds || []).length)), React.createElement("select", {
+    value: "",
+    onChange: e => {
+      if (e.target.value) toggleNoteStudent(e.target.value);
+    },
+    style: {
+      width: '100%',
+      padding: '9px 12px',
+      border: '1.5px solid var(--border)',
+      borderRadius: 8,
+      background: 'var(--surface)',
+      color: 'var(--ink)',
+      font: 'inherit',
+      fontSize: 13,
+      boxSizing: 'border-box',
+      colorScheme: 'light dark'
+    }
+  }, React.createElement("option", {
+    value: ""
+  }, tr('+ ជ្រើស​សិស្ស', '+ Select student')), STUDENTS.filter(s => !(noteModal.studentIds || []).includes(s.id) && !(window.__isGraduated && window.__isGraduated(s))).map(s => React.createElement("option", {
+    key: s.id,
+    value: s.id
+  }, s.name || s.en, s.id ? ' · ' + s.id : ''))), (noteModal.studentIds || []).length > 0 && React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginTop: 8
+    }
+  }, (noteModal.studentIds || []).map(id => {
+    var s = STUDENTS.find(x => x.id === id);
+    return React.createElement("span", {
+      key: id,
+      style: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '6px 11px',
+        borderRadius: 20,
+        border: '1px solid var(--accent)',
+        background: 'var(--accent-soft)',
+        color: 'var(--accent)',
+        fontSize: 12,
+        fontWeight: 600
+      }
+    }, s ? s.name || s.en : id, React.createElement("button", {
+      onClick: () => toggleNoteStudent(id),
+      title: tr('ដក​ចេញ', 'Remove'),
+      style: {
+        border: 'none',
+        background: 'none',
+        cursor: 'pointer',
+        color: 'var(--accent)',
+        fontSize: 15,
+        lineHeight: 1,
+        padding: 0
+      }
+    }, "\xD7"));
+  }))), React.createElement("div", null, React.createElement("label", {
     style: {
       fontSize: 11,
       fontWeight: 600,
@@ -47379,6 +47472,17 @@ var printStudentLessonsPDF = (s, lessons, exams, lang) => {
   </table>`).join('') : `
   <div class="secbar">${L('ប្រវត្តិសិក្សា', 'Lesson Records')}</div>
   <table class="lt"><tbody><tr><td colspan="3" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr></tbody></table>`}
+
+  ${(() => {
+      var ntes = (window.__scheduleNotes || []).filter(n => (n.studentIds || []).includes(sid)).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')) || String(a.time || '').localeCompare(String(b.time || '')));
+      if (!ntes.length) return '';
+      var rows = ntes.map(n => `<tr>
+      <td style="white-space:nowrap;font-family:monospace;color:#444;font-weight:700">${esc(n.date || '')}${n.time ? '<br>' + esc(String(n.time).slice(0, 5)) : ''}</td>
+      <td><b>${esc(n.title || '')}</b>${n.description ? '<div style="color:#555;margin-top:2px;white-space:pre-wrap">' + esc(n.description) + '</div>' : ''}${n.author ? '<div style="color:#999;margin-top:3px;font-size:11px">👤 ' + esc(n.author) + '</div>' : ''}</td>
+    </tr>`).join('');
+      return `<div class="secbar" style="background:#CA8A04">📝 ${L('ចំណាំ', 'Notes')}<span class="r">${ntes.length}</span></div>
+    <table class="lt"><thead><tr><th style="width:124px">${L('ថ្ងៃ/ម៉ោង', 'Date / Time')}</th><th>${L('ចំណាំ', 'Note')}</th></tr></thead><tbody>${rows}</tbody></table>`;
+    })()}
 </div>
 </body></html>`;
     try {
@@ -48886,7 +48990,9 @@ var StudentsScreenV2 = () => {
           };
         }).filter(g => g.items.length > 0);
         var totalHrs = groups.reduce((a, g) => a + g.hours, 0);
-        var curPhase = viewPhase && groups.some(g => g.p.k === viewPhase) ? viewPhase : groups[0] && groups[0].p.k || '';
+        var studentNotes = (window.__scheduleNotes || []).filter(n => (n.studentIds || []).includes(s.id)).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')) || String(a.time || '').localeCompare(String(b.time || '')));
+        var curPhase = viewPhase && (viewPhase === '__note' ? studentNotes.length > 0 : groups.some(g => g.p.k === viewPhase)) ? viewPhase : groups[0] && groups[0].p.k || (studentNotes.length ? '__note' : '');
+        var noteView = curPhase === '__note';
         var curGroup = groups.find(g => g.p.k === curPhase);
         var pdfLessons = studentLessons.filter(l => pdfPhase === 'all' || lessonPhase(l) === pdfPhase);
         var pdfExams = studentExams.filter(e => pdfPhase === 'all' || (e.phase || 'KH') === pdfPhase);
@@ -49001,7 +49107,7 @@ var StudentsScreenV2 = () => {
             lineHeight: 1,
             flexShrink: 0
           }
-        }, "\u2715")), groups.length > 0 && React.createElement("div", {
+        }, "\u2715")), (groups.length > 0 || studentNotes.length > 0) && React.createElement("div", {
           style: {
             display: 'flex',
             gap: 6,
@@ -49036,11 +49142,94 @@ var StudentsScreenV2 = () => {
             },
             title: tr('ទ្រឹស្ដី / អនុវត្ត', 'Theory / Practical')
           }, g.thHours, " / ", g.prHours));
-        }))), React.createElement("div", {
+        }), studentNotes.length > 0 && (() => {
+          var active = noteView;
+          return React.createElement("button", {
+            onClick: () => setViewPhase('__note'),
+            style: {
+              flexShrink: 0,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 13px',
+              borderRadius: 999,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              border: '1.5px solid ' + (active ? '#CA8A04' : 'var(--border)'),
+              background: active ? '#CA8A04' : 'var(--surface)',
+              color: active ? '#fff' : 'var(--ink-2)',
+              fontSize: 12.5,
+              fontWeight: 700
+            }
+          }, "\uD83D\uDCDD ", tr('ចំណាំ', 'Note'), " ", React.createElement("span", {
+            style: {
+              opacity: .85,
+              fontFamily: '"JetBrains Mono",monospace',
+              fontWeight: 600
+            }
+          }, studentNotes.length));
+        })())), React.createElement("div", {
           style: {
             padding: '8px 14px 14px'
           }
-        }, groups.length === 0 ? React.createElement("div", {
+        }, noteView ? studentNotes.length === 0 ? React.createElement("div", {
+          style: {
+            fontSize: 13,
+            color: 'var(--ink-3)',
+            textAlign: 'center',
+            padding: '28px 0'
+          }
+        }, tr('មិន​ទាន់​មាន​ចំណាំ', 'No notes yet')) : studentNotes.map((n, i) => React.createElement("div", {
+          key: n.id || 'nt' + i,
+          style: {
+            borderBottom: '1px solid var(--border)',
+            padding: '11px 0'
+          }
+        }, React.createElement("div", {
+          style: {
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: 8,
+            flexWrap: 'wrap'
+          }
+        }, React.createElement("span", {
+          style: {
+            fontSize: 12.5,
+            fontWeight: 700,
+            color: 'var(--ink)',
+            fontFamily: 'monospace'
+          }
+        }, n.date, n.time ? ' ' + String(n.time).slice(0, 5) : ''), React.createElement("span", {
+          style: {
+            fontSize: 10.5,
+            fontWeight: 700,
+            padding: '1px 8px',
+            borderRadius: 20,
+            background: 'rgba(202,138,4,.15)',
+            color: '#8a6200'
+          }
+        }, "\uD83D\uDCDD ", tr('ចំណាំ', 'Note'))), n.title && React.createElement("div", {
+          style: {
+            fontSize: 13.5,
+            fontWeight: 700,
+            color: 'var(--ink)',
+            marginTop: 4
+          }
+        }, n.title), n.description && React.createElement("div", {
+          style: {
+            fontSize: 12.5,
+            color: 'var(--ink-2)',
+            marginTop: 2,
+            whiteSpace: 'pre-wrap',
+            lineHeight: 1.5
+          }
+        }, n.description), n.author && React.createElement("div", {
+          style: {
+            fontSize: 11,
+            color: 'var(--ink-3)',
+            marginTop: 4
+          }
+        }, "\uD83D\uDC64 ", n.author))) : groups.length === 0 ? React.createElement("div", {
           style: {
             fontSize: 13,
             color: 'var(--ink-3)',

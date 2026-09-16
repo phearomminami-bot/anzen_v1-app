@@ -736,11 +736,12 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
     if (!title && !description) { setNoteModal(null); return; }
     const time = noteModal.time || '';
     const invited = noteModal.invited || [];
+    const studentIds = noteModal.studentIds || [];
     const len = Math.max(1, parseInt(noteModal.len) || 1);
     // keep `text` mirrored to the title so any older consumer / cloud reader still works
     const text = title || description;
-    if (noteModal.id) saveNotes(notes.map(n => n.id === noteModal.id ? { ...n, date: noteModal.date, time, len, title, description, text, invited } : n));
-    else              saveNotes([...notes, { id: 'N' + Date.now(), date: noteModal.date, time, len, title, description, text, author: noteModal.author || meName, invited }]);
+    if (noteModal.id) saveNotes(notes.map(n => n.id === noteModal.id ? { ...n, date: noteModal.date, time, len, title, description, text, invited, studentIds } : n));
+    else              saveNotes([...notes, { id: 'N' + Date.now(), date: noteModal.date, time, len, title, description, text, author: noteModal.author || meName, invited, studentIds }]);
     if (window.__logActivity) window.__logActivity(noteModal.id ? 'edit' : 'create', 'note', (title || description || '').slice(0,60));
     setNoteModal(null);
   };
@@ -752,6 +753,10 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   const toggleInvite = (instId) => setNoteModal(m => {
     const cur = m.invited || [];
     return { ...m, invited: cur.includes(instId) ? cur.filter(x => x !== instId) : [...cur, instId] };
+  });
+  const toggleNoteStudent = (sid) => setNoteModal(m => {
+    const cur = m.studentIds || [];
+    return { ...m, studentIds: cur.includes(sid) ? cur.filter(x => x !== sid) : [...cur, sid] };
   });
 
   // ── Exams ───────────────────────────────────────────────────────────────────
@@ -900,8 +905,8 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   ));
   // Click a time slot → open the create modal defaulting to the lesson tab,
   // pre-filled with that slot's date+hour (switchable to a note).
-  const openSlot = (date, hour) => setNoteModal({ mode:'lesson', date, hour, time:String(hour).padStart(2,'0')+':00', title:'', description:'', author:meName, invited:[] });
-  const editNote = (n) => setNoteModal({ id:n.id, date:n.date, time:n.time||'', len:n.len||1, title:n.title||n.text||'', description:n.description||'', author:n.author, invited:n.invited||[] });
+  const openSlot = (date, hour) => setNoteModal({ mode:'lesson', date, hour, time:String(hour).padStart(2,'0')+':00', title:'', description:'', author:meName, invited:[], studentIds:[] });
+  const editNote = (n) => setNoteModal({ id:n.id, date:n.date, time:n.time||'', len:n.len||1, title:n.title||n.text||'', description:n.description||'', author:n.author, invited:n.invited||[], studentIds:n.studentIds||[] });
   // Clicking a note opens a read-only detail (like the lesson detail); its
   // Edit/Delete buttons call back into these handlers.
   React.useEffect(() => {
@@ -1033,7 +1038,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(0)}>{tr('ថ្ងៃ​នេះ','Today')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>setWeekOffset(o=>o+1)}>{tr('បន្ទាប់ ▶','Next ▶')}</Btn>
             <Btn kind="ghost" size="md" onClick={()=>generateSchedulePDF({lessons:visibleLessons.filter(l=>l.status!=='cancelled'),weekDates:allWeekDates,viewType:v,labelEn,instFilter,vehFilter,studentFilter,phaseFilter,lang})} icon={<Icon name="download" size={14}/>}>{tr('PDF','PDF')}</Btn>
-            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:allWeekDates[0]||today,time:'09:00',title:'',description:'',author:meName,invited:[]})} icon={<Icon name="bell" size={14}/>}>{tr('+ ចំណាំ','+ Note')}</Btn>}
+            {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:allWeekDates[0]||today,time:'09:00',title:'',description:'',author:meName,invited:[],studentIds:[]})} icon={<Icon name="bell" size={14}/>}>{tr('+ ចំណាំ','+ Note')}</Btn>}
             {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setExamModal({kind:'exam',date:allWeekDates[0]||today,time:'08:00',len:2,studentIds:[],instIds:[],note:'',phase:'KH'})} icon={<Icon name="star" size={14}/>} style={{color:'#12A302',borderColor:'#12A302'}}>{tr('+ ប្រឡង','+ Exam')}</Btn>}
             {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setExamModal({kind:'apply',date:allWeekDates[0]||today,time:'08:00',len:2,studentIds:[],instIds:[],note:'',phase:'KH'})} icon={<Icon name="book" size={14}/>} style={{color:'#CA8A04',borderColor:'#CA8A04'}}>{tr('+ ដាក់​ពាក្យ','+ Apply')}</Btn>}
             {can(role,'create','lesson') && <Btn kind="primary" size="md" onClick={()=>openForm('newLesson')} icon={<Icon name="plus" size={14}/>}>{tr('មេរៀន​ថ្មី','New lesson')}</Btn>}
@@ -1440,6 +1445,37 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
               <textarea value={noteModal.description||''} onChange={e=>setNoteModal(m=>({...m,description:e.target.value}))} rows={3}
                 placeholder={tr('ឧ. ប្រជុំគ្រូទាំងអស់ នៅបន្ទប់ប្រជុំ ម៉ោង ២ រសៀល','e.g. All-instructor meeting in the conference room at 2pm')}
                 style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',resize:'vertical',fontFamily:'var(--font-km),var(--font-en),inherit'}}/>
+            </div>
+
+            {/* Students — attach this note to one or more students (shows in their
+                lessons popup under the Note tab, and in their PDF). */}
+            <div>
+              <label style={{fontSize:11,fontWeight:600,color:'var(--ink-2)',display:'flex',alignItems:'center',gap:5,marginBottom:7}}>
+                <Icon name="users" size={13}/> {tr('សិស្ស','Students')}
+                {(noteModal.studentIds||[]).length>0 && <span style={{color:'var(--accent)',fontWeight:700}}>· {(noteModal.studentIds||[]).length}</span>}
+              </label>
+              <select value="" onChange={e=>{ if(e.target.value) toggleNoteStudent(e.target.value); }}
+                style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)',font:'inherit',fontSize:13,boxSizing:'border-box',colorScheme:'light dark'}}>
+                <option value="">{tr('+ ជ្រើស​សិស្ស','+ Select student')}</option>
+                {STUDENTS.filter(s => !(noteModal.studentIds||[]).includes(s.id) && !(window.__isGraduated && window.__isGraduated(s))).map(s => (
+                  <option key={s.id} value={s.id}>{s.name || s.en}{s.id?' · '+s.id:''}</option>
+                ))}
+              </select>
+              {(noteModal.studentIds||[]).length > 0 && (
+                <div style={{display:'flex',flexWrap:'wrap',gap:6,marginTop:8}}>
+                  {(noteModal.studentIds||[]).map(id => {
+                    const s = STUDENTS.find(x => x.id === id);
+                    return (
+                      <span key={id} style={{display:'inline-flex',alignItems:'center',gap:6,padding:'6px 11px',borderRadius:20,
+                        border:'1px solid var(--accent)',background:'var(--accent-soft)',color:'var(--accent)',fontSize:12,fontWeight:600}}>
+                        {s ? (s.name || s.en) : id}
+                        <button onClick={()=>toggleNoteStudent(id)} title={tr('ដក​ចេញ','Remove')}
+                          style={{border:'none',background:'none',cursor:'pointer',color:'var(--accent)',fontSize:15,lineHeight:1,padding:0}}>×</button>
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Invite instructors (Google-Calendar style guests) */}
