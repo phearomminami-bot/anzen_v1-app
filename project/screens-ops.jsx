@@ -916,34 +916,43 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   const reRenderLessons = () => { setVer(n => n+1); if (window.__notifyLessonsChanged) window.__notifyLessonsChanged(); };
   const startCopy = (lesson) => setClip({ lesson, mode:'copy' });
   const startMove = (lesson) => setClip({ lesson, mode:'move' });
+  // A calendar block may be a collapsed class (one block, many students). Expand
+  // it to the real per-student lessons so copy/move act on the whole class.
+  const stripView = (o) => { const { _classLessonIds, _classStudentIds, ...rest } = o; return rest; };
+  const classMembers = (L) => (L._classLessonIds && L._classLessonIds.length > 1)
+    ? LESSONS.filter(x => L._classLessonIds.includes(x.id))
+    : [L];
   // Drop the clipboard lesson onto a slot: copy → duplicate, move → relocate.
   const placeLesson = (date, hour) => {
     if (!clip) return;
     const L = clip.lesson;
+    const members = classMembers(L);
+    const hh = String(hour).padStart(2,'0')+':00';
     if (clip.mode === 'copy') {
-      LESSONS.push({ ...L, id: nextLessonId(), date, h: hour,
-        status: 'scheduled', createdBy: window.__currentUserName || '', createdAt: new Date().toISOString() });
-      if (window.__logActivity) window.__logActivity('create','lesson','copy → '+date+' '+String(hour).padStart(2,'0')+':00');
-      toast(tr('បាន​ដាក់​ច្បាប់​ចម្លង ✓','Pasted copy ✓'),'good');   // keep clip → multi-paste
+      // A copied class becomes its own class group (fresh classId).
+      const newClassId = members.length > 1 ? ('CLS' + Date.now()) : null;
+      members.forEach(m => LESSONS.push({ ...stripView(m), id: nextLessonId(), date, h: hour,
+        status: 'scheduled', classId: newClassId || undefined, isClass: newClassId ? true : undefined,
+        createdBy: window.__currentUserName || '', createdAt: new Date().toISOString() }));
+      if (window.__logActivity) window.__logActivity('create','lesson','copy → '+date+' '+hh+(members.length>1?' · '+members.length+' students':''));
+      toast(members.length>1 ? tr('បាន​ចម្លង​ថ្នាក់រៀន ✓','Class copied ✓') : tr('បាន​ដាក់​ច្បាប់​ចម្លង ✓','Pasted copy ✓'),'good');   // keep clip → multi-paste
     } else {
-      const idx = LESSONS.findIndex(x => x.id === L.id);
-      if (idx !== -1) LESSONS[idx] = { ...LESSONS[idx], date, h: hour };
-      if (window.__logActivity) window.__logActivity('edit','lesson','move → '+date+' '+String(hour).padStart(2,'0')+':00');
-      toast(tr('បាន​ផ្លាស់​ទី ✓','Moved ✓'),'good');
+      members.forEach(m => { const idx = LESSONS.findIndex(x => x.id === m.id); if (idx !== -1) LESSONS[idx] = { ...LESSONS[idx], date, h: hour }; });
+      if (window.__logActivity) window.__logActivity('edit','lesson','move → '+date+' '+hh);
+      toast(members.length>1 ? tr('បាន​ផ្លាស់​ទី​ថ្នាក់រៀន ✓','Class moved ✓') : tr('បាន​ផ្លាស់​ទី ✓','Moved ✓'),'good');
       setClip(null);   // a lesson moves once
     }
     if (window.saveAllData) window.saveAllData();
     reRenderLessons();
   };
-  // Drag-and-drop move (desktop): relocate a lesson to a new day/hour.
+  // Drag-and-drop move (desktop): relocate a lesson (or whole class) to a new slot.
   const moveLesson = (lesson, date, hour) => {
-    const idx = LESSONS.findIndex(x => x.id === lesson.id);
-    if (idx === -1) return;
-    if (LESSONS[idx].date === date && LESSONS[idx].h === hour) return;
-    LESSONS[idx] = { ...LESSONS[idx], date, h: hour };
+    const members = classMembers(lesson);
+    if (members.every(m => m.date === date && m.h === hour)) return;
+    members.forEach(m => { const idx = LESSONS.findIndex(x => x.id === m.id); if (idx !== -1) LESSONS[idx] = { ...LESSONS[idx], date, h: hour }; });
     if (window.__logActivity) window.__logActivity('edit','lesson','move → '+date+' '+String(hour).padStart(2,'0')+':00');
     if (window.saveAllData) window.saveAllData();
-    toast(tr('បាន​ផ្លាស់​ទី ✓','Moved ✓'),'good');
+    toast(members.length>1 ? tr('បាន​ផ្លាស់​ទី​ថ្នាក់រៀន ✓','Class moved ✓') : tr('បាន​ផ្លាស់​ទី ✓','Moved ✓'),'good');
     reRenderLessons();
   };
   React.useEffect(() => {

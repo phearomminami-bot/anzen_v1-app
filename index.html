@@ -659,7 +659,9 @@ window.__trRegistry = {
   "')}`.trim() : (s ? s.name : l.type))}</div>\n                    <div style={{fontSize:11,color:'var(--ink-3)": "នាក់",
   "Available slots": "ម៉ោង​ដែល​អាច​កក់​បាន",
   "Admin": "នាយក",
+  "Class copied ✓": "បាន​ចម្លង​ថ្នាក់រៀន ✓",
   "Pasted copy ✓": "បាន​ដាក់​ច្បាប់​ចម្លង ✓",
+  "Class moved ✓": "បាន​ផ្លាស់​ទី​ថ្នាក់រៀន ✓",
   "Moved ✓": "បាន​ផ្លាស់​ទី ✓",
   "tap an empty slot to place": "ចុច​ប្រអប់​ទំនេរ​ដើម្បី​ដាក់",
   "◀ Prev": "◀ មុន",
@@ -2025,7 +2027,9 @@ window.__trGroups = {
     "')}`.trim() : (s ? s.name : l.type))}</div>\n                    <div style={{fontSize:11,color:'var(--ink-3)": "នាក់",
     "Available slots": "ម៉ោង​ដែល​អាច​កក់​បាន",
     "Admin": "នាយក",
+    "Class copied ✓": "បាន​ចម្លង​ថ្នាក់រៀន ✓",
     "Pasted copy ✓": "បាន​ដាក់​ច្បាប់​ចម្លង ✓",
+    "Class moved ✓": "បាន​ផ្លាស់​ទី​ថ្នាក់រៀន ✓",
     "Moved ✓": "បាន​ផ្លាស់​ទី ✓",
     "tap an empty slot to place": "ចុច​ប្រអប់​ទំនេរ​ដើម្បី​ដាក់",
     "◀ Prev": "◀ មុន",
@@ -3333,7 +3337,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v222";</script>
+<script>window.__ANZEN_VERSION="v223";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -22454,47 +22458,65 @@ var ScheduleScreen = ({
     lesson,
     mode: 'move'
   });
+  var stripView = o => {
+    var {
+      _classLessonIds,
+      _classStudentIds,
+      ...rest
+    } = o;
+    return rest;
+  };
+  var classMembers = L => L._classLessonIds && L._classLessonIds.length > 1 ? LESSONS.filter(x => L._classLessonIds.includes(x.id)) : [L];
   var placeLesson = (date, hour) => {
     if (!clip) return;
     var L = clip.lesson;
+    var members = classMembers(L);
+    var hh = String(hour).padStart(2, '0') + ':00';
     if (clip.mode === 'copy') {
-      LESSONS.push({
-        ...L,
+      var newClassId = members.length > 1 ? 'CLS' + Date.now() : null;
+      members.forEach(m => LESSONS.push({
+        ...stripView(m),
         id: nextLessonId(),
         date,
         h: hour,
         status: 'scheduled',
+        classId: newClassId || undefined,
+        isClass: newClassId ? true : undefined,
         createdBy: window.__currentUserName || '',
         createdAt: new Date().toISOString()
-      });
-      if (window.__logActivity) window.__logActivity('create', 'lesson', 'copy → ' + date + ' ' + String(hour).padStart(2, '0') + ':00');
-      toast(tr('បាន​ដាក់​ច្បាប់​ចម្លង ✓', 'Pasted copy ✓'), 'good');
+      }));
+      if (window.__logActivity) window.__logActivity('create', 'lesson', 'copy → ' + date + ' ' + hh + (members.length > 1 ? ' · ' + members.length + ' students' : ''));
+      toast(members.length > 1 ? tr('បាន​ចម្លង​ថ្នាក់រៀន ✓', 'Class copied ✓') : tr('បាន​ដាក់​ច្បាប់​ចម្លង ✓', 'Pasted copy ✓'), 'good');
     } else {
-      var idx = LESSONS.findIndex(x => x.id === L.id);
-      if (idx !== -1) LESSONS[idx] = {
-        ...LESSONS[idx],
-        date,
-        h: hour
-      };
-      if (window.__logActivity) window.__logActivity('edit', 'lesson', 'move → ' + date + ' ' + String(hour).padStart(2, '0') + ':00');
-      toast(tr('បាន​ផ្លាស់​ទី ✓', 'Moved ✓'), 'good');
+      members.forEach(m => {
+        var idx = LESSONS.findIndex(x => x.id === m.id);
+        if (idx !== -1) LESSONS[idx] = {
+          ...LESSONS[idx],
+          date,
+          h: hour
+        };
+      });
+      if (window.__logActivity) window.__logActivity('edit', 'lesson', 'move → ' + date + ' ' + hh);
+      toast(members.length > 1 ? tr('បាន​ផ្លាស់​ទី​ថ្នាក់រៀន ✓', 'Class moved ✓') : tr('បាន​ផ្លាស់​ទី ✓', 'Moved ✓'), 'good');
       setClip(null);
     }
     if (window.saveAllData) window.saveAllData();
     reRenderLessons();
   };
   var moveLesson = (lesson, date, hour) => {
-    var idx = LESSONS.findIndex(x => x.id === lesson.id);
-    if (idx === -1) return;
-    if (LESSONS[idx].date === date && LESSONS[idx].h === hour) return;
-    LESSONS[idx] = {
-      ...LESSONS[idx],
-      date,
-      h: hour
-    };
+    var members = classMembers(lesson);
+    if (members.every(m => m.date === date && m.h === hour)) return;
+    members.forEach(m => {
+      var idx = LESSONS.findIndex(x => x.id === m.id);
+      if (idx !== -1) LESSONS[idx] = {
+        ...LESSONS[idx],
+        date,
+        h: hour
+      };
+    });
     if (window.__logActivity) window.__logActivity('edit', 'lesson', 'move → ' + date + ' ' + String(hour).padStart(2, '0') + ':00');
     if (window.saveAllData) window.saveAllData();
-    toast(tr('បាន​ផ្លាស់​ទី ✓', 'Moved ✓'), 'good');
+    toast(members.length > 1 ? tr('បាន​ផ្លាស់​ទី​ថ្នាក់រៀន ✓', 'Class moved ✓') : tr('បាន​ផ្លាស់​ទី ✓', 'Moved ✓'), 'good');
     reRenderLessons();
   };
   React.useEffect(() => {
