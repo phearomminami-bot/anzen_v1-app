@@ -490,8 +490,57 @@ const SfStatusDot = ({ status }) => {
 };
 
 // ── Detail panel ──
+// ── Instructor notes PDF (mirrors the student notes PDF, notes-only) ──────────
+const printInstructorNotesPDF = (inst, notes, lang) => {
+  const HOST = '__instNotesPdf';
+  const ex = document.getElementById(HOST); if (ex) ex.remove();
+  const esc = (x) => String(x==null?'':x).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const L = (km,en) => lang==='en' ? en : km;
+  const tday = (typeof todayStr==='function'?todayStr():new Date().toISOString().slice(0,10));
+  const ss = window.__schoolSettings || {};
+  const host = document.createElement('div');
+  host.id = HOST;
+  host.style.cssText = 'position:fixed;inset:0;z-index:100000;background:#fff;display:flex;flex-direction:column;overflow:hidden';
+  const bar = document.createElement('div');
+  bar.style.cssText = 'display:flex;gap:8px;align-items:center;padding:10px 14px;background:#1B3A6B;color:#fff;flex-shrink:0;font-family:system-ui,sans-serif';
+  const btnCss = 'padding:7px 14px;border:none;border-radius:8px;background:rgba(255,255,255,.18);color:#fff;font-weight:700;cursor:pointer;font-size:13px';
+  bar.innerHTML = `<button id="__inClose" style="${btnCss}">← ${L('ត្រឡប់','Back')}</button><div style="flex:1;text-align:center;font-weight:700;font-size:15px">${L('ចំណាំ','Notes')} · ${esc(inst.en||inst.name||'')}</div><button id="__inPrint" style="${btnCss}">🖨 ${L('បោះពុម្ព','Print')}</button>`;
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'flex:1;width:100%;border:none;background:#e8e8e8';
+  host.appendChild(bar); host.appendChild(iframe); document.body.appendChild(host);
+  bar.querySelector('#__inClose').onclick = () => host.remove();
+  bar.querySelector('#__inPrint').onclick = () => { try { iframe.contentWindow.focus(); iframe.contentWindow.print(); } catch(e){} };
+  const sorted = [...notes].sort((a,b)=>String(a.fromDate||a.date||'').localeCompare(String(b.fromDate||b.date||'')) || String(a.fromTime||a.time||'').localeCompare(String(b.fromTime||b.time||'')));
+  const rows = sorted.length ? sorted.map(n => {
+    const from = n.fromDate||n.date||'', to = n.toDate||from;
+    const col = to && to < tday ? '#111' : (from && from > tday ? '#1A4F96' : '#B0413E');
+    const dLabel = esc(from) + (to && to!==from ? ' → '+esc(to) : '');
+    const tLabel = n.fromTime ? esc(String(n.fromTime).slice(0,5)) + (n.toTime?'–'+esc(String(n.toTime).slice(0,5)):'') : (n.time?esc(String(n.time).slice(0,5)):'');
+    const studs = (n.studentIds||[]).map(id=>{ const st=(window.STUDENTS||[]).find(x=>x.id===id); return st?esc(st.name||st.en):null; }).filter(Boolean).join(', ');
+    return `<tr>
+      <td style="white-space:nowrap;font-family:monospace;font-weight:700;color:${col}">${dLabel}${tLabel?'<br>'+tLabel:''}</td>
+      <td><b style="color:${col}">${esc(n.content||n.title||'')}</b>${n.reason?'<div style="color:#555;margin-top:2px"><span style="color:#999">'+L('មូលហេតុ','Reason')+': </span>'+esc(n.reason)+'</div>':''}${n.location?'<div style="color:#555;margin-top:2px">📍 '+esc(n.location)+'</div>':''}${(n.remark||n.description)?'<div style="color:#555;margin-top:2px;white-space:pre-wrap">'+esc(n.remark||n.description)+'</div>':''}${studs?'<div style="color:#777;margin-top:3px;font-size:11px">👥 '+studs+'</div>':''}${n.author?'<div style="color:#999;margin-top:2px;font-size:11px">👤 '+esc(n.author)+'</div>':''}</td>
+    </tr>`; }).join('') : `<tr><td colspan="2" style="text-align:center;color:#999;padding:18px">${L('គ្មាន​ទិន្នន័យ','No data')}</td></tr>`;
+  const doc = `<!DOCTYPE html><html><head><meta charset="utf-8">
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>*{box-sizing:border-box}body{margin:0;padding:22px;font-family:'Noto Sans Khmer','Inter',system-ui,sans-serif;color:#1a1a1a;font-size:13px}
+    h1{font-size:19px;margin:0 0 2px}.sub{color:#666;font-size:12px;margin-bottom:14px}
+    .secbar{background:#CA8A04;color:#fff;padding:7px 12px;font-size:14px;font-weight:700;border-radius:3px;-webkit-print-color-adjust:exact;print-color-adjust:exact;display:flex;justify-content:space-between}
+    table.lt{width:100%;border-collapse:collapse;margin-top:8px}
+    table.lt th{background:#f0f0ee;text-align:left;padding:7px 10px;font-size:11px;color:#555;border-bottom:2px solid #ddd}
+    table.lt td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:top}
+    @media print{body{padding:0}}</style></head><body>
+    <h1>${esc(ss.name||'Anzen')}</h1><div class="sub">${L('ចំណាំ','Notes')} · ${esc(inst.en||inst.name||'')}${inst.id?' · '+esc(inst.id):''}　·　${L('បោះពុម្ព','Printed')}: ${tday}</div>
+    <div class="secbar">📝 ${L('ចំណាំ','Notes')}<span>${sorted.length}</span></div>
+    <table class="lt"><thead><tr><th style="width:130px">${L('ថ្ងៃ/ម៉ោង','Date / Time')}</th><th>${L('ចំណាំ','Note')}</th></tr></thead><tbody>${rows}</tbody></table>
+    </body></html>`;
+  try { const idoc = iframe.contentWindow.document; idoc.open(); idoc.write(doc); idoc.close(); } catch(e){}
+};
+
 const SfDetailRow = ({ s, onEdit, onSavePhoto, onOffboard, onRestore }) => {
-  const { toast, navigate, tr } = useAppActions();
+  const { toast, navigate, tr, lang } = useAppActions();
+  const [notesOpen, setNotesOpen] = React.useState(false);
   const [showPw, setShowPw] = React.useState(false);
   const [settingPw, setSettingPw] = React.useState(false);   // editing credentials (ID + password)
   const [newPw, setNewPw] = React.useState('');
@@ -531,7 +580,7 @@ const SfDetailRow = ({ s, onEdit, onSavePhoto, onOffboard, onRestore }) => {
             {s.offboarded
               ? <Badge tone="warn">{tr('អតីត​បុគ្គលិក','Former staff')}{s.offboardedAt ? ' · ' + s.offboardedAt : ''}</Badge>
               : <><SfStatusDot status={s.status}/><span style={{fontSize:12,color:'var(--ink-3)'}}>{s.status}</span></>}
-            {inst && <Badge tone="accent">{inst.cls.map(c=>`Class ${c}`).join(' · ')}</Badge>}
+            {inst && (inst.cls||[]).length>0 && <Badge tone="accent">{(inst.cls||[]).map(c=>`Class ${c}`).join(' · ')}</Badge>}
           </div>
           <div style={{fontSize:12,color:'var(--ink-3)',marginTop:2}}>{s.en} · {s.id} · {s.role} · {s.dept}</div>
         </div>
@@ -575,6 +624,13 @@ const SfDetailRow = ({ s, onEdit, onSavePhoto, onOffboard, onRestore }) => {
           <Btn kind="primary" size="sm" icon={<Icon name="cal" size={13}/>}
             onClick={()=>{ if(inst) window.__scheduleInstFilter=inst.id; navigate('schedule'); }}>
             បើក​កាល​វិភាគ
+          </Btn>
+        )}
+        {inst && (
+          <Btn kind="ghost" size="sm" icon={<Icon name="bell" size={13}/>}
+            onClick={()=>setNotesOpen(true)}
+            style={{color:'#CA8A04',borderColor:'#CA8A04'}}>
+            📝 {tr('ចំណាំ','Note')}
           </Btn>
         )}
         {s.offboarded
@@ -656,6 +712,56 @@ const SfDetailRow = ({ s, onEdit, onSavePhoto, onOffboard, onRestore }) => {
         </div>
       </div>
       <SfExtendedInfo s={s}/>
+
+      {/* Instructor notes popup — notes attached to this instructor (invited),
+          same look as the student notes, with PDF download. */}
+      {notesOpen && inst && (() => {
+        const tday = (typeof todayStr==='function'?todayStr():new Date().toISOString().slice(0,10));
+        const instNotes = (window.__scheduleNotes||[])
+          .filter(n => (n.invited||[]).includes(inst.id))
+          .sort((a,b)=>String(a.fromDate||a.date||'').localeCompare(String(b.fromDate||b.date||'')) || String(a.fromTime||a.time||'').localeCompare(String(b.fromTime||b.time||'')));
+        return (
+        <Modal open onClose={()=>setNotesOpen(false)}>
+          <div style={{display:'flex',flexDirection:'column'}}>
+            <div style={{position:'sticky',top:0,zIndex:2,background:'var(--surface)',borderBottom:'1px solid var(--border)',padding:'12px 14px',display:'flex',alignItems:'center',gap:8}}>
+              <div style={{flex:1,minWidth:0,fontSize:15,fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>📝 {tr('ចំណាំ','Notes')} · {inst.en||inst.name}</div>
+              <button onClick={()=>setNotesOpen(false)} aria-label={tr('បិទ','Close')} style={{border:'none',background:'var(--surface-muted)',borderRadius:8,width:30,height:30,cursor:'pointer',color:'var(--ink-2)',fontSize:15,lineHeight:1,flexShrink:0}}>✕</button>
+            </div>
+            <div style={{padding:'8px 14px 14px'}}>
+              {instNotes.length===0 ? (
+                <div style={{fontSize:13,color:'var(--ink-3)',textAlign:'center',padding:'28px 0'}}>{tr('មិន​ទាន់​មាន​ចំណាំ','No notes yet')}</div>
+              ) : instNotes.map((n,i) => {
+                const from = n.fromDate||n.date||'', to = n.toDate||from;
+                const col = to && to < tday ? 'var(--ink)' : (from && from > tday ? '#2A5DB0' : '#B0413E');
+                const dLabel = from + (to && to!==from ? ' → ' + to : '');
+                const tLabel = n.fromTime ? String(n.fromTime).slice(0,5) + (n.toTime?'–'+String(n.toTime).slice(0,5):'') : (n.time?String(n.time).slice(0,5):'');
+                const studs = (n.studentIds||[]).map(id=>{ const st=(window.STUDENTS||[]).find(x=>x.id===id); return st?(st.name||st.en):null; }).filter(Boolean).join(', ');
+                return (
+                <div key={n.id||('nt'+i)} style={{borderBottom:'1px solid var(--border)',padding:'11px 0'}}>
+                  <div style={{display:'flex',alignItems:'baseline',gap:8,flexWrap:'wrap'}}>
+                    <span style={{fontSize:12.5,fontWeight:800,color:col,fontFamily:'monospace'}}>{dLabel}{tLabel?' · '+tLabel:''}</span>
+                    <span style={{fontSize:10.5,fontWeight:700,padding:'1px 8px',borderRadius:20,background:'rgba(202,138,4,.15)',color:'#8a6200'}}>📝 {tr('ចំណាំ','Note')}</span>
+                  </div>
+                  {(n.content||n.title) && <div style={{fontSize:13.5,fontWeight:700,color:col,marginTop:4}}>{n.content||n.title}</div>}
+                  {n.reason && <div style={{fontSize:12.5,color:'var(--ink-2)',marginTop:2}}><span style={{color:'var(--ink-3)'}}>{tr('មូលហេតុ','Reason')}: </span>{n.reason}</div>}
+                  {n.location && <div style={{fontSize:12.5,color:'var(--ink-2)',marginTop:2}}>📍 {n.location}</div>}
+                  {(n.remark||n.description) && <div style={{fontSize:12.5,color:'var(--ink-2)',marginTop:2,whiteSpace:'pre-wrap',lineHeight:1.5}}>{n.remark||n.description}</div>}
+                  {studs && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:4}}>👥 {studs}</div>}
+                  {n.author && <div style={{fontSize:11,color:'var(--ink-3)',marginTop:2}}>👤 {n.author}</div>}
+                </div>
+              ); })}
+            </div>
+            <div style={{position:'sticky',bottom:0,zIndex:2,background:'var(--surface)',borderTop:'1px solid var(--border)',padding:'10px 14px calc(12px + env(safe-area-inset-bottom,0px))'}}>
+              <div style={{fontSize:11,color:'var(--ink-3)',marginBottom:6}}>⬇ {tr('ទាញយក PDF','Download PDF')}</div>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={()=>printInstructorNotesPDF(inst, instNotes, 'km')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600}}>🇰🇭 {tr('ខ្មែរ','Khmer')}</button>
+                <button onClick={()=>printInstructorNotesPDF(inst, instNotes, 'en')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600}}>🇬🇧 English</button>
+              </div>
+            </div>
+          </div>
+        </Modal>
+        );
+      })()}
 
       {/* Account credentials section */}
       <div style={{padding:'14px 18px',borderTop:'1px solid var(--border)'}}>
