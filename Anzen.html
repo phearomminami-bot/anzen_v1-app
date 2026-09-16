@@ -690,11 +690,10 @@ window.__trRegistry = {
   "New note": "ចំណាំ​ថ្មី",
   "Class — book many students at one time. A lesson is recorded in each student\\'s own record.": "ថ្នាក់រៀន — ដាក់​សិស្ស​ច្រើន​នាក់​ក្នុង​ម៉ោង​តែ​មួយ។ មេរៀន​នឹង​ចូល​ក្នុង​កំណត់ត្រា​សិស្ស​ម្នាក់ៗ​ដាច់​ដោយ​ឡែក។",
   "Create schedule": "បង្កើត​កាលវិភាគ",
-  "Multi-day": "ច្រើន​ថ្ងៃ",
-  "Single day": "ថ្ងៃ​តែ​មួយ",
+  "Date from": "កាល​បរិច្ឆេទ ចាប់ពី",
+  "To": "ដល់",
   "Time (optional)": "ម៉ោង (ស្រេចចិត្ត)",
   "— none": "— ទំនេរ",
-  "To": "ដល់",
   "Content": "ខ្លឹមសារ",
   "e.g. On leave": "ឧ. ឈប់សម្រាក",
   "e.g. Travelling to province": "ឧ. ធ្វើ​ដំណើរ​ទៅ​ខេត្ត",
@@ -2066,11 +2065,10 @@ window.__trGroups = {
     "New note": "ចំណាំ​ថ្មី",
     "Class — book many students at one time. A lesson is recorded in each student\\'s own record.": "ថ្នាក់រៀន — ដាក់​សិស្ស​ច្រើន​នាក់​ក្នុង​ម៉ោង​តែ​មួយ។ មេរៀន​នឹង​ចូល​ក្នុង​កំណត់ត្រា​សិស្ស​ម្នាក់ៗ​ដាច់​ដោយ​ឡែក។",
     "Create schedule": "បង្កើត​កាលវិភាគ",
-    "Multi-day": "ច្រើន​ថ្ងៃ",
-    "Single day": "ថ្ងៃ​តែ​មួយ",
+    "Date from": "កាល​បរិច្ឆេទ ចាប់ពី",
+    "To": "ដល់",
     "Time (optional)": "ម៉ោង (ស្រេចចិត្ត)",
     "— none": "— ទំនេរ",
-    "To": "ដល់",
     "Content": "ខ្លឹមសារ",
     "e.g. On leave": "ឧ. ឈប់សម្រាក",
     "e.g. Travelling to province": "ឧ. ធ្វើ​ដំណើរ​ទៅ​ខេត្ត",
@@ -3359,7 +3357,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v235";</script>
+<script>window.__ANZEN_VERSION="v236";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -22330,7 +22328,7 @@ var ScheduleScreen = ({
       return;
     }
     var fromDate = noteModal.fromDate || noteModal.date || '';
-    var toDate = noteModal._multiDay && noteModal.toDate ? noteModal.toDate : fromDate;
+    var toDate = noteModal.toDate || fromDate;
     var fromTime = noteModal.fromTime || noteModal.time || '';
     var toTime = noteModal.toTime || '';
     var invited = noteModal.invited || [];
@@ -22567,7 +22565,6 @@ var ScheduleScreen = ({
     date: n.fromDate || n.date,
     fromDate: n.fromDate || n.date || '',
     toDate: n.toDate || n.fromDate || n.date || '',
-    _multiDay: !!(n.toDate && (n.fromDate || n.date) && n.toDate !== (n.fromDate || n.date)),
     fromTime: n.fromTime || n.time || '',
     toTime: n.toTime || '',
     time: n.fromTime || n.time || '',
@@ -23979,68 +23976,26 @@ var ScheduleScreen = ({
       f: '13:00',
       t: '17:00'
     }];
-    return React.createElement(React.Fragment, null, React.createElement("div", null, React.createElement("div", {
-      style: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'baseline',
-        marginBottom: 5
-      }
-    }, React.createElement("label", {
-      style: {
-        ...nLbl,
-        marginBottom: 0
-      }
-    }, tr('កាល​បរិច្ឆេទ', 'Date')), !noteModal._multiDay ? React.createElement("button", {
-      type: "button",
-      onClick: () => setNoteModal(m => ({
-        ...m,
-        _multiDay: true,
-        toDate: m.toDate || m.fromDate
-      })),
-      style: {
-        border: 'none',
-        background: 'none',
-        color: 'var(--accent)',
-        fontSize: 11,
-        fontWeight: 700,
-        cursor: 'pointer',
-        fontFamily: 'inherit',
-        padding: 0
-      }
-    }, "+ ", tr('ច្រើន​ថ្ងៃ', 'Multi-day')) : React.createElement("button", {
-      type: "button",
-      onClick: () => setNoteModal(m => ({
-        ...m,
-        _multiDay: false,
-        toDate: m.fromDate
-      })),
-      style: {
-        border: 'none',
-        background: 'none',
-        color: 'var(--ink-3)',
-        fontSize: 11,
-        fontWeight: 700,
-        cursor: 'pointer',
-        fontFamily: 'inherit',
-        padding: 0
-      }
-    }, "\u2715 ", tr('ថ្ងៃ​តែ​មួយ', 'Single day'))), React.createElement("div", {
+    return React.createElement(React.Fragment, null, React.createElement("div", {
       style: {
         display: 'grid',
-        gridTemplateColumns: noteModal._multiDay ? '1fr 1fr' : '1fr',
+        gridTemplateColumns: '1fr 1fr',
         gap: 10
       }
-    }, React.createElement("input", {
+    }, React.createElement("div", null, React.createElement("label", {
+      style: nLbl
+    }, tr('កាល​បរិច្ឆេទ ចាប់ពី', 'Date from')), React.createElement("input", {
       type: "date",
       value: noteModal.fromDate || '',
       onChange: e => setNoteModal(m => ({
         ...m,
         fromDate: e.target.value,
-        toDate: m._multiDay && m.toDate && m.toDate >= e.target.value ? m.toDate : e.target.value
+        toDate: !m.toDate || m.toDate < e.target.value ? e.target.value : m.toDate
       })),
       style: nInp
-    }), noteModal._multiDay && React.createElement("input", {
+    })), React.createElement("div", null, React.createElement("label", {
+      style: nLbl
+    }, tr('ដល់', 'To')), React.createElement("input", {
       type: "date",
       value: noteModal.toDate || noteModal.fromDate || '',
       min: noteModal.fromDate || '',
@@ -34545,18 +34500,22 @@ var printInstructorNotesPDF = (inst, notes, lang) => {
     } catch (e) {}
   };
   var sorted = [...notes].sort((a, b) => String(a.fromDate || a.date || '').localeCompare(String(b.fromDate || b.date || '')) || String(a.fromTime || a.time || '').localeCompare(String(b.fromTime || b.time || '')));
+  var prevKey = '';
   var rows = sorted.length ? sorted.map(n => {
     var from = n.fromDate || n.date || '',
       to = n.toDate || from;
     var col = to && to < tday ? '#111' : from && from > tday ? '#1A4F96' : '#B0413E';
     var dLabel = esc(from) + (to && to !== from ? '<br>→ ' + esc(to) : '');
     var tLabel = n.fromTime ? esc(String(n.fromTime).slice(0, 5)) + (n.toTime ? '–' + esc(String(n.toTime).slice(0, 5)) : '') : n.time ? esc(String(n.time).slice(0, 5)) : '';
+    var sameDay = from + '|' + to === prevKey;
+    prevKey = from + '|' + to;
+    var dCell = sameDay ? tLabel ? '<span style="font-weight:400;font-size:11px">' + tLabel + '</span>' : '' : (dLabel || '—') + (tLabel ? '<div style="font-weight:400;font-size:11px;margin-top:1px">' + tLabel + '</div>' : '');
     var studs = (n.studentIds || []).map(id => {
       var st = (window.STUDENTS || []).find(x => x.id === id);
       return st ? esc(st.name || st.en) : null;
     }).filter(Boolean).join(', ');
     return `<tr>
-      <td style="white-space:nowrap;font-family:monospace;font-weight:700;color:${col}">${dLabel || '—'}${tLabel ? '<div style="font-weight:400;font-size:11px;margin-top:1px">' + tLabel + '</div>' : ''}</td>
+      <td style="white-space:nowrap;font-family:monospace;font-weight:700;color:${col}">${dCell}</td>
       <td><b style="color:${col}">${esc(n.content || n.title || '') || '—'}</b>${n.location ? '<div style="color:#555;margin-top:2px">📍 ' + esc(n.location) + '</div>' : ''}${n.remark || n.description ? '<div style="color:#555;margin-top:2px;white-space:pre-wrap">' + esc(n.remark || n.description) + '</div>' : ''}${studs ? '<div style="color:#777;margin-top:3px;font-size:11px">👥 ' + studs + '</div>' : ''}</td>
       <td style="color:#444">${n.reason ? esc(n.reason) : '—'}</td>
       <td style="color:#666;white-space:nowrap">${n.author ? esc(n.author) : '—'}</td>
@@ -47994,14 +47953,18 @@ var printStudentLessonsPDF = (s, lessons, exams, lang, notesOnly) => {
       var tday = typeof todayStr === 'function' ? todayStr() : new Date().toISOString().slice(0, 10);
       var ntes = (window.__scheduleNotes || window.__schoolSettings && window.__schoolSettings.scheduleNotes || []).filter(n => (n.studentIds || []).includes(sid)).sort((a, b) => String(a.fromDate || a.date || '').localeCompare(String(b.fromDate || b.date || '')) || String(a.fromTime || a.time || '').localeCompare(String(b.fromTime || b.time || '')));
       if (!ntes.length) return notesOnly ? `<div class="secbar" style="background:#CA8A04">📝 ${L('ចំណាំ', 'Notes')}</div><table class="lt"><tbody><tr><td colspan="4" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr></tbody></table>` : '';
+      var prevKey = '';
       var rows = ntes.map(n => {
         var from = n.fromDate || n.date || '',
           to = n.toDate || from;
         var col = to && to < tday ? '#111' : from && from > tday ? '#1A4F96' : '#B0413E';
         var dLabel = esc(from) + (to && to !== from ? '<br>→ ' + esc(to) : '');
         var tLabel = n.fromTime ? esc(String(n.fromTime).slice(0, 5)) + (n.toTime ? '–' + esc(String(n.toTime).slice(0, 5)) : '') : n.time ? esc(String(n.time).slice(0, 5)) : '';
+        var sameDay = from + '|' + to === prevKey;
+        prevKey = from + '|' + to;
+        var dCell = sameDay ? tLabel ? '<span style="font-weight:400;font-size:11px">' + tLabel + '</span>' : '' : (dLabel || '—') + (tLabel ? '<div style="font-weight:400;font-size:11px;margin-top:1px">' + tLabel + '</div>' : '');
         return `<tr>
-      <td style="white-space:nowrap;font-family:monospace;font-weight:700;color:${col}">${dLabel || '—'}${tLabel ? '<div style="font-weight:400;font-size:11px;margin-top:1px">' + tLabel + '</div>' : ''}</td>
+      <td style="white-space:nowrap;font-family:monospace;font-weight:700;color:${col}">${dCell}</td>
       <td><b style="color:${col}">${esc(n.content || n.title || '') || '—'}</b>${n.location ? '<div style="color:#555;margin-top:2px">📍 ' + esc(n.location) + '</div>' : ''}${n.remark || n.description ? '<div style="color:#555;margin-top:2px;white-space:pre-wrap">' + esc(n.remark || n.description) + '</div>' : ''}</td>
       <td style="color:#444">${n.reason ? esc(n.reason) : '—'}</td>
       <td style="color:#666;white-space:nowrap">${n.author ? esc(n.author) : '—'}</td>

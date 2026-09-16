@@ -743,7 +743,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
     const remark   = (noteModal?.remark ?? noteModal?.description ?? '').trim();
     if (!content && !reason && !remark && !location) { setNoteModal(null); return; }
     const fromDate = noteModal.fromDate || noteModal.date || '';
-    const toDate   = (noteModal._multiDay && noteModal.toDate) ? noteModal.toDate : fromDate;
+    const toDate   = noteModal.toDate || fromDate;
     const fromTime = noteModal.fromTime || noteModal.time || '';
     const toTime   = noteModal.toTime || '';
     const invited = noteModal.invited || [];
@@ -917,7 +917,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   // Click a time slot → open the create modal defaulting to the lesson tab,
   // pre-filled with that slot's date+hour (switchable to a note).
   const openSlot = (date, hour) => setNoteModal({ mode:'lesson', date, hour, time:String(hour).padStart(2,'0')+':00', fromDate:date, toDate:date, fromTime:String(hour).padStart(2,'0')+':00', toTime:'', content:'', reason:'', location:'', remark:'', title:'', description:'', author:meName, invited:[], studentIds:[] });
-  const editNote = (n) => setNoteModal({ id:n.id, date:n.fromDate||n.date, fromDate:n.fromDate||n.date||'', toDate:n.toDate||n.fromDate||n.date||'', _multiDay: !!(n.toDate && (n.fromDate||n.date) && n.toDate !== (n.fromDate||n.date)), fromTime:n.fromTime||n.time||'', toTime:n.toTime||'', time:n.fromTime||n.time||'', len:n.len||1, content:n.content||n.title||n.text||'', reason:n.reason||'', location:n.location||'', remark:n.remark||'', author:n.author, invited:n.invited||[], studentIds:n.studentIds||[] });
+  const editNote = (n) => setNoteModal({ id:n.id, date:n.fromDate||n.date, fromDate:n.fromDate||n.date||'', toDate:n.toDate||n.fromDate||n.date||'', fromTime:n.fromTime||n.time||'', toTime:n.toTime||'', time:n.fromTime||n.time||'', len:n.len||1, content:n.content||n.title||n.text||'', reason:n.reason||'', location:n.location||'', remark:n.remark||'', author:n.author, invited:n.invited||[], studentIds:n.studentIds||[] });
   // Clicking a note opens a read-only detail (like the lesson detail); its
   // Edit/Delete buttons call back into these handlers.
   React.useEffect(() => {
@@ -1431,19 +1431,15 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
               const TIME_OPTS = (() => { const a=[]; for(let h=6;h<=20;h++){ a.push(String(h).padStart(2,'0')+':00'); a.push(String(h).padStart(2,'0')+':30'); } return a; })();
               const TIME_PRESETS = [{k:'full',km:'ពេញ​ថ្ងៃ',en:'Full day',f:'08:00',t:'17:00'},{k:'am',km:'ព្រឹក',en:'Half AM',f:'08:00',t:'12:00'},{k:'pm',km:'រសៀល',en:'Half PM',f:'13:00',t:'17:00'}];
               return (<>
-            {/* Date — single day by default; a toggle reveals an end date */}
-            <div>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:5}}>
-                <label style={{...nLbl,marginBottom:0}}>{tr('កាល​បរិច្ឆេទ','Date')}</label>
-                {!noteModal._multiDay
-                  ? <button type="button" onClick={()=>setNoteModal(m=>({...m,_multiDay:true,toDate:m.toDate||m.fromDate}))} style={{border:'none',background:'none',color:'var(--accent)',fontSize:11,fontWeight:700,cursor:'pointer',fontFamily:'inherit',padding:0}}>+ {tr('ច្រើន​ថ្ងៃ','Multi-day')}</button>
-                  : <button type="button" onClick={()=>setNoteModal(m=>({...m,_multiDay:false,toDate:m.fromDate}))} style={{border:'none',background:'none',color:'var(--ink-3)',fontSize:11,fontWeight:700,cursor:'pointer',fontFamily:'inherit',padding:0}}>✕ {tr('ថ្ងៃ​តែ​មួយ','Single day')}</button>}
+            {/* Date range (from → to; single day = same date) */}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+              <div>
+                <label style={nLbl}>{tr('កាល​បរិច្ឆេទ ចាប់ពី','Date from')}</label>
+                <input type="date" value={noteModal.fromDate||''} onChange={e=>setNoteModal(m=>({...m,fromDate:e.target.value, toDate:(!m.toDate||m.toDate<e.target.value)?e.target.value:m.toDate}))} style={nInp}/>
               </div>
-              <div style={{display:'grid',gridTemplateColumns:noteModal._multiDay?'1fr 1fr':'1fr',gap:10}}>
-                <input type="date" value={noteModal.fromDate||''} onChange={e=>setNoteModal(m=>({...m,fromDate:e.target.value, toDate:(m._multiDay && m.toDate && m.toDate>=e.target.value)?m.toDate:e.target.value}))} style={nInp}/>
-                {noteModal._multiDay && (
-                  <input type="date" value={noteModal.toDate||noteModal.fromDate||''} min={noteModal.fromDate||''} onChange={e=>setNoteModal(m=>({...m,toDate:e.target.value}))} style={nInp}/>
-                )}
+              <div>
+                <label style={nLbl}>{tr('ដល់','To')}</label>
+                <input type="date" value={noteModal.toDate||noteModal.fromDate||''} min={noteModal.fromDate||''} onChange={e=>setNoteModal(m=>({...m,toDate:e.target.value}))} style={nInp}/>
               </div>
             </div>
             {/* Time — quick presets + optional from/to (scroll pickers) */}

@@ -511,14 +511,17 @@ const printInstructorNotesPDF = (inst, notes, lang) => {
   bar.querySelector('#__inClose').onclick = () => host.remove();
   bar.querySelector('#__inPrint').onclick = () => { try { iframe.contentWindow.focus(); iframe.contentWindow.print(); } catch(e){} };
   const sorted = [...notes].sort((a,b)=>String(a.fromDate||a.date||'').localeCompare(String(b.fromDate||b.date||'')) || String(a.fromTime||a.time||'').localeCompare(String(b.fromTime||b.time||'')));
+  let prevKey = '';
   const rows = sorted.length ? sorted.map(n => {
     const from = n.fromDate||n.date||'', to = n.toDate||from;
     const col = to && to < tday ? '#111' : (from && from > tday ? '#1A4F96' : '#B0413E');
     const dLabel = esc(from) + (to && to!==from ? '<br>→ '+esc(to) : '');
     const tLabel = n.fromTime ? esc(String(n.fromTime).slice(0,5)) + (n.toTime?'–'+esc(String(n.toTime).slice(0,5)):'') : (n.time?esc(String(n.time).slice(0,5)):'');
+    const sameDay = (from+'|'+to) === prevKey; prevKey = from+'|'+to;   // same date as row above → show time only
+    const dCell = sameDay ? (tLabel?'<span style="font-weight:400;font-size:11px">'+tLabel+'</span>':'') : ((dLabel||'—') + (tLabel?'<div style="font-weight:400;font-size:11px;margin-top:1px">'+tLabel+'</div>':''));
     const studs = (n.studentIds||[]).map(id=>{ const st=(window.STUDENTS||[]).find(x=>x.id===id); return st?esc(st.name||st.en):null; }).filter(Boolean).join(', ');
     return `<tr>
-      <td style="white-space:nowrap;font-family:monospace;font-weight:700;color:${col}">${dLabel||'—'}${tLabel?'<div style="font-weight:400;font-size:11px;margin-top:1px">'+tLabel+'</div>':''}</td>
+      <td style="white-space:nowrap;font-family:monospace;font-weight:700;color:${col}">${dCell}</td>
       <td><b style="color:${col}">${esc(n.content||n.title||'')||'—'}</b>${n.location?'<div style="color:#555;margin-top:2px">📍 '+esc(n.location)+'</div>':''}${(n.remark||n.description)?'<div style="color:#555;margin-top:2px;white-space:pre-wrap">'+esc(n.remark||n.description)+'</div>':''}${studs?'<div style="color:#777;margin-top:3px;font-size:11px">👥 '+studs+'</div>':''}</td>
       <td style="color:#444">${n.reason?esc(n.reason):'—'}</td>
       <td style="color:#666;white-space:nowrap">${n.author?esc(n.author):'—'}</td>
