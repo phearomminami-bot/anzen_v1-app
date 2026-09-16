@@ -3333,7 +3333,7 @@ window.__trGroups = {
 };
 </script>
 
-<script>window.__ANZEN_VERSION="v221";</script>
+<script>window.__ANZEN_VERSION="v222";</script>
 
 <script>
 function useTweaks(defaults) {
@@ -24312,6 +24312,28 @@ var generateSchedulePDF = ({
   var iName = i => !i ? '' : curLang === 'km' ? i.name || i.en || '' : i.en || i.name || '';
   var fmtH = h => kd(`${String(h).padStart(2, '0')}:00`);
   var fmtRange = (h, len) => `${fmtH(h)}-${fmtH(h + (len || 1))}`;
+  var phOf = l => (typeof lessonPhase === 'function' ? lessonPhase(l) : l && l.phase) || 'KH';
+  var cumHourLabel = l => {
+    var sid = l.studentId;
+    if (!sid || sid === '—') return '';
+    var sameTh = isTheoryLesson(l),
+      ph = phOf(l);
+    var mine = (typeof LESSONS !== 'undefined' ? LESSONS : []).filter(x => x.studentId === sid && x.status !== 'cancelled' && isTheoryLesson(x) === sameTh && phOf(x) === ph).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')) || (a.h || 0) - (b.h || 0));
+    var acc = 0,
+      start = null;
+    for (var x of mine) {
+      if (x.id === l.id) {
+        start = acc + 1;
+        break;
+      }
+      acc += Math.max(1, Math.round(x.len || 1));
+    }
+    if (start == null) return '';
+    var n = Math.max(1, Math.round(l.len || 1)),
+      end = start + n - 1;
+    return ph + kd(n > 1 ? start + '-' + end : String(start));
+  };
+  var phaseColor = l => ((window.STUDENT_PHASES || []).find(p => p.k === phOf(l)) || {}).color || '#555';
   var lessonCard = l => {
     var c = lessonBlockColor(l);
     var isTh = isTheoryLesson(l);
@@ -24329,6 +24351,7 @@ var generateSchedulePDF = ({
     return `<div style="background:${c.bg};border:1px solid ${c.bd};border-left:3px solid ${c.accent};border-radius:4px;padding:4px 6px;margin-bottom:3px;font-size:10px;line-height:1.4;-webkit-print-color-adjust:exact;print-color-adjust:exact">
       <div style="display:flex;align-items:center;gap:4px;margin-bottom:1px">
         <span style="font-weight:700;color:${c.text};font-size:9px">${typeLabel}</span>
+        ${cumHourLabel(l) ? `<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;background:${phaseColor(l)};color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">${cumHourLabel(l)}</span>` : ''}
         ${locLabel ? `<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;background:${locBg};color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">${locLabel}</span>` : ''}
         ${transLabel ? `<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;background:${transLabel === 'MT' ? '#7A3B2B' : '#3B7A57'};color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">${transLabel}</span>` : ''}
       </div>
@@ -24438,6 +24461,7 @@ var generateSchedulePDF = ({
             <div style="display:flex;gap:2px;align-items:center;flex-wrap:wrap">
               <b style="color:${c.text}">${fmtRange(l.h, l.len)}</b>
               <span style="font-weight:700;color:${c.text}">${typeLabel}</span>
+              ${cumHourLabel(l) ? bdg(cumHourLabel(l), phaseColor(l)) : ''}
               ${loc ? bdg(loc, locBg) : ''}${trans ? bdg(trans, trans === 'MT' ? '#7A3B2B' : '#3B7A57') : ''}
             </div>
             ${s ? `<div style="font-weight:600;color:${nameCol}">${sName(s)}</div>` : ''}

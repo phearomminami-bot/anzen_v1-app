@@ -1601,6 +1601,26 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
   const fmtH = h => kd(`${String(h).padStart(2,'0')}:00`);
   const fmtRange = (h,len) => `${fmtH(h)}-${fmtH(h+(len||1))}`;
 
+  // Cumulative hour number within the student's phase, counted per type (theory
+  // and practical separately) across ALL that student's lessons — e.g. "KH3", or
+  // "KH3-4" for a 2h block. Shown after the Theory/Practice label so each block
+  // reads as "which hour of the phase this is".
+  const phOf = (l) => ((typeof lessonPhase === 'function' ? lessonPhase(l) : (l && l.phase)) || 'KH');
+  const cumHourLabel = (l) => {
+    const sid = l.studentId;
+    if (!sid || sid === '—') return '';
+    const sameTh = isTheoryLesson(l), ph = phOf(l);
+    const mine = (typeof LESSONS !== 'undefined' ? LESSONS : [])
+      .filter(x => x.studentId === sid && x.status !== 'cancelled' && isTheoryLesson(x) === sameTh && phOf(x) === ph)
+      .sort((a,b) => String(a.date||'').localeCompare(String(b.date||'')) || ((a.h||0) - (b.h||0)));
+    let acc = 0, start = null;
+    for (const x of mine) { if (x.id === l.id) { start = acc + 1; break; } acc += Math.max(1, Math.round(x.len||1)); }
+    if (start == null) return '';
+    const n = Math.max(1, Math.round(l.len||1)), end = start + n - 1;
+    return ph + kd(n > 1 ? (start + '-' + end) : String(start));
+  };
+  const phaseColor = (l) => ((window.STUDENT_PHASES||[]).find(p=>p.k===phOf(l))||{}).color || '#555';
+
   // Per-student colour + Theory(dark)/Practice(light) shading, via the shared
   // lessonBlockColor() helper (studentMode=false → colour by student).
   const lessonCard = (l) => {
@@ -1620,6 +1640,7 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
     return `<div style="background:${c.bg};border:1px solid ${c.bd};border-left:3px solid ${c.accent};border-radius:4px;padding:4px 6px;margin-bottom:3px;font-size:10px;line-height:1.4;-webkit-print-color-adjust:exact;print-color-adjust:exact">
       <div style="display:flex;align-items:center;gap:4px;margin-bottom:1px">
         <span style="font-weight:700;color:${c.text};font-size:9px">${typeLabel}</span>
+        ${cumHourLabel(l) ? `<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;background:${phaseColor(l)};color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">${cumHourLabel(l)}</span>` : ''}
         ${locLabel ? `<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;background:${locBg};color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">${locLabel}</span>` : ''}
         ${transLabel ? `<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;background:${transLabel==='MT'?'#7A3B2B':'#3B7A57'};color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">${transLabel}</span>` : ''}
       </div>
@@ -1709,6 +1730,7 @@ const generateSchedulePDF = ({ lessons, weekDates, viewType, labelEn, instFilter
             <div style="display:flex;gap:2px;align-items:center;flex-wrap:wrap">
               <b style="color:${c.text}">${fmtRange(l.h,l.len)}</b>
               <span style="font-weight:700;color:${c.text}">${typeLabel}</span>
+              ${cumHourLabel(l)?bdg(cumHourLabel(l),phaseColor(l)):''}
               ${loc?bdg(loc,locBg):''}${trans?bdg(trans,trans==='MT'?'#7A3B2B':'#3B7A57'):''}
             </div>
             ${s?`<div style="font-weight:600;color:${nameCol}">${sName(s)}</div>`:''}
