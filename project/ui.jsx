@@ -477,10 +477,10 @@ const can = (role, action, target) => {
 
 // ── Responsive breakpoint hook ────────────────────────────────────────────
 const useBreakpoint = () => {
-  // Tablet-sized screens (700–1100px) use the same layout as phones — the
-  // bottom bar is easier to reach one-handed than a sidebar. Only ≥1100px
-  // gets the desktop sidebar layout.
-  const get = () => ({ mobile: window.innerWidth < 1100, tablet: false });
+  // One layout everywhere: the phone layout, with its bottom bar. The user
+  // works on a tablet and wanted the desktop to match it rather than show a
+  // sidebar, so no width gets the desktop or tablet shells.
+  const get = () => ({ mobile: true, tablet: false });
   const [bp, setBp] = React.useState(get);
   React.useEffect(() => {
     const h = () => setBp(get());

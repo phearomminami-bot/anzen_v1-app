@@ -4394,7 +4394,7 @@ var can = (role, action, target) => {
 };
 var useBreakpoint = () => {
   var get = () => ({
-    mobile: window.innerWidth < 1100,
+    mobile: true,
     tablet: false
   });
   var [bp, setBp] = React.useState(get);
