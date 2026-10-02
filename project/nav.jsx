@@ -511,7 +511,7 @@ const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
                 borderRadius:10,cursor:'pointer',fontSize:16,textAlign:'left',fontFamily:'inherit',
                 color:current===it.id?'var(--ink)':'var(--ink-2)',fontWeight:current===it.id?700:500,
               }}>
-                <Icon name={it.icon} size={20} stroke={current===it.id?2:1.5}/>
+                <Icon name={it.icon} size={26} stroke={current===it.id?2:1.5}/>
                 {ll(it)}
               </button>
             ))}
@@ -530,7 +530,7 @@ const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
           </div>
         </div>
       )}
-      <div style={{
+      <div className="anz-navbar" style={{
         position:'fixed',bottom:0,left:0,right:0,zIndex:100,
         background:'var(--surface)',borderTop:'1px solid var(--border)',
         boxShadow:'0 -1px 12px rgba(0,0,0,.05)',
@@ -547,7 +547,7 @@ const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
             color:on?'var(--accent)':'var(--ink-3)',transition:'color .15s',
           }}>
             {on && <span style={{position:'absolute',top:0,left:'50%',transform:'translateX(-50%)',width:24,height:3,borderRadius:'0 0 3px 3px',background:'var(--accent)'}}/>}
-            <Icon name={it.icon} size={21} stroke={on?2.2:1.6}/>
+            <Icon name={it.icon} size={26} stroke={on?2.2:1.6}/>
             <span style={{
               fontSize:10,fontWeight:on?600:500,lineHeight:1.12,textAlign:'center',width:'100%',
               display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden',
@@ -602,7 +602,7 @@ const Sidebar = ({ items, current, onGo, role, onLogout, onReorder, collapsed = 
 
   if (collapsed) {
     return (
-      <aside style={{
+      <aside className="anz-side" style={{
         width:56, background:'var(--surface)', borderRight:'1px solid var(--border)',
         display:'flex', flexDirection:'column', flexShrink:0, alignItems:'center',
         transition:'width .2s',
@@ -624,7 +624,7 @@ const Sidebar = ({ items, current, onGo, role, onLogout, onReorder, collapsed = 
               background:current===it.id?'var(--accent-soft)':'transparent',
               color:current===it.id?'var(--accent)':'var(--ink-3)',
             }}>
-              <Icon name={it.icon} size={18} stroke={current===it.id?2:1.5}/>
+              <Icon name={it.icon} size={26} stroke={current===it.id?2:1.5}/>
             </button>
           ))}
         </nav>
@@ -642,7 +642,7 @@ const Sidebar = ({ items, current, onGo, role, onLogout, onReorder, collapsed = 
   const drag = useDragOrder(onReorder);
 
   return (
-  <aside style={{
+  <aside className="anz-side" style={{
     width:240, background:'var(--surface)', borderRight:'1px solid var(--border)',
     display:'flex', flexDirection:'column', flexShrink:0,
     transition:'width .2s',
@@ -697,7 +697,7 @@ const Sidebar = ({ items, current, onGo, role, onLogout, onReorder, collapsed = 
                 textAlign:'left',
               }}>
               <GripDots/>
-              <Icon name={it.icon} size={16} stroke={current===it.id ? 2 : 1.5}/>
+              <Icon name={it.icon} size={24} stroke={current===it.id ? 2 : 1.5}/>
               <span style={{flex:1}}>{ll(it)}</span>
             </button>
             {lineBot && <div style={{position:'absolute',bottom:0,left:8,right:8,height:2,background:'var(--accent)',borderRadius:1,zIndex:5}}/>}

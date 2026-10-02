@@ -137,7 +137,9 @@
       _lastAuxPull = Date.now();
 
       const insp = await pull('vehicle_inspections');
-      if (insp) window.__vehicleInspections = insp.map(rowObj);
+      // An empty array is truthy — guard on length so an empty cloud table
+      // never wipes the local inspections.
+      if (insp && insp.length) window.__vehicleInspections = insp.map(rowObj);
 
       const att = await pull('attendance');
       if (att && att.length) {

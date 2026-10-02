@@ -11,7 +11,7 @@ def compile_jsx(jsx_path: pathlib.Path) -> str:
     """Pre-compile a JSX file to plain JavaScript at build time."""
     result = subprocess.run(
         ["node", str(COMPILER), str(jsx_path)],
-        capture_output=True, text=True, cwd=ROOT
+        capture_output=True, text=True, encoding='utf-8', cwd=ROOT
     )
     if result.returncode != 0:
         print(f"ERROR compiling {jsx_path.name}:\n{result.stderr}", file=sys.stderr)
@@ -189,52 +189,88 @@ HEAD = """<!doctype html>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Khmer:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Moul&family=Battambang:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Khmer:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Moul&family=Battambang:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
+  /* ═══════════════════════════════════════════════════════════
+     SKIN · ខៀវអណ្ដែត (B)
+     ជ្រុងមូល · ស្រមោលទន់ · គ្មានស៊ុមរឹង · ពុម្ពអក្សរទំនើប
+     ═══════════════════════════════════════════════════════════ */
   :root{
-    --bg: #FAFAF7;
+    --bg: #F1F4F9;
     --surface: #FFFFFF;
-    --surface-muted: #F4F2EC;
-    --border: #E6E3DC;
-    --border-strong: #C9C5BB;
-    --ink: #1A1A19;
-    --ink-2: #4A4A47;
-    --ink-3: #6E6B62;
-    --accent: #1B3A6B;
-    --accent-soft: #E4EAF4;
-    --gold: #F2B705;
-    --gold-soft: #FCEFC2;
-    --warn: #C66A2E;
-    --good: #3B7A57;
-    --danger: #B0413E;
-    /* Prefer the web fonts (Noto Sans Khmer, Inter) — they always render
-       upright. The local 'Khmer OS' is kept only as a last fallback: on some
-       machines its installed face renders slanted/oblique, which made the whole
-       UI look italic, so it must never be the first choice. */
+    --surface-muted: #F5F7FB;
+    --surface-2: #F5F7FB;
+    --surface-3: #E9EDF4;
+    --border: #E6EAF1;
+    --border-strong: #CFD6E2;
+    --ink: #101828;
+    --ink-2: #475467;
+    --ink-3: #667085;
+    --accent: #1D4E8F;
+    --accent-2: #2D66B4;
+    --accent-ink: #FFFFFF;
+    --accent-soft: #EAF1FF;
+    --gold: #B5892A;
+    --gold-soft: #FDF4E1;
+    --good: #12804A;
+    --good-soft: #E7F7EE;
+    --ok: #12804A;
+    --warn: #B25E09;
+    --warn-soft: #FEF3E2;
+    --danger: #C4320A;
+    --danger-soft: #FDECE7;
+    --nav-bg: #163766;
+    --nav-ink: #C9D5E8;
+    --nav-ink-2: #92A7C7;
+    --nav-active-bg: rgba(255,255,255,.16);
+    --nav-active-ink: #FFFFFF;
+    --nav-rule: rgba(255,255,255,.12);
+    --shadow: 0 1px 2px rgba(16,24,40,.05);
+    --shadow-lg: 0 12px 28px -12px rgba(16,24,40,.18);
+    /* Kantumruy Pro — ពុម្ពខ្មែរទំនើប។ Noto Sans Khmer ជា fallback;
+       Khmer OS ចុងក្រោយ ព្រោះវាបង្ហាញជាអក្សរទ្រេតនៅម៉ាស៊ីនខ្លះ។ */
     --font-en: 'Inter', system-ui, 'Segoe UI', Arial, sans-serif;
-    --font-km: 'Noto Sans Khmer', 'Battambang', 'Khmer OS', system-ui, sans-serif;
-    --font-title: 'Moul', 'Noto Serif Khmer', 'Khmer OS Muol', serif;
-    --font-display: 'Inter', 'Noto Sans Khmer', system-ui, sans-serif;
-    --radius: 10px;
-    --radius-sm: 6px;
+    --font-km: 'Kantumruy Pro', 'Noto Sans Khmer', 'Battambang', 'Khmer OS', system-ui, sans-serif;
+    --font-title: 'Kantumruy Pro', 'Noto Sans Khmer', system-ui, sans-serif;
+    --font-display: 'Inter', 'Kantumruy Pro', system-ui, sans-serif;
+    --radius: 14px;
+    --radius-sm: 10px;
+    --radius-lg: 20px;
+    --radius-pill: 999px;
   }
   [data-theme="dark"]{
-    --bg: #0F1117;
-    --surface: #181B24;
-    --surface-muted: #1E2230;
-    --border: #272C3C;
-    --border-strong: #353C52;
-    --ink: #E4E8F2;
-    --ink-2: #AEB8D2;
-    --ink-3: #828DAD;
-    --accent: #5E8AD0;
-    --accent-soft: #1F2B45;
-    --gold: #F2B705;
-    --gold-soft: #3A3208;
-    --warn: #E07840;
-    --good: #4A9A6A;
-    --danger: #D45A56;
+    --bg: #0E1420;
+    --surface: #151C2B;
+    --surface-muted: #1C2536;
+    --surface-2: #1C2536;
+    --surface-3: #243047;
+    --border: #222D42;
+    --border-strong: #33415C;
+    --ink: #EAF0FA;
+    --ink-2: #A9B6CC;
+    --ink-3: #7D8CA6;
+    --accent: #6FA6FF;
+    --accent-2: #8CBAFF;
+    --accent-ink: #081120;
+    --accent-soft: #16273F;
+    --gold: #E0B450;
+    --gold-soft: #2E2611;
+    --good: #3FCB86;
+    --good-soft: #10291F;
+    --ok: #3FCB86;
+    --warn: #E9A24B;
+    --warn-soft: #2E2315;
+    --danger: #FF7A66;
+    --danger-soft: #2E1815;
+    --nav-bg: #101A2C;
+    --nav-ink: #A9B6CC;
+    --nav-ink-2: #6F7F99;
+    --nav-active-bg: rgba(111,166,255,.18);
+    --nav-active-ink: #FFFFFF;
+    --nav-rule: rgba(255,255,255,.08);
+    --shadow: 0 1px 2px rgba(0,0,0,.5);
+    --shadow-lg: 0 14px 30px -14px rgba(0,0,0,.75);
   }
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--ink);
@@ -313,6 +349,84 @@ HEAD = """<!doctype html>
   .wheel-col{ -ms-overflow-style:none; scrollbar-width:none; }
   .wheel-col::-webkit-scrollbar{ width:0;height:0;display:none; }
   @media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms!important;transition-duration:.01ms!important;} }
+
+  /* ── របារចំហៀង និងរបារខាងក្រោម ជាពណ៌ខៀវ ──────────────────────
+     មិនកែ inline style រាប់ពាន់កន្លែង — គ្រាន់តែកំណត់តម្លៃ variable
+     ឡើងវិញក្នុង subtree នេះ នោះអ្វីៗដែលប្រើ var(--…) ប្ដូរតាម។ */
+  .anz-side,
+  .anz-navbar{
+    --bg:             var(--nav-bg);
+    --surface:        var(--nav-bg);
+    --surface-muted:  var(--nav-active-bg);
+    --surface-2:      var(--nav-active-bg);
+    --border:         var(--nav-rule);
+    --border-strong:  var(--nav-rule);
+    --ink:            var(--nav-active-ink);
+    --ink-2:          var(--nav-ink);
+    --ink-3:          var(--nav-ink-2);
+    --accent:         var(--nav-active-ink);
+    --accent-soft:    var(--nav-active-bg);
+    background: var(--nav-bg);
+    color: var(--nav-ink);
+  }
+  .anz-navbar{ --ink-3: var(--nav-ink); }
+
+  /* ── ជួរ tab ដែលវែងជាងអេក្រង់ (Tablet បញ្ឈរ) ─────────────────
+     ឱ្យវារំកិលក្នុងខ្លួនឯង ជំនួសការហូរហួសទំព័រ។ */
+  .anz-tabrow{ overflow-x:auto; overflow-y:hidden; scrollbar-width:none; }
+  .anz-tabrow::-webkit-scrollbar{ display:none; }
+  .anz-tabrow > *{ flex-shrink:0; white-space:nowrap; }
+
+  /* ── ឧបករណ៍ប៉ះ — គោលដៅធំល្មមម្រាមដៃ ─────────────────────────── */
+  @media (pointer: coarse){
+    .anz-side nav button{ min-height:44px; }
+    .anz-navbar > button, .anz-navbar > a{ min-height:56px; }
+  }
+
+  /* ── ស្បែក B · ខៀវអណ្ដែត ─────────────────────────────────────
+     ជ្រុងមូល ស្រមោលទន់សាយ គ្មានគែមរឹង និងចលនាពេលប៉ះ។ */
+  body{
+    background: linear-gradient(180deg, #EEF2F8 0%, #F4F6FA 100%);
+    background-attachment: fixed;
+  }
+  [data-theme="dark"] body{
+    background: linear-gradient(180deg, #0C121D 0%, #111A29 100%);
+  }
+  .anz-card{
+    border: none !important;
+    border-radius: 20px !important;
+    box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 12px 28px -12px rgba(16,24,40,.16) !important;
+  }
+  [data-theme="dark"] .anz-card{
+    box-shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 14px 30px -14px rgba(0,0,0,.7) !important;
+  }
+  .anz-side{
+    margin: 12px 0 12px 12px;
+    border-radius: 26px !important;
+    border-right: none !important;
+    overflow: hidden;
+    background: linear-gradient(165deg, #20477F 0%, #163766 45%, #0F2A50 100%) !important;
+    box-shadow: 0 1px 0 rgba(255,255,255,.12) inset,
+                0 24px 48px -20px rgba(15,42,80,.55) !important;
+  }
+  [data-theme="dark"] .anz-side{
+    background: linear-gradient(165deg, #16243C 0%, #101A2C 50%, #0A1220 100%) !important;
+  }
+  .anz-side nav button{ border-radius: 14px !important; }
+  .anz-navbar{
+    border-radius: 22px 22px 0 0 !important;
+    border-top: none !important;
+    background: linear-gradient(165deg, #20477F 0%, #12305A 100%) !important;
+    box-shadow: 0 -10px 26px -12px rgba(15,42,80,.55) !important;
+  }
+  .anz-btn{ border-radius: 999px !important; }
+  input, select, textarea{ border-radius: 12px; }
+  .anz-btn, .anz-side nav button, .anz-navbar > button{
+    transition: transform .12s ease, filter .12s ease, background .16s ease;
+  }
+  .anz-btn:active, .anz-side nav button:active, .anz-navbar > button:active{
+    transform: scale(.97);
+  }
 </style>
 </head>
 <body>
@@ -344,11 +458,11 @@ window.onerror = function(msg,src,line,col,err){
 
 <script>
   const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-    "accent": "#1B3A6B",
+    "accent": "#1D4E8F",
     "palette": [
-      "#1B3A6B",
-      "#F2B705",
-      "#FAFAF7"
+      "#1D4E8F",
+      "#B5892A",
+      "#F1F4F9"
     ],
     "font": "inter",
     "nav": "sidebar",

@@ -560,10 +560,16 @@ function App() {
     }
     // Tablet: collapsed icon-only sidebar
     if (bp.tablet) {
+      // Tablet is a primary device here: same shape as desktop but tighter
+      // padding — a labelled, collapsible sidebar plus the search topbar.
+      // 100svh so the mobile browser chrome never covers the bottom row.
       return (
-        <div style={{display:'flex',height:'100vh',width:'100vw',background:'var(--bg)'}}>
-          <Sidebar items={items} current={current} onGo={setCurrent} role={role} onLogout={logout} onReorder={handleNavReorder} collapsed/>
-          <main style={{flex:1,overflow:'auto',padding:'16px 20px',minWidth:0}}>{screens[current]}</main>
+        <div style={{display:'flex',height:'100svh',width:'100vw',background:'var(--bg)'}}>
+          <Sidebar items={items} current={current} onGo={setCurrent} role={role} onLogout={logout} onReorder={handleNavReorder} collapsed={sideCollapsed} onToggleCollapse={toggleSideCollapsed}/>
+          <div style={{flex:1,display:'flex',flexDirection:'column',minWidth:0}}>
+            <ContentTopbar role={role}/>
+            <main style={{flex:1,overflow:'auto',padding:'16px 18px 28px',minWidth:0}}>{screens[current]}</main>
+          </div>
         </div>
       );
     }
@@ -756,6 +762,17 @@ const RealLoginCard = ({ onAuthLogin, onUseDemo }) => {
           background: busy?'var(--ink-3)':'var(--accent)', color:'#fff',
           fontSize:14,fontWeight:700,cursor: busy?'default':'pointer',fontFamily:'inherit',
         }}>{busy ? tr('កំពុង​ចូល…','Signing in…') : tr('ចូល','Sign in')}</button>
+        {/* onUseDemo existed but was never rendered, so demo mode was
+            unreachable from the real login screen. */}
+        {onUseDemo && (
+          <div style={{marginTop:16,paddingTop:14,borderTop:'1px solid var(--border)',textAlign:'center'}}>
+            <button type="button" onClick={onUseDemo} style={{
+              border:'none',background:'transparent',cursor:'pointer',fontFamily:'inherit',
+              fontSize:12,fontWeight:600,color:'var(--ink-3)',padding:'4px 8px',
+              textDecoration:'underline',textUnderlineOffset:'3px',
+            }}>{tr('ប្រើ​ជា Demo — ទិន្នន័យ​សាកល្បង','Try the demo — sample data')}</button>
+          </div>
+        )}
       </form>
     </div>
   );

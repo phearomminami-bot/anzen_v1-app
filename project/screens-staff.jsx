@@ -282,7 +282,7 @@ const StaffScreen = () => {
 
       <Card pad={0}>
         {/* sub-tabs */}
-        <div style={{padding:'10px 14px',borderBottom:'1px solid var(--border)',display:'flex',gap:4,alignItems:'center'}}>
+        <div className="anz-tabrow" style={{padding:'10px 14px',borderBottom:'1px solid var(--border)',display:'flex',gap:4,alignItems:'center'}}>
           {TABS.map(t => (
             <button key={t.id} onClick={()=>setTab(t.id)} style={{
               display:'inline-flex',alignItems:'center',gap:7,padding:'7px 12px',border:'none',

@@ -312,6 +312,37 @@ const LessonDetail = ({ lesson, onClose }) => {
   const { toast, confirm, role, tr, openForm, lang } = useAppActions();
   const [ver,     setVer]     = React.useState(0);
   const [editing, setEditing] = React.useState(false);
+  // ── Note box: writable, saves by itself ─────────────────────────────
+  // noteState: 0 idle · 1 saving · 2 saved
+  const [noteDraft, setNoteDraft] = React.useState('');
+  const [noteState, setNoteState] = React.useState(0);
+  const noteTimer = React.useRef(null);
+  const lessonKey = lesson ? lesson.id : null;
+  React.useEffect(() => {
+    setNoteDraft(lesson && lesson.note ? String(lesson.note) : '');
+    setNoteState(0);
+  }, [lessonKey]);
+  React.useEffect(() => () => clearTimeout(noteTimer.current), []);
+  const saveNote = (val) => {
+    if (!lesson) return;
+    if (String(lesson.note || '') === String(val)) { setNoteState(0); return; }
+    lesson.note = val;
+    setNoteState(2);
+    setVer(n => n + 1);
+    try { if (window.__notifyLessonsChanged) window.__notifyLessonsChanged(); } catch (e) {}
+    try { if (window.saveAllData) window.saveAllData(); } catch (e) {}
+    setTimeout(() => setNoteState(x => (x === 2 ? 0 : x)), 2000);
+  };
+  const onNoteChange = (e) => {
+    const el = e.target, val = el.value;
+    setNoteDraft(val);
+    setNoteState(1);
+    el.style.height = 'auto';
+    el.style.height = Math.max(72, el.scrollHeight) + 'px';
+    clearTimeout(noteTimer.current);
+    noteTimer.current = setTimeout(() => saveNote(val), 600);
+  };
+  const onNoteBlur = () => { clearTimeout(noteTimer.current); saveNote(noteDraft); };
   if (!lesson) return null;
   const s  = studentById(lesson.studentId || lesson.who);
   const it = instById(lesson.instId || lesson.inst);
@@ -569,12 +600,32 @@ const LessonDetail = ({ lesson, onClose }) => {
         </div>
       )}
 
-      {/* Note */}
-      {lesson.note && (
-        <div style={{padding:'10px 14px',background:'var(--surface-muted)',borderRadius:8,fontSize:13,color:'var(--ink-2)'}}>
-          {lesson.note}
+      {/* Note — always shown, writable, saves by itself */}
+      <div style={{display:'flex',flexDirection:'column',gap:6}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,fontSize:11,color:'var(--ink-3)'}}>
+          <span>{tr('ចំណាំ','Notes')}</span>
+          <span style={{
+            marginLeft:'auto',fontSize:11,fontWeight:600,
+            color: noteState === 2 ? 'var(--good)' : 'var(--ink-3)',
+            opacity: noteState ? 1 : 0, transition:'opacity .25s ease',
+          }}>{noteState === 2 ? tr('បាន​រក្សាទុក ✓','Saved ✓') : tr('កំពុង​រក្សាទុក…','Saving…')}</span>
         </div>
-      )}
+        {isStudent ? (
+          <div style={{padding:'10px 14px',background:'var(--surface-muted)',borderRadius:8,fontSize:13,color:'var(--ink-2)',whiteSpace:'pre-wrap'}}>
+            {lesson.note || '—'}
+          </div>
+        ) : (
+          <textarea value={noteDraft} onChange={onNoteChange} onBlur={onNoteBlur} rows={3}
+            placeholder={tr('សរសេរ​ចំណាំ​នៅ​ទីនេះ — រក្សាទុក​ដោយ​ខ្លួន​ឯង','Write a note — saves by itself')}
+            style={{
+              width:'100%',boxSizing:'border-box',minHeight:72,resize:'vertical',
+              padding:'10px 14px',background:'var(--surface-muted)',
+              border:'1px solid var(--border)',borderRadius:8,
+              fontFamily:'var(--font-km), var(--font-en), sans-serif',
+              fontSize:16,lineHeight:1.6,color:'var(--ink)',outline:'none',
+            }}/>
+        )}
+      </div>
 
       {/* Created by */}
       {lesson.createdBy && (

@@ -307,7 +307,11 @@ const translateFeedbackTexts = async (texts, target) => {
   } catch (e) { return {}; }
 };
 
-const printStudentLessonsPDF = (s, lessons, exams, lang, notesOnly) => {
+/* showNotes: left out = shown (keeps older 4-arg callers working). Picking a
+   specific phase passes false so the PDF holds only that phase's lessons. */
+const printStudentLessonsPDF = (s, lessons, exams, lang, notesOnly, showNotes) => {
+  if (showNotes === undefined) showNotes = true;
+  if (notesOnly) showNotes = true;
   if (!s) return;
   lang = lang === 'en' ? 'en' : 'km';
   // Render in an in-app overlay with a Back button — NOT a new tab/window, which
@@ -568,6 +572,7 @@ const printStudentLessonsPDF = (s, lessons, exams, lang, notesOnly) => {
   <table class="lt"><tbody><tr><td colspan="3" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr></tbody></table>`)}
 
   ${(() => {
+    if (!showNotes) return '';
     const tday = (typeof todayStr==='function'?todayStr():new Date().toISOString().slice(0,10));
     const ntes = (window.__scheduleNotes || (window.__schoolSettings && window.__schoolSettings.scheduleNotes) || []).filter(n => (n.studentIds||[]).includes(sid))
       .sort((a,b)=>String(a.fromDate||a.date||'').localeCompare(String(b.fromDate||b.date||'')) || String(a.fromTime||a.time||'').localeCompare(String(b.fromTime||b.time||'')));
@@ -1434,8 +1439,8 @@ const StudentsScreenV2 = () => {
                       })}
                     </div>
                     <div style={{display:'flex',gap:8}}>
-                      <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, pdfExams, 'km', pdfPhase==='__note')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>🇰🇭 {tr('ខ្មែរ','Khmer')}</button>
-                      <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, pdfExams, 'en', pdfPhase==='__note')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>🇬🇧 English</button>
+                      <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, pdfExams, 'km', pdfPhase==='__note', pdfPhase==='all' || pdfPhase==='__note')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>🇰🇭 {tr('ខ្មែរ','Khmer')}</button>
+                      <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, pdfExams, 'en', pdfPhase==='__note', pdfPhase==='all' || pdfPhase==='__note')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>🇬🇧 English</button>
                     </div>
                   </div>
                 </div>
@@ -1718,7 +1723,7 @@ const StudentsScreenV2 = () => {
 
       <Card pad={0}>
         {/* Tab bar */}
-        <div style={{padding:'10px 14px',borderBottom:'1px solid var(--border)',display:'flex',gap:4,alignItems:'center'}}>
+        <div className="anz-tabrow" style={{padding:'10px 14px',borderBottom:'1px solid var(--border)',display:'flex',gap:4,alignItems:'center'}}>
           {tabs.map(t => (
             <button key={t.id} onClick={() => { setTab(t.id); setEditing(false); }} style={{
               display:'inline-flex',alignItems:'center',gap:7,
@@ -2414,8 +2419,8 @@ const LessonRecords = ({ s, onSaveLesson, onSaveExam, readOnly = false }) => {
         })}
       </div>
       <div style={{display:'flex',gap:8}}>
-        <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, pdfExams, 'km')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>🇰🇭 {tr('ខ្មែរ','Khmer')}</button>
-        <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, pdfExams, 'en')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>🇬🇧 English</button>
+        <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, pdfExams, 'km', false, pdfPhase==='all')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>🇰🇭 {tr('ខ្មែរ','Khmer')}</button>
+        <button onClick={()=>printStudentLessonsPDF(s, pdfLessons, pdfExams, 'en', false, pdfPhase==='all')} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid var(--border-strong)',background:'var(--surface)',color:'var(--ink-2)',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>🇬🇧 English</button>
       </div>
     </div>
   );

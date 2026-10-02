@@ -34,52 +34,88 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Khmer:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Moul&family=Battambang:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Khmer:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Moul&family=Battambang:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
+  /* ═══════════════════════════════════════════════════════════
+     SKIN · ខៀវអណ្ដែត (B)
+     ជ្រុងមូល · ស្រមោលទន់ · គ្មានស៊ុមរឹង · ពុម្ពអក្សរទំនើប
+     ═══════════════════════════════════════════════════════════ */
   :root{
-    --bg: #FAFAF7;
+    --bg: #F1F4F9;
     --surface: #FFFFFF;
-    --surface-muted: #F4F2EC;
-    --border: #E6E3DC;
-    --border-strong: #C9C5BB;
-    --ink: #1A1A19;
-    --ink-2: #4A4A47;
-    --ink-3: #6E6B62;
-    --accent: #1B3A6B;
-    --accent-soft: #E4EAF4;
-    --gold: #F2B705;
-    --gold-soft: #FCEFC2;
-    --warn: #C66A2E;
-    --good: #3B7A57;
-    --danger: #B0413E;
-    /* Prefer the web fonts (Noto Sans Khmer, Inter) — they always render
-       upright. The local 'Khmer OS' is kept only as a last fallback: on some
-       machines its installed face renders slanted/oblique, which made the whole
-       UI look italic, so it must never be the first choice. */
+    --surface-muted: #F5F7FB;
+    --surface-2: #F5F7FB;
+    --surface-3: #E9EDF4;
+    --border: #E6EAF1;
+    --border-strong: #CFD6E2;
+    --ink: #101828;
+    --ink-2: #475467;
+    --ink-3: #667085;
+    --accent: #1D4E8F;
+    --accent-2: #2D66B4;
+    --accent-ink: #FFFFFF;
+    --accent-soft: #EAF1FF;
+    --gold: #B5892A;
+    --gold-soft: #FDF4E1;
+    --good: #12804A;
+    --good-soft: #E7F7EE;
+    --ok: #12804A;
+    --warn: #B25E09;
+    --warn-soft: #FEF3E2;
+    --danger: #C4320A;
+    --danger-soft: #FDECE7;
+    --nav-bg: #163766;
+    --nav-ink: #C9D5E8;
+    --nav-ink-2: #92A7C7;
+    --nav-active-bg: rgba(255,255,255,.16);
+    --nav-active-ink: #FFFFFF;
+    --nav-rule: rgba(255,255,255,.12);
+    --shadow: 0 1px 2px rgba(16,24,40,.05);
+    --shadow-lg: 0 12px 28px -12px rgba(16,24,40,.18);
+    /* Kantumruy Pro — ពុម្ពខ្មែរទំនើប។ Noto Sans Khmer ជា fallback;
+       Khmer OS ចុងក្រោយ ព្រោះវាបង្ហាញជាអក្សរទ្រេតនៅម៉ាស៊ីនខ្លះ។ */
     --font-en: 'Inter', system-ui, 'Segoe UI', Arial, sans-serif;
-    --font-km: 'Noto Sans Khmer', 'Battambang', 'Khmer OS', system-ui, sans-serif;
-    --font-title: 'Moul', 'Noto Serif Khmer', 'Khmer OS Muol', serif;
-    --font-display: 'Inter', 'Noto Sans Khmer', system-ui, sans-serif;
-    --radius: 10px;
-    --radius-sm: 6px;
+    --font-km: 'Kantumruy Pro', 'Noto Sans Khmer', 'Battambang', 'Khmer OS', system-ui, sans-serif;
+    --font-title: 'Kantumruy Pro', 'Noto Sans Khmer', system-ui, sans-serif;
+    --font-display: 'Inter', 'Kantumruy Pro', system-ui, sans-serif;
+    --radius: 14px;
+    --radius-sm: 10px;
+    --radius-lg: 20px;
+    --radius-pill: 999px;
   }
   [data-theme="dark"]{
-    --bg: #0F1117;
-    --surface: #181B24;
-    --surface-muted: #1E2230;
-    --border: #272C3C;
-    --border-strong: #353C52;
-    --ink: #E4E8F2;
-    --ink-2: #AEB8D2;
-    --ink-3: #828DAD;
-    --accent: #5E8AD0;
-    --accent-soft: #1F2B45;
-    --gold: #F2B705;
-    --gold-soft: #3A3208;
-    --warn: #E07840;
-    --good: #4A9A6A;
-    --danger: #D45A56;
+    --bg: #0E1420;
+    --surface: #151C2B;
+    --surface-muted: #1C2536;
+    --surface-2: #1C2536;
+    --surface-3: #243047;
+    --border: #222D42;
+    --border-strong: #33415C;
+    --ink: #EAF0FA;
+    --ink-2: #A9B6CC;
+    --ink-3: #7D8CA6;
+    --accent: #6FA6FF;
+    --accent-2: #8CBAFF;
+    --accent-ink: #081120;
+    --accent-soft: #16273F;
+    --gold: #E0B450;
+    --gold-soft: #2E2611;
+    --good: #3FCB86;
+    --good-soft: #10291F;
+    --ok: #3FCB86;
+    --warn: #E9A24B;
+    --warn-soft: #2E2315;
+    --danger: #FF7A66;
+    --danger-soft: #2E1815;
+    --nav-bg: #101A2C;
+    --nav-ink: #A9B6CC;
+    --nav-ink-2: #6F7F99;
+    --nav-active-bg: rgba(111,166,255,.18);
+    --nav-active-ink: #FFFFFF;
+    --nav-rule: rgba(255,255,255,.08);
+    --shadow: 0 1px 2px rgba(0,0,0,.5);
+    --shadow-lg: 0 14px 30px -14px rgba(0,0,0,.75);
   }
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--ink);
@@ -158,6 +194,84 @@
   .wheel-col{ -ms-overflow-style:none; scrollbar-width:none; }
   .wheel-col::-webkit-scrollbar{ width:0;height:0;display:none; }
   @media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms!important;transition-duration:.01ms!important;} }
+
+  /* ── របារចំហៀង និងរបារខាងក្រោម ជាពណ៌ខៀវ ──────────────────────
+     មិនកែ inline style រាប់ពាន់កន្លែង — គ្រាន់តែកំណត់តម្លៃ variable
+     ឡើងវិញក្នុង subtree នេះ នោះអ្វីៗដែលប្រើ var(--…) ប្ដូរតាម។ */
+  .anz-side,
+  .anz-navbar{
+    --bg:             var(--nav-bg);
+    --surface:        var(--nav-bg);
+    --surface-muted:  var(--nav-active-bg);
+    --surface-2:      var(--nav-active-bg);
+    --border:         var(--nav-rule);
+    --border-strong:  var(--nav-rule);
+    --ink:            var(--nav-active-ink);
+    --ink-2:          var(--nav-ink);
+    --ink-3:          var(--nav-ink-2);
+    --accent:         var(--nav-active-ink);
+    --accent-soft:    var(--nav-active-bg);
+    background: var(--nav-bg);
+    color: var(--nav-ink);
+  }
+  .anz-navbar{ --ink-3: var(--nav-ink); }
+
+  /* ── ជួរ tab ដែលវែងជាងអេក្រង់ (Tablet បញ្ឈរ) ─────────────────
+     ឱ្យវារំកិលក្នុងខ្លួនឯង ជំនួសការហូរហួសទំព័រ។ */
+  .anz-tabrow{ overflow-x:auto; overflow-y:hidden; scrollbar-width:none; }
+  .anz-tabrow::-webkit-scrollbar{ display:none; }
+  .anz-tabrow > *{ flex-shrink:0; white-space:nowrap; }
+
+  /* ── ឧបករណ៍ប៉ះ — គោលដៅធំល្មមម្រាមដៃ ─────────────────────────── */
+  @media (pointer: coarse){
+    .anz-side nav button{ min-height:44px; }
+    .anz-navbar > button, .anz-navbar > a{ min-height:56px; }
+  }
+
+  /* ── ស្បែក B · ខៀវអណ្ដែត ─────────────────────────────────────
+     ជ្រុងមូល ស្រមោលទន់សាយ គ្មានគែមរឹង និងចលនាពេលប៉ះ។ */
+  body{
+    background: linear-gradient(180deg, #EEF2F8 0%, #F4F6FA 100%);
+    background-attachment: fixed;
+  }
+  [data-theme="dark"] body{
+    background: linear-gradient(180deg, #0C121D 0%, #111A29 100%);
+  }
+  .anz-card{
+    border: none !important;
+    border-radius: 20px !important;
+    box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 12px 28px -12px rgba(16,24,40,.16) !important;
+  }
+  [data-theme="dark"] .anz-card{
+    box-shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 14px 30px -14px rgba(0,0,0,.7) !important;
+  }
+  .anz-side{
+    margin: 12px 0 12px 12px;
+    border-radius: 26px !important;
+    border-right: none !important;
+    overflow: hidden;
+    background: linear-gradient(165deg, #20477F 0%, #163766 45%, #0F2A50 100%) !important;
+    box-shadow: 0 1px 0 rgba(255,255,255,.12) inset,
+                0 24px 48px -20px rgba(15,42,80,.55) !important;
+  }
+  [data-theme="dark"] .anz-side{
+    background: linear-gradient(165deg, #16243C 0%, #101A2C 50%, #0A1220 100%) !important;
+  }
+  .anz-side nav button{ border-radius: 14px !important; }
+  .anz-navbar{
+    border-radius: 22px 22px 0 0 !important;
+    border-top: none !important;
+    background: linear-gradient(165deg, #20477F 0%, #12305A 100%) !important;
+    box-shadow: 0 -10px 26px -12px rgba(15,42,80,.55) !important;
+  }
+  .anz-btn{ border-radius: 999px !important; }
+  input, select, textarea{ border-radius: 12px; }
+  .anz-btn, .anz-side nav button, .anz-navbar > button{
+    transition: transform .12s ease, filter .12s ease, background .16s ease;
+  }
+  .anz-btn:active, .anz-side nav button:active, .anz-navbar > button:active{
+    transform: scale(.97);
+  }
 </style>
 </head>
 <body>
@@ -189,11 +303,11 @@ window.onerror = function(msg,src,line,col,err){
 
 <script>
   const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-    "accent": "#1B3A6B",
+    "accent": "#1D4E8F",
     "palette": [
-      "#1B3A6B",
-      "#F2B705",
-      "#FAFAF7"
+      "#1D4E8F",
+      "#B5892A",
+      "#F1F4F9"
     ],
     "font": "inter",
     "nav": "sidebar",
@@ -424,6 +538,9 @@ window.__trRegistry = {
   "INSTRUCTOR": "គ្រូ",
   "LESSONS": "មេរៀន",
   "GUEST INSTRUCTORS": "គ្រូ​ភ្ញៀវ",
+  "Saved ✓": "បាន​រក្សាទុក ✓",
+  "Saving…": "កំពុង​រក្សាទុក…",
+  "Write a note — saves by itself": "សរសេរ​ចំណាំ​នៅ​ទីនេះ — រក្សាទុក​ដោយ​ខ្លួន​ឯង",
   "Created by": "បង្កើត​ដោយ",
   "Close": "បិទ",
   "Contacting instructor…": "សាក​ទំនាក់​គ្រូ…",
@@ -824,7 +941,6 @@ window.__trRegistry = {
   "Visible": "សិស្សឃើញ",
   "Instructor only": "គ្រូតែប៉ុណ្ណោះ",
   "Add item": "បន្ថែម",
-  "Saving…": "កំពុង​រក្សាទុក…",
   "Enter a YouTube ID to preview": "វាយ YouTube ID ដើម្បីមើល",
   "Add video": "បន្ថែម​វីដេអូ",
   "If you paste a Google Form link, this exercise uses the form instead of the questions below.": "បើ​ដាក់​តំណ Google Form នោះ​លំហាត់​នេះ​នឹង​ប្រើ Google Form ជំនួស​សំណួរ​ខាង​ក្រោម។",
@@ -1750,6 +1866,7 @@ window.__trRegistry = {
   "Sign in": "ចូល​គណនី",
   "Enter your email and password": "បញ្ចូល​អ៊ីមែល និង​ពាក្យ​សម្ងាត់​របស់​អ្នក",
   "Signing in…": "កំពុង​ចូល…",
+  "Try the demo — sample data": "ប្រើ​ជា Demo — ទិន្នន័យ​សាកល្បង",
   "Incorrect Student ID or password": "Student ID ឬ Password មិន​ត្រឹម​ត្រូវ",
   "Account suspended — please contact the school": "គណនីត្រូវបានផ្អាក — សូម​ទំនាក់ទំនង​គ្រឹះស្ថាន",
   "Please enter ID and password": "សូម​បំពេញ ID និង Password",
@@ -2203,7 +2320,6 @@ window.__trGroups = {
     "Visible": "សិស្សឃើញ",
     "Instructor only": "គ្រូតែប៉ុណ្ណោះ",
     "Add item": "បន្ថែមចំណុច",
-    "Saving…": "កំពុង​រក្សាទុក…",
     "Enter a YouTube ID to preview": "វាយ YouTube ID ដើម្បីមើល",
     "Add video": "បន្ថែម",
     "If you paste a Google Form link, this exercise uses the form instead of the questions below.": "បើ​ដាក់​តំណ Google Form នោះ​លំហាត់​នេះ​នឹង​ប្រើ Google Form ជំនួស​សំណួរ​ខាង​ក្រោម។",
@@ -3035,6 +3151,9 @@ window.__trGroups = {
     "INSTRUCTOR": "គ្រូ",
     "LESSONS": "មេរៀន",
     "GUEST INSTRUCTORS": "គ្រូ​ភ្ញៀវ",
+    "Saved ✓": "បាន​រក្សាទុក ✓",
+    "Saving…": "កំពុង​រក្សាទុក…",
+    "Write a note — saves by itself": "សរសេរ​ចំណាំ​នៅ​ទីនេះ — រក្សាទុក​ដោយ​ខ្លួន​ឯង",
     "Created by": "បង្កើត​ដោយ",
     "Close": "ត្រឡប់",
     "Contacting instructor…": "សាក​ទំនាក់​គ្រូ…",
@@ -3135,6 +3254,7 @@ window.__trGroups = {
     "Sign in": "ចូល​គណនី",
     "Enter your email and password": "បញ្ចូល​អ៊ីមែល និង​ពាក្យ​សម្ងាត់​របស់​អ្នក",
     "Signing in…": "កំពុង​ចូល…",
+    "Try the demo — sample data": "ប្រើ​ជា Demo — ទិន្នន័យ​សាកល្បង",
     "Incorrect Student ID or password": "Student ID ឬ Password មិន​ត្រឹម​ត្រូវ",
     "Account suspended — please contact the school": "គណនីត្រូវបានផ្អាក — សូម​ទំនាក់ទំនង​គ្រឹះស្ថាន",
     "Please enter ID and password": "សូម​បំពេញ ID និង Password",
@@ -3734,6 +3854,7 @@ var Card = ({
   var isKhmer = typeof label === 'string' && /[ក-៿]/.test(label);
   if (bar && label) {
     return React.createElement("div", {
+      className: "anz-card",
       style: {
         background: 'var(--surface)',
         border: '1px solid var(--border)',
@@ -3771,6 +3892,7 @@ var Card = ({
     }, children));
   }
   return React.createElement("div", {
+    className: "anz-card",
     style: {
       background: 'var(--surface)',
       border: '1px solid var(--border)',
@@ -3943,6 +4065,7 @@ var Btn = ({
   var k = kinds[kind];
   return React.createElement("button", {
     onClick: onClick,
+    className: "anz-btn",
     style: {
       display: 'inline-flex',
       alignItems: 'center',
@@ -3960,6 +4083,46 @@ var Btn = ({
       ...style
     }
   }, icon, children);
+};
+var SHAPED_ICONS = {
+  "dashboard": "<path d=\"M8 46h48l-4 6H12z\" fill=\"#16233A\" opacity=\".18\"/><rect x=\"9\" y=\"42\" width=\"46\" height=\"6\" rx=\"2\" fill=\"#23538F\"/><rect x=\"9\" y=\"40\" width=\"46\" height=\"4\" rx=\"1.6\" fill=\"#3E7BC4\"/><rect x=\"15\" y=\"26\" width=\"9.5\" height=\"14\" fill=\"#1A4E9E\"/><rect x=\"15\" y=\"24\" width=\"9.5\" height=\"4\" rx=\"1.4\" fill=\"#5C93DC\"/><rect x=\"27.3\" y=\"16\" width=\"9.5\" height=\"24\" fill=\"#164477\"/><rect x=\"27.3\" y=\"14\" width=\"9.5\" height=\"4\" rx=\"1.4\" fill=\"#4E8BE8\"/><rect x=\"39.6\" y=\"30\" width=\"9.5\" height=\"10\" fill=\"#1A4E9E\"/><rect x=\"39.6\" y=\"28\" width=\"9.5\" height=\"4\" rx=\"1.4\" fill=\"#5C93DC\"/><path d=\"M17 12.6 30 20l4.6-2.6\" stroke=\"#E5A93A\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" fill=\"none\"/><circle cx=\"17\" cy=\"12.6\" r=\"2.6\" fill=\"#F2C24E\"/>",
+  "students": "<ellipse cx=\"32\" cy=\"54\" rx=\"21\" ry=\"3.8\" fill=\"#16181C\" opacity=\".14\"/><path d=\"M32 34c7.3 0 13.2 4.6 13.2 10.3V50c0 1.6-1.3 2.6-3 2.6H21.8c-1.7 0-3-1-3-2.6v-5.7C18.8 38.6 24.7 34 32 34z\" fill=\"#1A4E9E\"/><path d=\"M32 34c4 0 7.6 1.4 10 3.6-2.5 2.6-6 4.1-10 4.1s-7.5-1.5-10-4.1C24.4 35.4 28 34 32 34z\" fill=\"#2E6FD0\"/><circle cx=\"32\" cy=\"23.5\" r=\"8.6\" fill=\"#E0A97B\"/><path d=\"M32 14.9c4.8 0 8.6 3.9 8.6 8.6 0 .8-.1 1.5-.3 2.2-1.9-1.4-4.8-2.3-8.3-2.3s-6.4.9-8.3 2.3c-.2-.7-.3-1.4-.3-2.2 0-4.7 3.8-8.6 8.6-8.6z\" fill=\"#3A2A1E\"/><path d=\"M39.6 18v6.6c0 1.2-3.4 2.6-7.6 2.6s-7.6-1.4-7.6-2.6V18l7.6 3z\" fill=\"#0E2747\"/><path d=\"M32 8.4 48.6 15 32 21.6 15.4 15z\" fill=\"#12325C\"/><path d=\"M32 8.4 48.6 15 32 21.6z\" fill=\"#1D4E8F\"/><path d=\"M48.6 15v9.6\" stroke=\"#B08915\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"48.6\" cy=\"26.4\" r=\"2.6\" fill=\"#E5A93A\"/>",
+  "lessons": "<ellipse cx=\"32\" cy=\"52\" rx=\"24\" ry=\"4\" fill=\"#16181C\" opacity=\".14\"/><path d=\"M6 18.5c7.6-2.8 16.8-2.4 26 3.4v25c-9.2-5.8-18.4-6.2-26-3.4z\" fill=\"#0F5D53\"/><path d=\"M58 18.5c-7.6-2.8-16.8-2.4-26 3.4v25c9.2-5.8 18.4-6.2 26-3.4z\" fill=\"#12655A\"/><path d=\"M9 21c6.6-2 14.3-1.3 22 3.6v20.9c-7.7-4.9-15.4-5.6-22-3.6z\" fill=\"#FBFAF6\"/><path d=\"M55 21c-6.6-2-14.3-1.3-22 3.6v20.9c7.7-4.9 15.4-5.6 22-3.6z\" fill=\"#FFFFFF\"/><path d=\"M13 28c4.6-1 9.6-.3 14 2.2M13 34c4.6-1 9.6-.3 14 2.2\" stroke=\"#9AA3AE\" stroke-width=\"1.9\" stroke-linecap=\"round\" fill=\"none\"/><path d=\"M51 28c-4.6-1-9.6-.3-14 2.2M51 34c-4.6-1-9.6-.3-14 2.2\" stroke=\"#B4BCC6\" stroke-width=\"1.9\" stroke-linecap=\"round\" fill=\"none\"/><path d=\"M32 21.9v25\" stroke=\"#0A4A42\" stroke-width=\"2.4\"/><path d=\"M41.4 14.6v13.8l-4.2-2.9-4.2 2.9V16.9z\" fill=\"#E5A93A\"/><path d=\"M41.4 14.6v13.8l-4.2-2.9V16.3z\" fill=\"#B08915\"/>",
+  "schedule": "<ellipse cx=\"32\" cy=\"55\" rx=\"22\" ry=\"3.6\" fill=\"#16181C\" opacity=\".14\"/><path d=\"M11 17h42a3 3 0 0 1 3 3v29a3 3 0 0 1-3 3H11a3 3 0 0 1-3-3V20a3 3 0 0 1 3-3z\" fill=\"#3D2A85\"/><path d=\"M11 17h42a3 3 0 0 1 3 3v6H8v-6a3 3 0 0 1 3-3z\" fill=\"#6B4FCF\"/><path d=\"M8 26h48v22a3 3 0 0 1-3 3H11a3 3 0 0 1-3-3z\" fill=\"#FBFAF6\"/><path d=\"M8 26h48v3.4H8z\" fill=\"#E8E4EF\"/><rect x=\"14\" y=\"33\" width=\"9\" height=\"7\" rx=\"1.8\" fill=\"#CFC9E4\"/><rect x=\"27.5\" y=\"33\" width=\"9\" height=\"7\" rx=\"1.8\" fill=\"#CFC9E4\"/><rect x=\"41\" y=\"33\" width=\"9\" height=\"7\" rx=\"1.8\" fill=\"#6B4FCF\"/><rect x=\"14\" y=\"42.5\" width=\"9\" height=\"7\" rx=\"1.8\" fill=\"#CFC9E4\"/><rect x=\"27.5\" y=\"42.5\" width=\"9\" height=\"7\" rx=\"1.8\" fill=\"#E5A93A\"/><rect x=\"41\" y=\"42.5\" width=\"9\" height=\"7\" rx=\"1.8\" fill=\"#CFC9E4\"/><rect x=\"17\" y=\"8.5\" width=\"6\" height=\"12\" rx=\"3\" fill=\"#2A1C60\"/><rect x=\"17\" y=\"8.5\" width=\"6\" height=\"7\" rx=\"3\" fill=\"#8A73E0\"/><rect x=\"41\" y=\"8.5\" width=\"6\" height=\"12\" rx=\"3\" fill=\"#2A1C60\"/><rect x=\"41\" y=\"8.5\" width=\"6\" height=\"7\" rx=\"3\" fill=\"#8A73E0\"/>",
+  "instructors": "<ellipse cx=\"32\" cy=\"55\" rx=\"22\" ry=\"3.6\" fill=\"#16181C\" opacity=\".14\"/><circle cx=\"32\" cy=\"33\" r=\"23\" fill=\"#8A5E08\"/><circle cx=\"32\" cy=\"31.4\" r=\"23\" fill=\"#D99A1C\"/><circle cx=\"32\" cy=\"31.4\" r=\"17.2\" fill=\"#F6F4EE\"/><path d=\"M32 24v-9.4M26.3 36.8l-8.6 8.6M37.7 36.8l8.6 8.6\" stroke=\"#C08810\" stroke-width=\"5.6\" stroke-linecap=\"round\"/><path d=\"M32 23.2v-8.6M26.9 36.2l-8 8M37.1 36.2l8 8\" stroke=\"#F2C24E\" stroke-width=\"4\" stroke-linecap=\"round\"/><circle cx=\"32\" cy=\"31.4\" r=\"7.4\" fill=\"#A8720C\"/><circle cx=\"32\" cy=\"30.2\" r=\"7.4\" fill=\"#E5A93A\"/><circle cx=\"32\" cy=\"30.2\" r=\"3.4\" fill=\"#FBEBC4\"/>",
+  "vehicles": "<ellipse cx=\"32\" cy=\"53\" rx=\"25\" ry=\"4.2\" fill=\"#16181C\" opacity=\".14\"/><path d=\"M5 43v-6c0-3 1.6-4.6 4.4-5.1l8.2-1.4 5.2-7.6C24.2 20.8 26.1 20 28.4 20h9.9c2.4 0 4.3.9 5.7 2.7l4.6 6.2 6.3 1.3C57.5 30.9 59 32.6 59 35.6V43c0 2.2-1.3 3.4-3.6 3.4H8.6C6.3 46.4 5 45.2 5 43z\" fill=\"#C2532B\"/><path d=\"M5 37.6c0-3 1.6-4.6 4.4-5.1l8.2-1.4 5.2-7.6C24.2 20.8 26.1 20 28.4 20h9.9c2.4 0 4.3.9 5.7 2.7l4.6 6.2 6.3 1.3C57.5 30.9 59 32.6 59 35.6z\" fill=\"#E8784E\"/><path d=\"M26.2 24.4h4.9v6.6l-12.6 1z\" fill=\"#2E3D4F\"/><path d=\"M33.8 24.4h4.3c1.3 0 2.2.4 3 1.4l3.9 5.2-11.2.9z\" fill=\"#3D5066\"/><path d=\"M26.2 24.4h4.9v2.2l-6.6.7z\" fill=\"#5E7590\" opacity=\".55\"/><path d=\"M9 33.6l7.6-1.2-.5 2.6-7.1.7z\" fill=\"#FFFFFF\" opacity=\".28\"/><rect x=\"6.4\" y=\"37.2\" width=\"6\" height=\"3.2\" rx=\"1.6\" fill=\"#F6EDD2\"/><rect x=\"51.6\" y=\"37.2\" width=\"6\" height=\"3.2\" rx=\"1.6\" fill=\"#9B3630\"/><circle cx=\"18.5\" cy=\"46\" r=\"7.4\" fill=\"#1F2630\"/><circle cx=\"18.5\" cy=\"46\" r=\"3.3\" fill=\"#B9C0CA\"/><circle cx=\"45.5\" cy=\"46\" r=\"7.4\" fill=\"#1F2630\"/><circle cx=\"45.5\" cy=\"46\" r=\"3.3\" fill=\"#B9C0CA\"/>",
+  "invoices": "<ellipse cx=\"32\" cy=\"53\" rx=\"24\" ry=\"4\" fill=\"#16181C\" opacity=\".14\"/><rect x=\"7\" y=\"34\" width=\"50\" height=\"14\" rx=\"3\" fill=\"#175636\"/><rect x=\"7\" y=\"31\" width=\"50\" height=\"14\" rx=\"3\" fill=\"#1E6B41\"/><rect x=\"7\" y=\"28\" width=\"50\" height=\"14\" rx=\"3\" fill=\"#25804E\"/><rect x=\"7\" y=\"16\" width=\"50\" height=\"16\" rx=\"3\" fill=\"#43AE72\"/><rect x=\"11\" y=\"19.4\" width=\"42\" height=\"9.2\" rx=\"1.6\" fill=\"#5FC08A\" opacity=\".55\"/><circle cx=\"32\" cy=\"24\" r=\"6\" fill=\"#F6EDD2\"/><path d=\"M32 20.6v6.8M30 22.2h3.4a1.7 1.7 0 0 1 0 3.4H30\" stroke=\"#A8720C\" stroke-width=\"1.7\" stroke-linecap=\"round\" fill=\"none\"/>",
+  "settings": "<ellipse cx=\"32\" cy=\"54\" rx=\"21\" ry=\"3.6\" fill=\"#16181C\" opacity=\".14\"/><path d=\"M32 9.5l5.4 2.1 5.5-1.5 3.1 4.8 5.3 2.3-.7 5.7 3.4 4.6-3.4 4.6.7 5.7-5.3 2.3-3.1 4.8-5.5-1.5L32 45.5l-5.4-2.1-5.5 1.5-3.1-4.8-5.3-2.3.7-5.7L10 27.5l3.4-4.6-.7-5.7 5.3-2.3 3.1-4.8 5.5 1.5z\" fill=\"#3D4859\"/><path d=\"M32 7.9l5.4 2.1 5.5-1.5 3.1 4.8 5.3 2.3-.7 5.7 3.4 4.6-3.4 4.6.7 5.7-5.3 2.3-3.1 4.8-5.5-1.5L32 43.9l-5.4-2.1-5.5 1.5-3.1-4.8-5.3-2.3.7-5.7L10 25.9l3.4-4.6-.7-5.7 5.3-2.3 3.1-4.8 5.5 1.5z\" fill=\"#7B8AA3\"/><circle cx=\"32\" cy=\"25.9\" r=\"10.4\" fill=\"#4A566B\"/><circle cx=\"32\" cy=\"24.9\" r=\"10.4\" fill=\"#F6F4EE\"/><circle cx=\"32\" cy=\"24.9\" r=\"5.6\" fill=\"#8E9BB0\"/><path d=\"M23.5 18.6a10.4 10.4 0 0 1 14.6-1.9\" stroke=\"#FFFFFF\" stroke-width=\"2.4\" stroke-linecap=\"round\" fill=\"none\" opacity=\".75\"/>",
+  "bell": "<ellipse cx=\"32\" cy=\"54\" rx=\"17\" ry=\"3.2\" fill=\"#16181C\" opacity=\".14\"/><path d=\"M32 11c8.6 0 14.4 6.2 14.4 14.6 0 7.8 1.6 11 3.6 13.4 1 1.2.2 3-1.4 3H15.4c-1.6 0-2.4-1.8-1.4-3 2-2.4 3.6-5.6 3.6-13.4C17.6 17.2 23.4 11 32 11z\" fill=\"#A8720C\"/><path d=\"M32 11c8.6 0 14.4 6.2 14.4 14.6 0 4.6.6 7.8 1.5 10.2H16.1c.9-2.4 1.5-5.6 1.5-10.2C17.6 17.2 23.4 11 32 11z\" fill=\"#E5A93A\"/><path d=\"M24.6 17.6c1.8-2.3 4.4-3.7 7.4-3.9\" stroke=\"#FBEBC4\" stroke-width=\"2.6\" stroke-linecap=\"round\" fill=\"none\" opacity=\".8\"/><rect x=\"13\" y=\"36\" width=\"38\" height=\"5.4\" rx=\"2.7\" fill=\"#8A5E08\"/><rect x=\"13\" y=\"35\" width=\"38\" height=\"4.4\" rx=\"2.2\" fill=\"#D99A1C\"/><circle cx=\"32\" cy=\"8.6\" r=\"3.4\" fill=\"#C08810\"/><circle cx=\"32\" cy=\"7.8\" r=\"3.4\" fill=\"#F2C24E\"/><path d=\"M27.4 43.6h9.2a4.6 4.6 0 0 1-9.2 0z\" fill=\"#8A5E08\"/>",
+  "shield": "<path d=\"M32 7.4 51 13.6v13.2c0 11.4-7.6 21.6-19 25.2-11.4-3.6-19-13.8-19-25.2V13.6z\" fill=\"#8A5E08\"/><path d=\"M32 6 51 12.2v13.2c0 11.4-7.6 21.6-19 25.2-11.4-3.6-19-13.8-19-25.2V12.2z\" fill=\"#E5A93A\"/><path d=\"M32 6 51 12.2v13.2c0 11.4-7.6 21.6-19 25.2z\" fill=\"#C08810\"/><path d=\"M22.8 28.4 29.4 35l12-12.6\" stroke=\"#FFFFFF\" stroke-width=\"4.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" fill=\"none\"/>",
+  "cap": "<ellipse cx=\"32\" cy=\"54\" rx=\"21\" ry=\"3.8\" fill=\"#16181C\" opacity=\".14\"/><path d=\"M32 34c7.3 0 13.2 4.6 13.2 10.3V50c0 1.6-1.3 2.6-3 2.6H21.8c-1.7 0-3-1-3-2.6v-5.7C18.8 38.6 24.7 34 32 34z\" fill=\"#8A5E08\"/><path d=\"M32 34c4 0 7.6 1.4 10 3.6-2.5 2.6-6 4.1-10 4.1s-7.5-1.5-10-4.1C24.4 35.4 28 34 32 34z\" fill=\"#D99A1C\"/><path d=\"M29 35.4h6l-3 9.2z\" fill=\"#F6EDD2\"/><circle cx=\"32\" cy=\"24.6\" r=\"8.6\" fill=\"#E0A97B\"/><path d=\"M21.6 20.4h20.8c1 0 1.8.8 1.8 1.8s-.8 1.8-1.8 1.8H21.6c-1 0-1.8-.8-1.8-1.8s.8-1.8 1.8-1.8z\" fill=\"#0E2747\"/><path d=\"M32 9.6c6 0 10.4 3.8 10.4 9v1.8H21.6v-1.8c0-5.2 4.4-9 10.4-9z\" fill=\"#12325C\"/><path d=\"M32 9.6c3 0 5.6 1 7.4 2.6-2 1.4-4.6 2.2-7.4 2.2s-5.4-.8-7.4-2.2C26.4 10.6 29 9.6 32 9.6z\" fill=\"#1D4E8F\"/><circle cx=\"32\" cy=\"16.6\" r=\"2.8\" fill=\"#E5A93A\"/>",
+  "sheet": "<ellipse cx=\"32\" cy=\"54\" rx=\"21\" ry=\"3.4\" fill=\"#16181C\" opacity=\".14\"/><rect x=\"13\" y=\"12\" width=\"38\" height=\"40\" rx=\"3\" fill=\"#C9C2AE\"/><rect x=\"10\" y=\"9\" width=\"38\" height=\"40\" rx=\"3\" fill=\"#FBFAF6\"/><path d=\"M10 12a3 3 0 0 1 3-3h32a3 3 0 0 1 3 3v6H10z\" fill=\"#2BA795\"/><rect x=\"14\" y=\"22\" width=\"12\" height=\"5\" rx=\"1.4\" fill=\"#D8E4E2\"/><rect x=\"29\" y=\"22\" width=\"15\" height=\"5\" rx=\"1.4\" fill=\"#D8E4E2\"/><rect x=\"14\" y=\"30\" width=\"12\" height=\"5\" rx=\"1.4\" fill=\"#D8E4E2\"/><rect x=\"29\" y=\"30\" width=\"15\" height=\"5\" rx=\"1.4\" fill=\"#E5A93A\"/><rect x=\"14\" y=\"38\" width=\"12\" height=\"5\" rx=\"1.4\" fill=\"#D8E4E2\"/><rect x=\"29\" y=\"38\" width=\"15\" height=\"5\" rx=\"1.4\" fill=\"#D8E4E2\"/>",
+  "box": "<ellipse cx=\"32\" cy=\"55\" rx=\"22\" ry=\"3.4\" fill=\"#16181C\" opacity=\".14\"/><path d=\"M32 20 8 26v20l24 7 24-7V26z\" fill=\"#A8723C\"/><path d=\"M32 20v33l24-7V26z\" fill=\"#8A5C2C\"/><path d=\"M32 9 8 16l24 7 24-7z\" fill=\"#E0B87C\"/><path d=\"M32 16 8 16v10l24 6z\" fill=\"#C08A4E\"/><path d=\"M26 11.4 50 18.4v5.2l-24-7z\" fill=\"#F2E0C0\" opacity=\".7\"/><path d=\"M26 17.6v5.4L38 26.6v-5.4z\" fill=\"#F2E0C0\" opacity=\".5\"/>",
+  "briefcase": "<ellipse cx=\"32\" cy=\"53\" rx=\"23\" ry=\"3.6\" fill=\"#16181C\" opacity=\".14\"/><path d=\"M25 13h14a3 3 0 0 1 3 3v5h-4.4v-3.6H26.4V21H22v-5a3 3 0 0 1 3-3z\" fill=\"#5E4A2A\"/><rect x=\"7\" y=\"20\" width=\"50\" height=\"28\" rx=\"4\" fill=\"#8A5E08\"/><rect x=\"7\" y=\"20\" width=\"50\" height=\"13\" rx=\"4\" fill=\"#C08810\"/><rect x=\"7\" y=\"31\" width=\"50\" height=\"4\" fill=\"#6E4A06\"/><rect x=\"26\" y=\"29\" width=\"12\" height=\"8\" rx=\"2\" fill=\"#E5A93A\"/><rect x=\"29.4\" y=\"31.6\" width=\"5.2\" height=\"2.8\" rx=\"1.4\" fill=\"#8A5E08\"/>",
+  "megaphone": "<ellipse cx=\"32\" cy=\"54\" rx=\"20\" ry=\"3.4\" fill=\"#16181C\" opacity=\".14\"/><path d=\"M12 24h8l22-10v30L20 34h-8a4 4 0 0 1-4-4v-2a4 4 0 0 1 4-4z\" fill=\"#C2532B\"/><path d=\"M20 24 42 14v13H20z\" fill=\"#E8784E\"/><path d=\"M12 24h8v4h-8a4 4 0 0 1-3.6-2.2A4 4 0 0 1 12 24z\" fill=\"#E8784E\" opacity=\".5\"/><rect x=\"18\" y=\"34\" width=\"7\" height=\"14\" rx=\"2.4\" fill=\"#3D4859\"/><rect x=\"18\" y=\"34\" width=\"7\" height=\"5\" rx=\"2.4\" fill=\"#7B8AA3\"/><path d=\"M48 20.6a12 12 0 0 1 0 16.8M52.6 15.4a19 19 0 0 1 0 27.2\" stroke=\"#E5A93A\" stroke-width=\"3.4\" stroke-linecap=\"round\" fill=\"none\"/>",
+  "clipboard": "<ellipse cx=\"32\" cy=\"55\" rx=\"20\" ry=\"3.4\" fill=\"#16181C\" opacity=\".14\"/><rect x=\"12\" y=\"11\" width=\"40\" height=\"41\" rx=\"4\" fill=\"#3D4859\"/><rect x=\"12\" y=\"11\" width=\"40\" height=\"6\" rx=\"4\" fill=\"#7B8AA3\"/><rect x=\"17\" y=\"18\" width=\"30\" height=\"29\" rx=\"2\" fill=\"#FBFAF6\"/><rect x=\"25\" y=\"7\" width=\"14\" height=\"8\" rx=\"2.6\" fill=\"#8E9BB0\"/><rect x=\"25\" y=\"7\" width=\"14\" height=\"4\" rx=\"2\" fill=\"#C3CBD6\"/><path d=\"M21.6 32.4 27 37.8l14-14\" stroke=\"#2F6B4A\" stroke-width=\"4.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" fill=\"none\"/>"
+};
+var SHAPED_ALIAS = {
+  "home": "dashboard",
+  "chart": "dashboard",
+  "trend": "dashboard",
+  "users": "students",
+  "book": "lessons",
+  "cal": "schedule",
+  "cap": "cap",
+  "flag": "instructors",
+  "wheel": "instructors",
+  "car": "vehicles",
+  "cash": "invoices",
+  "wallet": "invoices",
+  "receipt": "invoices",
+  "sheet": "sheet",
+  "box": "box",
+  "briefcase": "briefcase",
+  "megaphone": "megaphone",
+  "clipboard": "clipboard",
+  "bell": "bell",
+  "settings": "settings"
 };
 var Icon = ({
   name,
@@ -4008,6 +4171,21 @@ var Icon = ({
     receipt: 'M6 2h12v20l-3-2-3 2-3-2-3 2V2ZM9 7h6M9 11h6M9 15h4',
     sheet: 'M4 4h16v16H4zM4 9h16M4 14h16M9.5 4v16M14.5 4v16'
   };
+  var shapedKey = SHAPED_ALIAS[name];
+  if (shapedKey && size >= 16 && SHAPED_ICONS[shapedKey]) {
+    return React.createElement("svg", {
+      width: size,
+      height: size,
+      viewBox: "0 0 64 64",
+      style: {
+        flexShrink: 0,
+        display: 'block'
+      },
+      dangerouslySetInnerHTML: {
+        __html: SHAPED_ICONS[shapedKey]
+      }
+    });
+  }
   return React.createElement("svg", {
     width: size,
     height: size,
@@ -4216,8 +4394,8 @@ var can = (role, action, target) => {
 };
 var useBreakpoint = () => {
   var get = () => ({
-    mobile: window.innerWidth < 1100,
-    tablet: false
+    mobile: window.innerWidth < 700,
+    tablet: window.innerWidth >= 700 && window.innerWidth < 1100
   });
   var [bp, setBp] = React.useState(get);
   React.useEffect(() => {
@@ -10569,6 +10747,46 @@ var LessonDetail = ({
   } = useAppActions();
   var [ver, setVer] = React.useState(0);
   var [editing, setEditing] = React.useState(false);
+  var [noteDraft, setNoteDraft] = React.useState('');
+  var [noteState, setNoteState] = React.useState(0);
+  var noteTimer = React.useRef(null);
+  var lessonKey = lesson ? lesson.id : null;
+  React.useEffect(() => {
+    setNoteDraft(lesson && lesson.note ? String(lesson.note) : '');
+    setNoteState(0);
+  }, [lessonKey]);
+  React.useEffect(() => () => clearTimeout(noteTimer.current), []);
+  var saveNote = val => {
+    if (!lesson) return;
+    if (String(lesson.note || '') === String(val)) {
+      setNoteState(0);
+      return;
+    }
+    lesson.note = val;
+    setNoteState(2);
+    setVer(n => n + 1);
+    try {
+      if (window.__notifyLessonsChanged) window.__notifyLessonsChanged();
+    } catch (e) {}
+    try {
+      if (window.saveAllData) window.saveAllData();
+    } catch (e) {}
+    setTimeout(() => setNoteState(x => x === 2 ? 0 : x), 2000);
+  };
+  var onNoteChange = e => {
+    var el = e.target,
+      val = el.value;
+    setNoteDraft(val);
+    setNoteState(1);
+    el.style.height = 'auto';
+    el.style.height = Math.max(72, el.scrollHeight) + 'px';
+    clearTimeout(noteTimer.current);
+    noteTimer.current = setTimeout(() => saveNote(val), 600);
+  };
+  var onNoteBlur = () => {
+    clearTimeout(noteTimer.current);
+    saveNote(noteDraft);
+  };
   if (!lesson) return null;
   var s = studentById(lesson.studentId || lesson.who);
   var it = instById(lesson.instId || lesson.inst);
@@ -11116,15 +11334,60 @@ var LessonDetail = ({
         color: 'var(--ink-3)'
       }
     }, gi?.name || '')));
-  }))), lesson.note && React.createElement("div", {
+  }))), React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 6
+    }
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      fontSize: 11,
+      color: 'var(--ink-3)'
+    }
+  }, React.createElement("span", null, tr('ចំណាំ', 'Notes')), React.createElement("span", {
+    style: {
+      marginLeft: 'auto',
+      fontSize: 11,
+      fontWeight: 600,
+      color: noteState === 2 ? 'var(--good)' : 'var(--ink-3)',
+      opacity: noteState ? 1 : 0,
+      transition: 'opacity .25s ease'
+    }
+  }, noteState === 2 ? tr('បាន​រក្សាទុក ✓', 'Saved ✓') : tr('កំពុង​រក្សាទុក…', 'Saving…'))), isStudent ? React.createElement("div", {
     style: {
       padding: '10px 14px',
       background: 'var(--surface-muted)',
       borderRadius: 8,
       fontSize: 13,
-      color: 'var(--ink-2)'
+      color: 'var(--ink-2)',
+      whiteSpace: 'pre-wrap'
     }
-  }, lesson.note), lesson.createdBy && React.createElement("div", {
+  }, lesson.note || '—') : React.createElement("textarea", {
+    value: noteDraft,
+    onChange: onNoteChange,
+    onBlur: onNoteBlur,
+    rows: 3,
+    placeholder: tr('សរសេរ​ចំណាំ​នៅ​ទីនេះ — រក្សាទុក​ដោយ​ខ្លួន​ឯង', 'Write a note — saves by itself'),
+    style: {
+      width: '100%',
+      boxSizing: 'border-box',
+      minHeight: 72,
+      resize: 'vertical',
+      padding: '10px 14px',
+      background: 'var(--surface-muted)',
+      border: '1px solid var(--border)',
+      borderRadius: 8,
+      fontFamily: 'var(--font-km), var(--font-en), sans-serif',
+      fontSize: 16,
+      lineHeight: 1.6,
+      color: 'var(--ink)',
+      outline: 'none'
+    }
+  })), lesson.createdBy && React.createElement("div", {
     style: {
       fontSize: 11,
       color: 'var(--ink-3)',
@@ -15628,7 +15891,7 @@ var MobileBottomBar = ({
     }
   }, React.createElement(Icon, {
     name: it.icon,
-    size: 20,
+    size: 26,
     stroke: current === it.id ? 2 : 1.5
   }), ll(it)))), React.createElement("div", {
     style: {
@@ -15713,6 +15976,7 @@ var MobileBottomBar = ({
   }, React.createElement("path", {
     d: "M6 6l12 12M18 6L6 18"
   })))))), React.createElement("div", {
+    className: "anz-navbar",
     style: {
       position: 'fixed',
       bottom: 0,
@@ -15760,7 +16024,7 @@ var MobileBottomBar = ({
       }
     }), React.createElement(Icon, {
       name: it.icon,
-      size: 21,
+      size: 26,
       stroke: on ? 2.2 : 1.6
     }), React.createElement("span", {
       style: {
@@ -15887,6 +16151,7 @@ var Sidebar = ({
   var ss = window.__schoolSettings;
   if (collapsed) {
     return React.createElement("aside", {
+      className: "anz-side",
       style: {
         width: 56,
         background: 'var(--surface)',
@@ -15960,7 +16225,7 @@ var Sidebar = ({
       }
     }, React.createElement(Icon, {
       name: it.icon,
-      size: 18,
+      size: 26,
       stroke: current === it.id ? 2 : 1.5
     })))), React.createElement("div", {
       style: {
@@ -15993,6 +16258,7 @@ var Sidebar = ({
   }
   var drag = useDragOrder(onReorder);
   return React.createElement("aside", {
+    className: "anz-side",
     style: {
       width: 240,
       background: 'var(--surface)',
@@ -16125,7 +16391,7 @@ var Sidebar = ({
       }
     }, React.createElement(GripDots, null), React.createElement(Icon, {
       name: it.icon,
-      size: 16,
+      size: 24,
       stroke: current === it.id ? 2 : 1.5
     }), React.createElement("span", {
       style: {
@@ -34462,6 +34728,7 @@ var StaffScreen = () => {
   }))), React.createElement(Card, {
     pad: 0
   }, React.createElement("div", {
+    className: "anz-tabrow",
     style: {
       padding: '10px 14px',
       borderBottom: '1px solid var(--border)',
@@ -48166,7 +48433,9 @@ var translateFeedbackTexts = async (texts, target) => {
     return {};
   }
 };
-var printStudentLessonsPDF = (s, lessons, exams, lang, notesOnly) => {
+var printStudentLessonsPDF = (s, lessons, exams, lang, notesOnly, showNotes) => {
+  if (showNotes === undefined) showNotes = true;
+  if (notesOnly) showNotes = true;
   if (!s) return;
   lang = lang === 'en' ? 'en' : 'km';
   var HOST_ID = '__anzenStuPdfHost';
@@ -48483,6 +48752,7 @@ var printStudentLessonsPDF = (s, lessons, exams, lang, notesOnly) => {
   <table class="lt"><tbody><tr><td colspan="3" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr></tbody></table>`}
 
   ${(() => {
+      if (!showNotes) return '';
       var tday = typeof todayStr === 'function' ? todayStr() : new Date().toISOString().slice(0, 10);
       var ntes = (window.__scheduleNotes || window.__schoolSettings && window.__schoolSettings.scheduleNotes || []).filter(n => (n.studentIds || []).includes(sid)).sort((a, b) => String(a.fromDate || a.date || '').localeCompare(String(b.fromDate || b.date || '')) || String(a.fromTime || a.time || '').localeCompare(String(b.fromTime || b.time || '')));
       if (!ntes.length) return notesOnly ? `<div class="secbar" style="background:#CA8A04">📝 ${L('ចំណាំ', 'Notes')}</div><table class="lt"><tbody><tr><td colspan="4" style="text-align:center;color:#999;padding:18px">គ្មានទិន្នន័យ</td></tr></tbody></table>` : '';
@@ -50351,7 +50621,7 @@ var StudentsScreenV2 = () => {
             gap: 8
           }
         }, React.createElement("button", {
-          onClick: () => printStudentLessonsPDF(s, pdfLessons, pdfExams, 'km', pdfPhase === '__note'),
+          onClick: () => printStudentLessonsPDF(s, pdfLessons, pdfExams, 'km', pdfPhase === '__note', pdfPhase === 'all' || pdfPhase === '__note'),
           style: {
             flex: 1,
             padding: '10px',
@@ -50368,7 +50638,7 @@ var StudentsScreenV2 = () => {
             gap: 6
           }
         }, "\uD83C\uDDF0\uD83C\uDDED ", tr('ខ្មែរ', 'Khmer')), React.createElement("button", {
-          onClick: () => printStudentLessonsPDF(s, pdfLessons, pdfExams, 'en', pdfPhase === '__note'),
+          onClick: () => printStudentLessonsPDF(s, pdfLessons, pdfExams, 'en', pdfPhase === '__note', pdfPhase === 'all' || pdfPhase === '__note'),
           style: {
             flex: 1,
             padding: '10px',
@@ -51341,6 +51611,7 @@ var StudentsScreenV2 = () => {
   })(), React.createElement(Card, {
     pad: 0
   }, React.createElement("div", {
+    className: "anz-tabrow",
     style: {
       padding: '10px 14px',
       borderBottom: '1px solid var(--border)',
@@ -52933,7 +53204,7 @@ var LessonRecords = ({
       gap: 8
     }
   }, React.createElement("button", {
-    onClick: () => printStudentLessonsPDF(s, pdfLessons, pdfExams, 'km'),
+    onClick: () => printStudentLessonsPDF(s, pdfLessons, pdfExams, 'km', false, pdfPhase === 'all'),
     style: {
       flex: 1,
       padding: '10px',
@@ -52950,7 +53221,7 @@ var LessonRecords = ({
       gap: 6
     }
   }, "\uD83C\uDDF0\uD83C\uDDED ", tr('ខ្មែរ', 'Khmer')), React.createElement("button", {
-    onClick: () => printStudentLessonsPDF(s, pdfLessons, pdfExams, 'en'),
+    onClick: () => printStudentLessonsPDF(s, pdfLessons, pdfExams, 'en', false, pdfPhase === 'all'),
     style: {
       flex: 1,
       padding: '10px',
@@ -76259,7 +76530,7 @@ Object.assign(window, {
     if (initial || Date.now() - _lastAuxPull > 120000) {
       _lastAuxPull = Date.now();
       var insp = await pull('vehicle_inspections');
-      if (insp) window.__vehicleInspections = insp.map(rowObj);
+      if (insp && insp.length) window.__vehicleInspections = insp.map(rowObj);
       var att = await pull('attendance');
       if (att && att.length) {
         var m = {};
@@ -77481,7 +77752,7 @@ function App() {
       return React.createElement("div", {
         style: {
           display: 'flex',
-          height: '100vh',
+          height: '100svh',
           width: '100vw',
           background: 'var(--bg)'
         }
@@ -77492,15 +77763,25 @@ function App() {
         role: role,
         onLogout: logout,
         onReorder: handleNavReorder,
-        collapsed: true
+        collapsed: sideCollapsed,
+        onToggleCollapse: toggleSideCollapsed
+      }), React.createElement("div", {
+        style: {
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minWidth: 0
+        }
+      }, React.createElement(ContentTopbar, {
+        role: role
       }), React.createElement("main", {
         style: {
           flex: 1,
           overflow: 'auto',
-          padding: '16px 20px',
+          padding: '16px 18px 28px',
           minWidth: 0
         }
-      }, screens[current]));
+      }, screens[current])));
     }
     if (navStyle === 'sidebar') {
       return React.createElement("div", {
@@ -77907,7 +78188,29 @@ var RealLoginCard = ({
       cursor: busy ? 'default' : 'pointer',
       fontFamily: 'inherit'
     }
-  }, busy ? tr('កំពុង​ចូល…', 'Signing in…') : tr('ចូល', 'Sign in'))));
+  }, busy ? tr('កំពុង​ចូល…', 'Signing in…') : tr('ចូល', 'Sign in')), onUseDemo && React.createElement("div", {
+    style: {
+      marginTop: 16,
+      paddingTop: 14,
+      borderTop: '1px solid var(--border)',
+      textAlign: 'center'
+    }
+  }, React.createElement("button", {
+    type: "button",
+    onClick: onUseDemo,
+    style: {
+      border: 'none',
+      background: 'transparent',
+      cursor: 'pointer',
+      fontFamily: 'inherit',
+      fontSize: 12,
+      fontWeight: 600,
+      color: 'var(--ink-3)',
+      padding: '4px 8px',
+      textDecoration: 'underline',
+      textUnderlineOffset: '3px'
+    }
+  }, tr('ប្រើ​ជា Demo — ទិន្នន័យ​សាកល្បង', 'Try the demo — sample data')))));
 };
 var LoginScreen = ({
   onLogin,
