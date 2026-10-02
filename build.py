@@ -436,6 +436,25 @@ HEAD = """<!doctype html>
     width: min(900px, 100%);
   }
 
+  /* ── ម៉ឺនុយពេញអេក្រង់ — តម្រឹមតាមជួរ ៩០០px ដែរ ─────────────── */
+  .anz-menu{
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%);
+    width: min(900px, 100%);
+  }
+  /* ទូលាយល្មម (ជាពិសេសពេលផ្ដេក) — ដាក់ជាពីរជួរ ដូច្នេះមុខងារ
+     ទាំង ១៧ ឃើញក្នុងអេក្រង់តែម្ដង ដោយមិនបាច់រមូរវែង។ */
+  @media (min-width: 620px){
+    .anz-menu nav{
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px;
+      align-content: start;
+    }
+    .anz-menu nav button{ margin-bottom: 0 !important; }
+  }
+
   .anz-btn{ border-radius: 999px !important; }
   input, select, textarea{ border-radius: 12px; }
   .anz-btn, .anz-side nav button, .anz-navbar > button{

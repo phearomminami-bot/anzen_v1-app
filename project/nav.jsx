@@ -499,7 +499,7 @@ const MobileBottomBar = ({ items, current, onGo, role, onLogout }) => {
   return (
     <>
       {menuOpen && (
-        <div style={{position:'fixed',inset:0,background:'var(--bg)',zIndex:200,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <div className="anz-menu" style={{position:'fixed',inset:0,background:'var(--bg)',zIndex:200,display:'flex',flexDirection:'column',overflow:'hidden'}}>
           <div style={{padding:'16px 20px',borderBottom:'1px solid var(--border)',flexShrink:0,background:'var(--surface)'}}>
             <MobileAppHeader/>
           </div>
