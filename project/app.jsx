@@ -546,7 +546,7 @@ function App() {
       const mobileTitle    = isDash ? (window.__schoolSettings?.name || 'Anzen') : tabName;
       const mobileSubtitle = isDash ? (typeof todayStr === 'function' ? todayStr() : null) : null;
       return (
-        <div style={{display:'flex',flexDirection:'column',height:'100svh',width:'100vw',background:'var(--bg)'}}>
+        <div className="anz-shell" style={{display:'flex',flexDirection:'column',height:'100svh',width:'100vw',background:'var(--bg)'}}>
           {/* Every tab gets the same fixed header — hidden while a card/form overlay is open */}
           {!overlayOpen && (
             <div style={{flexShrink:0,zIndex:20,background:'var(--surface)',borderBottom:'1px solid var(--border)',boxShadow:'0 1px 10px rgba(0,0,0,.06)',padding:'calc(10px + env(safe-area-inset-top,0px)) 14px 10px'}}>

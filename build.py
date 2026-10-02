@@ -419,6 +419,23 @@ HEAD = """<!doctype html>
     background: linear-gradient(165deg, #20477F 0%, #12305A 100%) !important;
     box-shadow: 0 -10px 26px -12px rgba(15,42,80,.55) !important;
   }
+  /* ── ជួរកណ្ដាលទទឹង ៩០០px ─────────────────────────────────────
+     គ្រោងតែមួយប្រើគ្រប់ឧបករណ៍។ លើអេក្រង់ធំ ដាក់វាជាជួរកណ្ដាល
+     ទទឹងប៉ុន Tablet ដើម្បីកុំឱ្យបន្ទាត់អក្សរវែងពេក និងកុំឱ្យ
+     មុខងារក្នុងរបារខាងក្រោមឃ្លាតដល់គែមអេក្រង់។ */
+  .anz-shell{
+    width: 100% !important;
+    max-width: 900px;
+    margin: 0 auto;
+    box-shadow: 0 0 60px -28px rgba(16,24,40,.30);
+  }
+  .anz-navbar{
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%);
+    width: min(900px, 100%);
+  }
+
   .anz-btn{ border-radius: 999px !important; }
   input, select, textarea{ border-radius: 12px; }
   .anz-btn, .anz-side nav button, .anz-navbar > button{
