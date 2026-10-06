@@ -1,0 +1,475 @@
+// screens-autoplan.jsx — Draft a whole intake's timetable from a few numbers.
+//
+// Building a term by hand is slow once there are a dozen students, and the
+// result is hard to judge until it is all laid out. This takes the counts
+// (students / instructors / cars), the opening hours and the weekdays, lays a
+// draft over the free slots, and shows it as a printable sheet. Nothing enters
+// LESSONS until the user confirms on that sheet.
+//
+// Three pieces: autoPlanBuild (pure), autoPlanPDF (the sheet), AutoPlanModal
+// (the form). Cars rotate slot by slot rather than belonging to an instructor.
+
+const AUTOPLAN_DOW    = [1, 2, 3, 4, 5, 6, 0];        // Mon…Sun, as JS day numbers
+const AUTOPLAN_DOW_KM = ['ច', 'អ', 'ព', 'ព្រ', 'សុ', 'ស', 'អា'];
+const AUTOPLAN_DOW_EN = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+const autoPlanISO = (d) => {
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+};
+const autoPlanOverlaps = (aH, aLen, bH, bLen) => aH < bH + bLen && bH < aH + aLen;
+
+// Who is available to be scheduled at all: students still training, every
+// instructor, and any car not sitting in the workshop.
+const autoPlanPools = () => ({
+  students: (typeof STUDENTS !== 'undefined' ? STUDENTS : [])
+    .filter(s => s && s.status !== 'Completed' && s.status !== 'Former' && s.status !== 'Cleared'),
+  instructors: (typeof INSTRUCTORS !== 'undefined' ? INSTRUCTORS : []).filter(Boolean),
+  vehicles: (typeof VEHICLES !== 'undefined' ? VEHICLES : []).filter(v => v && v.status !== 'Workshop'),
+});
+
+// ── The planner ─────────────────────────────────────────────────────────────
+// Walks forward one day at a time. For each slot it reads who the real
+// schedule already has busy, then pairs the free instructors and cars with
+// students who still owe hours. A student never gets two lessons in one slot
+// and never exceeds hoursPerDay. Stops when everybody has their hours (or
+// after a year, so bad input can't spin forever).
+const autoPlanBuild = (o) => {
+  const pools = autoPlanPools();
+  const students    = pools.students.slice(0, Math.max(0, o.studentCount));
+  const instructors = pools.instructors.slice(0, Math.max(0, o.instCount));
+  const vehicles    = pools.vehicles.slice(0, Math.max(0, o.vehCount));
+  const block = Math.max(1, o.block);
+  const existing = (typeof LESSONS !== 'undefined' ? LESSONS : []).filter(l => l && l.status !== 'cancelled');
+
+  const need = new Map(students.map(s => [s.id, o.totalHours]));
+  const days = [];
+  let skipped = 0, vehCursor = 0, instCursor = 0;
+  let cursor = new Date(o.startDate + 'T00:00:00');
+  if (isNaN(cursor.getTime())) cursor = new Date();
+
+  for (let guard = 0; guard < 366; guard++) {
+    if (![...need.values()].some(v => v > 0)) break;
+    const iso = autoPlanISO(cursor);
+
+    if (o.weekdays.includes(cursor.getDay()) && students.length && instructors.length && vehicles.length) {
+      const sameDay = existing.filter(l => l.date === iso);
+      const todayH = new Map();
+      const slots = [];
+
+      for (let h = o.dayStart; h + block <= o.dayEnd; h += block) {
+        // Lunch is a hole in the day, not a lesson.
+        if (o.lunchTo > o.lunchFrom && autoPlanOverlaps(h, block, o.lunchFrom, o.lunchTo - o.lunchFrom)) continue;
+
+        const clash = o.avoidExisting ? sameDay.filter(l => autoPlanOverlaps(h, block, l.h, l.len || 1)) : [];
+        const busyI = new Set(clash.map(l => l.instId).filter(Boolean));
+        const busyV = new Set(clash.map(l => l.veh).filter(Boolean));
+        const busyS = new Set(clash.map(l => l.studentId).filter(Boolean));
+        skipped += clash.length;
+
+        const freeI = instructors.filter(i => !busyI.has(i.id));
+        const freeV = vehicles.filter(v => !busyV.has(v.id));
+        const cap = Math.min(freeI.length, freeV.length);
+        if (cap <= 0) continue;
+
+        const queue = students.filter(s =>
+          (need.get(s.id) || 0) > 0 &&
+          (todayH.get(s.id) || 0) + block <= o.hoursPerDay &&
+          !busyS.has(s.id));
+        if (!queue.length) continue;
+
+        const items = queue.slice(0, cap).map((s, k) => {
+          need.set(s.id, (need.get(s.id) || 0) - block);
+          todayH.set(s.id, (todayH.get(s.id) || 0) + block);
+          return {
+            student: s,
+            inst: freeI[(instCursor + k) % freeI.length],
+            veh:  freeV[(vehCursor  + k) % freeV.length],
+          };
+        });
+        // Shift both rotations so the next slot starts with different pairings.
+        vehCursor  = (vehCursor  + items.length) % freeV.length;
+        instCursor = (instCursor + items.length) % freeI.length;
+        slots.push({ h, len: block, items, clashes: clash.length });
+      }
+      if (slots.length) days.push({ date: iso, dow: cursor.getDay(), slots });
+    }
+    cursor = new Date(cursor.getTime() + 86400000);
+  }
+
+  const sessions = days.reduce((n, d) => n + d.slots.reduce((m, s) => m + s.items.length, 0), 0);
+  return {
+    days, students, instructors, vehicles,
+    stats: {
+      dayCount: days.length,
+      sessions,
+      hoursEach: o.totalHours,
+      skipped,
+      short: [...need.entries()].filter(([, v]) => v > 0).length,
+      from: days.length ? days[0].date : '—',
+      to:   days.length ? days[days.length - 1].date : '—',
+    },
+  };
+};
+
+// Turn the draft into real lesson records. IDs are handed out in one pass here
+// rather than through nextLessonId() per lesson, which would re-scan LESSONS
+// every time and collide until each one is pushed.
+const autoPlanToLessons = (plan, o) => {
+  const nums = (typeof LESSONS !== 'undefined' ? LESSONS : [])
+    .map(l => parseInt(String(l.id || '').replace('L-', ''))).filter(n => !isNaN(n));
+  let n = nums.length ? Math.max(...nums) : 0;
+  const stamp = new Date().toISOString();
+  const out = [];
+  plan.days.forEach(d => d.slots.forEach(s => s.items.forEach(it => {
+    n += 1;
+    out.push({
+      id: 'L-' + String(n).padStart(4, '0'),
+      studentId: it.student.id, date: d.date, h: s.h, len: s.len,
+      instId: it.inst.id, guests: [], veh: it.veh.id,
+      type: '', color: 'a', phase: o.phase,
+      pickup: '', location: '', note: '',
+      status: 'scheduled', autoPlan: true,
+      createdBy: window.__currentUserName || '', createdAt: stamp,
+    });
+  })));
+  return out;
+};
+
+// ── The printable sheet ─────────────────────────────────────────────────────
+// Same shape as the schedule PDF: an in-app overlay (never a new tab, which
+// traps phone users) plus a print stylesheet that hides the rest of the app.
+const autoPlanPDF = (plan, o, onSave) => {
+  const HOST_ID = '__autoPlanHost';
+  document.getElementById(HOST_ID)?.remove();
+  document.getElementById('__autoPlanStyle')?.remove();
+
+  const ss = window.__schoolSettings || {};
+  const curLang = (window.__anzenLang || 'km') === 'en' ? 'en' : 'km';
+  const L  = (km, en) => (curLang === 'km' ? km : en);
+  const kd = s => curLang === 'km' ? String(s).replace(/[0-9]/g, d => '០១២៣៤៥៦៧៨៩'[+d]) : String(s);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+  const sName = s => esc(curLang === 'km' ? (s.name || s.en || s.id) : (s.en || s.name || s.id));
+  const iName = i => esc(curLang === 'km' ? (i.name || i.en || i.id) : (i.en || i.name || i.id));
+  const DAYS = curLang === 'km'
+    ? ['អាទិត្យ','ច័ន្ទ','អង្គារ','ពុធ','ព្រហស្បតិ៍','សុក្រ','សៅរ៍']
+    : ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const fmtH = h => kd(String(h).padStart(2, '0') + ':00');
+  const st = plan.stats;
+  const insts = plan.instructors;
+
+  const tile = (v, lab, bg, ink) => `
+    <div style="flex:1;min-width:0;border-radius:9px;background:${bg};padding:8px 10px">
+      <div style="font-size:18px;font-weight:800;color:${ink};line-height:1.15">${kd(v)}</div>
+      <div style="font-size:10px;color:#475467;margin-top:2px">${lab}</div>
+    </div>`;
+
+  const dayBlock = (d) => {
+    const rows = d.slots.map((s, si) => {
+      const by = {}; s.items.forEach(it => { by[it.inst.id] = it; });
+      const zebra = si % 2 ? '#FAFBFD' : '#fff';
+      const cells = insts.map(i => {
+        const it = by[i.id];
+        if (!it) return `<td style="padding:5px;border:1px solid #E6EAF1;background:${zebra};color:#C8CFDA;text-align:center">—</td>`;
+        return `<td style="padding:4px 5px;border:1px solid #E6EAF1;background:${zebra}">
+          <div style="border-radius:5px;background:#DCE8FA;border-left:3px solid #1A4F96;padding:3px 6px">
+            <div style="font-size:10.5px;font-weight:700;color:#12325C;line-height:1.3">${sName(it.student)}</div>
+            <div style="font-size:9px;color:#5A6B82;line-height:1.3">${esc(it.veh.plate || it.veh.id)}</div>
+          </div></td>`;
+      }).join('');
+      return `<tr>
+        <td style="padding:5px;border:1px solid #E6EAF1;background:${zebra};font-size:10px;font-weight:700;color:#344054;white-space:nowrap">${fmtH(s.h)}–${fmtH(s.h + s.len)}</td>
+        ${cells}</tr>`;
+    }).join('');
+    const n = d.slots.reduce((m, s) => m + s.items.length, 0);
+    const cl = d.slots.reduce((m, s) => m + s.clashes, 0);
+    return `<div class="ap-day">
+      <div style="margin:12px 0 5px;display:flex;align-items:baseline;gap:8px">
+        <b style="font-size:12.5px;color:#101828">${DAYS[d.dow]} · ${kd(d.date)}</b>
+        <span style="font-size:10.5px;color:#667085">${kd(n)} ${L('វគ្គ','sessions')}</span>
+        ${cl ? `<span style="font-size:10px;color:#B25E09;background:#FEF3E2;border-radius:5px;padding:1px 6px">${L('វៀស','skipped')} ${kd(cl)}</span>` : ''}
+      </div>
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr>
+          <th style="width:86px;padding:6px 5px;border:1px solid #D6DEEA;background:#EEF2F8;font-size:9.5px;color:#475467;text-align:left">${L('ម៉ោង','Time')}</th>
+          ${insts.map(i => `<th style="padding:6px 5px;border:1px solid #D6DEEA;background:#EEF2F8;font-size:9.5px;color:#475467;text-align:left">${iName(i)}</th>`).join('')}
+        </tr></thead>
+        <tbody>${rows}</tbody></table></div>`;
+  };
+
+  const paper = `
+    <div style="display:flex;align-items:flex-start;gap:12px;padding-bottom:9px;border-bottom:2px solid #1A4F96">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:16px;font-weight:800;color:#101828">${esc(ss.name || 'Anzen Driving School')}</div>
+        <div style="font-size:10.5px;color:#667085">${L('កាលវិភាគបឋម — គំរូ មិនទាន់រក្សាទុក','Draft timetable — not saved yet')}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:13px;font-weight:700;color:#1A4F96">${L('កាលវិភាគស្វ័យប្រវត្ត','Auto schedule')}</div>
+        <div style="font-size:10.5px;color:#667085;margin-top:1px">${kd(st.from)} → ${kd(st.to)}</div>
+      </div>
+    </div>
+    <div style="font-size:10.5px;color:#667085;padding:7px 0 9px;line-height:1.8">
+      ${L('សិស្ស','Students')} ${kd(plan.students.length)} ·
+      ${L('គ្រូ','Instructors')} ${kd(plan.instructors.length)} ·
+      ${L('ឡាន','Cars')} ${kd(plan.vehicles.length)} ·
+      ${fmtH(o.dayStart)}–${fmtH(o.dayEnd)}${o.lunchTo > o.lunchFrom ? ` (${L('សម្រាក','break')} ${fmtH(o.lunchFrom)}–${fmtH(o.lunchTo)})` : ''} ·
+      ${L('១ វគ្គ','block')} ${kd(o.block)}h ·
+      ${kd(o.hoursPerDay)}h/${L('ថ្ងៃ','day')}/${L('សិស្ស','student')} ·
+      ${L('វគ្គសិក្សា','phase')} ${esc(o.phase)}
+    </div>
+    <div style="display:flex;gap:7">
+      ${tile(st.dayCount, L('ថ្ងៃរៀន','Teaching days'), '#EAF1FF', '#1A4F96')}
+      ${tile(st.sessions, L('វគ្គសរុប','Total sessions'), '#E7F7EE', '#12804A')}
+      ${tile(st.hoursEach + 'h', L('ម៉ោង / សិស្ស','Hours each'), '#FEF3E2', '#B25E09')}
+      ${tile(st.skipped, L('ម៉ោងជាន់គ្នា — វៀស','Clashes avoided'), '#F0F2F6', '#475467')}
+    </div>
+    ${plan.days.map(dayBlock).join('')}
+    ${st.short ? `<div style="margin-top:11px;padding:8px 10px;border-radius:8px;background:#FDECE7;font-size:10.5px;color:#8A2C06;line-height:1.6">
+      ${L('សិស្ស','Students')} ${kd(st.short)} ${L('នាក់មិនទាន់គ្រប់ម៉ោងនៅថ្ងៃទាំងនេះ — បន្ថែមថ្ងៃរៀន គ្រូ ឬឡាន។',
+          'are still short of hours within these days — add teaching days, instructors or cars.')}</div>` : ''}
+    <div style="display:flex;margin-top:11px;padding-top:8px;border-top:1px solid #E6EAF1;font-size:10px;color:#98A2B3">
+      <span>${L('បង្កើតដោយស្វ័យប្រវត្តិ · មិនជាន់លើមេរៀនដែលមានស្រាប់','Generated automatically · existing lessons untouched')}</span>
+      <span style="margin-left:auto">${kd(autoPlanISO(new Date()))}</span>
+    </div>`;
+
+  const style = document.createElement('style');
+  style.id = '__autoPlanStyle';
+  style.textContent = `
+    #${HOST_ID}{position:fixed;inset:0;z-index:100000;background:#fff;overflow:auto;-webkit-overflow-scrolling:touch}
+    #${HOST_ID} .ap-paper{font-family:'Kantumruy Pro',Inter,'Khmer OS','Battambang',sans-serif;font-size:12px;color:#222;background:#fff;padding:18px 20px 24px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #${HOST_ID} .ap-bar button{font-family:inherit}
+    @media print{
+      body > *:not(#${HOST_ID}){display:none !important}
+      #${HOST_ID}{position:static !important;overflow:visible !important}
+      #${HOST_ID} .ap-bar{display:none !important}
+      #${HOST_ID} .ap-paper{zoom:1 !important;width:auto !important}
+      #${HOST_ID} .ap-day{page-break-inside:avoid}
+      @page{size:A4 landscape;margin:11mm}
+    }`;
+  document.head.appendChild(style);
+
+  const host = document.createElement('div');
+  host.id = HOST_ID;
+  host.innerHTML = `
+    <div class="ap-bar" style="position:sticky;top:0;z-index:2;display:flex;gap:6px;flex-wrap:nowrap;align-items:center;overflow-x:auto;padding:calc(10px + env(safe-area-inset-top,0px)) 10px 10px;background:#1A4F96;color:#fff;box-shadow:0 1px 8px rgba(0,0,0,.25)">
+      <button id="__apBack" title="${L('ត្រឡប់','Back')}" style="flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:16px;width:38px;height:38px;border-radius:8px;cursor:pointer">⬅</button>
+      <div style="flex:1;min-width:2px;font-size:12.5px;font-weight:600;white-space:nowrap">${L('កាលវិភាគបឋម','Draft schedule')}</div>
+      <button id="__apSave" style="flex-shrink:0;border:none;background:#2FBF71;color:#fff;font-size:12.5px;font-weight:700;padding:0 13px;height:38px;border-radius:8px;cursor:pointer;white-space:nowrap">${L('រក្សាទុកចូលកាលវិភាគពិត','Save to schedule')}</button>
+      <button id="__apPrint" title="${L('បោះពុម្ព / PDF','Print / PDF')}" style="flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border:none;background:#fff;color:#1A4F96;font-size:17px;width:40px;height:38px;border-radius:8px;cursor:pointer">🖨</button>
+    </div>
+    <div id="__apConfirm" style="display:none;align-items:center;gap:8px;padding:10px 12px;background:#FFF8E1;border-bottom:1px solid #F0D79A;font-size:12px;color:#7A4A05;line-height:1.6">
+      <span style="flex:1;min-width:0">${L(`មេរៀន ${kd(st.sessions)} នឹងបន្ថែមចូលកាលវិភាគពិត។ លុបម្ដងមួយៗក្រោយបាន។`,
+            `${st.sessions} lessons will be added to the real schedule. You can delete them individually later.`)}</span>
+      <button id="__apNo" style="flex-shrink:0;border:1px solid #D9BE86;background:#fff;color:#7A4A05;font-size:12px;font-weight:600;padding:0 12px;height:34px;border-radius:7px;cursor:pointer">${L('បោះបង់','Cancel')}</button>
+      <button id="__apYes" style="flex-shrink:0;border:none;background:#2FBF71;color:#fff;font-size:12px;font-weight:700;padding:0 14px;height:34px;border-radius:7px;cursor:pointer">${L('បញ្ជាក់','Confirm')}</button>
+    </div>
+    <div class="ap-paper">${paper}</div>`;
+  document.body.appendChild(host);
+
+  // With seven instructors the table is far wider than a phone. Render it at a
+  // tablet-ish width and zoom-to-fit, the same trick the month PDF uses, so the
+  // whole day stays on one screen instead of wrapping into a tall column.
+  const SHEET_W = 840;
+  const fit = () => {
+    const p = host.querySelector('.ap-paper');
+    if (!p) return;
+    const avail = host.clientWidth || window.innerWidth || SHEET_W;
+    if (avail < SHEET_W) { p.style.width = SHEET_W + 'px'; p.style.zoom = (avail / SHEET_W).toFixed(3); }
+    else { p.style.width = ''; p.style.zoom = ''; }
+  };
+  const cleanup = () => { window.removeEventListener('resize', fit); host.remove(); style.remove(); };
+  const bar = host.querySelector('#__apConfirm');
+  host.querySelector('#__apBack').onclick  = cleanup;
+  host.querySelector('#__apPrint').onclick = () => { try { window.print(); } catch (e) {} };
+  // Confirm inside the sheet rather than through the app's dialog: the sheet
+  // sits above every overlay, so a normal dialog would open behind it.
+  host.querySelector('#__apSave').onclick = () => { bar.style.display = 'flex'; };
+  host.querySelector('#__apNo').onclick   = () => { bar.style.display = 'none'; };
+  host.querySelector('#__apYes').onclick  = () => { cleanup(); onSave?.(); };
+  fit();
+  window.addEventListener('resize', fit);
+};
+
+// ── The form ────────────────────────────────────────────────────────────────
+const AutoPlanModal = ({ open, onClose }) => {
+  const { tr, toast } = useAppActions();
+  const pools = autoPlanPools();
+  const [o, setO] = React.useState(() => ({
+    studentCount: pools.students.length,
+    instCount:    pools.instructors.length,
+    vehCount:     pools.vehicles.length,
+    startDate: autoPlanISO(new Date()),
+    weekdays:  [1, 2, 3, 4, 5, 6],
+    dayStart: 7, dayEnd: 18, lunchFrom: 12, lunchTo: 13,
+    totalHours: 20, hoursPerDay: 2, block: 2,
+    phase: 'KH', avoidExisting: true,
+  }));
+  const set = (k, v) => setO(p => ({ ...p, [k]: v }));
+  if (!open) return null;
+
+  // Live capacity read-out, so an impossible plan is obvious before generating.
+  const block   = Math.max(1, o.block);
+  const usable  = (o.dayEnd - o.dayStart) - Math.max(0, o.lunchTo - o.lunchFrom);
+  const perDay  = Math.max(0, Math.floor(usable / block));
+  const atOnce  = Math.min(o.instCount, o.vehCount);
+  const cap     = atOnce * perDay;
+  const want    = o.studentCount * Math.ceil(o.hoursPerDay / block);
+  const dayCnt  = Math.ceil(o.totalHours / Math.max(1, o.hoursPerDay));
+  const ok      = cap > 0 && want <= cap;
+
+  const fieldCss = {
+    width:'100%', boxSizing:'border-box', height:48, padding:'0 12px',
+    fontFamily:'inherit', fontSize:17, fontWeight:700, color:'var(--ink)',
+    background:'var(--surface-muted)', border:'1px solid var(--border)',
+    borderRadius:11, outline:'none',
+  };
+  const labelCss = { display:'block', fontSize:12, color:'var(--ink-3)', marginBottom:5 };
+
+  const numField = (k, label, hint) => (
+    <label style={{flex:1,minWidth:0,display:'block'}}>
+      <span style={labelCss}>{label}</span>
+      <input type="number" inputMode="numeric" value={o[k]}
+        onChange={e => set(k, Math.max(0, parseInt(e.target.value) || 0))} style={fieldCss}/>
+      {hint && <span style={{display:'block',fontSize:10.5,color:'var(--ink-3)',marginTop:4}}>{hint}</span>}
+    </label>
+  );
+  const hourField = (k, label) => (
+    <label style={{flex:1,minWidth:0,display:'block'}}>
+      <span style={labelCss}>{label}</span>
+      <select value={o[k]} onChange={e => set(k, parseInt(e.target.value))}
+        style={{...fieldCss, fontSize:15, cursor:'pointer'}}>
+        {Array.from({length:20}, (_, i) => i + 5).map(h =>
+          <option key={h} value={h}>{String(h).padStart(2,'0')}:00</option>)}
+      </select>
+    </label>
+  );
+  const row = (label, value, strong) => (
+    <div style={{display:'flex',alignItems:'baseline',gap:10,padding:'5px 0',
+      borderTop: strong ? '1px solid var(--border)' : 'none'}}>
+      <span style={{fontSize:12.5,fontWeight: strong ? 700 : 500,color: strong ? 'var(--accent)' : 'var(--ink-2)'}}>{label}</span>
+      <span style={{marginLeft:'auto',fontSize: strong ? 16 : 14,fontWeight: strong ? 800 : 700,
+        color: strong ? 'var(--accent)' : 'var(--ink)'}}>{value}</span>
+    </div>
+  );
+
+  const run = () => {
+    if (!o.weekdays.length)   { toast(tr('ជ្រើស​ថ្ងៃ​រៀន​យ៉ាង​តិច​មួយ','Pick at least one weekday'), 'warn'); return; }
+    if (o.dayEnd <= o.dayStart) { toast(tr('ម៉ោង​បិទ​ត្រូវ​ក្រោយ​ម៉ោង​បើក','Closing time must be after opening'), 'warn'); return; }
+    if (!o.studentCount || !o.instCount || !o.vehCount) { toast(tr('ត្រូវ​មាន​សិស្ស គ្រូ និង​ឡាន','Need students, instructors and cars'), 'warn'); return; }
+    if (!ok) { toast(tr('ធនធាន​មិន​គ្រប់ — បន្ថែម​គ្រូ ឡាន ឬ​ម៉ោង','Not enough capacity — add instructors, cars or hours'), 'warn'); return; }
+
+    const plan = autoPlanBuild(o);
+    if (!plan.days.length) { toast(tr('បង្កើត​មិន​បាន — ពិនិត្យ​ម៉ោង និង​ថ្ងៃ','Nothing generated — check hours and days'), 'warn'); return; }
+
+    autoPlanPDF(plan, o, () => {
+      autoPlanToLessons(plan, o).forEach(l => LESSONS.push(l));
+      if (window.__logActivity) window.__logActivity('create', 'lesson', `auto ×${plan.stats.sessions}`);
+      if (window.__notifyLessonsChanged) window.__notifyLessonsChanged();
+      if (window.saveAllData) window.saveAllData();
+      toast(tr(`បាន​បន្ថែម​មេរៀន ${plan.stats.sessions} ✓`, `Added ${plan.stats.sessions} lessons ✓`), 'good');
+      onClose?.();
+    });
+  };
+
+  return (
+    <Modal open={open} onClose={onClose} width={620}>
+      <div style={{padding:'14px 16px 18px'}}>
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
+          <Icon name="cal" size={30}/>
+          <div style={{minWidth:0}}>
+            <div style={{fontSize:16,fontWeight:700,color:'var(--ink)'}}>{tr('បង្កើត​កាលវិភាគ​ស្វ័យប្រវត្ត','Auto-generate schedule')}</div>
+            <div style={{fontSize:11.5,color:'var(--ink-3)'}}>{tr('មើល PDF គំរូ​មុន​រក្សាទុក','Preview the PDF before saving')}</div>
+          </div>
+        </div>
+
+        {/* Resources */}
+        <div style={{display:'flex',gap:9,marginBottom:13}}>
+          {numField('studentCount', tr('សិស្ស','Students'),     tr(`កំពុង​រៀន ${pools.students.length}`, `${pools.students.length} active`))}
+          {numField('instCount',    tr('គ្រូ','Instructors'),    tr(`មាន ${pools.instructors.length}`, `${pools.instructors.length} total`))}
+          {numField('vehCount',     tr('ឡាន','Cars'),           tr(`ប្រើ​បាន ${pools.vehicles.length}`, `${pools.vehicles.length} usable`))}
+        </div>
+
+        {/* Time window */}
+        <div style={{display:'flex',gap:9,marginBottom:10}}>
+          <label style={{flex:1.3,minWidth:0,display:'block'}}>
+            <span style={labelCss}>{tr('ថ្ងៃ​ចាប់​ផ្ដើម','Start date')}</span>
+            <input type="date" value={o.startDate} onChange={e => set('startDate', e.target.value)}
+              style={{...fieldCss, fontSize:15}}/>
+          </label>
+          {hourField('dayStart', tr('ម៉ោង​បើក','Opens'))}
+          {hourField('dayEnd',   tr('ម៉ោង​បិទ','Closes'))}
+        </div>
+        <div style={{display:'flex',gap:9,marginBottom:13}}>
+          {hourField('lunchFrom', tr('សម្រាក​ពី','Break from'))}
+          {hourField('lunchTo',   tr('ដល់','until'))}
+          {numField('block',      tr('១ វគ្គ (ម៉ោង)','Block (h)'))}
+        </div>
+
+        {/* Weekdays */}
+        <span style={labelCss}>{tr('ថ្ងៃ​រៀន​ក្នុង​សប្ដាហ៍','Teaching days')}</span>
+        <div style={{display:'flex',gap:5,marginBottom:13}}>
+          {AUTOPLAN_DOW.map((d, i) => {
+            const on = o.weekdays.includes(d);
+            return (
+              <button key={d} type="button"
+                onClick={() => set('weekdays', on ? o.weekdays.filter(x => x !== d) : [...o.weekdays, d])}
+                style={{flex:1,minWidth:0,height:42,border: on ? 'none' : '1px solid var(--border)',
+                  borderRadius:11,cursor:'pointer',fontFamily:'inherit',fontSize:13.5,
+                  fontWeight: on ? 700 : 500,
+                  background: on ? 'var(--accent)' : 'var(--surface-muted)',
+                  color: on ? '#fff' : 'var(--ink-3)'}}>
+                {tr(AUTOPLAN_DOW_KM[i], AUTOPLAN_DOW_EN[i])}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Course load */}
+        <div style={{display:'flex',gap:9,marginBottom:13}}>
+          {numField('totalHours',  tr('ម៉ោង​សរុប / សិស្ស','Total hours each'), tr('រហូត​ចប់​វគ្គ','to finish'))}
+          {numField('hoursPerDay', tr('ម៉ោង / ថ្ងៃ / សិស្ស','Hours per day'),  tr('អតិបរមា','maximum'))}
+          <label style={{flex:1,minWidth:0,display:'block'}}>
+            <span style={labelCss}>{tr('វគ្គ​សិក្សា','Phase')}</span>
+            <select value={o.phase} onChange={e => set('phase', e.target.value)}
+              style={{...fieldCss, cursor:'pointer'}}>
+              {(window.STUDENT_PHASES || [{k:'KH',label:'KH'}]).map(p =>
+                <option key={p.k} value={p.k}>{p.label}</option>)}
+            </select>
+          </label>
+        </div>
+
+        <label style={{display:'flex',alignItems:'center',gap:10,padding:'11px 13px',borderRadius:12,
+          background:'var(--surface-muted)',border:'1px solid var(--border)',cursor:'pointer',marginBottom:13}}>
+          <input type="checkbox" checked={o.avoidExisting} onChange={e => set('avoidExisting', e.target.checked)}
+            style={{width:19,height:19,flexShrink:0,accentColor:'var(--accent)'}}/>
+          <span style={{fontSize:12.5,fontWeight:600,color:'var(--ink-2)',lineHeight:1.5}}>
+            {tr('វៀស​ម៉ោង​ដែល​មាន​កាលវិភាគ​រួច — មិន​ដាក់​ជាន់​គ្នា','Skip hours already booked — never double-book')}
+          </span>
+        </label>
+
+        {/* Capacity check */}
+        <div style={{borderRadius:14,background:'var(--accent-soft)',padding:'11px 13px',marginBottom:14}}>
+          <div style={{fontSize:13,fontWeight:700,color:'var(--accent)',marginBottom:3}}>{tr('គណនា​មុន​បង្កើត','Capacity check')}</div>
+          {row(tr('មេរៀន​ស្រប​គ្នា​បាន','Lessons at once'), atOnce)}
+          {row(tr('វេន​ក្នុង ១ ថ្ងៃ','Slots per day'), perDay)}
+          {row(tr('ចំណុះ ១ ថ្ងៃ','Capacity per day'), tr(`${cap} វគ្គ`, `${cap} sessions`))}
+          {row(tr('ត្រូវ​ការ ១ ថ្ងៃ','Needed per day'), tr(`${want} វគ្គ`, `${want} sessions`))}
+          {row(tr('ថ្ងៃ​រៀន​សរុប','Teaching days'), tr(`${dayCnt} ថ្ងៃ`, `${dayCnt} days`), true)}
+          {!ok && (
+            <div style={{marginTop:7,padding:'8px 10px',borderRadius:9,background:'rgba(176,65,62,.12)',
+              fontSize:12,fontWeight:600,color:'#B0413E',lineHeight:1.5}}>
+              {tr('ធនធាន​មិន​គ្រប់ — បន្ថែម​គ្រូ ឡាន ឬ​ម៉ោង​បើក','Not enough capacity — add instructors, cars or opening hours')}
+            </div>
+          )}
+        </div>
+
+        <div style={{display:'flex',gap:9}}>
+          <Btn kind="ghost" size="lg" onClick={onClose} style={{flex:1,justifyContent:'center'}}>{tr('បោះបង់','Cancel')}</Btn>
+          <Btn kind="accent" size="lg" onClick={run} style={{flex:2,justifyContent:'center',fontWeight:700}}>
+            {tr('បង្កើត — មើល PDF','Generate — preview PDF')}
+          </Btn>
+        </div>
+      </div>
+    </Modal>
+  );
+};

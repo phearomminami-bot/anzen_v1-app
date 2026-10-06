@@ -797,6 +797,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   const [ver, setVer] = React.useState(0);
   // Copy / move clipboard for scheduled lessons: { lesson, mode:'copy'|'move' }.
   const [clip, setClip] = React.useState(null);
+  const [autoPlanOpen, setAutoPlanOpen] = React.useState(false);
   const [instFilter,    setInstFilter]    = React.useState('');
   const [vehFilter,     setVehFilter]     = React.useState('');
   const [studentFilter, setStudentFilter] = React.useState('');
@@ -1155,6 +1156,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
             {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setNoteModal({date:allWeekDates[0]||today,fromDate:allWeekDates[0]||today,toDate:allWeekDates[0]||today,time:'09:00',fromTime:'09:00',toTime:'',content:'',reason:'',location:'',remark:'',title:'',description:'',author:meName,invited:[],studentIds:[]})} icon={<Icon name="bell" size={14}/>}>{tr('+ ចំណាំ','+ Note')}</Btn>}
             {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setExamModal({kind:'exam',date:allWeekDates[0]||today,time:'08:00',len:2,studentIds:[],instIds:[],note:'',phase:'KH'})} icon={<Icon name="star" size={14}/>} style={{color:'#12A302',borderColor:'#12A302'}}>{tr('+ ប្រឡង','+ Exam')}</Btn>}
             {!studentMode && <Btn kind="ghost" size="md" onClick={()=>setExamModal({kind:'apply',date:allWeekDates[0]||today,time:'08:00',len:2,studentIds:[],instIds:[],note:'',phase:'KH'})} icon={<Icon name="book" size={14}/>} style={{color:'#CA8A04',borderColor:'#CA8A04'}}>{tr('+ ដាក់​ពាក្យ','+ Apply')}</Btn>}
+            {!studentMode && can(role,'create','lesson') && <Btn kind="ghost" size="md" onClick={()=>setAutoPlanOpen(true)} icon={<Icon name="cal" size={14}/>} style={{color:'var(--accent)',borderColor:'var(--accent)'}}>{tr('កាលវិភាគ​ស្វ័យប្រវត្ត','Auto schedule')}</Btn>}
             {can(role,'create','lesson') && <Btn kind="primary" size="md" onClick={()=>openForm('newLesson')} icon={<Icon name="plus" size={14}/>}>{tr('មេរៀន​ថ្មី','New lesson')}</Btn>}
           </div>
         )}
@@ -1450,6 +1452,17 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
           }}
           icon={<Icon name="download" size={14}/>}>{tr('ទាញ​យក PDF (ប្រចាំ​ខែ)','Download PDF (month)')}</Btn>
       )}
+
+      {/* Draft a whole intake at once — asks for the counts, then shows a
+          printable sheet. Nothing is scheduled until that sheet is confirmed. */}
+      {bp.mobile && !studentMode && can(role,'create','lesson') && (
+        <Btn kind="accent" size="md" style={{justifyContent:'center',fontWeight:700}}
+          onClick={()=>setAutoPlanOpen(true)} icon={<Icon name="cal" size={14}/>}>
+          {tr('បង្កើត​កាលវិភាគ​ស្វ័យប្រវត្ត','Auto-generate schedule')}
+        </Btn>
+      )}
+
+      <AutoPlanModal open={autoPlanOpen} onClose={()=>setAutoPlanOpen(false)}/>
 
       {studentMode ? (
         <div style={{display:'flex',gap:18,padding:'8px 4px',fontSize:11,color:'var(--ink-3)'}}>
