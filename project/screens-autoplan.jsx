@@ -52,6 +52,28 @@ const autoPlanPools = (trans) => {
   };
 };
 
+// ── Who the plan is for ─────────────────────────────────────────────────────
+// Real people first, so a plan that fits the school is made of its own staff
+// and cars, then numbered stand-ins for whatever was asked for beyond them.
+const autoPlanRoster = (o) => {
+  const pools = autoPlanPools(o.trans);
+  const pad = (real, want, make) => {
+    const out = real.slice(0, Math.max(0, want));
+    for (let n = out.length; n < want; n++) out.push(make(n + 1));
+    return out;
+  };
+  const students = pad(pools.students, o.studentCount,
+    n => ({ id: 'NEW-S' + n, name: 'សិស្សថ្មី ' + n, en: 'New student ' + n, newSeq: n, isNew: true }));
+  const instructors = pad(pools.instructors, o.instCount,
+    n => ({ id: 'NEW-I' + n, name: 'គ្រូថ្មី ' + n, en: 'New instructor ' + n, newSeq: n, isNew: true }));
+  const vehicles = pad(pools.vehicles, o.vehCount,
+    n => ({ id: 'NEW-V' + n, plate: '', trans: o.trans || '', newSeq: n, isNew: true }));
+  return {
+    students, instructors, vehicles, pools,
+    projected: [...students, ...instructors, ...vehicles].some(x => x.isNew),
+  };
+};
+
 // ── Slots in a day ──────────────────────────────────────────────────────────
 // The day is cut into sittings of at most maxLen, but the tail of a stretch is
 // kept rather than discarded: 13:00-16:00 with two-hour sittings is 13-15 and
@@ -80,10 +102,10 @@ const autoPlanSlots = (o) => {
 // students take an hour where others take two - and a course can be told to
 // last a minimum number of days, which thins out how much anyone does per day.
 const autoPlanBuild = (o) => {
-  const pools = autoPlanPools(o.trans);
-  const students    = pools.students.slice(0, Math.max(0, o.studentCount));
-  const instructors = pools.instructors.slice(0, Math.max(0, o.instCount));
-  const vehicles    = pools.vehicles.slice(0, Math.max(0, o.vehCount));
+  const roster = autoPlanRoster(o);
+  const students    = roster.students;
+  const instructors = roster.instructors;
+  const vehicles    = roster.vehicles;
   const maxLen    = Math.max(1, o.maxLen);
   const minLen    = Math.max(1, Math.min(o.minLen, maxLen));
   const maxPerDay = Math.max(minLen, o.maxPerDay);
@@ -181,6 +203,7 @@ const autoPlanBuild = (o) => {
   const sessions = days.reduce((n, d) => n + d.slots.reduce((m, s) => m + s.items.length, 0), 0);
   return {
     days, students, instructors, vehicles,
+    projected: roster.projected,
     stats: {
       dayCount: days.length,
       sessions,
@@ -251,6 +274,8 @@ const autoPlanPDF = (plan, o, onSave, lang) => {
   const sName = s => generic
     ? L(`សិស្ស ${kd((sIdx.get(s.id) ?? 0) + 1)}`, `Student ${(sIdx.get(s.id) ?? 0) + 1}`)
     : esc(curLang === 'km' ? (s.name || s.en || s.id) : (s.en || s.name || s.id));
+  const vName = v => v.plate ? esc(v.plate) + (v.trans ? ' · ' + esc(v.trans) : '')
+    : L(`ឡាន ${kd(v.newSeq || 1)}`, `Car ${v.newSeq || 1}`) + (v.trans ? ' · ' + esc(v.trans) : '');
   const iName = i => generic
     ? L(`គ្រូ ${kd((iIdx.get(i.id) ?? 0) + 1)}`, `Instructor ${(iIdx.get(i.id) ?? 0) + 1}`)
     : esc(curLang === 'km' ? (i.name || i.en || i.id) : (i.en || i.name || i.id));
@@ -300,7 +325,7 @@ const autoPlanPDF = (plan, o, onSave, lang) => {
           <div style="border-radius:5px;background:${c.bg};border-left:3px solid ${c.edge};padding:3px 6px">
             <div style="font-size:10.5px;font-weight:700;color:${c.ink};line-height:1.3">${sName(it.student)}
               <span style="display:inline-block;margin-left:3px;padding:0 4px;border-radius:3px;background:${c.edge};color:#fff;font-size:9px;font-weight:800">${hoursTag(it, s.len)}</span></div>
-            <div style="font-size:9px;color:#5A6B82;line-height:1.3">${esc(it.veh.plate || it.veh.id)}${it.veh.trans ? ' · ' + esc(it.veh.trans) : ''}${ends}</div>
+            <div style="font-size:9px;color:#5A6B82;line-height:1.3">${vName(it.veh)}${ends}</div>
             <div style="font-size:9px;color:${c.ink};line-height:1.3;opacity:.8">${progressTag(it)}</div>
           </div></td>`;
       }).join('');
@@ -372,7 +397,9 @@ const autoPlanPDF = (plan, o, onSave, lang) => {
     <div style="display:flex;align-items:flex-start;gap:12px;padding-bottom:9px;border-bottom:2px solid #1A4F96">
       <div style="flex:1;min-width:0">
         <div style="font-size:16px;font-weight:800;color:#101828">${esc(ss.name || 'Anzen Driving School')}</div>
-        <div style="font-size:10.5px;color:#667085">${L('កាលវិភាគបឋម — គំរូ មិនទាន់រក្សាទុក','Draft timetable — not saved yet')}</div>
+        <div style="font-size:10.5px;color:#667085">${plan.projected
+          ? L('ការប៉ាន់ស្មាន — បើទទួលសិស្សចំនួននេះ','A projection — if this many students enrolled')
+          : L('កាលវិភាគបឋម — គំរូ មិនទាន់រក្សាទុក','Draft timetable — not saved yet')}</div>
       </div>
       <div style="text-align:right">
         <div style="font-size:13px;font-weight:700;color:#1A4F96">${L('កាលវិភាគស្វ័យប្រវត្ត','Auto schedule')}</div>
@@ -443,7 +470,9 @@ const autoPlanPDF = (plan, o, onSave, lang) => {
         <button id="__apCal" style="border:none;background:${o.view==='calendar'?'#fff':'transparent'};color:${o.view==='calendar'?'#1A4F96':'#fff'};font-size:12px;font-weight:700;padding:7px 8px;border-radius:6px;cursor:pointer">${L('ប្រតិទិន','Calendar')}</button>
       </div>
       <div style="flex:1;min-width:2px"></div>
-      <button id="__apSave" style="flex-shrink:0;border:none;background:#2FBF71;color:#fff;font-size:12.5px;font-weight:700;padding:0 13px;height:38px;border-radius:8px;cursor:pointer;white-space:nowrap">${L('រក្សាទុកចូលកាលវិភាគពិត','Save to schedule')}</button>
+      ${plan.projected
+        ? `<span style="flex-shrink:0;padding:0 12px;height:38px;display:inline-flex;align-items:center;border-radius:8px;background:rgba(255,255,255,.16);font-size:12px;font-weight:600;white-space:nowrap">${L('ការប៉ាន់ស្មាន — រក្សាទុកមិនបាន','A projection — cannot be saved')}</span>`
+        : `<button id="__apSave" style="flex-shrink:0;border:none;background:#2FBF71;color:#fff;font-size:12.5px;font-weight:700;padding:0 13px;height:38px;border-radius:8px;cursor:pointer;white-space:nowrap">${L('រក្សាទុកចូលកាលវិភាគពិត','Save to schedule')}</button>`}
       <button id="__apPrint" title="${L('បោះពុម្ព / PDF','Print / PDF')}" style="flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border:none;background:#fff;color:#1A4F96;font-size:17px;width:40px;height:38px;border-radius:8px;cursor:pointer">🖨</button>
     </div>
     <div id="__apConfirm" style="display:none;align-items:center;gap:8px;padding:10px 12px;background:#FFF8E1;border-bottom:1px solid #F0D79A;font-size:12px;color:#7A4A05;line-height:1.6">
@@ -478,9 +507,11 @@ const autoPlanPDF = (plan, o, onSave, lang) => {
   host.querySelector('#__apPrint').onclick = () => { try { window.print(); } catch (e) {} };
   // Confirm inside the sheet rather than through the app's dialog: the sheet
   // sits above every overlay, so a normal dialog would open behind it.
-  host.querySelector('#__apSave').onclick = () => { bar.style.display = 'flex'; };
-  host.querySelector('#__apNo').onclick   = () => { bar.style.display = 'none'; };
-  host.querySelector('#__apYes').onclick  = () => { cleanup(); onSave?.(); };
+  if (!plan.projected) {
+    host.querySelector('#__apSave').onclick = () => { bar.style.display = 'flex'; };
+    host.querySelector('#__apNo').onclick   = () => { bar.style.display = 'none'; };
+    host.querySelector('#__apYes').onclick  = () => { cleanup(); onSave?.(); };
+  }
   fit();
   window.addEventListener('resize', fit);
 };
@@ -505,14 +536,19 @@ const AutoPlanModal = ({ open, onClose }) => {
   // Re-read on every render so the hints track the chosen gearbox.
   const pools = autoPlanPools(o.trans);
   const leftOut = autoPlanLeftOut(o.trans);
+  const projected = o.studentCount > pools.students.length
+    || o.instCount > pools.instructors.length
+    || o.vehCount > pools.vehicles.length;
   // Changing the gearbox changes which cars and students are in play, so the
   // counts have to follow it rather than keep yesterday's numbers.
   const set = (k, v) => setO(p => {
     const next = { ...p, [k]: v };
     if (k === 'trans') {
+      // Only raise the counts to match the newly available pool; a larger
+      // number the user typed is a question they asked, so leave it alone.
       const np = autoPlanPools(v);
-      next.studentCount = np.students.length;
-      next.vehCount     = np.vehicles.length;
+      next.studentCount = Math.max(p.studentCount, np.students.length);
+      next.vehCount     = Math.max(p.vehCount, np.vehicles.length);
     }
     return next;
   });
@@ -593,7 +629,7 @@ const AutoPlanModal = ({ open, onClose }) => {
     const plan = autoPlanBuild(o);
     if (!plan.days.length) { toast(tr('បង្កើត​មិន​បាន — ពិនិត្យ​ម៉ោង និង​ថ្ងៃ','Nothing generated — check hours and days'), 'warn'); return; }
 
-    autoPlanPDF(plan, o, () => {
+    autoPlanPDF(plan, o, plan.projected ? null : () => {
       autoPlanToLessons(plan, o).forEach(l => LESSONS.push(l));
       if (window.__logActivity) window.__logActivity('create', 'lesson', `auto ×${plan.stats.sessions}`);
       if (window.__notifyLessonsChanged) window.__notifyLessonsChanged();
@@ -629,23 +665,29 @@ const AutoPlanModal = ({ open, onClose }) => {
           })}
         </div>
         <div style={{display:'flex',gap:9,marginBottom:13}}>
-          {numField('studentCount', tr('សិស្ស','Students'),  tr(`ប្រើ​បាន ${pools.students.length}`,    `${pools.students.length} available`),    pools.students.length)}
-          {numField('instCount',    tr('គ្រូ','Instructors'), tr(`ប្រើ​បាន ${pools.instructors.length}`, `${pools.instructors.length} available`), pools.instructors.length)}
-          {numField('vehCount',     tr('ឡាន','Cars'),        tr(`ប្រើ​បាន ${pools.vehicles.length}`,    `${pools.vehicles.length} available`),    pools.vehicles.length)}
+          {numField('studentCount', tr('សិស្ស','Students'),  tr(`ក្នុង​បញ្ជី ${pools.students.length}`,    `${pools.students.length} on the roll`))}
+          {numField('instCount',    tr('គ្រូ','Instructors'), tr(`ក្នុង​បញ្ជី ${pools.instructors.length}`, `${pools.instructors.length} on staff`))}
+          {numField('vehCount',     tr('ឡាន','Cars'),        tr(`ក្នុង​បញ្ជី ${pools.vehicles.length}`,    `${pools.vehicles.length} in the fleet`))}
         </div>
-        {(leftOut.studentsTotal > pools.students.length || leftOut.vehiclesTotal > pools.vehicles.length) && (
+        {projected ? (
           <div style={{padding:'9px 12px',borderRadius:11,marginBottom:13,lineHeight:1.65,
             background:'rgba(202,138,4,.12)',fontSize:12,color:'#8A6206'}}>
+            {tr('ការ​ប៉ាន់​ស្មាន — លើស​ពី​អ្វី​ដែល​មាន​ក្នុង​ប្រព័ន្ធ។ ល្អ​សម្រាប់​បង្ហាញ​អតិថិជន តែ​រក្សាទុក​ចូល​កាលវិភាគ​ពិត​មិន​បាន។',
+                'A projection — more than the school has on record. Good for showing a customer, but it cannot be saved into the real schedule.')}
+          </div>
+        ) : (leftOut.studentsTotal > pools.students.length || leftOut.vehiclesTotal > pools.vehicles.length) && (
+          <div style={{padding:'9px 12px',borderRadius:11,marginBottom:13,lineHeight:1.65,
+            background:'var(--surface-muted)',border:'1px solid var(--border)',fontSize:11.5,color:'var(--ink-3)'}}>
             {leftOut.studentsTotal > pools.students.length && (
-              <div>{tr(`សិស្ស​ក្នុង​ប្រព័ន្ធ ${leftOut.studentsTotal} នាក់ — ប្រើ​បាន ${pools.students.length}`,
-                       `${leftOut.studentsTotal} students on the roll, ${pools.students.length} available`)}
+              <div>{tr(`សិស្ស​ក្នុង​ប្រព័ន្ធ ${leftOut.studentsTotal} នាក់ — រាប់​បញ្ចូល ${pools.students.length}`,
+                       `${leftOut.studentsTotal} students on record, ${pools.students.length} counted`)}
                 {leftOut.studentsFinished ? tr(` · ចប់​វគ្គ​ហើយ ${leftOut.studentsFinished}`, ` · ${leftOut.studentsFinished} finished`) : ''}
                 {leftOut.studentsOtherGear ? tr(` · ប្រអប់​លេខ​ផ្សេង ${leftOut.studentsOtherGear}`, ` · ${leftOut.studentsOtherGear} on the other gearbox`) : ''}
               </div>
             )}
             {leftOut.vehiclesTotal > pools.vehicles.length && (
-              <div>{tr(`ឡាន​ក្នុង​ប្រព័ន្ធ ${leftOut.vehiclesTotal} — ប្រើ​បាន ${pools.vehicles.length}`,
-                       `${leftOut.vehiclesTotal} cars in the fleet, ${pools.vehicles.length} available`)}
+              <div>{tr(`ឡាន​ក្នុង​ប្រព័ន្ធ ${leftOut.vehiclesTotal} — រាប់​បញ្ចូល ${pools.vehicles.length}`,
+                       `${leftOut.vehiclesTotal} cars on record, ${pools.vehicles.length} counted`)}
                 {leftOut.vehiclesWorkshop ? tr(` · ជួសជុល ${leftOut.vehiclesWorkshop}`, ` · ${leftOut.vehiclesWorkshop} in the workshop`) : ''}
                 {leftOut.vehiclesOtherGear ? tr(` · ប្រអប់​លេខ​ផ្សេង ${leftOut.vehiclesOtherGear}`, ` · ${leftOut.vehiclesOtherGear} on the other gearbox`) : ''}
               </div>
