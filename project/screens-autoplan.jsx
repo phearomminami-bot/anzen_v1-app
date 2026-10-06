@@ -262,7 +262,12 @@ const autoPlanPDF = (plan, o, onSave, lang) => {
     runningTotal.set(it.student.id, n);
     done.set(it, n);
   })));
-  const hoursTag = (it, slotLen) => kd(it.len || slotLen) + 'h';
+  const hoursTag = (it, slotLen) => {
+    const end = done.get(it) || 0, len = it.len || slotLen;
+    const list = [];
+    for (let n = end - len + 1; n <= end; n++) list.push(kd(n));
+    return list.join(',');
+  };
   const progressTag = (it) => `${kd(done.get(it) || 0)}/${kd(o.totalHours)}h`;
 
   const dayBlock = (d) => {
@@ -366,6 +371,10 @@ const autoPlanPDF = (plan, o, onSave, lang) => {
       ${L('១ វគ្គ','sitting')} ${kd(o.minLen)}–${kd(o.maxLen)}h ·
       ${L('អតិបរមា','max')} ${kd(o.maxPerDay)}h/${L('ថ្ងៃ','day')}/${L('សិស្ស','student')} ·
       ${L('វគ្គសិក្សា','phase')} ${esc(o.phase)}${o.trans ? ' · ' + esc(o.trans) : ''}
+    </div>
+    <div style="font-size:10px;color:#98A2B3;padding-bottom:7px">
+      ${L('លេខក្រោយឈ្មោះ = ម៉ោងទីប៉ុន្មាននៃវគ្គ (ឧ. 1,2 = ម៉ោងទី ១ និង ២)',
+          'The number after a name is which hours of the course it covers (1,2 = the 1st and 2nd hour)')}
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:4px 9px;padding-bottom:9px">
       ${plan.students.map((stu, i) => { const c = autoPlanTint(i); return `
