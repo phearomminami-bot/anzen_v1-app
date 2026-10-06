@@ -21,12 +21,21 @@ const autoPlanOverlaps = (aH, aLen, bH, bLen) => aH < bH + bLen && bH < aH + aLe
 
 // Who is available to be scheduled at all: students still training, every
 // instructor, and any car not sitting in the workshop.
-const autoPlanPools = () => ({
-  students: (typeof STUDENTS !== 'undefined' ? STUDENTS : [])
-    .filter(s => s && s.status !== 'Completed' && s.status !== 'Former' && s.status !== 'Cleared'),
-  instructors: (typeof INSTRUCTORS !== 'undefined' ? INSTRUCTORS : []).filter(Boolean),
-  vehicles: (typeof VEHICLES !== 'undefined' ? VEHICLES : []).filter(v => v && v.status !== 'Workshop'),
-});
+// `trans` of 'MT' or 'AT' narrows it to that gearbox: the cars must match, and
+// so must the students who are already enrolled for one. A student record with
+// no transmission set is left in either way rather than silently dropped.
+const autoPlanPools = (trans) => {
+  const t = trans === 'MT' || trans === 'AT' ? trans : '';
+  return {
+    students: (typeof STUDENTS !== 'undefined' ? STUDENTS : [])
+      .filter(s => s && s.status !== 'Completed' && s.status !== 'Former' && s.status !== 'Cleared')
+      .filter(s => !t || !s.trans || s.trans === t),
+    instructors: (typeof INSTRUCTORS !== 'undefined' ? INSTRUCTORS : []).filter(Boolean),
+    vehicles: (typeof VEHICLES !== 'undefined' ? VEHICLES : [])
+      .filter(v => v && v.status !== 'Workshop')
+      .filter(v => !t || v.trans === t),
+  };
+};
 
 // ── The planner ─────────────────────────────────────────────────────────────
 // Walks forward one day at a time. For each slot it reads who the real
@@ -35,7 +44,7 @@ const autoPlanPools = () => ({
 // and never exceeds hoursPerDay. Stops when everybody has their hours (or
 // after a year, so bad input can't spin forever).
 const autoPlanBuild = (o) => {
-  const pools = autoPlanPools();
+  const pools = autoPlanPools(o.trans);
   const students    = pools.students.slice(0, Math.max(0, o.studentCount));
   const instructors = pools.instructors.slice(0, Math.max(0, o.instCount));
   const vehicles    = pools.vehicles.slice(0, Math.max(0, o.vehCount));
@@ -75,17 +84,22 @@ const autoPlanBuild = (o) => {
         const cap = Math.min(freeI.length, freeV.length);
         if (cap <= 0) continue;
 
-        const queue = students.filter(s =>
-          (need.get(s.id) || 0) > 0 &&
-          (todayH.get(s.id) || 0) + block <= o.hoursPerDay &&
-          !busyS.has(s.id));
+        const queue = students.filter(s => {
+          const left = need.get(s.id) || 0;
+          return left > 0 &&
+            (todayH.get(s.id) || 0) + Math.min(block, left) <= o.hoursPerDay &&
+            !busyS.has(s.id);
+        });
         if (!queue.length) continue;
 
         const items = queue.slice(0, cap).map((s, k) => {
-          need.set(s.id, (need.get(s.id) || 0) - block);
-          todayH.set(s.id, (todayH.get(s.id) || 0) + block);
+          // Odd course lengths leave a stub at the end — 13h in 2h sittings is
+          // six full ones and a single hour, not seven full ones.
+          const take = Math.min(block, need.get(s.id));
+          need.set(s.id, need.get(s.id) - take);
+          todayH.set(s.id, (todayH.get(s.id) || 0) + take);
           return {
-            student: s,
+            student: s, len: take,
             inst: freeI[(instCursor + k) % freeI.length],
             veh:  freeV[(vehCursor  + k) % freeV.length],
           };
@@ -128,7 +142,7 @@ const autoPlanToLessons = (plan, o) => {
     n += 1;
     out.push({
       id: 'L-' + String(n).padStart(4, '0'),
-      studentId: it.student.id, date: d.date, h: s.h, len: s.len,
+      studentId: it.student.id, date: d.date, h: s.h, len: it.len || s.len,
       instId: it.inst.id, guests: [], veh: it.veh.id,
       type: '', color: 'a', phase: o.phase,
       pickup: '', location: '', note: '',
@@ -142,18 +156,40 @@ const autoPlanToLessons = (plan, o) => {
 // ── The printable sheet ─────────────────────────────────────────────────────
 // Same shape as the schedule PDF: an in-app overlay (never a new tab, which
 // traps phone users) plus a print stylesheet that hides the rest of the app.
-const autoPlanPDF = (plan, o, onSave) => {
+// A draft is about shape, not about who exactly sits where, so a hue per
+// student is what makes it readable. Golden-angle spacing keeps neighbouring
+// numbers far apart on the wheel, which matters more than a fixed palette once
+// there are a dozen students.
+const autoPlanHue = (i) => (i * 137.508) % 360;
+const autoPlanTint = (i) => ({
+  bg:   `hsl(${autoPlanHue(i).toFixed(1)},72%,93%)`,
+  edge: `hsl(${autoPlanHue(i).toFixed(1)},58%,52%)`,
+  ink:  `hsl(${autoPlanHue(i).toFixed(1)},62%,27%)`,
+});
+
+// `lang` overrides the app's language for this sheet only — the toolbar toggle
+// re-invokes the whole thing, exactly as the schedule PDF does.
+const autoPlanPDF = (plan, o, onSave, lang) => {
   const HOST_ID = '__autoPlanHost';
   document.getElementById(HOST_ID)?.remove();
   document.getElementById('__autoPlanStyle')?.remove();
 
   const ss = window.__schoolSettings || {};
-  const curLang = (window.__anzenLang || 'km') === 'en' ? 'en' : 'km';
+  const curLang = (lang || o.pdfLang || window.__anzenLang || 'km') === 'en' ? 'en' : 'km';
   const L  = (km, en) => (curLang === 'km' ? km : en);
   const kd = s => curLang === 'km' ? String(s).replace(/[0-9]/g, d => '០១២៣៤៥៦៧៨៩'[+d]) : String(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
-  const sName = s => esc(curLang === 'km' ? (s.name || s.en || s.id) : (s.en || s.name || s.id));
-  const iName = i => esc(curLang === 'km' ? (i.name || i.en || i.id) : (i.en || i.name || i.id));
+  // Until the real people are pinned to the slots, numbered placeholders say
+  // more than real names do — the draft is about how many and when.
+  const sIdx = new Map(plan.students.map((s, i) => [s.id, i]));
+  const iIdx = new Map(plan.instructors.map((i, k) => [i.id, k]));
+  const generic = o.names !== 'real';
+  const sName = s => generic
+    ? L(`សិស្ស ${kd((sIdx.get(s.id) ?? 0) + 1)}`, `Student ${(sIdx.get(s.id) ?? 0) + 1}`)
+    : esc(curLang === 'km' ? (s.name || s.en || s.id) : (s.en || s.name || s.id));
+  const iName = i => generic
+    ? L(`គ្រូ ${kd((iIdx.get(i.id) ?? 0) + 1)}`, `Instructor ${(iIdx.get(i.id) ?? 0) + 1}`)
+    : esc(curLang === 'km' ? (i.name || i.en || i.id) : (i.en || i.name || i.id));
   const DAYS = curLang === 'km'
     ? ['អាទិត្យ','ច័ន្ទ','អង្គារ','ពុធ','ព្រហស្បតិ៍','សុក្រ','សៅរ៍']
     : ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -174,10 +210,14 @@ const autoPlanPDF = (plan, o, onSave) => {
       const cells = insts.map(i => {
         const it = by[i.id];
         if (!it) return `<td style="padding:5px;border:1px solid #E6EAF1;background:${zebra};color:#C8CFDA;text-align:center">—</td>`;
+        const c = autoPlanTint(sIdx.get(it.student.id) ?? 0);
+        const len = it.len || s.len;
+        const stub = len < s.len ? `<span style="font-weight:700">${kd(len)}h</span> ${fmtH(s.h)}–${fmtH(s.h + len)}` : '';
         return `<td style="padding:4px 5px;border:1px solid #E6EAF1;background:${zebra}">
-          <div style="border-radius:5px;background:#DCE8FA;border-left:3px solid #1A4F96;padding:3px 6px">
-            <div style="font-size:10.5px;font-weight:700;color:#12325C;line-height:1.3">${sName(it.student)}</div>
-            <div style="font-size:9px;color:#5A6B82;line-height:1.3">${esc(it.veh.plate || it.veh.id)}</div>
+          <div style="border-radius:5px;background:${c.bg};border-left:3px solid ${c.edge};padding:3px 6px">
+            <div style="font-size:10.5px;font-weight:700;color:${c.ink};line-height:1.3">${sName(it.student)}</div>
+            <div style="font-size:9px;color:#5A6B82;line-height:1.3">${esc(it.veh.plate || it.veh.id)}${it.veh.trans ? ' · ' + esc(it.veh.trans) : ''}</div>
+            ${stub ? `<div style="font-size:9px;color:${c.ink};line-height:1.3">${stub}</div>` : ''}
           </div></td>`;
       }).join('');
       return `<tr>
@@ -218,7 +258,13 @@ const autoPlanPDF = (plan, o, onSave) => {
       ${fmtH(o.dayStart)}–${fmtH(o.dayEnd)}${o.lunchTo > o.lunchFrom ? ` (${L('សម្រាក','break')} ${fmtH(o.lunchFrom)}–${fmtH(o.lunchTo)})` : ''} ·
       ${L('១ វគ្គ','block')} ${kd(o.block)}h ·
       ${kd(o.hoursPerDay)}h/${L('ថ្ងៃ','day')}/${L('សិស្ស','student')} ·
-      ${L('វគ្គសិក្សា','phase')} ${esc(o.phase)}
+      ${L('វគ្គសិក្សា','phase')} ${esc(o.phase)}${o.trans ? ' · ' + esc(o.trans) : ''}
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px 9px;padding-bottom:9px">
+      ${plan.students.map((stu, i) => { const c = autoPlanTint(i); return `
+        <span style="display:inline-flex;align-items:center;gap:4px;font-size:9.5px;color:#475467">
+          <span style="width:9px;height:9px;border-radius:2px;background:${c.bg};border-left:3px solid ${c.edge}"></span>
+          ${sName(stu)}</span>`; }).join('')}
     </div>
     <div style="display:flex;gap:7">
       ${tile(st.dayCount, L('ថ្ងៃរៀន','Teaching days'), '#EAF1FF', '#1A4F96')}
@@ -256,7 +302,11 @@ const autoPlanPDF = (plan, o, onSave) => {
   host.innerHTML = `
     <div class="ap-bar" style="position:sticky;top:0;z-index:2;display:flex;gap:6px;flex-wrap:nowrap;align-items:center;overflow-x:auto;padding:calc(10px + env(safe-area-inset-top,0px)) 10px 10px;background:#1A4F96;color:#fff;box-shadow:0 1px 8px rgba(0,0,0,.25)">
       <button id="__apBack" title="${L('ត្រឡប់','Back')}" style="flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:16px;width:38px;height:38px;border-radius:8px;cursor:pointer">⬅</button>
-      <div style="flex:1;min-width:2px;font-size:12.5px;font-weight:600;white-space:nowrap">${L('កាលវិភាគបឋម','Draft schedule')}</div>
+      <div style="display:flex;flex-shrink:0;background:rgba(255,255,255,.16);border-radius:8px;padding:2px">
+        <button id="__apKm" style="border:none;background:${curLang==='km'?'#fff':'transparent'};color:${curLang==='km'?'#1A4F96':'#fff'};font-size:12px;font-weight:700;padding:7px 8px;border-radius:6px;cursor:pointer">ខ្មែរ</button>
+        <button id="__apEn" style="border:none;background:${curLang==='en'?'#fff':'transparent'};color:${curLang==='en'?'#1A4F96':'#fff'};font-size:12px;font-weight:700;padding:7px 8px;border-radius:6px;cursor:pointer">EN</button>
+      </div>
+      <div style="flex:1;min-width:2px"></div>
       <button id="__apSave" style="flex-shrink:0;border:none;background:#2FBF71;color:#fff;font-size:12.5px;font-weight:700;padding:0 13px;height:38px;border-radius:8px;cursor:pointer;white-space:nowrap">${L('រក្សាទុកចូលកាលវិភាគពិត','Save to schedule')}</button>
       <button id="__apPrint" title="${L('បោះពុម្ព / PDF','Print / PDF')}" style="flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border:none;background:#fff;color:#1A4F96;font-size:17px;width:40px;height:38px;border-radius:8px;cursor:pointer">🖨</button>
     </div>
@@ -283,6 +333,9 @@ const autoPlanPDF = (plan, o, onSave) => {
   const cleanup = () => { window.removeEventListener('resize', fit); host.remove(); style.remove(); };
   const bar = host.querySelector('#__apConfirm');
   host.querySelector('#__apBack').onclick  = cleanup;
+  const relang = (next) => { if (next !== curLang) { cleanup(); autoPlanPDF(plan, o, onSave, next); } };
+  host.querySelector('#__apKm').onclick = () => relang('km');
+  host.querySelector('#__apEn').onclick = () => relang('en');
   host.querySelector('#__apPrint').onclick = () => { try { window.print(); } catch (e) {} };
   // Confirm inside the sheet rather than through the app's dialog: the sheet
   // sits above every overlay, so a normal dialog would open behind it.
@@ -296,18 +349,33 @@ const autoPlanPDF = (plan, o, onSave) => {
 // ── The form ────────────────────────────────────────────────────────────────
 const AutoPlanModal = ({ open, onClose }) => {
   const { tr, toast } = useAppActions();
-  const pools = autoPlanPools();
-  const [o, setO] = React.useState(() => ({
-    studentCount: pools.students.length,
-    instCount:    pools.instructors.length,
-    vehCount:     pools.vehicles.length,
+  const [o, setO] = React.useState(() => {
+    const p0 = autoPlanPools('');
+    return {
+    studentCount: p0.students.length,
+    instCount:    p0.instructors.length,
+    vehCount:     p0.vehicles.length,
     startDate: autoPlanISO(new Date()),
     weekdays:  [1, 2, 3, 4, 5, 6],
     dayStart: 7, dayEnd: 18, lunchFrom: 12, lunchTo: 13,
     totalHours: 20, hoursPerDay: 2, block: 2,
-    phase: 'KH', avoidExisting: true,
-  }));
-  const set = (k, v) => setO(p => ({ ...p, [k]: v }));
+    phase: 'KH', trans: '', avoidExisting: true,
+    names: 'generic', pdfLang: 'en',
+    };
+  });
+  // Re-read on every render so the hints track the chosen gearbox.
+  const pools = autoPlanPools(o.trans);
+  // Changing the gearbox changes which cars and students are in play, so the
+  // counts have to follow it rather than keep yesterday's numbers.
+  const set = (k, v) => setO(p => {
+    const next = { ...p, [k]: v };
+    if (k === 'trans') {
+      const np = autoPlanPools(v);
+      next.studentCount = np.students.length;
+      next.vehCount     = np.vehicles.length;
+    }
+    return next;
+  });
   if (!open) return null;
 
   // Live read-out of what the numbers imply. A school with few instructors is
@@ -406,6 +474,19 @@ const AutoPlanModal = ({ open, onClose }) => {
         </div>
 
         {/* Resources */}
+        <span style={labelCss}>{tr('ប្រអប់​លេខ','Gearbox')}</span>
+        <div style={{display:'flex',gap:6,marginBottom:11}}>
+          {[['', tr('ទាំង​ពីរ','Both')], ['MT', tr('លេខ​ដៃ · MT','Manual · MT')], ['AT', tr('អូតូ · AT','Automatic · AT')]].map(([k, lab]) => {
+            const on = o.trans === k;
+            return (
+              <button key={k || 'all'} type="button" onClick={() => set('trans', k)}
+                style={{flex:1,minWidth:0,height:40,borderRadius:11,cursor:'pointer',fontFamily:'inherit',
+                  border: on ? 'none' : '1px solid var(--border)',
+                  background: on ? 'var(--accent)' : 'var(--surface-muted)',
+                  color: on ? '#fff' : 'var(--ink-3)', fontSize:12.5, fontWeight: on ? 700 : 500}}>{lab}</button>
+            );
+          })}
+        </div>
         <div style={{display:'flex',gap:9,marginBottom:13}}>
           {numField('studentCount', tr('សិស្ស','Students'),     tr(`កំពុង​រៀន ${pools.students.length}`, `${pools.students.length} active`))}
           {numField('instCount',    tr('គ្រូ','Instructors'),    tr(`មាន ${pools.instructors.length}`, `${pools.instructors.length} total`))}
@@ -470,6 +551,30 @@ const AutoPlanModal = ({ open, onClose }) => {
                  `${block}h × ${perDayBlocks} per day · ${eachNeeds} sittings in all`)
             : tr('«១ ថ្ងៃ» តិច​ជាង «រៀន​ម្ដង»','Hours per day is less than one sitting')}
           {roundNote && <span style={{display:'block',marginTop:3,color:'var(--ink-3)',fontSize:11.5}}>{roundNote}</span>}
+        </div>
+
+        <span style={labelCss}>{tr('ឈ្មោះ​ក្នុង PDF','Names on the sheet')}</span>
+        <div style={{display:'flex',gap:6,marginBottom:13}}>
+          {[['generic', tr('Student 1, 2, 3…','Student 1, 2, 3…')], ['real', tr('ឈ្មោះ​ពិត','Real names')]].map(([k, lab]) => {
+            const on = o.names === k;
+            return (
+              <button key={k} type="button" onClick={() => set('names', k)}
+                style={{flex:1,minWidth:0,height:40,borderRadius:11,cursor:'pointer',fontFamily:'inherit',
+                  border: on ? 'none' : '1px solid var(--border)',
+                  background: on ? 'var(--accent)' : 'var(--surface-muted)',
+                  color: on ? '#fff' : 'var(--ink-3)', fontSize:12.5, fontWeight: on ? 700 : 500}}>{lab}</button>
+            );
+          })}
+          {[['km','ខ្មែរ'],['en','EN']].map(([k, lab]) => {
+            const on = o.pdfLang === k;
+            return (
+              <button key={k} type="button" onClick={() => set('pdfLang', k)}
+                style={{width:58,flexShrink:0,height:40,borderRadius:11,cursor:'pointer',fontFamily:'inherit',
+                  border: on ? 'none' : '1px solid var(--border)',
+                  background: on ? 'var(--ink)' : 'var(--surface-muted)',
+                  color: on ? 'var(--bg)' : 'var(--ink-3)', fontSize:12.5, fontWeight: on ? 700 : 500}}>{lab}</button>
+            );
+          })}
         </div>
 
         <label style={{display:'flex',alignItems:'center',gap:10,padding:'11px 13px',borderRadius:12,

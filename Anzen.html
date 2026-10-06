@@ -823,6 +823,10 @@ window.__trRegistry = {
   "Nothing generated — check hours and days": "បង្កើត​មិន​បាន — ពិនិត្យ​ម៉ោង និង​ថ្ងៃ",
   "Auto-generate schedule": "បង្កើត​កាលវិភាគ​ស្វ័យប្រវត្ត",
   "Preview the PDF before saving": "មើល PDF គំរូ​មុន​រក្សាទុក",
+  "Gearbox": "ប្រអប់​លេខ",
+  "Both": "ទាំង​ពីរ",
+  "Manual · MT": "លេខ​ដៃ · MT",
+  "Automatic · AT": "អូតូ · AT",
   "Cars": "ឡាន",
   "Start date": "ថ្ងៃ​ចាប់​ផ្ដើម",
   "Opens": "ម៉ោង​បើក",
@@ -838,6 +842,9 @@ window.__trRegistry = {
   "Course total (h)": "ទាំង​អស់ ប៉ុន្មាន​ម៉ោង?",
   "to graduate": "រហូត​ចប់​វគ្គ",
   "Hours per day is less than one sitting": "«១ ថ្ងៃ» តិច​ជាង «រៀន​ម្ដង»",
+  "Names on the sheet": "ឈ្មោះ​ក្នុង PDF",
+  "Student 1, 2, 3…": "Student 1, 2, 3…",
+  "Real names": "ឈ្មោះ​ពិត",
   "Skip hours already booked — never double-book": "វៀស​ម៉ោង​ដែល​មាន​កាលវិភាគ​រួច — មិន​ដាក់​ជាន់​គ្នា",
   "Before you generate": "គណនា​មុន​បង្កើត",
   "Lessons at once": "មេរៀន​ស្រប​គ្នា​បាន",
@@ -3359,6 +3366,10 @@ window.__trGroups = {
     "Nothing generated — check hours and days": "បង្កើត​មិន​បាន — ពិនិត្យ​ម៉ោង និង​ថ្ងៃ",
     "Auto-generate schedule": "បង្កើត​កាលវិភាគ​ស្វ័យប្រវត្ត",
     "Preview the PDF before saving": "មើល PDF គំរូ​មុន​រក្សាទុក",
+    "Gearbox": "ប្រអប់​លេខ",
+    "Both": "ទាំង​ពីរ",
+    "Manual · MT": "លេខ​ដៃ · MT",
+    "Automatic · AT": "អូតូ · AT",
     "Cars": "ឡាន",
     "Start date": "ថ្ងៃ​ចាប់​ផ្ដើម",
     "Opens": "ម៉ោង​បើក",
@@ -3374,6 +3385,9 @@ window.__trGroups = {
     "Course total (h)": "ទាំង​អស់ ប៉ុន្មាន​ម៉ោង?",
     "to graduate": "រហូត​ចប់​វគ្គ",
     "Hours per day is less than one sitting": "«១ ថ្ងៃ» តិច​ជាង «រៀន​ម្ដង»",
+    "Names on the sheet": "ឈ្មោះ​ក្នុង PDF",
+    "Student 1, 2, 3…": "Student 1, 2, 3…",
+    "Real names": "ឈ្មោះ​ពិត",
     "Skip hours already booked — never double-book": "វៀស​ម៉ោង​ដែល​មាន​កាលវិភាគ​រួច — មិន​ដាក់​ជាន់​គ្នា",
     "Before you generate": "គណនា​មុន​បង្កើត",
     "Lessons at once": "មេរៀន​ស្រប​គ្នា​បាន",
@@ -21287,13 +21301,16 @@ var autoPlanISO = d => {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 };
 var autoPlanOverlaps = (aH, aLen, bH, bLen) => aH < bH + bLen && bH < aH + aLen;
-var autoPlanPools = () => ({
-  students: (typeof STUDENTS !== 'undefined' ? STUDENTS : []).filter(s => s && s.status !== 'Completed' && s.status !== 'Former' && s.status !== 'Cleared'),
-  instructors: (typeof INSTRUCTORS !== 'undefined' ? INSTRUCTORS : []).filter(Boolean),
-  vehicles: (typeof VEHICLES !== 'undefined' ? VEHICLES : []).filter(v => v && v.status !== 'Workshop')
-});
+var autoPlanPools = trans => {
+  var t = trans === 'MT' || trans === 'AT' ? trans : '';
+  return {
+    students: (typeof STUDENTS !== 'undefined' ? STUDENTS : []).filter(s => s && s.status !== 'Completed' && s.status !== 'Former' && s.status !== 'Cleared').filter(s => !t || !s.trans || s.trans === t),
+    instructors: (typeof INSTRUCTORS !== 'undefined' ? INSTRUCTORS : []).filter(Boolean),
+    vehicles: (typeof VEHICLES !== 'undefined' ? VEHICLES : []).filter(v => v && v.status !== 'Workshop').filter(v => !t || v.trans === t)
+  };
+};
 var autoPlanBuild = o => {
-  var pools = autoPlanPools();
+  var pools = autoPlanPools(o.trans);
   var students = pools.students.slice(0, Math.max(0, o.studentCount));
   var instructors = pools.instructors.slice(0, Math.max(0, o.instCount));
   var vehicles = pools.vehicles.slice(0, Math.max(0, o.vehCount));
@@ -21324,13 +21341,18 @@ var autoPlanBuild = o => {
           var freeV = vehicles.filter(v => !busyV.has(v.id));
           var cap = Math.min(freeI.length, freeV.length);
           if (cap <= 0) return 0;
-          var queue = students.filter(s => (need.get(s.id) || 0) > 0 && (todayH.get(s.id) || 0) + block <= o.hoursPerDay && !busyS.has(s.id));
+          var queue = students.filter(s => {
+            var left = need.get(s.id) || 0;
+            return left > 0 && (todayH.get(s.id) || 0) + Math.min(block, left) <= o.hoursPerDay && !busyS.has(s.id);
+          });
           if (!queue.length) return 0;
           var items = queue.slice(0, cap).map((s, k) => {
-            need.set(s.id, (need.get(s.id) || 0) - block);
-            todayH.set(s.id, (todayH.get(s.id) || 0) + block);
+            var take = Math.min(block, need.get(s.id));
+            need.set(s.id, need.get(s.id) - take);
+            todayH.set(s.id, (todayH.get(s.id) || 0) + take);
             return {
               student: s,
+              len: take,
               inst: freeI[(instCursor + k) % freeI.length],
               veh: freeV[(vehCursor + k) % freeV.length]
             };
@@ -21389,7 +21411,7 @@ var autoPlanToLessons = (plan, o) => {
       studentId: it.student.id,
       date: d.date,
       h: s.h,
-      len: s.len,
+      len: it.len || s.len,
       instId: it.inst.id,
       guests: [],
       veh: it.veh.id,
@@ -21407,12 +21429,18 @@ var autoPlanToLessons = (plan, o) => {
   })));
   return out;
 };
-var autoPlanPDF = (plan, o, onSave) => {
+var autoPlanHue = i => i * 137.508 % 360;
+var autoPlanTint = i => ({
+  bg: `hsl(${autoPlanHue(i).toFixed(1)},72%,93%)`,
+  edge: `hsl(${autoPlanHue(i).toFixed(1)},58%,52%)`,
+  ink: `hsl(${autoPlanHue(i).toFixed(1)},62%,27%)`
+});
+var autoPlanPDF = (plan, o, onSave, lang) => {
   var HOST_ID = '__autoPlanHost';
   document.getElementById(HOST_ID)?.remove();
   document.getElementById('__autoPlanStyle')?.remove();
   var ss = window.__schoolSettings || {};
-  var curLang = (window.__anzenLang || 'km') === 'en' ? 'en' : 'km';
+  var curLang = (lang || o.pdfLang || window.__anzenLang || 'km') === 'en' ? 'en' : 'km';
   var L = (km, en) => curLang === 'km' ? km : en;
   var kd = s => curLang === 'km' ? String(s).replace(/[0-9]/g, d => '០១២៣៤៥៦៧៨៩'[+d]) : String(s);
   var esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({
@@ -21421,8 +21449,11 @@ var autoPlanPDF = (plan, o, onSave) => {
     '>': '&gt;',
     '"': '&quot;'
   })[c]);
-  var sName = s => esc(curLang === 'km' ? s.name || s.en || s.id : s.en || s.name || s.id);
-  var iName = i => esc(curLang === 'km' ? i.name || i.en || i.id : i.en || i.name || i.id);
+  var sIdx = new Map(plan.students.map((s, i) => [s.id, i]));
+  var iIdx = new Map(plan.instructors.map((i, k) => [i.id, k]));
+  var generic = o.names !== 'real';
+  var sName = s => generic ? L(`សិស្ស ${kd((sIdx.get(s.id) ?? 0) + 1)}`, `Student ${(sIdx.get(s.id) ?? 0) + 1}`) : esc(curLang === 'km' ? s.name || s.en || s.id : s.en || s.name || s.id);
+  var iName = i => generic ? L(`គ្រូ ${kd((iIdx.get(i.id) ?? 0) + 1)}`, `Instructor ${(iIdx.get(i.id) ?? 0) + 1}`) : esc(curLang === 'km' ? i.name || i.en || i.id : i.en || i.name || i.id);
   var DAYS = curLang === 'km' ? ['អាទិត្យ', 'ច័ន្ទ', 'អង្គារ', 'ពុធ', 'ព្រហស្បតិ៍', 'សុក្រ', 'សៅរ៍'] : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   var fmtH = h => kd(String(h).padStart(2, '0') + ':00');
   var st = plan.stats;
@@ -21442,10 +21473,14 @@ var autoPlanPDF = (plan, o, onSave) => {
       var cells = insts.map(i => {
         var it = by[i.id];
         if (!it) return `<td style="padding:5px;border:1px solid #E6EAF1;background:${zebra};color:#C8CFDA;text-align:center">—</td>`;
+        var c = autoPlanTint(sIdx.get(it.student.id) ?? 0);
+        var len = it.len || s.len;
+        var stub = len < s.len ? `<span style="font-weight:700">${kd(len)}h</span> ${fmtH(s.h)}–${fmtH(s.h + len)}` : '';
         return `<td style="padding:4px 5px;border:1px solid #E6EAF1;background:${zebra}">
-          <div style="border-radius:5px;background:#DCE8FA;border-left:3px solid #1A4F96;padding:3px 6px">
-            <div style="font-size:10.5px;font-weight:700;color:#12325C;line-height:1.3">${sName(it.student)}</div>
-            <div style="font-size:9px;color:#5A6B82;line-height:1.3">${esc(it.veh.plate || it.veh.id)}</div>
+          <div style="border-radius:5px;background:${c.bg};border-left:3px solid ${c.edge};padding:3px 6px">
+            <div style="font-size:10.5px;font-weight:700;color:${c.ink};line-height:1.3">${sName(it.student)}</div>
+            <div style="font-size:9px;color:#5A6B82;line-height:1.3">${esc(it.veh.plate || it.veh.id)}${it.veh.trans ? ' · ' + esc(it.veh.trans) : ''}</div>
+            ${stub ? `<div style="font-size:9px;color:${c.ink};line-height:1.3">${stub}</div>` : ''}
           </div></td>`;
       }).join('');
       return `<tr>
@@ -21485,7 +21520,16 @@ var autoPlanPDF = (plan, o, onSave) => {
       ${fmtH(o.dayStart)}–${fmtH(o.dayEnd)}${o.lunchTo > o.lunchFrom ? ` (${L('សម្រាក', 'break')} ${fmtH(o.lunchFrom)}–${fmtH(o.lunchTo)})` : ''} ·
       ${L('១ វគ្គ', 'block')} ${kd(o.block)}h ·
       ${kd(o.hoursPerDay)}h/${L('ថ្ងៃ', 'day')}/${L('សិស្ស', 'student')} ·
-      ${L('វគ្គសិក្សា', 'phase')} ${esc(o.phase)}
+      ${L('វគ្គសិក្សា', 'phase')} ${esc(o.phase)}${o.trans ? ' · ' + esc(o.trans) : ''}
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px 9px;padding-bottom:9px">
+      ${plan.students.map((stu, i) => {
+    var c = autoPlanTint(i);
+    return `
+        <span style="display:inline-flex;align-items:center;gap:4px;font-size:9.5px;color:#475467">
+          <span style="width:9px;height:9px;border-radius:2px;background:${c.bg};border-left:3px solid ${c.edge}"></span>
+          ${sName(stu)}</span>`;
+  }).join('')}
     </div>
     <div style="display:flex;gap:7">
       ${tile(st.dayCount, L('ថ្ងៃរៀន', 'Teaching days'), '#EAF1FF', '#1A4F96')}
@@ -21520,7 +21564,11 @@ var autoPlanPDF = (plan, o, onSave) => {
   host.innerHTML = `
     <div class="ap-bar" style="position:sticky;top:0;z-index:2;display:flex;gap:6px;flex-wrap:nowrap;align-items:center;overflow-x:auto;padding:calc(10px + env(safe-area-inset-top,0px)) 10px 10px;background:#1A4F96;color:#fff;box-shadow:0 1px 8px rgba(0,0,0,.25)">
       <button id="__apBack" title="${L('ត្រឡប់', 'Back')}" style="flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:16px;width:38px;height:38px;border-radius:8px;cursor:pointer">⬅</button>
-      <div style="flex:1;min-width:2px;font-size:12.5px;font-weight:600;white-space:nowrap">${L('កាលវិភាគបឋម', 'Draft schedule')}</div>
+      <div style="display:flex;flex-shrink:0;background:rgba(255,255,255,.16);border-radius:8px;padding:2px">
+        <button id="__apKm" style="border:none;background:${curLang === 'km' ? '#fff' : 'transparent'};color:${curLang === 'km' ? '#1A4F96' : '#fff'};font-size:12px;font-weight:700;padding:7px 8px;border-radius:6px;cursor:pointer">ខ្មែរ</button>
+        <button id="__apEn" style="border:none;background:${curLang === 'en' ? '#fff' : 'transparent'};color:${curLang === 'en' ? '#1A4F96' : '#fff'};font-size:12px;font-weight:700;padding:7px 8px;border-radius:6px;cursor:pointer">EN</button>
+      </div>
+      <div style="flex:1;min-width:2px"></div>
       <button id="__apSave" style="flex-shrink:0;border:none;background:#2FBF71;color:#fff;font-size:12.5px;font-weight:700;padding:0 13px;height:38px;border-radius:8px;cursor:pointer;white-space:nowrap">${L('រក្សាទុកចូលកាលវិភាគពិត', 'Save to schedule')}</button>
       <button id="__apPrint" title="${L('បោះពុម្ព / PDF', 'Print / PDF')}" style="flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border:none;background:#fff;color:#1A4F96;font-size:17px;width:40px;height:38px;border-radius:8px;cursor:pointer">🖨</button>
     </div>
@@ -21551,6 +21599,14 @@ var autoPlanPDF = (plan, o, onSave) => {
   };
   var bar = host.querySelector('#__apConfirm');
   host.querySelector('#__apBack').onclick = cleanup;
+  var relang = next => {
+    if (next !== curLang) {
+      cleanup();
+      autoPlanPDF(plan, o, onSave, next);
+    }
+  };
+  host.querySelector('#__apKm').onclick = () => relang('km');
+  host.querySelector('#__apEn').onclick = () => relang('en');
   host.querySelector('#__apPrint').onclick = () => {
     try {
       window.print();
@@ -21577,27 +21633,41 @@ var AutoPlanModal = ({
     tr,
     toast
   } = useAppActions();
-  var pools = autoPlanPools();
-  var [o, setO] = React.useState(() => ({
-    studentCount: pools.students.length,
-    instCount: pools.instructors.length,
-    vehCount: pools.vehicles.length,
-    startDate: autoPlanISO(new Date()),
-    weekdays: [1, 2, 3, 4, 5, 6],
-    dayStart: 7,
-    dayEnd: 18,
-    lunchFrom: 12,
-    lunchTo: 13,
-    totalHours: 20,
-    hoursPerDay: 2,
-    block: 2,
-    phase: 'KH',
-    avoidExisting: true
-  }));
-  var set = (k, v) => setO(p => ({
-    ...p,
-    [k]: v
-  }));
+  var [o, setO] = React.useState(() => {
+    var p0 = autoPlanPools('');
+    return {
+      studentCount: p0.students.length,
+      instCount: p0.instructors.length,
+      vehCount: p0.vehicles.length,
+      startDate: autoPlanISO(new Date()),
+      weekdays: [1, 2, 3, 4, 5, 6],
+      dayStart: 7,
+      dayEnd: 18,
+      lunchFrom: 12,
+      lunchTo: 13,
+      totalHours: 20,
+      hoursPerDay: 2,
+      block: 2,
+      phase: 'KH',
+      trans: '',
+      avoidExisting: true,
+      names: 'generic',
+      pdfLang: 'en'
+    };
+  });
+  var pools = autoPlanPools(o.trans);
+  var set = (k, v) => setO(p => {
+    var next = {
+      ...p,
+      [k]: v
+    };
+    if (k === 'trans') {
+      var np = autoPlanPools(v);
+      next.studentCount = np.students.length;
+      next.vehCount = np.vehicles.length;
+    }
+    return next;
+  });
   if (!open) return null;
   var block = Math.max(1, o.block);
   var usable = o.dayEnd - o.dayStart - Math.max(0, o.lunchTo - o.lunchFrom);
@@ -21761,7 +21831,35 @@ var AutoPlanModal = ({
       fontSize: 11.5,
       color: 'var(--ink-3)'
     }
-  }, tr('មើល PDF គំរូ​មុន​រក្សាទុក', 'Preview the PDF before saving')))), React.createElement("div", {
+  }, tr('មើល PDF គំរូ​មុន​រក្សាទុក', 'Preview the PDF before saving')))), React.createElement("span", {
+    style: labelCss
+  }, tr('ប្រអប់​លេខ', 'Gearbox')), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 6,
+      marginBottom: 11
+    }
+  }, [['', tr('ទាំង​ពីរ', 'Both')], ['MT', tr('លេខ​ដៃ · MT', 'Manual · MT')], ['AT', tr('អូតូ · AT', 'Automatic · AT')]].map(([k, lab]) => {
+    var on = o.trans === k;
+    return React.createElement("button", {
+      key: k || 'all',
+      type: "button",
+      onClick: () => set('trans', k),
+      style: {
+        flex: 1,
+        minWidth: 0,
+        height: 40,
+        borderRadius: 11,
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+        border: on ? 'none' : '1px solid var(--border)',
+        background: on ? 'var(--accent)' : 'var(--surface-muted)',
+        color: on ? '#fff' : 'var(--ink-3)',
+        fontSize: 12.5,
+        fontWeight: on ? 700 : 500
+      }
+    }, lab);
+  })), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 9,
@@ -21870,7 +21968,55 @@ var AutoPlanModal = ({
       color: 'var(--ink-3)',
       fontSize: 11.5
     }
-  }, roundNote)), React.createElement("label", {
+  }, roundNote)), React.createElement("span", {
+    style: labelCss
+  }, tr('ឈ្មោះ​ក្នុង PDF', 'Names on the sheet')), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 6,
+      marginBottom: 13
+    }
+  }, [['generic', tr('Student 1, 2, 3…', 'Student 1, 2, 3…')], ['real', tr('ឈ្មោះ​ពិត', 'Real names')]].map(([k, lab]) => {
+    var on = o.names === k;
+    return React.createElement("button", {
+      key: k,
+      type: "button",
+      onClick: () => set('names', k),
+      style: {
+        flex: 1,
+        minWidth: 0,
+        height: 40,
+        borderRadius: 11,
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+        border: on ? 'none' : '1px solid var(--border)',
+        background: on ? 'var(--accent)' : 'var(--surface-muted)',
+        color: on ? '#fff' : 'var(--ink-3)',
+        fontSize: 12.5,
+        fontWeight: on ? 700 : 500
+      }
+    }, lab);
+  }), [['km', 'ខ្មែរ'], ['en', 'EN']].map(([k, lab]) => {
+    var on = o.pdfLang === k;
+    return React.createElement("button", {
+      key: k,
+      type: "button",
+      onClick: () => set('pdfLang', k),
+      style: {
+        width: 58,
+        flexShrink: 0,
+        height: 40,
+        borderRadius: 11,
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+        border: on ? 'none' : '1px solid var(--border)',
+        background: on ? 'var(--ink)' : 'var(--surface-muted)',
+        color: on ? 'var(--bg)' : 'var(--ink-3)',
+        fontSize: 12.5,
+        fontWeight: on ? 700 : 500
+      }
+    }, lab);
+  })), React.createElement("label", {
     style: {
       display: 'flex',
       alignItems: 'center',
