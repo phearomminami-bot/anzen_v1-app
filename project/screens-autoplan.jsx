@@ -37,21 +37,53 @@ const autoPlanPools = (trans) => {
   };
 };
 
+// ── Slots in a day ──────────────────────────────────────────────────────────
+// The day is cut into sittings of at most maxLen, but the tail of a stretch is
+// kept rather than discarded: 13:00-16:00 with two-hour sittings is 13-15 and
+// then 15-16, not 13-15 and an idle hour.
+const autoPlanSlots = (o) => {
+  const maxLen = Math.max(1, o.maxLen), minLen = Math.max(1, Math.min(o.minLen, maxLen));
+  const hasLunch = o.lunchTo > o.lunchFrom && o.lunchFrom >= o.dayStart && o.lunchTo <= o.dayEnd;
+  const stretches = hasLunch
+    ? [[o.dayStart, o.lunchFrom], [o.lunchTo, o.dayEnd]]
+    : [[o.dayStart, o.dayEnd]];
+  const out = [];
+  stretches.forEach(([from, to]) => {
+    for (let h = from; to - h >= minLen; ) {
+      const len = Math.min(maxLen, to - h);
+      out.push({ h, len });
+      h += len;
+    }
+  });
+  return out;
+};
+
 // ── The planner ─────────────────────────────────────────────────────────────
-// Walks forward one day at a time. For each slot it reads who the real
+// Walks forward one day at a time. For each sitting it reads who the real
 // schedule already has busy, then pairs the free instructors and cars with
-// students who still owe hours. A student never gets two lessons in one slot
-// and never exceeds hoursPerDay. Stops when everybody has their hours (or
-// after a year, so bad input can't spin forever).
+// students who still owe hours. A sitting can be shorter than its slot - some
+// students take an hour where others take two - and a course can be told to
+// last a minimum number of days, which thins out how much anyone does per day.
 const autoPlanBuild = (o) => {
   const pools = autoPlanPools(o.trans);
   const students    = pools.students.slice(0, Math.max(0, o.studentCount));
   const instructors = pools.instructors.slice(0, Math.max(0, o.instCount));
   const vehicles    = pools.vehicles.slice(0, Math.max(0, o.vehCount));
-  const block = Math.max(1, o.block);
+  const maxLen    = Math.max(1, o.maxLen);
+  const minLen    = Math.max(1, Math.min(o.minLen, maxLen));
+  const maxPerDay = Math.max(minLen, o.maxPerDay);
+  const grid = autoPlanSlots(o);
   const existing = (typeof LESSONS !== 'undefined' ? LESSONS : []).filter(l => l && l.status !== 'cancelled');
 
+  // A minimum course length is given in calendar days, which is how a school
+  // thinks about it; pacing happens in teaching days, so convert through the
+  // teaching week. Each student is then rationed to roughly what they have
+  // left divided by the teaching days they still have to fill.
+  const perWeek = Math.max(1, o.weekdays.length);
+  const spread = o.minSpanDays > 0 ? Math.max(1, Math.round(o.minSpanDays * perWeek / 7)) : 0;
+
   const need = new Map(students.map(s => [s.id, o.totalHours]));
+  const daysUsed = new Map(students.map(s => [s.id, 0]));
   const days = [];
   let skipped = 0, vehCursor = 0, instCursor = 0;
   let cursor = new Date(o.startDate + 'T00:00:00');
@@ -64,16 +96,23 @@ const autoPlanBuild = (o) => {
     if (![...need.values()].some(v => v > 0)) break;
     const iso = autoPlanISO(cursor);
 
-    if (o.weekdays.includes(cursor.getDay()) && students.length && instructors.length && vehicles.length) {
+    if (o.weekdays.includes(cursor.getDay()) && students.length && instructors.length && vehicles.length && grid.length) {
       const sameDay = existing.filter(l => l.date === iso);
       const todayH = new Map();
       const slots = [];
 
-      for (let h = o.dayStart; h + block <= o.dayEnd; h += block) {
-        // Lunch is a hole in the day, not a lesson.
-        if (o.lunchTo > o.lunchFrom && autoPlanOverlaps(h, block, o.lunchFrom, o.lunchTo - o.lunchFrom)) continue;
+      // How much each student may do today. Without a minimum span this is
+      // simply the daily ceiling; with one it is their remaining hours thinned
+      // across the teaching days they still have to fill.
+      const allowance = new Map(students.map(s => {
+        const rem = need.get(s.id) || 0;
+        if (!spread) return [s.id, maxPerDay];
+        const left = Math.max(1, spread - (daysUsed.get(s.id) || 0));
+        return [s.id, Math.max(minLen, Math.min(maxPerDay, Math.ceil(rem / left)))];
+      }));
 
-        const clash = o.avoidExisting ? sameDay.filter(l => autoPlanOverlaps(h, block, l.h, l.len || 1)) : [];
+      grid.forEach(({ h, len: slotLen }) => {
+        const clash = o.avoidExisting ? sameDay.filter(l => autoPlanOverlaps(h, slotLen, l.h, l.len || 1)) : [];
         const busyI = new Set(clash.map(l => l.instId).filter(Boolean));
         const busyV = new Set(clash.map(l => l.veh).filter(Boolean));
         const busyS = new Set(clash.map(l => l.studentId).filter(Boolean));
@@ -82,21 +121,30 @@ const autoPlanBuild = (o) => {
         const freeI = instructors.filter(i => !busyI.has(i.id));
         const freeV = vehicles.filter(v => !busyV.has(v.id));
         const cap = Math.min(freeI.length, freeV.length);
-        if (cap <= 0) continue;
+        if (cap <= 0) return;
 
-        const queue = students.filter(s => {
-          const left = need.get(s.id) || 0;
-          return left > 0 &&
-            (todayH.get(s.id) || 0) + Math.min(block, left) <= o.hoursPerDay &&
-            !busyS.has(s.id);
-        });
-        if (!queue.length) continue;
+        // What this student would take here, or 0 if nothing useful fits. A
+        // final stub below minLen is still worth giving - it is the last of
+        // their hours, not a badly-sized sitting.
+        const takeFor = (s) => {
+          const rem = need.get(s.id) || 0;
+          if (rem <= 0 || busyS.has(s.id)) return 0;
+          const room = (allowance.get(s.id) || maxPerDay) - (todayH.get(s.id) || 0);
+          const take = Math.min(slotLen, rem, room);
+          if (take <= 0) return 0;
+          return (take >= minLen || take >= rem) ? take : 0;
+        };
+
+        // Longest outstanding first, so the students furthest from finishing
+        // take the long sittings and the rest fill the stubs.
+        const queue = students.filter(s => takeFor(s) > 0)
+          .sort((a, b) => (need.get(b.id) || 0) - (need.get(a.id) || 0));
+        if (!queue.length) return;
 
         const items = queue.slice(0, cap).map((s, k) => {
-          // Odd course lengths leave a stub at the end — 13h in 2h sittings is
-          // six full ones and a single hour, not seven full ones.
-          const take = Math.min(block, need.get(s.id));
+          const take = takeFor(s);
           need.set(s.id, need.get(s.id) - take);
+          if (!(todayH.get(s.id) > 0)) daysUsed.set(s.id, (daysUsed.get(s.id) || 0) + 1);
           todayH.set(s.id, (todayH.get(s.id) || 0) + take);
           return {
             student: s, len: take,
@@ -107,8 +155,8 @@ const autoPlanBuild = (o) => {
         // Shift both rotations so the next slot starts with different pairings.
         vehCursor  = (vehCursor  + items.length) % freeV.length;
         instCursor = (instCursor + items.length) % freeI.length;
-        slots.push({ h, len: block, items, clashes: clash.length });
-      }
+        slots.push({ h, len: slotLen, items, clashes: clash.length });
+      });
       if (slots.length) days.push({ date: iso, dow: cursor.getDay(), slots });
     }
     cursor = new Date(cursor.getTime() + 86400000);
@@ -240,6 +288,50 @@ const autoPlanPDF = (plan, o, onSave, lang) => {
         <tbody>${rows}</tbody></table></div>`;
   };
 
+  const monthGrid = () => {
+    const byDate = new Map(plan.days.map(d => [d.date, d]));
+    const first = new Date(plan.days[0].date + 'T00:00:00');
+    const last  = new Date(plan.days[plan.days.length - 1].date + 'T00:00:00');
+    const MONTHS = curLang === 'km'
+      ? ['មករា','កុម្ភៈ','មីនា','មេសា','ឧសភា','មិថុនា','កក្កដា','សីហា','កញ្ញា','តុលា','វិច្ឆិកា','ធ្នូ']
+      : ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const HEAD = curLang === 'km' ? ['ច','អ','ព','ព្រ','សុ','ស','អា'] : ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const out = [];
+
+    for (let m = new Date(first.getFullYear(), first.getMonth(), 1);
+         m <= last; m = new Date(m.getFullYear(), m.getMonth() + 1, 1)) {
+      const y = m.getFullYear(), mo = m.getMonth();
+      const daysIn = new Date(y, mo + 1, 0).getDate();
+      const lead = (new Date(y, mo, 1).getDay() + 6) % 7;   // Monday-first
+      const cells = [];
+      for (let i = 0; i < lead; i++) cells.push('<td style="border:1px solid #E6EAF1;background:#F7F9FC"></td>');
+      for (let dn = 1; dn <= daysIn; dn++) {
+        const iso = autoPlanISO(new Date(y, mo, dn));
+        const d = byDate.get(iso);
+        const chips = d ? d.slots.flatMap(sl => sl.items.map(it => {
+          const c = autoPlanTint(sIdx.get(it.student.id) ?? 0);
+          return `<div style="border-radius:3px;background:${c.bg};border-left:2px solid ${c.edge};padding:1px 3px;margin-top:1px;font-size:8px;line-height:1.35;color:${c.ink};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            ${fmtH(sl.h)} ${sName(it.student)}</div>`;
+        })).join('') : '';
+        const total = d ? d.slots.reduce((n, sl) => n + sl.items.length, 0) : 0;
+        cells.push(`<td style="vertical-align:top;border:1px solid #E6EAF1;background:${d ? '#fff' : '#F7F9FC'};padding:2px 3px;height:62px">
+          <div style="display:flex;align-items:baseline;gap:3px">
+            <span style="font-size:9px;font-weight:700;color:${d ? '#101828' : '#B6BFCC'}">${kd(dn)}</span>
+            ${total ? `<span style="font-size:7.5px;color:#98A2B3">${kd(total)}</span>` : ''}
+          </div>${chips}</td>`);
+      }
+      while (cells.length % 7) cells.push('<td style="border:1px solid #E6EAF1;background:#F7F9FC"></td>');
+      const rows = [];
+      for (let i = 0; i < cells.length; i += 7) rows.push(`<tr>${cells.slice(i, i + 7).join('')}</tr>`);
+      out.push(`<div class="ap-day">
+        <div style="margin:13px 0 5px;font-size:13px;font-weight:800;color:#101828">${MONTHS[mo]} ${kd(y)}</div>
+        <table style="width:100%;table-layout:fixed;border-collapse:collapse">
+          <thead><tr>${HEAD.map(h => `<th style="padding:4px;border:1px solid #D6DEEA;background:#EEF2F8;font-size:9px;color:#475467">${h}</th>`).join('')}</tr></thead>
+          <tbody>${rows.join('')}</tbody></table></div>`);
+    }
+    return out.join('');
+  };
+
   const paper = `
     <div style="display:flex;align-items:flex-start;gap:12px;padding-bottom:9px;border-bottom:2px solid #1A4F96">
       <div style="flex:1;min-width:0">
@@ -256,8 +348,8 @@ const autoPlanPDF = (plan, o, onSave, lang) => {
       ${L('គ្រូ','Instructors')} ${kd(plan.instructors.length)} ·
       ${L('ឡាន','Cars')} ${kd(plan.vehicles.length)} ·
       ${fmtH(o.dayStart)}–${fmtH(o.dayEnd)}${o.lunchTo > o.lunchFrom ? ` (${L('សម្រាក','break')} ${fmtH(o.lunchFrom)}–${fmtH(o.lunchTo)})` : ''} ·
-      ${L('១ វគ្គ','block')} ${kd(o.block)}h ·
-      ${kd(o.hoursPerDay)}h/${L('ថ្ងៃ','day')}/${L('សិស្ស','student')} ·
+      ${L('១ វគ្គ','sitting')} ${kd(o.minLen)}–${kd(o.maxLen)}h ·
+      ${L('អតិបរមា','max')} ${kd(o.maxPerDay)}h/${L('ថ្ងៃ','day')}/${L('សិស្ស','student')} ·
       ${L('វគ្គសិក្សា','phase')} ${esc(o.phase)}${o.trans ? ' · ' + esc(o.trans) : ''}
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:4px 9px;padding-bottom:9px">
@@ -272,7 +364,7 @@ const autoPlanPDF = (plan, o, onSave, lang) => {
       ${tile(st.hoursEach + 'h', L('ម៉ោង / សិស្ស','Hours each'), '#FEF3E2', '#B25E09')}
       ${tile(st.skipped, L('ម៉ោងជាន់គ្នា — វៀស','Clashes avoided'), '#F0F2F6', '#475467')}
     </div>
-    ${plan.days.map(dayBlock).join('')}
+    ${o.view === 'calendar' ? monthGrid() : plan.days.map(dayBlock).join('')}
     ${st.short ? `<div style="margin-top:11px;padding:8px 10px;border-radius:8px;background:#FDECE7;font-size:10.5px;color:#8A2C06;line-height:1.6">
       ${L('សិស្ស','Students')} ${kd(st.short)} ${L('នាក់មិនទាន់គ្រប់ម៉ោងនៅថ្ងៃទាំងនេះ — បន្ថែមថ្ងៃរៀន គ្រូ ឬឡាន។',
           'are still short of hours within these days — add teaching days, instructors or cars.')}</div>` : ''}
@@ -306,6 +398,10 @@ const autoPlanPDF = (plan, o, onSave, lang) => {
         <button id="__apKm" style="border:none;background:${curLang==='km'?'#fff':'transparent'};color:${curLang==='km'?'#1A4F96':'#fff'};font-size:12px;font-weight:700;padding:7px 8px;border-radius:6px;cursor:pointer">ខ្មែរ</button>
         <button id="__apEn" style="border:none;background:${curLang==='en'?'#fff':'transparent'};color:${curLang==='en'?'#1A4F96':'#fff'};font-size:12px;font-weight:700;padding:7px 8px;border-radius:6px;cursor:pointer">EN</button>
       </div>
+      <div style="display:flex;flex-shrink:0;background:rgba(255,255,255,.16);border-radius:8px;padding:2px">
+        <button id="__apTable" style="border:none;background:${o.view!=='calendar'?'#fff':'transparent'};color:${o.view!=='calendar'?'#1A4F96':'#fff'};font-size:12px;font-weight:700;padding:7px 8px;border-radius:6px;cursor:pointer">${L('តារាង','Table')}</button>
+        <button id="__apCal" style="border:none;background:${o.view==='calendar'?'#fff':'transparent'};color:${o.view==='calendar'?'#1A4F96':'#fff'};font-size:12px;font-weight:700;padding:7px 8px;border-radius:6px;cursor:pointer">${L('ប្រតិទិន','Calendar')}</button>
+      </div>
       <div style="flex:1;min-width:2px"></div>
       <button id="__apSave" style="flex-shrink:0;border:none;background:#2FBF71;color:#fff;font-size:12.5px;font-weight:700;padding:0 13px;height:38px;border-radius:8px;cursor:pointer;white-space:nowrap">${L('រក្សាទុកចូលកាលវិភាគពិត','Save to schedule')}</button>
       <button id="__apPrint" title="${L('បោះពុម្ព / PDF','Print / PDF')}" style="flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border:none;background:#fff;color:#1A4F96;font-size:17px;width:40px;height:38px;border-radius:8px;cursor:pointer">🖨</button>
@@ -336,6 +432,9 @@ const autoPlanPDF = (plan, o, onSave, lang) => {
   const relang = (next) => { if (next !== curLang) { cleanup(); autoPlanPDF(plan, o, onSave, next); } };
   host.querySelector('#__apKm').onclick = () => relang('km');
   host.querySelector('#__apEn').onclick = () => relang('en');
+  const review = (v) => { if (v !== o.view) { cleanup(); autoPlanPDF(plan, { ...o, view: v }, onSave, curLang); } };
+  host.querySelector('#__apTable').onclick = () => review('table');
+  host.querySelector('#__apCal').onclick   = () => review('calendar');
   host.querySelector('#__apPrint').onclick = () => { try { window.print(); } catch (e) {} };
   // Confirm inside the sheet rather than through the app's dialog: the sheet
   // sits above every overlay, so a normal dialog would open behind it.
@@ -358,8 +457,8 @@ const AutoPlanModal = ({ open, onClose }) => {
     startDate: autoPlanISO(new Date()),
     weekdays:  [1, 2, 3, 4, 5, 6],
     dayStart: 7, dayEnd: 18, lunchFrom: 12, lunchTo: 13,
-    totalHours: 20, hoursPerDay: 2, block: 2,
-    phase: 'KH', trans: '', avoidExisting: true,
+    totalHours: 20, minLen: 1, maxLen: 2, maxPerDay: 2, minSpanDays: 0,
+    phase: 'KH', trans: '', avoidExisting: true, view: 'table',
     names: 'generic', pdfLang: 'en',
     };
   });
@@ -381,32 +480,30 @@ const AutoPlanModal = ({ open, onClose }) => {
   // Live read-out of what the numbers imply. A school with few instructors is
   // not an impossible plan — the students simply take turns across more days —
   // so the only thing that genuinely blocks is a day with no room in it at all.
-  const block   = Math.max(1, o.block);
-  const usable  = (o.dayEnd - o.dayStart) - Math.max(0, o.lunchTo - o.lunchFrom);
-  const perDay  = Math.max(0, Math.floor(usable / block));          // time slots in a day
+  const slotGrid = autoPlanSlots(o);                                // the day, cut up
+  const openHours = slotGrid.reduce((n, sl) => n + sl.len, 0);      // teachable, after cutting
+  const perDay  = slotGrid.length;                                  // sittings in a day
   const atOnce  = Math.min(o.instCount, o.vehCount);                // lessons side by side
-  const cap     = atOnce * perDay;                                  // sessions a day can hold
-  const eachNeeds = Math.ceil(o.totalHours / block);                // sessions per student
-  const totalNeeds = o.studentCount * eachNeeds;
-  const perDayBlocks = Math.floor(o.hoursPerDay / block);           // sessions per student per day
-  // Two floors on the length: nobody may exceed hoursPerDay, and the school
-  // can only run `cap` sessions a day. The longer one wins.
+  const cap     = atOnce * openHours;                               // teachable hours a day
+  const totalHoursNeeded = o.studentCount * o.totalHours;
+  const perStudentDay = Math.max(1, Math.min(o.maxPerDay, o.maxLen * perDay));
+  // Two floors on the length: nobody may exceed their daily ceiling, and the
+  // school can only teach `cap` hours a day. The longer one wins — and a
+  // requested minimum course length can stretch it further still.
   const dayCnt = Math.max(
-    perDayBlocks ? Math.ceil(eachNeeds / perDayBlocks) : 0,
-    cap ? Math.ceil(totalNeeds / cap) : 0);
-  const ok = perDay > 0 && atOnce > 0 && perDayBlocks >= 1;
+    Math.ceil(o.totalHours / perStudentDay),
+    cap ? Math.ceil(totalHoursNeeded / cap) : 0,
+    o.minSpanDays > 0 ? Math.round(o.minSpanDays * Math.max(1, o.weekdays.length) / 7) : 0);
+  const ok = perDay > 0 && atOnce > 0;
   const blockReason =
-    perDay <= 0        ? tr('ម៉ោង​បើក–បិទ ខ្លី​ជាង ១ វគ្គ — បើក​យូរ​ជាង​នេះ ឬ​បន្ថយ​ម៉ោង​ក្នុង ១ វគ្គ',
-                            'The opening hours are shorter than one sitting — open longer, or shorten a sitting') :
-    atOnce <= 0        ? tr('ត្រូវ​មាន​គ្រូ និង​ឡាន​យ៉ាង​តិច ១','Need at least one instructor and one car') :
-    perDayBlocks < 1   ? tr('«១ ថ្ងៃ» តិច​ជាង «រៀន​ម្ដង» — សិស្ស​រៀន​មិន​បាន​សូម្បី​ម្ដង',
-                            'Hours per day is less than one sitting — a student could not have even one') : '';
-  // Advisory only: the hours simply do not divide evenly into sittings.
-  const roundNote =
-    o.totalHours % block ? tr(`${o.totalHours} ម៉ោង ÷ ${block} = ${eachNeeds} វគ្គ (${eachNeeds * block} ម៉ោង)`,
-                              `${o.totalHours}h ÷ ${block} rounds up to ${eachNeeds} sittings (${eachNeeds * block}h)`) :
-    o.hoursPerDay % block ? tr(`១ ថ្ងៃ ${o.hoursPerDay} ម៉ោង — ប្រើ​បាន​តែ ${perDayBlocks * block} ម៉ោង`,
-                               `${o.hoursPerDay}h per day — only ${perDayBlocks * block}h is usable`) : '';
+    perDay <= 0 ? tr('ម៉ោង​បើក–បិទ ខ្លី​ជាង​វគ្គ​ខ្លី​បំផុត — បើក​យូរ​ជាង​នេះ ឬ​បន្ថយ​វគ្គ​ខ្លី​បំផុត',
+                     'The opening hours are shorter than the shortest sitting — open longer, or shorten it') :
+    atOnce <= 0 ? tr('ត្រូវ​មាន​គ្រូ និង​ឡាន​យ៉ាង​តិច ១','Need at least one instructor and one car') : '';
+  // What the day actually breaks into, which is the thing that was invisible.
+  const slotNote = slotGrid.length
+    ? slotGrid.map(sl => `${String(sl.h).padStart(2,'0')}:00–${String(sl.h + sl.len).padStart(2,'0')}:00`).join(' · ')
+    : '';
+  const idleHours = ((o.dayEnd - o.dayStart) - Math.max(0, o.lunchTo - o.lunchFrom)) - openHours;
 
   const fieldCss = {
     width:'100%', boxSizing:'border-box', height:48, padding:'0 12px',
@@ -535,22 +632,37 @@ const AutoPlanModal = ({ open, onClose }) => {
           })}
         </div>
 
-        {/* Course load. Phrased as three questions about one student — the
-            bare nouns ("block", "hours per day") read as the same thing. */}
+        {/* Course load, as questions about one student. A sitting is a range
+            now, not a fixed size, so one student can take an hour where the
+            next takes two. */}
         <span style={labelCss}>{tr('សិស្ស ១ នាក់ រៀន​យ៉ាង​ណា?','For one student')}</span>
         <div style={{display:'flex',gap:9,marginBottom:9}}>
-          {numField('block',       tr('រៀន​ម្ដង ប៉ុន្មាន​ម៉ោង?','One sitting (h)'),  tr('ចូល​ឡាន​ម្ដង','per sitting'))}
-          {numField('hoursPerDay', tr('១ ថ្ងៃ ប៉ុន្មាន​ម៉ោង?','Per day (h)'),           tr('ច្រើន​បំផុត​ក្នុង ១ ថ្ងៃ','most in one day'))}
+          {numField('minLen',    tr('រៀន​ម្ដង យ៉ាង​តិច','Sitting, least (h)'),   tr('ធម្មតា ១','usually 1'))}
+          {numField('maxLen',    tr('រៀន​ម្ដង យ៉ាង​ច្រើន','Sitting, most (h)'),  tr('ធម្មតា ២','usually 2'))}
+          {numField('maxPerDay', tr('១ ថ្ងៃ យ៉ាង​ច្រើន','Per day, most (h)'),        tr('២ ឬ ៣ ពេល​ចាំបាច់','2, or 3 if needed'))}
+        </div>
+        <div style={{display:'flex',gap:9,marginBottom:9}}>
           {numField('totalHours',  tr('ទាំង​អស់ ប៉ុន្មាន​ម៉ោង?','Course total (h)'), tr('រហូត​ចប់​វគ្គ','to graduate'))}
+          {numField('minSpanDays', tr('វគ្គ​យូរ​យ៉ាង​តិច (ថ្ងៃ)','Course lasts at least (days)'), tr('០ = មិន​កំណត់','0 = no minimum'))}
         </div>
         <div style={{padding:'9px 12px',borderRadius:11,marginBottom:13,lineHeight:1.65,
           background:'var(--surface-muted)',border:'1px solid var(--border)',
           fontSize:12.5,color:'var(--ink-2)'}}>
-          {perDayBlocks >= 1
-            ? tr(`រៀន ${block} ម៉ោង × ${perDayBlocks} ដង/ថ្ងៃ · សរុប ${eachNeeds} វគ្គ`,
-                 `${block}h × ${perDayBlocks} per day · ${eachNeeds} sittings in all`)
-            : tr('«១ ថ្ងៃ» តិច​ជាង «រៀន​ម្ដង»','Hours per day is less than one sitting')}
-          {roundNote && <span style={{display:'block',marginTop:3,color:'var(--ink-3)',fontSize:11.5}}>{roundNote}</span>}
+          {ok
+            ? tr(`វេន​ក្នុង ១ ថ្ងៃ៖ ${slotNote}`, `Sittings in a day: ${slotNote}`)
+            : tr('គ្មាន​វេន​ក្នុង ១ ថ្ងៃ','No sitting fits in the day')}
+          {ok && idleHours > 0 && (
+            <span style={{display:'block',marginTop:3,color:'#B25E09',fontSize:11.5}}>
+              {tr(`នៅ​សល់ ${idleHours} ម៉ោង​មិន​បាន​ប្រើ — បន្ថយ «រៀន​ម្ដង យ៉ាង​តិច»`,
+                  `${idleHours}h of the day goes unused — lower the shortest sitting`)}
+            </span>
+          )}
+          {ok && o.minSpanDays > 0 && (
+            <span style={{display:'block',marginTop:3,color:'var(--ink-3)',fontSize:11.5}}>
+              {tr(`សិស្ស​រៀន​បន្តិច​ម្ដងៗ ដើម្បី​អោយ​វគ្គ​យូរ​យ៉ាង​តិច ${o.minSpanDays} ថ្ងៃ`,
+                  `Lessons are thinned out so the course lasts at least ${o.minSpanDays} days`)}
+            </span>
+          )}
         </div>
 
         <span style={labelCss}>{tr('ឈ្មោះ​ក្នុង PDF','Names on the sheet')}</span>
@@ -591,9 +703,9 @@ const AutoPlanModal = ({ open, onClose }) => {
         <div style={{borderRadius:14,background:'var(--accent-soft)',padding:'11px 13px',marginBottom:14}}>
           <div style={{fontSize:13,fontWeight:700,color:'var(--accent)',marginBottom:3}}>{tr('គណនា​មុន​បង្កើត','Before you generate')}</div>
           {row(tr('មេរៀន​ស្រប​គ្នា​បាន','Lessons at once'), atOnce)}
-          {row(tr('វេន​ក្នុង ១ ថ្ងៃ','Slots per day'), perDay)}
-          {row(tr('ចំណុះ ១ ថ្ងៃ','Capacity per day'), tr(`${cap} វគ្គ`, `${cap} sessions`))}
-          {row(tr('វគ្គ​ត្រូវ​ការ​ទាំង​អស់','Sessions needed'), tr(`${totalNeeds} វគ្គ`, `${totalNeeds} sessions`))}
+          {row(tr('វេន​ក្នុង ១ ថ្ងៃ','Sittings per day'), perDay)}
+          {row(tr('ចំណុះ ១ ថ្ងៃ','Capacity per day'), tr(`${cap} ម៉ោង`, `${cap} hours`))}
+          {row(tr('ម៉ោង​ត្រូវ​ការ​ទាំង​អស់','Hours needed'), tr(`${totalHoursNeeded} ម៉ោង`, `${totalHoursNeeded} hours`))}
           {row(tr('ថ្ងៃ​រៀន​ប្រហែល','Teaching days'), ok ? tr(`${dayCnt} ថ្ងៃ`, `${dayCnt} days`) : '—', true)}
           {ok && dayCnt > 60 && (
             <div style={{marginTop:7,padding:'8px 10px',borderRadius:9,background:'rgba(202,138,4,.14)',
