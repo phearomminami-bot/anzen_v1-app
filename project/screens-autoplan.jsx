@@ -120,7 +120,9 @@ const autoPlanBuild = (o) => {
   const perWeek = Math.max(1, o.weekdays.length);
   const spread = o.minSpanDays > 0 ? Math.max(1, Math.round(o.minSpanDays * perWeek / 7)) : 0;
   const visits = Math.max(1, Math.ceil(o.totalHours / maxPerDay));   // attendances at full load
-  const gap = spread ? Math.max(1, Math.round(spread / visits)) : 1; // teaching days between them
+  // How many teaching days apart a student's lessons sit. The school sets it
+  // directly; a minimum course length can only widen it further.
+  const gap = Math.max(1, o.gapDays || 1, spread ? Math.round(spread / visits) : 1);
 
   const need = new Map(students.map(s => [s.id, o.totalHours]));
   const lastSeen = new Map();          // teaching-day index of each student's last lesson
@@ -173,10 +175,17 @@ const autoPlanBuild = (o) => {
           return (take >= minLen || take >= rem) ? take : 0;
         };
 
-        // Longest outstanding first, so the students furthest from finishing
-        // take the long sittings and the rest fill the stubs.
-        const queue = students.filter(s => takeFor(s) > 0)
-          .sort((a, b) => (need.get(b.id) || 0) - (need.get(a.id) || 0));
+        // Students already under way come first, the most overdue of them
+        // ahead of the rest, so their lessons stay `gap` days apart. Someone
+        // who has not started yet waits for a free day rather than taking a
+        // slot from someone mid-course — which is what pushed a student's
+        // second lesson days away from their first.
+        const dueAt = s => lastSeen.has(s.id) ? lastSeen.get(s.id) + gap : Infinity;
+        const queue = students.filter(s => takeFor(s) > 0).sort((a, b) => {
+          const da = dueAt(a), db = dueAt(b);
+          if (da !== db) return da - db;
+          return (need.get(b.id) || 0) - (need.get(a.id) || 0);
+        });
         if (!queue.length) return;
 
         const items = queue.slice(0, cap).map((s, k) => {
@@ -528,7 +537,7 @@ const AutoPlanModal = ({ open, onClose }) => {
     startDate: autoPlanISO(new Date()),
     weekdays:  [1, 2, 3, 4, 5, 6],
     dayStart: 7, dayEnd: 18, lunchFrom: 12, lunchTo: 13,
-    totalHours: 20, minLen: 1, maxLen: 2, maxPerDay: 2, minSpanDays: 0,
+    totalHours: 20, minLen: 1, maxLen: 2, maxPerDay: 2, minSpanDays: 0, gapDays: 1,
     phase: 'KH', trans: '', avoidExisting: true, view: 'table',
     names: 'generic', pdfLang: 'en',
     };
@@ -749,6 +758,19 @@ const AutoPlanModal = ({ open, onClose }) => {
         <div style={{display:'flex',gap:9,marginBottom:9}}>
           {numField('totalHours',  tr('ទាំង​អស់ ប៉ុន្មាន​ម៉ោង?','Course total (h)'), tr('រហូត​ចប់​វគ្គ','to graduate'))}
           {numField('minSpanDays', tr('វគ្គ​យូរ​យ៉ាង​តិច (ថ្ងៃ)','Course lasts at least (days)'), tr('០ = មិន​កំណត់','0 = no minimum'))}
+        </div>
+        <span style={labelCss}>{tr('គម្លាត​រវាង​លើក​រៀន','Days between lessons')}</span>
+        <div style={{display:'flex',gap:6,marginBottom:9}}>
+          {[[1, tr('រាល់​ថ្ងៃ','Every day')], [2, tr('រៀង​រាល់ ២ ថ្ងៃ','Every 2nd day')], [3, tr('រៀង​រាល់ ៣ ថ្ងៃ','Every 3rd day')]].map(([k, lab]) => {
+            const on = (o.gapDays || 1) === k;
+            return (
+              <button key={k} type="button" onClick={() => set('gapDays', k)}
+                style={{flex:1,minWidth:0,height:40,borderRadius:11,cursor:'pointer',fontFamily:'inherit',
+                  border: on ? 'none' : '1px solid var(--border)',
+                  background: on ? 'var(--accent)' : 'var(--surface-muted)',
+                  color: on ? '#fff' : 'var(--ink-3)', fontSize:12.5, fontWeight: on ? 700 : 500}}>{lab}</button>
+            );
+          })}
         </div>
         <div style={{padding:'9px 12px',borderRadius:11,marginBottom:13,lineHeight:1.65,
           background:'var(--surface-muted)',border:'1px solid var(--border)',

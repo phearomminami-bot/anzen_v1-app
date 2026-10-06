@@ -845,6 +845,10 @@ window.__trRegistry = {
   "to graduate": "រហូត​ចប់​វគ្គ",
   "Course lasts at least (days)": "វគ្គ​យូរ​យ៉ាង​តិច (ថ្ងៃ)",
   "0 = no minimum": "០ = មិន​កំណត់",
+  "Days between lessons": "គម្លាត​រវាង​លើក​រៀន",
+  "Every day": "រាល់​ថ្ងៃ",
+  "Every 2nd day": "រៀង​រាល់ ២ ថ្ងៃ",
+  "Every 3rd day": "រៀង​រាល់ ៣ ថ្ងៃ",
   "No sitting fits in the day": "គ្មាន​វេន​ក្នុង ១ ថ្ងៃ",
   "Names on the sheet": "ឈ្មោះ​ក្នុង PDF",
   "Student 1, 2, 3…": "Student 1, 2, 3…",
@@ -3392,6 +3396,10 @@ window.__trGroups = {
     "to graduate": "រហូត​ចប់​វគ្គ",
     "Course lasts at least (days)": "វគ្គ​យូរ​យ៉ាង​តិច (ថ្ងៃ)",
     "0 = no minimum": "០ = មិន​កំណត់",
+    "Days between lessons": "គម្លាត​រវាង​លើក​រៀន",
+    "Every day": "រាល់​ថ្ងៃ",
+    "Every 2nd day": "រៀង​រាល់ ២ ថ្ងៃ",
+    "Every 3rd day": "រៀង​រាល់ ៣ ថ្ងៃ",
     "No sitting fits in the day": "គ្មាន​វេន​ក្នុង ១ ថ្ងៃ",
     "Names on the sheet": "ឈ្មោះ​ក្នុង PDF",
     "Student 1, 2, 3…": "Student 1, 2, 3…",
@@ -21398,7 +21406,7 @@ var autoPlanBuild = o => {
   var perWeek = Math.max(1, o.weekdays.length);
   var spread = o.minSpanDays > 0 ? Math.max(1, Math.round(o.minSpanDays * perWeek / 7)) : 0;
   var visits = Math.max(1, Math.ceil(o.totalHours / maxPerDay));
-  var gap = spread ? Math.max(1, Math.round(spread / visits)) : 1;
+  var gap = Math.max(1, o.gapDays || 1, spread ? Math.round(spread / visits) : 1);
   var need = new Map(students.map(s => [s.id, o.totalHours]));
   var lastSeen = new Map();
   var teachIndex = -1;
@@ -21439,7 +21447,13 @@ var autoPlanBuild = o => {
           if (take <= 0) return 0;
           return take >= minLen || take >= rem ? take : 0;
         };
-        var queue = students.filter(s => takeFor(s) > 0).sort((a, b) => (need.get(b.id) || 0) - (need.get(a.id) || 0));
+        var dueAt = s => lastSeen.has(s.id) ? lastSeen.get(s.id) + gap : Infinity;
+        var queue = students.filter(s => takeFor(s) > 0).sort((a, b) => {
+          var da = dueAt(a),
+            db = dueAt(b);
+          if (da !== db) return da - db;
+          return (need.get(b.id) || 0) - (need.get(a.id) || 0);
+        });
         if (!queue.length) return;
         var items = queue.slice(0, cap).map((s, k) => {
           var take = takeFor(s);
@@ -21819,6 +21833,7 @@ var AutoPlanModal = ({
       maxLen: 2,
       maxPerDay: 2,
       minSpanDays: 0,
+      gapDays: 1,
       phase: 'KH',
       trans: '',
       avoidExisting: true,
@@ -22155,7 +22170,35 @@ var AutoPlanModal = ({
       gap: 9,
       marginBottom: 9
     }
-  }, numField('totalHours', tr('ទាំង​អស់ ប៉ុន្មាន​ម៉ោង?', 'Course total (h)'), tr('រហូត​ចប់​វគ្គ', 'to graduate')), numField('minSpanDays', tr('វគ្គ​យូរ​យ៉ាង​តិច (ថ្ងៃ)', 'Course lasts at least (days)'), tr('០ = មិន​កំណត់', '0 = no minimum'))), React.createElement("div", {
+  }, numField('totalHours', tr('ទាំង​អស់ ប៉ុន្មាន​ម៉ោង?', 'Course total (h)'), tr('រហូត​ចប់​វគ្គ', 'to graduate')), numField('minSpanDays', tr('វគ្គ​យូរ​យ៉ាង​តិច (ថ្ងៃ)', 'Course lasts at least (days)'), tr('០ = មិន​កំណត់', '0 = no minimum'))), React.createElement("span", {
+    style: labelCss
+  }, tr('គម្លាត​រវាង​លើក​រៀន', 'Days between lessons')), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 6,
+      marginBottom: 9
+    }
+  }, [[1, tr('រាល់​ថ្ងៃ', 'Every day')], [2, tr('រៀង​រាល់ ២ ថ្ងៃ', 'Every 2nd day')], [3, tr('រៀង​រាល់ ៣ ថ្ងៃ', 'Every 3rd day')]].map(([k, lab]) => {
+    var on = (o.gapDays || 1) === k;
+    return React.createElement("button", {
+      key: k,
+      type: "button",
+      onClick: () => set('gapDays', k),
+      style: {
+        flex: 1,
+        minWidth: 0,
+        height: 40,
+        borderRadius: 11,
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+        border: on ? 'none' : '1px solid var(--border)',
+        background: on ? 'var(--accent)' : 'var(--surface-muted)',
+        color: on ? '#fff' : 'var(--ink-3)',
+        fontSize: 12.5,
+        fontWeight: on ? 700 : 500
+      }
+    }, lab);
+  })), React.createElement("div", {
     style: {
       padding: '9px 12px',
       borderRadius: 11,
