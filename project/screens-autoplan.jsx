@@ -48,7 +48,10 @@ const autoPlanBuild = (o) => {
   let cursor = new Date(o.startDate + 'T00:00:00');
   if (isNaN(cursor.getTime())) cursor = new Date();
 
-  for (let guard = 0; guard < 366; guard++) {
+  // Calendar days to walk, not teaching days: a thin school with one car can
+  // legitimately need a couple of years, and stopping early would quietly
+  // drop students instead of reporting them as short.
+  for (let guard = 0; guard < 1100; guard++) {
     if (![...need.values()].some(v => v > 0)) break;
     const iso = autoPlanISO(cursor);
 
@@ -307,15 +310,35 @@ const AutoPlanModal = ({ open, onClose }) => {
   const set = (k, v) => setO(p => ({ ...p, [k]: v }));
   if (!open) return null;
 
-  // Live capacity read-out, so an impossible plan is obvious before generating.
+  // Live read-out of what the numbers imply. A school with few instructors is
+  // not an impossible plan — the students simply take turns across more days —
+  // so the only thing that genuinely blocks is a day with no room in it at all.
   const block   = Math.max(1, o.block);
   const usable  = (o.dayEnd - o.dayStart) - Math.max(0, o.lunchTo - o.lunchFrom);
-  const perDay  = Math.max(0, Math.floor(usable / block));
-  const atOnce  = Math.min(o.instCount, o.vehCount);
-  const cap     = atOnce * perDay;
-  const want    = o.studentCount * Math.ceil(o.hoursPerDay / block);
-  const dayCnt  = Math.ceil(o.totalHours / Math.max(1, o.hoursPerDay));
-  const ok      = cap > 0 && want <= cap;
+  const perDay  = Math.max(0, Math.floor(usable / block));          // time slots in a day
+  const atOnce  = Math.min(o.instCount, o.vehCount);                // lessons side by side
+  const cap     = atOnce * perDay;                                  // sessions a day can hold
+  const eachNeeds = Math.ceil(o.totalHours / block);                // sessions per student
+  const totalNeeds = o.studentCount * eachNeeds;
+  const perDayBlocks = Math.floor(o.hoursPerDay / block);           // sessions per student per day
+  // Two floors on the length: nobody may exceed hoursPerDay, and the school
+  // can only run `cap` sessions a day. The longer one wins.
+  const dayCnt = Math.max(
+    perDayBlocks ? Math.ceil(eachNeeds / perDayBlocks) : 0,
+    cap ? Math.ceil(totalNeeds / cap) : 0);
+  const ok = perDay > 0 && atOnce > 0 && perDayBlocks >= 1;
+  const blockReason =
+    perDay <= 0        ? tr('ម៉ោង​បើក–បិទ ខ្លី​ជាង ១ វគ្គ — បើក​យូរ​ជាង​នេះ ឬ​បន្ថយ​ម៉ោង​ក្នុង ១ វគ្គ',
+                            'The opening hours are shorter than one sitting — open longer, or shorten a sitting') :
+    atOnce <= 0        ? tr('ត្រូវ​មាន​គ្រូ និង​ឡាន​យ៉ាង​តិច ១','Need at least one instructor and one car') :
+    perDayBlocks < 1   ? tr('«១ ថ្ងៃ» តិច​ជាង «រៀន​ម្ដង» — សិស្ស​រៀន​មិន​បាន​សូម្បី​ម្ដង',
+                            'Hours per day is less than one sitting — a student could not have even one') : '';
+  // Advisory only: the hours simply do not divide evenly into sittings.
+  const roundNote =
+    o.totalHours % block ? tr(`${o.totalHours} ម៉ោង ÷ ${block} = ${eachNeeds} វគ្គ (${eachNeeds * block} ម៉ោង)`,
+                              `${o.totalHours}h ÷ ${block} rounds up to ${eachNeeds} sittings (${eachNeeds * block}h)`) :
+    o.hoursPerDay % block ? tr(`១ ថ្ងៃ ${o.hoursPerDay} ម៉ោង — ប្រើ​បាន​តែ ${perDayBlocks * block} ម៉ោង`,
+                               `${o.hoursPerDay}h per day — only ${perDayBlocks * block}h is usable`) : '';
 
   const fieldCss = {
     width:'100%', boxSizing:'border-box', height:48, padding:'0 12px',
@@ -356,7 +379,7 @@ const AutoPlanModal = ({ open, onClose }) => {
     if (!o.weekdays.length)   { toast(tr('ជ្រើស​ថ្ងៃ​រៀន​យ៉ាង​តិច​មួយ','Pick at least one weekday'), 'warn'); return; }
     if (o.dayEnd <= o.dayStart) { toast(tr('ម៉ោង​បិទ​ត្រូវ​ក្រោយ​ម៉ោង​បើក','Closing time must be after opening'), 'warn'); return; }
     if (!o.studentCount || !o.instCount || !o.vehCount) { toast(tr('ត្រូវ​មាន​សិស្ស គ្រូ និង​ឡាន','Need students, instructors and cars'), 'warn'); return; }
-    if (!ok) { toast(tr('ធនធាន​មិន​គ្រប់ — បន្ថែម​គ្រូ ឡាន ឬ​ម៉ោង','Not enough capacity — add instructors, cars or hours'), 'warn'); return; }
+    if (!ok) { toast(blockReason, 'warn'); return; }
 
     const plan = autoPlanBuild(o);
     if (!plan.days.length) { toast(tr('បង្កើត​មិន​បាន — ពិនិត្យ​ម៉ោង និង​ថ្ងៃ','Nothing generated — check hours and days'), 'warn'); return; }
@@ -402,7 +425,14 @@ const AutoPlanModal = ({ open, onClose }) => {
         <div style={{display:'flex',gap:9,marginBottom:13}}>
           {hourField('lunchFrom', tr('សម្រាក​ពី','Break from'))}
           {hourField('lunchTo',   tr('ដល់','until'))}
-          {numField('block',      tr('១ វគ្គ (ម៉ោង)','Block (h)'))}
+          <label style={{flex:1,minWidth:0,display:'block'}}>
+            <span style={labelCss}>{tr('វគ្គ​សិក្សា','Phase')}</span>
+            <select value={o.phase} onChange={e => set('phase', e.target.value)}
+              style={{...fieldCss, cursor:'pointer'}}>
+              {(window.STUDENT_PHASES || [{k:'KH',label:'KH'}]).map(p =>
+                <option key={p.k} value={p.k}>{p.label}</option>)}
+            </select>
+          </label>
         </div>
 
         {/* Weekdays */}
@@ -424,18 +454,22 @@ const AutoPlanModal = ({ open, onClose }) => {
           })}
         </div>
 
-        {/* Course load */}
-        <div style={{display:'flex',gap:9,marginBottom:13}}>
-          {numField('totalHours',  tr('ម៉ោង​សរុប / សិស្ស','Total hours each'), tr('រហូត​ចប់​វគ្គ','to finish'))}
-          {numField('hoursPerDay', tr('ម៉ោង / ថ្ងៃ / សិស្ស','Hours per day'),  tr('អតិបរមា','maximum'))}
-          <label style={{flex:1,minWidth:0,display:'block'}}>
-            <span style={labelCss}>{tr('វគ្គ​សិក្សា','Phase')}</span>
-            <select value={o.phase} onChange={e => set('phase', e.target.value)}
-              style={{...fieldCss, cursor:'pointer'}}>
-              {(window.STUDENT_PHASES || [{k:'KH',label:'KH'}]).map(p =>
-                <option key={p.k} value={p.k}>{p.label}</option>)}
-            </select>
-          </label>
+        {/* Course load. Phrased as three questions about one student — the
+            bare nouns ("block", "hours per day") read as the same thing. */}
+        <span style={labelCss}>{tr('សិស្ស ១ នាក់ រៀន​យ៉ាង​ណា?','For one student')}</span>
+        <div style={{display:'flex',gap:9,marginBottom:9}}>
+          {numField('block',       tr('រៀន​ម្ដង ប៉ុន្មាន​ម៉ោង?','One sitting (h)'),  tr('ចូល​ឡាន​ម្ដង','per sitting'))}
+          {numField('hoursPerDay', tr('១ ថ្ងៃ ប៉ុន្មាន​ម៉ោង?','Per day (h)'),           tr('ច្រើន​បំផុត​ក្នុង ១ ថ្ងៃ','most in one day'))}
+          {numField('totalHours',  tr('ទាំង​អស់ ប៉ុន្មាន​ម៉ោង?','Course total (h)'), tr('រហូត​ចប់​វគ្គ','to graduate'))}
+        </div>
+        <div style={{padding:'9px 12px',borderRadius:11,marginBottom:13,lineHeight:1.65,
+          background:'var(--surface-muted)',border:'1px solid var(--border)',
+          fontSize:12.5,color:'var(--ink-2)'}}>
+          {perDayBlocks >= 1
+            ? tr(`រៀន ${block} ម៉ោង × ${perDayBlocks} ដង/ថ្ងៃ · សរុប ${eachNeeds} វគ្គ`,
+                 `${block}h × ${perDayBlocks} per day · ${eachNeeds} sittings in all`)
+            : tr('«១ ថ្ងៃ» តិច​ជាង «រៀន​ម្ដង»','Hours per day is less than one sitting')}
+          {roundNote && <span style={{display:'block',marginTop:3,color:'var(--ink-3)',fontSize:11.5}}>{roundNote}</span>}
         </div>
 
         <label style={{display:'flex',alignItems:'center',gap:10,padding:'11px 13px',borderRadius:12,
@@ -447,19 +481,25 @@ const AutoPlanModal = ({ open, onClose }) => {
           </span>
         </label>
 
-        {/* Capacity check */}
+        {/* What the plan will come out as. Few instructors only means a longer
+            term, not an impossible one, so this reports rather than refuses. */}
         <div style={{borderRadius:14,background:'var(--accent-soft)',padding:'11px 13px',marginBottom:14}}>
-          <div style={{fontSize:13,fontWeight:700,color:'var(--accent)',marginBottom:3}}>{tr('គណនា​មុន​បង្កើត','Capacity check')}</div>
+          <div style={{fontSize:13,fontWeight:700,color:'var(--accent)',marginBottom:3}}>{tr('គណនា​មុន​បង្កើត','Before you generate')}</div>
           {row(tr('មេរៀន​ស្រប​គ្នា​បាន','Lessons at once'), atOnce)}
           {row(tr('វេន​ក្នុង ១ ថ្ងៃ','Slots per day'), perDay)}
           {row(tr('ចំណុះ ១ ថ្ងៃ','Capacity per day'), tr(`${cap} វគ្គ`, `${cap} sessions`))}
-          {row(tr('ត្រូវ​ការ ១ ថ្ងៃ','Needed per day'), tr(`${want} វគ្គ`, `${want} sessions`))}
-          {row(tr('ថ្ងៃ​រៀន​សរុប','Teaching days'), tr(`${dayCnt} ថ្ងៃ`, `${dayCnt} days`), true)}
+          {row(tr('វគ្គ​ត្រូវ​ការ​ទាំង​អស់','Sessions needed'), tr(`${totalNeeds} វគ្គ`, `${totalNeeds} sessions`))}
+          {row(tr('ថ្ងៃ​រៀន​ប្រហែល','Teaching days'), ok ? tr(`${dayCnt} ថ្ងៃ`, `${dayCnt} days`) : '—', true)}
+          {ok && dayCnt > 60 && (
+            <div style={{marginTop:7,padding:'8px 10px',borderRadius:9,background:'rgba(202,138,4,.14)',
+              fontSize:12,fontWeight:600,color:'#8A6206',lineHeight:1.55}}>
+              {tr(`វែង ${dayCnt} ថ្ងៃ — បន្ថែម​គ្រូ ឡាន ឬ​ម៉ោង​បើក ទើប​ខ្លី​ជាង`,
+                  `${dayCnt} teaching days is long — more instructors, cars or opening hours would shorten it`)}
+            </div>
+          )}
           {!ok && (
             <div style={{marginTop:7,padding:'8px 10px',borderRadius:9,background:'rgba(176,65,62,.12)',
-              fontSize:12,fontWeight:600,color:'#B0413E',lineHeight:1.5}}>
-              {tr('ធនធាន​មិន​គ្រប់ — បន្ថែម​គ្រូ ឡាន ឬ​ម៉ោង​បើក','Not enough capacity — add instructors, cars or opening hours')}
-            </div>
+              fontSize:12,fontWeight:600,color:'#B0413E',lineHeight:1.55}}>{blockReason}</div>
           )}
         </div>
 
