@@ -251,6 +251,20 @@ const autoPlanPDF = (plan, o, onSave, lang) => {
       <div style="font-size:10px;color:#475467;margin-top:2px">${lab}</div>
     </div>`;
 
+  // Hours done after each lesson. Sittings vary in length now, so neither "how
+  // long is this one" nor "how far along is this student" can be read off the
+  // grid. Rebuilt on every render, so re-opening the sheet in another language
+  // or view gives the same numbers.
+  const done = new Map();
+  const runningTotal = new Map();
+  plan.days.forEach(d => d.slots.forEach(sl => sl.items.forEach(it => {
+    const n = (runningTotal.get(it.student.id) || 0) + (it.len || sl.len);
+    runningTotal.set(it.student.id, n);
+    done.set(it, n);
+  })));
+  const hoursTag = (it, slotLen) => kd(it.len || slotLen) + 'h';
+  const progressTag = (it) => `${kd(done.get(it) || 0)}/${kd(o.totalHours)}h`;
+
   const dayBlock = (d) => {
     const rows = d.slots.map((s, si) => {
       const by = {}; s.items.forEach(it => { by[it.inst.id] = it; });
@@ -260,12 +274,13 @@ const autoPlanPDF = (plan, o, onSave, lang) => {
         if (!it) return `<td style="padding:5px;border:1px solid #E6EAF1;background:${zebra};color:#C8CFDA;text-align:center">—</td>`;
         const c = autoPlanTint(sIdx.get(it.student.id) ?? 0);
         const len = it.len || s.len;
-        const stub = len < s.len ? `<span style="font-weight:700">${kd(len)}h</span> ${fmtH(s.h)}–${fmtH(s.h + len)}` : '';
+        const ends = len < s.len ? ` ${fmtH(s.h)}–${fmtH(s.h + len)}` : '';
         return `<td style="padding:4px 5px;border:1px solid #E6EAF1;background:${zebra}">
           <div style="border-radius:5px;background:${c.bg};border-left:3px solid ${c.edge};padding:3px 6px">
-            <div style="font-size:10.5px;font-weight:700;color:${c.ink};line-height:1.3">${sName(it.student)}</div>
-            <div style="font-size:9px;color:#5A6B82;line-height:1.3">${esc(it.veh.plate || it.veh.id)}${it.veh.trans ? ' · ' + esc(it.veh.trans) : ''}</div>
-            ${stub ? `<div style="font-size:9px;color:${c.ink};line-height:1.3">${stub}</div>` : ''}
+            <div style="font-size:10.5px;font-weight:700;color:${c.ink};line-height:1.3">${sName(it.student)}
+              <span style="display:inline-block;margin-left:3px;padding:0 4px;border-radius:3px;background:${c.edge};color:#fff;font-size:9px;font-weight:800">${hoursTag(it, s.len)}</span></div>
+            <div style="font-size:9px;color:#5A6B82;line-height:1.3">${esc(it.veh.plate || it.veh.id)}${it.veh.trans ? ' · ' + esc(it.veh.trans) : ''}${ends}</div>
+            <div style="font-size:9px;color:${c.ink};line-height:1.3;opacity:.8">${progressTag(it)}</div>
           </div></td>`;
       }).join('');
       return `<tr>
@@ -311,7 +326,7 @@ const autoPlanPDF = (plan, o, onSave, lang) => {
         const chips = d ? d.slots.flatMap(sl => sl.items.map(it => {
           const c = autoPlanTint(sIdx.get(it.student.id) ?? 0);
           return `<div style="border-radius:3px;background:${c.bg};border-left:2px solid ${c.edge};padding:1px 3px;margin-top:1px;font-size:8px;line-height:1.35;color:${c.ink};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-            ${fmtH(sl.h)} ${sName(it.student)}</div>`;
+            ${fmtH(sl.h)} ${sName(it.student)} <b>${hoursTag(it, sl.len)}</b></div>`;
         })).join('') : '';
         const total = d ? d.slots.reduce((n, sl) => n + sl.items.length, 0) : 0;
         cells.push(`<td style="vertical-align:top;border:1px solid #E6EAF1;background:${d ? '#fff' : '#F7F9FC'};padding:2px 3px;height:62px">
