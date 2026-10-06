@@ -21307,6 +21307,20 @@ var autoPlanISO = d => {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 };
 var autoPlanOverlaps = (aH, aLen, bH, bLen) => aH < bH + bLen && bH < aH + aLen;
+var autoPlanLeftOut = trans => {
+  var t = trans === 'MT' || trans === 'AT' ? trans : '';
+  var S = (typeof STUDENTS !== 'undefined' ? STUDENTS : []).filter(Boolean);
+  var V = (typeof VEHICLES !== 'undefined' ? VEHICLES : []).filter(Boolean);
+  var finished = s => s.status === 'Completed' || s.status === 'Former' || s.status === 'Cleared';
+  return {
+    studentsTotal: S.length,
+    studentsFinished: S.filter(finished).length,
+    studentsOtherGear: t ? S.filter(s => !finished(s) && s.trans && s.trans !== t).length : 0,
+    vehiclesTotal: V.length,
+    vehiclesWorkshop: V.filter(v => v.status === 'Workshop').length,
+    vehiclesOtherGear: t ? V.filter(v => v.status !== 'Workshop' && v.trans !== t).length : 0
+  };
+};
 var autoPlanPools = trans => {
   var t = trans === 'MT' || trans === 'AT' ? trans : '';
   return {
@@ -21772,6 +21786,7 @@ var AutoPlanModal = ({
     };
   });
   var pools = autoPlanPools(o.trans);
+  var leftOut = autoPlanLeftOut(o.trans);
   var set = (k, v) => setO(p => {
     var next = {
       ...p,
@@ -21817,7 +21832,7 @@ var AutoPlanModal = ({
     color: 'var(--ink-3)',
     marginBottom: 5
   };
-  var numField = (k, label, hint) => React.createElement("label", {
+  var numField = (k, label, hint, max) => React.createElement("label", {
     style: {
       flex: 1,
       minWidth: 0,
@@ -21829,7 +21844,11 @@ var AutoPlanModal = ({
     type: "number",
     inputMode: "numeric",
     value: o[k],
-    onChange: e => set(k, Math.max(0, parseInt(e.target.value) || 0)),
+    max: max,
+    onChange: e => {
+      var n = Math.max(0, parseInt(e.target.value) || 0);
+      set(k, max === undefined ? n : Math.min(n, max));
+    },
     style: fieldCss
   }), hint && React.createElement("span", {
     style: {
@@ -21981,7 +22000,17 @@ var AutoPlanModal = ({
       gap: 9,
       marginBottom: 13
     }
-  }, numField('studentCount', tr('សិស្ស', 'Students'), tr(`កំពុង​រៀន ${pools.students.length}`, `${pools.students.length} active`)), numField('instCount', tr('គ្រូ', 'Instructors'), tr(`មាន ${pools.instructors.length}`, `${pools.instructors.length} total`)), numField('vehCount', tr('ឡាន', 'Cars'), tr(`ប្រើ​បាន ${pools.vehicles.length}`, `${pools.vehicles.length} usable`))), React.createElement("div", {
+  }, numField('studentCount', tr('សិស្ស', 'Students'), tr(`ប្រើ​បាន ${pools.students.length}`, `${pools.students.length} available`), pools.students.length), numField('instCount', tr('គ្រូ', 'Instructors'), tr(`ប្រើ​បាន ${pools.instructors.length}`, `${pools.instructors.length} available`), pools.instructors.length), numField('vehCount', tr('ឡាន', 'Cars'), tr(`ប្រើ​បាន ${pools.vehicles.length}`, `${pools.vehicles.length} available`), pools.vehicles.length)), (leftOut.studentsTotal > pools.students.length || leftOut.vehiclesTotal > pools.vehicles.length) && React.createElement("div", {
+    style: {
+      padding: '9px 12px',
+      borderRadius: 11,
+      marginBottom: 13,
+      lineHeight: 1.65,
+      background: 'rgba(202,138,4,.12)',
+      fontSize: 12,
+      color: '#8A6206'
+    }
+  }, leftOut.studentsTotal > pools.students.length && React.createElement("div", null, tr(`សិស្ស​ក្នុង​ប្រព័ន្ធ ${leftOut.studentsTotal} នាក់ — ប្រើ​បាន ${pools.students.length}`, `${leftOut.studentsTotal} students on the roll, ${pools.students.length} available`), leftOut.studentsFinished ? tr(` · ចប់​វគ្គ​ហើយ ${leftOut.studentsFinished}`, ` · ${leftOut.studentsFinished} finished`) : '', leftOut.studentsOtherGear ? tr(` · ប្រអប់​លេខ​ផ្សេង ${leftOut.studentsOtherGear}`, ` · ${leftOut.studentsOtherGear} on the other gearbox`) : ''), leftOut.vehiclesTotal > pools.vehicles.length && React.createElement("div", null, tr(`ឡាន​ក្នុង​ប្រព័ន្ធ ${leftOut.vehiclesTotal} — ប្រើ​បាន ${pools.vehicles.length}`, `${leftOut.vehiclesTotal} cars in the fleet, ${pools.vehicles.length} available`), leftOut.vehiclesWorkshop ? tr(` · ជួសជុល ${leftOut.vehiclesWorkshop}`, ` · ${leftOut.vehiclesWorkshop} in the workshop`) : '', leftOut.vehiclesOtherGear ? tr(` · ប្រអប់​លេខ​ផ្សេង ${leftOut.vehiclesOtherGear}`, ` · ${leftOut.vehiclesOtherGear} on the other gearbox`) : '')), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 9,

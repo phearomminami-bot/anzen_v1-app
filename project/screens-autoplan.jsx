@@ -24,6 +24,21 @@ const autoPlanOverlaps = (aH, aLen, bH, bLen) => aH < bH + bLen && bH < aH + aLe
 // `trans` of 'MT' or 'AT' narrows it to that gearbox: the cars must match, and
 // so must the students who are already enrolled for one. A student record with
 // no transmission set is left in either way rather than silently dropped.
+const autoPlanLeftOut = (trans) => {
+  const t = trans === 'MT' || trans === 'AT' ? trans : '';
+  const S = (typeof STUDENTS !== 'undefined' ? STUDENTS : []).filter(Boolean);
+  const V = (typeof VEHICLES !== 'undefined' ? VEHICLES : []).filter(Boolean);
+  const finished = s => s.status === 'Completed' || s.status === 'Former' || s.status === 'Cleared';
+  return {
+    studentsTotal: S.length,
+    studentsFinished: S.filter(finished).length,
+    studentsOtherGear: t ? S.filter(s => !finished(s) && s.trans && s.trans !== t).length : 0,
+    vehiclesTotal: V.length,
+    vehiclesWorkshop: V.filter(v => v.status === 'Workshop').length,
+    vehiclesOtherGear: t ? V.filter(v => v.status !== 'Workshop' && v.trans !== t).length : 0,
+  };
+};
+
 const autoPlanPools = (trans) => {
   const t = trans === 'MT' || trans === 'AT' ? trans : '';
   return {
@@ -489,6 +504,7 @@ const AutoPlanModal = ({ open, onClose }) => {
   });
   // Re-read on every render so the hints track the chosen gearbox.
   const pools = autoPlanPools(o.trans);
+  const leftOut = autoPlanLeftOut(o.trans);
   // Changing the gearbox changes which cars and students are in play, so the
   // counts have to follow it rather than keep yesterday's numbers.
   const set = (k, v) => setO(p => {
@@ -538,11 +554,14 @@ const AutoPlanModal = ({ open, onClose }) => {
   };
   const labelCss = { display:'block', fontSize:12, color:'var(--ink-3)', marginBottom:5 };
 
-  const numField = (k, label, hint) => (
+  const numField = (k, label, hint, max) => (
     <label style={{flex:1,minWidth:0,display:'block'}}>
       <span style={labelCss}>{label}</span>
-      <input type="number" inputMode="numeric" value={o[k]}
-        onChange={e => set(k, Math.max(0, parseInt(e.target.value) || 0))} style={fieldCss}/>
+      <input type="number" inputMode="numeric" value={o[k]} max={max}
+        onChange={e => {
+          const n = Math.max(0, parseInt(e.target.value) || 0);
+          set(k, max === undefined ? n : Math.min(n, max));
+        }} style={fieldCss}/>
       {hint && <span style={{display:'block',fontSize:10.5,color:'var(--ink-3)',marginTop:4}}>{hint}</span>}
     </label>
   );
@@ -610,10 +629,29 @@ const AutoPlanModal = ({ open, onClose }) => {
           })}
         </div>
         <div style={{display:'flex',gap:9,marginBottom:13}}>
-          {numField('studentCount', tr('សិស្ស','Students'),     tr(`កំពុង​រៀន ${pools.students.length}`, `${pools.students.length} active`))}
-          {numField('instCount',    tr('គ្រូ','Instructors'),    tr(`មាន ${pools.instructors.length}`, `${pools.instructors.length} total`))}
-          {numField('vehCount',     tr('ឡាន','Cars'),           tr(`ប្រើ​បាន ${pools.vehicles.length}`, `${pools.vehicles.length} usable`))}
+          {numField('studentCount', tr('សិស្ស','Students'),  tr(`ប្រើ​បាន ${pools.students.length}`,    `${pools.students.length} available`),    pools.students.length)}
+          {numField('instCount',    tr('គ្រូ','Instructors'), tr(`ប្រើ​បាន ${pools.instructors.length}`, `${pools.instructors.length} available`), pools.instructors.length)}
+          {numField('vehCount',     tr('ឡាន','Cars'),        tr(`ប្រើ​បាន ${pools.vehicles.length}`,    `${pools.vehicles.length} available`),    pools.vehicles.length)}
         </div>
+        {(leftOut.studentsTotal > pools.students.length || leftOut.vehiclesTotal > pools.vehicles.length) && (
+          <div style={{padding:'9px 12px',borderRadius:11,marginBottom:13,lineHeight:1.65,
+            background:'rgba(202,138,4,.12)',fontSize:12,color:'#8A6206'}}>
+            {leftOut.studentsTotal > pools.students.length && (
+              <div>{tr(`សិស្ស​ក្នុង​ប្រព័ន្ធ ${leftOut.studentsTotal} នាក់ — ប្រើ​បាន ${pools.students.length}`,
+                       `${leftOut.studentsTotal} students on the roll, ${pools.students.length} available`)}
+                {leftOut.studentsFinished ? tr(` · ចប់​វគ្គ​ហើយ ${leftOut.studentsFinished}`, ` · ${leftOut.studentsFinished} finished`) : ''}
+                {leftOut.studentsOtherGear ? tr(` · ប្រអប់​លេខ​ផ្សេង ${leftOut.studentsOtherGear}`, ` · ${leftOut.studentsOtherGear} on the other gearbox`) : ''}
+              </div>
+            )}
+            {leftOut.vehiclesTotal > pools.vehicles.length && (
+              <div>{tr(`ឡាន​ក្នុង​ប្រព័ន្ធ ${leftOut.vehiclesTotal} — ប្រើ​បាន ${pools.vehicles.length}`,
+                       `${leftOut.vehiclesTotal} cars in the fleet, ${pools.vehicles.length} available`)}
+                {leftOut.vehiclesWorkshop ? tr(` · ជួសជុល ${leftOut.vehiclesWorkshop}`, ` · ${leftOut.vehiclesWorkshop} in the workshop`) : ''}
+                {leftOut.vehiclesOtherGear ? tr(` · ប្រអប់​លេខ​ផ្សេង ${leftOut.vehiclesOtherGear}`, ` · ${leftOut.vehiclesOtherGear} on the other gearbox`) : ''}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Time window */}
         <div style={{display:'flex',gap:9,marginBottom:10}}>
