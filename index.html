@@ -21345,8 +21345,11 @@ var autoPlanBuild = o => {
   var existing = (typeof LESSONS !== 'undefined' ? LESSONS : []).filter(l => l && l.status !== 'cancelled');
   var perWeek = Math.max(1, o.weekdays.length);
   var spread = o.minSpanDays > 0 ? Math.max(1, Math.round(o.minSpanDays * perWeek / 7)) : 0;
+  var visits = Math.max(1, Math.ceil(o.totalHours / maxPerDay));
+  var gap = spread ? Math.max(1, Math.round(spread / visits)) : 1;
   var need = new Map(students.map(s => [s.id, o.totalHours]));
-  var daysUsed = new Map(students.map(s => [s.id, 0]));
+  var lastSeen = new Map();
+  var teachIndex = -1;
   var days = [];
   var skipped = 0,
     vehCursor = 0,
@@ -21360,12 +21363,8 @@ var autoPlanBuild = o => {
       var sameDay = existing.filter(l => l.date === iso);
       var todayH = new Map();
       var slots = [];
-      var allowance = new Map(students.map(s => {
-        var rem = need.get(s.id) || 0;
-        if (!spread) return [s.id, maxPerDay];
-        var left = Math.max(1, spread - (daysUsed.get(s.id) || 0));
-        return [s.id, Math.max(minLen, Math.min(maxPerDay, Math.ceil(rem / left)))];
-      }));
+      teachIndex += 1;
+      var due = new Set(students.filter(s => teachIndex - (lastSeen.has(s.id) ? lastSeen.get(s.id) : -gap) >= gap).map(s => s.id));
       grid.forEach(({
         h,
         len: slotLen
@@ -21382,7 +21381,8 @@ var autoPlanBuild = o => {
         var takeFor = s => {
           var rem = need.get(s.id) || 0;
           if (rem <= 0 || busyS.has(s.id)) return 0;
-          var room = (allowance.get(s.id) || maxPerDay) - (todayH.get(s.id) || 0);
+          if (!due.has(s.id) && !(todayH.get(s.id) > 0)) return 0;
+          var room = maxPerDay - (todayH.get(s.id) || 0);
           var take = Math.min(slotLen, rem, room);
           if (take <= 0) return 0;
           return take >= minLen || take >= rem ? take : 0;
@@ -21392,7 +21392,7 @@ var autoPlanBuild = o => {
         var items = queue.slice(0, cap).map((s, k) => {
           var take = takeFor(s);
           need.set(s.id, need.get(s.id) - take);
-          if (!(todayH.get(s.id) > 0)) daysUsed.set(s.id, (daysUsed.get(s.id) || 0) + 1);
+          if (!(todayH.get(s.id) > 0)) lastSeen.set(s.id, teachIndex);
           todayH.set(s.id, (todayH.get(s.id) || 0) + take);
           return {
             student: s,
@@ -22097,7 +22097,7 @@ var AutoPlanModal = ({
       color: 'var(--ink-3)',
       fontSize: 11.5
     }
-  }, tr(`សិស្ស​រៀន​បន្តិច​ម្ដងៗ ដើម្បី​អោយ​វគ្គ​យូរ​យ៉ាង​តិច ${o.minSpanDays} ថ្ងៃ`, `Lessons are thinned out so the course lasts at least ${o.minSpanDays} days`))), React.createElement("span", {
+  }, tr(`សិស្ស​មក​រៀន​មិន​រាល់​ថ្ងៃ — មាន​ថ្ងៃ​សម្រាក​ចន្លោះ ដើម្បី​អោយ​វគ្គ​យូរ​យ៉ាង​តិច ${o.minSpanDays} ថ្ងៃ។ ម៉ោង​ក្នុង ១ វេន​នៅ​ដដែល។`, `Students come in less often, with rest days between, so the course lasts at least ${o.minSpanDays} days. Sittings stay full length.`))), React.createElement("span", {
     style: labelCss
   }, tr('ឈ្មោះ​ក្នុង PDF', 'Names on the sheet')), React.createElement("div", {
     style: {

@@ -77,13 +77,17 @@ const autoPlanBuild = (o) => {
 
   // A minimum course length is given in calendar days, which is how a school
   // thinks about it; pacing happens in teaching days, so convert through the
-  // teaching week. Each student is then rationed to roughly what they have
-  // left divided by the teaching days they still have to fill.
+  // teaching week. A longer course means coming in less often, NOT sitting in
+  // the car for less time — an hour in a two-hour slot wastes the slot and the
+  // student would rather have the full sitting and a rest day after it.
   const perWeek = Math.max(1, o.weekdays.length);
   const spread = o.minSpanDays > 0 ? Math.max(1, Math.round(o.minSpanDays * perWeek / 7)) : 0;
+  const visits = Math.max(1, Math.ceil(o.totalHours / maxPerDay));   // attendances at full load
+  const gap = spread ? Math.max(1, Math.round(spread / visits)) : 1; // teaching days between them
 
   const need = new Map(students.map(s => [s.id, o.totalHours]));
-  const daysUsed = new Map(students.map(s => [s.id, 0]));
+  const lastSeen = new Map();          // teaching-day index of each student's last lesson
+  let teachIndex = -1;
   const days = [];
   let skipped = 0, vehCursor = 0, instCursor = 0;
   let cursor = new Date(o.startDate + 'T00:00:00');
@@ -101,15 +105,11 @@ const autoPlanBuild = (o) => {
       const todayH = new Map();
       const slots = [];
 
-      // How much each student may do today. Without a minimum span this is
-      // simply the daily ceiling; with one it is their remaining hours thinned
-      // across the teaching days they still have to fill.
-      const allowance = new Map(students.map(s => {
-        const rem = need.get(s.id) || 0;
-        if (!spread) return [s.id, maxPerDay];
-        const left = Math.max(1, spread - (daysUsed.get(s.id) || 0));
-        return [s.id, Math.max(minLen, Math.min(maxPerDay, Math.ceil(rem / left)))];
-      }));
+      teachIndex += 1;
+      // Who is due today. With no minimum span everyone is due every day.
+      const due = new Set(students
+        .filter(s => teachIndex - (lastSeen.has(s.id) ? lastSeen.get(s.id) : -gap) >= gap)
+        .map(s => s.id));
 
       grid.forEach(({ h, len: slotLen }) => {
         const clash = o.avoidExisting ? sameDay.filter(l => autoPlanOverlaps(h, slotLen, l.h, l.len || 1)) : [];
@@ -129,7 +129,8 @@ const autoPlanBuild = (o) => {
         const takeFor = (s) => {
           const rem = need.get(s.id) || 0;
           if (rem <= 0 || busyS.has(s.id)) return 0;
-          const room = (allowance.get(s.id) || maxPerDay) - (todayH.get(s.id) || 0);
+          if (!due.has(s.id) && !(todayH.get(s.id) > 0)) return 0;   // resting today
+          const room = maxPerDay - (todayH.get(s.id) || 0);
           const take = Math.min(slotLen, rem, room);
           if (take <= 0) return 0;
           return (take >= minLen || take >= rem) ? take : 0;
@@ -144,7 +145,7 @@ const autoPlanBuild = (o) => {
         const items = queue.slice(0, cap).map((s, k) => {
           const take = takeFor(s);
           need.set(s.id, need.get(s.id) - take);
-          if (!(todayH.get(s.id) > 0)) daysUsed.set(s.id, (daysUsed.get(s.id) || 0) + 1);
+          if (!(todayH.get(s.id) > 0)) lastSeen.set(s.id, teachIndex);
           todayH.set(s.id, (todayH.get(s.id) || 0) + take);
           return {
             student: s, len: take,
@@ -683,8 +684,8 @@ const AutoPlanModal = ({ open, onClose }) => {
           )}
           {ok && o.minSpanDays > 0 && (
             <span style={{display:'block',marginTop:3,color:'var(--ink-3)',fontSize:11.5}}>
-              {tr(`សិស្ស​រៀន​បន្តិច​ម្ដងៗ ដើម្បី​អោយ​វគ្គ​យូរ​យ៉ាង​តិច ${o.minSpanDays} ថ្ងៃ`,
-                  `Lessons are thinned out so the course lasts at least ${o.minSpanDays} days`)}
+              {tr(`សិស្ស​មក​រៀន​មិន​រាល់​ថ្ងៃ — មាន​ថ្ងៃ​សម្រាក​ចន្លោះ ដើម្បី​អោយ​វគ្គ​យូរ​យ៉ាង​តិច ${o.minSpanDays} ថ្ងៃ។ ម៉ោង​ក្នុង ១ វេន​នៅ​ដដែល។`,
+                  `Students come in less often, with rest days between, so the course lasts at least ${o.minSpanDays} days. Sittings stay full length.`)}
             </span>
           )}
         </div>
