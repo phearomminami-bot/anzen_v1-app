@@ -24709,7 +24709,7 @@ var ScheduleScreen = ({
         color: '#CA8A04',
         borderColor: '#CA8A04'
       }
-    }, tr('+ ដាក់​ពាក្យ', '+ Apply')), !studentMode && can(role, 'create', 'lesson') && React.createElement(Btn, {
+    }, tr('+ ដាក់​ពាក្យ', '+ Apply')), role === 'admin' && React.createElement(Btn, {
       kind: "ghost",
       size: "md",
       onClick: () => setAutoPlanOpen(true),
@@ -25399,7 +25399,7 @@ var ScheduleScreen = ({
       name: "download",
       size: 14
     })
-  }, tr('ទាញ​យក PDF (ប្រចាំ​ខែ)', 'Download PDF (month)')), bp.mobile && !studentMode && can(role, 'create', 'lesson') && React.createElement(Btn, {
+  }, tr('ទាញ​យក PDF (ប្រចាំ​ខែ)', 'Download PDF (month)')), bp.mobile && role === 'admin' && React.createElement(Btn, {
     kind: "accent",
     size: "md",
     style: {
@@ -25411,7 +25411,7 @@ var ScheduleScreen = ({
       name: "cal",
       size: 14
     })
-  }, tr('បង្កើត​កាលវិភាគ​ស្វ័យប្រវត្ត', 'Auto-generate schedule')), React.createElement(AutoPlanModal, {
+  }, tr('បង្កើត​កាលវិភាគ​ស្វ័យប្រវត្ត', 'Auto-generate schedule')), role === 'admin' && React.createElement(AutoPlanModal, {
     open: autoPlanOpen,
     onClose: () => setAutoPlanOpen(false)
   }), studentMode ? React.createElement("div", {
