@@ -866,6 +866,8 @@ window.__trRegistry = {
   "Capacity per day": "ចំណុះ ១ ថ្ងៃ",
   "Hours needed": "ម៉ោង​ត្រូវ​ការ​ទាំង​អស់",
   "Generate — preview PDF": "បង្កើត — មើល PDF",
+  "Closed": "បិទ",
+  "Sunday": "ថ្ងៃ​អាទិត្យ",
   "Copy": "ម៉ូដ​ចម្លង",
   "Move": "ម៉ូដ​ផ្លាស់​ទី",
   "')}`.trim()\n                            : (s ? (s.en || s.name) : l.type.split('·": "នាក់",
@@ -1502,7 +1504,6 @@ window.__trRegistry = {
   "IDENTITY": "អត្តសញ្ញាណ",
   "CONTACT": "ការ​ទាក់​ទង​សាធារណៈ",
   "BUSINESS HOURS": "ម៉ោង​ធ្វើ​ការ",
-  "Closed": "បិទ",
   "AI & OCR": "បញ្ញាប្រឌិត",
   "Add an Anthropic API Key to enable automatic ID card scanning in student enrollment.": "បញ្ចូល Anthropic API Key ដើម្បីបើក ស្គេនអត្តសញ្ញាណប័ណ្ណ ស្វ័យប្រវត្ត នៅក្នុងការចុះឈ្មោះសិស្ស។",
   "Test": "សាក",
@@ -2249,6 +2250,8 @@ window.__trGroups = {
     "Rate": "វាយ​តម្លៃ"
   },
   "កាលវិភាគ · Schedule": {
+    "Closed": "ឈប់​សម្រាក",
+    "Sunday": "ថ្ងៃ​អាទិត្យ",
     "Copy": "ចម្លង",
     "Move": "ផ្លាស់ទី",
     "')}`.trim()\n                            : (s ? (s.en || s.name) : l.type.split('·": "នាក់",
@@ -2873,7 +2876,6 @@ window.__trGroups = {
     "IDENTITY": "អត្តសញ្ញាណ",
     "CONTACT": "ការ​ទាក់​ទង​សាធារណៈ",
     "BUSINESS HOURS": "ម៉ោង​ធ្វើ​ការ",
-    "Closed": "បិទ",
     "AI & OCR": "បញ្ញាប្រឌិត",
     "Add an Anthropic API Key to enable automatic ID card scanning in student enrollment.": "បញ្ចូល Anthropic API Key ដើម្បីបើក ស្គេនអត្តសញ្ញាណប័ណ្ណ ស្វ័យប្រវត្ត នៅក្នុងការចុះឈ្មោះសិស្ស។",
     "Test": "សាកល្បង",
@@ -22653,6 +22655,12 @@ var lessonShort = l => {
   return (l.type || '').split('·')[1]?.trim() || '';
 };
 var isSunday = dateStr => !!dateStr && new Date(dateStr + 'T00:00:00').getDay() === 0;
+var holidayFor = dateStr => {
+  var ss = window.__schoolSettings;
+  var list = ss && Array.isArray(ss.scheduleHolidays) ? ss.scheduleHolidays : [];
+  return list.find(h => h && h.date === dateStr) || null;
+};
+var isRestDay = dateStr => isSunday(dateStr) || !!holidayFor(dateStr);
 function WheelPicker({
   items,
   value,
@@ -23084,6 +23092,9 @@ var ScheduleWeek = ({
     var dowEn = (DAYS_EN[km0] || '').toUpperCase();
     var dd0 = (weekDates[0] || today).slice(8, 10);
     var monKm = (typeof KM_MONTHS !== 'undefined' ? KM_MONTHS : [])[d0.getMonth()] || d0.getMonth() + 1;
+    var navDate = weekDates[0] || today;
+    var navHol = holidayFor(navDate);
+    var navRest = isRestDay(navDate);
     return React.createElement("div", {
       style: {
         display: 'flex',
@@ -23091,7 +23102,7 @@ var ScheduleWeek = ({
         gap: 8,
         padding: '10px 10px',
         borderBottom: '1px solid var(--border)',
-        background: 'var(--surface-muted)'
+        background: navRest ? 'rgba(176,65,62,.13)' : 'var(--surface-muted)'
       }
     }, React.createElement("button", {
       onClick: dayNav.onPrev,
@@ -23143,10 +23154,17 @@ var ScheduleWeek = ({
       style: {
         fontSize: 15,
         fontWeight: 700,
-        color: dayNav.isToday ? 'var(--accent)' : 'var(--ink)',
+        color: dayNav.isToday ? 'var(--accent)' : navRest ? '#b0413e' : 'var(--ink)',
         fontFamily: 'var(--font-km)'
       }
-    }, parseInt(dd0), " ", dowKm, " \xB7 ", monKm), React.createElement("input", {
+    }, parseInt(dd0), " ", dowKm, " \xB7 ", monKm), navRest && React.createElement("div", {
+      style: {
+        fontSize: 10.5,
+        fontWeight: 600,
+        color: '#b0413e',
+        fontFamily: 'var(--font-km)'
+      }
+    }, navHol ? navHol.name || tr('ឈប់​សម្រាក', 'Closed') : tr('ថ្ងៃ​អាទិត្យ', 'Sunday')), React.createElement("input", {
       ref: dateInputRef,
       type: "date",
       value: weekDates[0] || today,
@@ -23204,13 +23222,13 @@ var ScheduleWeek = ({
     var {
       available
     } = dayAvailabilitySummary(date);
-    var isSun = isSunday(date);
+    var isSun = isRestDay(date);
     return React.createElement("div", {
       key: date || i,
       style: {
         padding: '12px 10px',
         borderLeft: '1px solid var(--border)',
-        background: isToday ? 'var(--surface-muted)' : isSun ? 'rgba(176,65,62,.07)' : 'transparent'
+        background: isToday ? 'var(--surface-muted)' : isSun ? 'rgba(176,65,62,.13)' : 'transparent'
       }
     }, React.createElement("div", {
       style: {
@@ -23233,7 +23251,21 @@ var ScheduleWeek = ({
         fontWeight: 400,
         color: isSun ? '#b0413e80' : 'var(--ink-3)'
       }
-    }, dayKm)), studentMode && (available > 0 ? React.createElement("div", {
+    }, dayKm)), (() => {
+      var h = holidayFor(date);
+      return h ? React.createElement("div", {
+        style: {
+          fontSize: 9.5,
+          fontWeight: 600,
+          color: '#b0413e',
+          marginTop: 2,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        },
+        title: h.name || ''
+      }, h.name || tr('ឈប់​សម្រាក', 'Closed')) : null;
+    })(), studentMode && (available > 0 ? React.createElement("div", {
       style: {
         fontSize: 9,
         color: 'var(--good)',
@@ -23326,7 +23358,7 @@ var ScheduleWeek = ({
       };
     }).filter(e => e.h >= startHour && e.h < endHour);
     var layout = computeLayout([...dayLessons, ...dayNotes, ...dayExams]);
-    var isSun = isSunday(date);
+    var isSun = isRestDay(date);
     return React.createElement("div", {
       key: dayIdx,
       onDragOver: onMoveLesson ? e => {
@@ -23346,7 +23378,7 @@ var ScheduleWeek = ({
       style: {
         position: 'relative',
         borderLeft: '1px solid var(--border)',
-        background: date === today ? 'rgba(42,93,176,.02)' : isSun ? 'rgba(176,65,62,.04)' : 'transparent'
+        background: date === today ? 'rgba(42,93,176,.02)' : isSun ? 'rgba(176,65,62,.10)' : 'transparent'
       }
     }, hours.map(h => {
       var hlKey = `${date}:${h}`;
@@ -23903,7 +23935,7 @@ var ScheduleMonth = ({
       e
     }))].sort((a, b) => a.time - b.time);
     var avail = studentMode ? dayAvailabilitySummary(date) : null;
-    var isSun = isSunday(date);
+    var isSun = isRestDay(date);
     return React.createElement("div", {
       key: i,
       onClick: studentMode ? undefined : () => openForm('newLesson', {
@@ -23913,7 +23945,7 @@ var ScheduleMonth = ({
         borderLeft: i % 7 ? '1px solid var(--border)' : 'none',
         borderTop: i >= 7 ? '1px solid var(--border)' : 'none',
         padding: compact ? '6px 4px' : '8px 10px',
-        background: isToday ? 'var(--surface-muted)' : isSun ? 'rgba(176,65,62,.05)' : 'transparent',
+        background: isToday ? 'var(--surface-muted)' : isSun ? 'rgba(176,65,62,.12)' : 'transparent',
         display: 'flex',
         flexDirection: 'column',
         gap: compact ? 3 : 4,

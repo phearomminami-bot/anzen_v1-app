@@ -27,6 +27,12 @@ const lessonShort = (l) => {
 };
 
 const isSunday = (dateStr) => !!dateStr && new Date(dateStr + 'T00:00:00').getDay() === 0;
+const holidayFor = (dateStr) => {
+  const ss = window.__schoolSettings;
+  const list = (ss && Array.isArray(ss.scheduleHolidays)) ? ss.scheduleHolidays : [];
+  return list.find(h => h && h.date === dateStr) || null;
+};
+const isRestDay = (dateStr) => isSunday(dateStr) || !!holidayFor(dateStr);
 
 // ── Scroll wheel (iOS-style drum) ────────────────────────────────────────────
 // A single scrolling column; the item snapped to the centre band is selected.
@@ -279,13 +285,22 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
         const dowKm = DAYS_KM[km0] || ''; const dowEn = (DAYS_EN[km0] || '').toUpperCase();
         const dd0 = (weekDates[0] || today).slice(8,10);
         const monKm = (typeof KM_MONTHS !== 'undefined' ? KM_MONTHS : [])[d0.getMonth()] || (d0.getMonth()+1);
+        const navDate = weekDates[0] || today;
+        const navHol  = holidayFor(navDate);
+        const navRest = isRestDay(navDate);
         return (
-          <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 10px',borderBottom:'1px solid var(--border)',background:'var(--surface-muted)'}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 10px',borderBottom:'1px solid var(--border)',
+            background: navRest ? 'rgba(176,65,62,.13)' : 'var(--surface-muted)'}}>
             <button onClick={dayNav.onPrev} style={{width:38,height:38,borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)',cursor:'pointer',fontSize:15,fontWeight:600,color:'var(--ink-2)',flexShrink:0}}>◀</button>
             <button onClick={()=>{ const el=dateInputRef.current; if(el){ try{ el.showPicker ? el.showPicker() : el.click(); }catch(e){ el.click(); } } }}
               style={{flex:1,position:'relative',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:1,padding:'4px 8px',borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)',cursor:'pointer'}}>
               <div style={{fontSize:10,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.05em'}}>{dowEn} 📅</div>
-              <div style={{fontSize:15,fontWeight:700,color: dayNav.isToday ? 'var(--accent)' : 'var(--ink)',fontFamily:'var(--font-km)'}}>{parseInt(dd0)} {dowKm} · {monKm}</div>
+              <div style={{fontSize:15,fontWeight:700,color: dayNav.isToday ? 'var(--accent)' : navRest ? '#b0413e' : 'var(--ink)',fontFamily:'var(--font-km)'}}>{parseInt(dd0)} {dowKm} · {monKm}</div>
+              {navRest && (
+                <div style={{fontSize:10.5,fontWeight:600,color:'#b0413e',fontFamily:'var(--font-km)'}}>
+                  {navHol ? (navHol.name || tr('ឈប់​សម្រាក','Closed')) : tr('ថ្ងៃ​អាទិត្យ','Sunday')}
+                </div>
+              )}
               <input ref={dateInputRef} type="date" value={weekDates[0] || today} onChange={e=>dayNav.onPick(e.target.value)}
                 style={{position:'absolute',inset:0,opacity:0,cursor:'pointer',width:'100%',height:'100%'}}/>
             </button>
@@ -304,13 +319,17 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
           const dayKm = DAYS_KM[kmIdx] || '';
           const dayEnStr = (DAYS_EN[kmIdx] || '').toUpperCase();
           const {available} = dayAvailabilitySummary(date);
-          const isSun = isSunday(date);
+          const isSun = isRestDay(date);
           return (
-            <div key={date||i} style={{padding:'12px 10px',borderLeft:'1px solid var(--border)',background:isToday?'var(--surface-muted)':isSun?'rgba(176,65,62,.07)':'transparent'}}>
+            <div key={date||i} style={{padding:'12px 10px',borderLeft:'1px solid var(--border)',background:isToday?'var(--surface-muted)':isSun?'rgba(176,65,62,.13)':'transparent'}}>
               <div style={{fontSize:11,color:isSun?'#b0413e':'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace',letterSpacing:'.05em'}}>{dayEnStr}</div>
               <div style={{fontSize:18,fontWeight:600,marginTop:2,fontFamily:'var(--font-display)',color:isToday?'var(--accent)':isSun?'#b0413e':'inherit'}}>
                 {dayNum} <span style={{fontSize:11,fontWeight:400,color:isSun?'#b0413e80':'var(--ink-3)'}}>{dayKm}</span>
               </div>
+              {(() => { const h = holidayFor(date); return h ? (
+                <div style={{fontSize:9.5,fontWeight:600,color:'#b0413e',marginTop:2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}
+                  title={h.name || ''}>{h.name || tr('ឈប់​សម្រាក','Closed')}</div>
+              ) : null; })()}
               {studentMode && (
                 available > 0
                   ? <div style={{fontSize:9,color:'var(--good)',fontFamily:'"JetBrains Mono",monospace',marginTop:2}}>{available} ទំនេរ</div>
@@ -374,7 +393,7 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
             return { ...e, h: hh + (mm||0)/60, len: e.len || 2, _exam: true };
           }).filter(e => e.h >= startHour && e.h < endHour);
           const layout = computeLayout([...dayLessons, ...dayNotes, ...dayExams]);
-          const isSun = isSunday(date);
+          const isSun = isRestDay(date);
           return (
             <div key={dayIdx}
               onDragOver={onMoveLesson ? (e)=>{ e.preventDefault(); e.dataTransfer.dropEffect='move'; } : undefined}
@@ -388,7 +407,7 @@ const ScheduleWeek = ({ lessons = LESSONS, studentMode = false, weekDates = [], 
                 nh = Math.max(startHour, Math.min(endHour - 1, nh));
                 onMoveLesson(lesson, date, nh);
               } : undefined}
-              style={{position:'relative',borderLeft:'1px solid var(--border)',background:date===today?'rgba(42,93,176,.02)':isSun?'rgba(176,65,62,.04)':'transparent'}}>
+              style={{position:'relative',borderLeft:'1px solid var(--border)',background:date===today?'rgba(42,93,176,.02)':isSun?'rgba(176,65,62,.10)':'transparent'}}>
               {hours.map(h => {
                 const hlKey = `${date}:${h}`;
                 const hlBg = highlights[hlKey] || '';
@@ -621,7 +640,7 @@ const ScheduleMonth = ({ lessons = LESSONS, studentMode = false, weekDates = [],
             ...dayExams.map(e => ({ t:'exam', time: parseInt(String(e.time||'0').slice(0,2)) || 0, e })),
           ].sort((a,b) => a.time - b.time);
           const avail = studentMode ? dayAvailabilitySummary(date) : null;
-          const isSun = isSunday(date);
+          const isSun = isRestDay(date);
           return (
             <div key={i}
               onClick={studentMode ? undefined : ()=>openForm('newLesson',{date})}
@@ -629,7 +648,7 @@ const ScheduleMonth = ({ lessons = LESSONS, studentMode = false, weekDates = [],
                 borderLeft: i%7 ? '1px solid var(--border)':'none',
                 borderTop: i>=7 ? '1px solid var(--border)':'none',
                 padding:compact?'6px 4px':'8px 10px',
-                background: isToday ? 'var(--surface-muted)' : isSun ? 'rgba(176,65,62,.05)' : 'transparent',
+                background: isToday ? 'var(--surface-muted)' : isSun ? 'rgba(176,65,62,.12)' : 'transparent',
                 display:'flex',flexDirection:'column',gap:compact?3:4,
                 minWidth:0, minHeight:0, overflow:'hidden', cursor:studentMode?'default':'pointer',
               }}>
