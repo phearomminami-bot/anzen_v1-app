@@ -57,16 +57,24 @@ const autoPlanPools = (trans) => {
 // and cars, then numbered stand-ins for whatever was asked for beyond them.
 const autoPlanRoster = (o) => {
   const pools = autoPlanPools(o.trans);
-  const pad = (real, want, make) => {
+  // A count takes whoever is at the top of the list, which is right for "what
+  // if twenty enrolled" and wrong once the plan is for particular people. A
+  // pick names them; an empty pick falls back to the count.
+  const take = (real, want, pick, make) => {
+    const chosen = (pick || []).filter(Boolean);
+    if (chosen.length) {
+      const by = new Set(chosen);
+      return real.filter(x => by.has(x.id));
+    }
     const out = real.slice(0, Math.max(0, want));
     for (let n = out.length; n < want; n++) out.push(make(n + 1));
     return out;
   };
-  const students = pad(pools.students, o.studentCount,
+  const students = take(pools.students, o.studentCount, o.pickS,
     n => ({ id: 'NEW-S' + n, name: 'សិស្សថ្មី ' + n, en: 'New student ' + n, newSeq: n, isNew: true }));
-  const instructors = pad(pools.instructors, o.instCount,
+  const instructors = take(pools.instructors, o.instCount, o.pickI,
     n => ({ id: 'NEW-I' + n, name: 'គ្រូថ្មី ' + n, en: 'New instructor ' + n, newSeq: n, isNew: true }));
-  const vehicles = pad(pools.vehicles, o.vehCount,
+  const vehicles = take(pools.vehicles, o.vehCount, o.pickV,
     n => ({ id: 'NEW-V' + n, plate: '', trans: o.trans || '', newSeq: n, isNew: true }));
   return {
     students, instructors, vehicles, pools,
@@ -527,7 +535,7 @@ const autoPlanPDF = (plan, o, onSave, lang) => {
 
 // ── The form ────────────────────────────────────────────────────────────────
 const AutoPlanModal = ({ open, onClose }) => {
-  const { tr, toast } = useAppActions();
+  const { tr, toast, lang } = useAppActions();
   const [o, setO] = React.useState(() => {
     const p0 = autoPlanPools('');
     return {
@@ -539,15 +547,21 @@ const AutoPlanModal = ({ open, onClose }) => {
     dayStart: 7, dayEnd: 18, lunchFrom: 12, lunchTo: 13,
     totalHours: 20, minLen: 1, maxLen: 2, maxPerDay: 2, minSpanDays: 0, gapDays: 1,
     phase: 'KH', trans: '', avoidExisting: true, view: 'table',
+    pickS: [], pickI: [], pickV: [], picking: false,
     names: 'generic', pdfLang: 'en',
     };
   });
   // Re-read on every render so the hints track the chosen gearbox.
   const pools = autoPlanPools(o.trans);
   const leftOut = autoPlanLeftOut(o.trans);
-  const projected = o.studentCount > pools.students.length
-    || o.instCount > pools.instructors.length
-    || o.vehCount > pools.vehicles.length;
+  // A named pick decides its own count; the number field follows it.
+  const pickLen = { pickS: (o.pickS || []).length, pickI: (o.pickI || []).length, pickV: (o.pickV || []).length };
+  const nS = pickLen.pickS || o.studentCount;
+  const nI = pickLen.pickI || o.instCount;
+  const nV = pickLen.pickV || o.vehCount;
+  const projected = nS > pools.students.length
+    || nI > pools.instructors.length
+    || nV > pools.vehicles.length;
   // Changing the gearbox changes which cars and students are in play, so the
   // counts have to follow it rather than keep yesterday's numbers.
   const set = (k, v) => setO(p => {
@@ -569,9 +583,9 @@ const AutoPlanModal = ({ open, onClose }) => {
   const slotGrid = autoPlanSlots(o);                                // the day, cut up
   const openHours = slotGrid.reduce((n, sl) => n + sl.len, 0);      // teachable, after cutting
   const perDay  = slotGrid.length;                                  // sittings in a day
-  const atOnce  = Math.min(o.instCount, o.vehCount);                // lessons side by side
+  const atOnce  = Math.min(nI, nV);                // lessons side by side
   const cap     = atOnce * openHours;                               // teachable hours a day
-  const totalHoursNeeded = o.studentCount * o.totalHours;
+  const totalHoursNeeded = nS * o.totalHours;
   const perStudentDay = Math.max(1, Math.min(o.maxPerDay, o.maxLen * perDay));
   // Two floors on the length: nobody may exceed their daily ceiling, and the
   // school can only teach `cap` hours a day. The longer one wins — and a
@@ -599,17 +613,68 @@ const AutoPlanModal = ({ open, onClose }) => {
   };
   const labelCss = { display:'block', fontSize:12, color:'var(--ink-3)', marginBottom:5 };
 
-  const numField = (k, label, hint, max) => (
-    <label style={{flex:1,minWidth:0,display:'block'}}>
-      <span style={labelCss}>{label}</span>
-      <input type="number" inputMode="numeric" value={o[k]} max={max}
-        onChange={e => {
-          const n = Math.max(0, parseInt(e.target.value) || 0);
-          set(k, max === undefined ? n : Math.min(n, max));
-        }} style={fieldCss}/>
-      {hint && <span style={{display:'block',fontSize:10.5,color:'var(--ink-3)',marginTop:4}}>{hint}</span>}
-    </label>
-  );
+  // `pickKey` set and non-empty means the count is decided by the names chosen,
+  // so the field shows that number and stops taking input.
+  const numField = (k, label, hint, max, pickKey, shown) => {
+    const locked = pickKey && (o[pickKey] || []).length > 0;
+    return (
+      <label style={{flex:1,minWidth:0,display:'block'}}>
+        <span style={labelCss}>{label}</span>
+        <input type="number" inputMode="numeric" readOnly={locked}
+          value={locked ? shown : o[k]} max={max}
+          onChange={e => {
+            if (locked) return;
+            const n = Math.max(0, parseInt(e.target.value) || 0);
+            set(k, max === undefined ? n : Math.min(n, max));
+          }}
+          style={{...fieldCss,
+            background: locked ? 'var(--accent-soft)' : fieldCss.background,
+            borderColor: locked ? 'var(--accent)' : 'var(--border)',
+            color: locked ? 'var(--accent)' : fieldCss.color}}/>
+        {hint && <span style={{display:'block',fontSize:10.5,color: locked ? 'var(--accent)' : 'var(--ink-3)',marginTop:4}}>{hint}</span>}
+      </label>
+    );
+  };
+
+  // One group of pickable chips. All and Clear carry most of the work: a
+  // school usually wants everyone but two, or only two.
+  const pickGroup = (key, label, list, labelOf) => {
+    const on = o[key] || [];
+    const toggle = (id) => set(key, on.includes(id) ? on.filter(x => x !== id) : [...on, id]);
+    return (
+      <div style={{marginBottom:12}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:7}}>
+          <span style={{fontSize:12,fontWeight:700,color:'var(--ink-2)'}}>{label}</span>
+          <span style={{fontSize:11,color:'var(--ink-3)'}}>{on.length ? `${on.length}/${list.length}` : tr(`ទាំងអស់ ${list.length}`, `all ${list.length}`)}</span>
+          <span style={{marginLeft:'auto',display:'flex',gap:8}}>
+            <button type="button" onClick={() => set(key, list.map(x => x.id))}
+              style={{border:'none',background:'transparent',cursor:'pointer',fontFamily:'inherit',fontSize:11,fontWeight:600,color:'var(--accent)'}}>{tr('ទាំងអស់','All')}</button>
+            {on.length > 0 && (
+              <button type="button" onClick={() => set(key, [])}
+                style={{border:'none',background:'transparent',cursor:'pointer',fontFamily:'inherit',fontSize:11,fontWeight:600,color:'var(--ink-3)'}}>{tr('សម្អាត','Clear')}</button>
+            )}
+          </span>
+        </div>
+        {list.length === 0 ? (
+          <div style={{fontSize:11.5,color:'var(--ink-3)'}}>{tr('គ្មាន​ក្នុង​ប្រព័ន្ធ','None on record')}</div>
+        ) : (
+          <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+            {list.map(x => {
+              const sel = on.includes(x.id);
+              return (
+                <button key={x.id} type="button" onClick={() => toggle(x.id)}
+                  style={{padding:'7px 11px',borderRadius:999,cursor:'pointer',fontFamily:'inherit',
+                    fontSize:12,fontWeight: sel ? 700 : 500,
+                    border: sel ? 'none' : '1px solid var(--border)',
+                    background: sel ? 'var(--accent)' : 'var(--surface)',
+                    color: sel ? '#fff' : 'var(--ink-2)'}}>{labelOf(x)}</button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
   const hourField = (k, label) => (
     <label style={{flex:1,minWidth:0,display:'block'}}>
       <span style={labelCss}>{label}</span>
@@ -632,7 +697,7 @@ const AutoPlanModal = ({ open, onClose }) => {
   const run = () => {
     if (!o.weekdays.length)   { toast(tr('ជ្រើស​ថ្ងៃ​រៀន​យ៉ាង​តិច​មួយ','Pick at least one weekday'), 'warn'); return; }
     if (o.dayEnd <= o.dayStart) { toast(tr('ម៉ោង​បិទ​ត្រូវ​ក្រោយ​ម៉ោង​បើក','Closing time must be after opening'), 'warn'); return; }
-    if (!o.studentCount || !o.instCount || !o.vehCount) { toast(tr('ត្រូវ​មាន​សិស្ស គ្រូ និង​ឡាន','Need students, instructors and cars'), 'warn'); return; }
+    if (!nS || !nI || !nV) { toast(tr('ត្រូវ​មាន​សិស្ស គ្រូ និង​ឡាន','Need students, instructors and cars'), 'warn'); return; }
     if (!ok) { toast(blockReason, 'warn'); return; }
 
     const plan = autoPlanBuild(o);
@@ -674,10 +739,42 @@ const AutoPlanModal = ({ open, onClose }) => {
           })}
         </div>
         <div style={{display:'flex',gap:9,marginBottom:13}}>
-          {numField('studentCount', tr('សិស្ស','Students'),  tr(`ក្នុង​បញ្ជី ${pools.students.length}`,    `${pools.students.length} on the roll`))}
-          {numField('instCount',    tr('គ្រូ','Instructors'), tr(`ក្នុង​បញ្ជី ${pools.instructors.length}`, `${pools.instructors.length} on staff`))}
-          {numField('vehCount',     tr('ឡាន','Cars'),        tr(`ក្នុង​បញ្ជី ${pools.vehicles.length}`,    `${pools.vehicles.length} in the fleet`))}
+          {numField('studentCount', tr('សិស្ស','Students'),  pickLen.pickS ? tr('តាម​ឈ្មោះ','by name')  : tr(`ក្នុង​បញ្ជី ${pools.students.length}`,    `${pools.students.length} on the roll`),   undefined, 'pickS', nS)}
+          {numField('instCount',    tr('គ្រូ','Instructors'), pickLen.pickI ? tr('តាម​ឈ្មោះ','by name')  : tr(`ក្នុង​បញ្ជី ${pools.instructors.length}`, `${pools.instructors.length} on staff`),   undefined, 'pickI', nI)}
+          {numField('vehCount',     tr('ឡាន','Cars'),        pickLen.pickV ? tr('តាម​ផ្លាក','by plate') : tr(`ក្នុង​បញ្ជី ${pools.vehicles.length}`,    `${pools.vehicles.length} in the fleet`), undefined, 'pickV', nV)}
         </div>
+
+        {/* Counts take whoever is at the top of the list, which stops being
+            what you want as soon as the plan is for particular people. */}
+        <button type="button" onClick={() => set('picking', !o.picking)}
+          style={{display:'flex',alignItems:'center',gap:8,width:'100%',boxSizing:'border-box',marginBottom:13,padding:'11px 13px',
+            borderRadius:12,cursor:'pointer',fontFamily:'inherit',textAlign:'left',
+            border:'1px solid var(--border)',background:'var(--surface-muted)'}}>
+          <Icon name="cap" size={18}/>
+          <span style={{flex:1,minWidth:0,fontSize:12.5,fontWeight:600,color:'var(--ink-2)'}}>
+            {tr('ជ្រើស​ឈ្មោះ​ដោយ​ខ្លួន​ឯង','Choose who takes part')}
+          </span>
+          {(pickLen.pickS + pickLen.pickI + pickLen.pickV) > 0 && (
+            <span style={{fontSize:11,fontWeight:700,color:'#fff',background:'var(--accent)',borderRadius:999,padding:'2px 8px'}}>
+              {pickLen.pickS + pickLen.pickI + pickLen.pickV}
+            </span>
+          )}
+          <span style={{fontSize:12,color:'var(--ink-3)'}}>{o.picking ? '▴' : '▾'}</span>
+        </button>
+
+        {o.picking && (
+          <div style={{marginBottom:13,padding:'13px 14px',borderRadius:14,background:'var(--surface-muted)',border:'1px solid var(--border)'}}>
+            {pickGroup('pickS', tr('សិស្ស','Students'), pools.students,
+              x => (lang === 'km' ? (x.name || x.en) : (x.en || x.name)) || x.id)}
+            {pickGroup('pickI', tr('គ្រូ','Instructors'), pools.instructors,
+              x => (lang === 'km' ? (x.name || x.en) : (x.en || x.name)) || x.id)}
+            {pickGroup('pickV', tr('ឡាន','Cars'), pools.vehicles,
+              x => (x.plate || x.id) + (x.trans ? ' · ' + x.trans : ''))}
+            <div style={{fontSize:11,color:'var(--ink-3)',lineHeight:1.6}}>
+              {tr('មិន​ជ្រើស = យក​តាម​ចំនួន​ខាង​លើ','Nothing chosen = go by the counts above')}
+            </div>
+          </div>
+        )}
         {projected ? (
           <div style={{padding:'9px 12px',borderRadius:11,marginBottom:13,lineHeight:1.65,
             background:'rgba(202,138,4,.12)',fontSize:12,color:'#8A6206'}}>
