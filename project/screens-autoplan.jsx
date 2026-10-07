@@ -63,8 +63,9 @@ const autoPlanRoster = (o) => {
   const take = (real, want, pick, make) => {
     const chosen = (pick || []).filter(Boolean);
     if (chosen.length) {
-      const by = new Set(chosen);
-      return real.filter(x => by.has(x.id));
+      // Kept in the order they were picked, not the order of the roll: the
+      // planner takes the earliest sitting for whoever comes first here.
+      return chosen.map(id => real.find(x => x.id === id)).filter(Boolean);
     }
     const out = real.slice(0, Math.max(0, want));
     for (let n = out.length; n < want; n++) out.push(make(n + 1));
@@ -660,14 +661,22 @@ const AutoPlanModal = ({ open, onClose }) => {
         ) : (
           <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
             {list.map(x => {
-              const sel = on.includes(x.id);
+              const at = on.indexOf(x.id);
+              const sel = at >= 0;
               return (
                 <button key={x.id} type="button" onClick={() => toggle(x.id)}
-                  style={{padding:'7px 11px',borderRadius:999,cursor:'pointer',fontFamily:'inherit',
+                  style={{display:'inline-flex',alignItems:'center',gap:6,padding: sel ? '7px 11px 7px 7px' : '7px 11px',
+                    borderRadius:999,cursor:'pointer',fontFamily:'inherit',
                     fontSize:12,fontWeight: sel ? 700 : 500,
                     border: sel ? 'none' : '1px solid var(--border)',
                     background: sel ? 'var(--accent)' : 'var(--surface)',
-                    color: sel ? '#fff' : 'var(--ink-2)'}}>{labelOf(x)}</button>
+                    color: sel ? '#fff' : 'var(--ink-2)'}}>
+                  {sel && (
+                    <span style={{flexShrink:0,width:18,height:18,borderRadius:999,background:'rgba(255,255,255,.25)',
+                      display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:10.5,fontWeight:800}}>{at + 1}</span>
+                  )}
+                  {labelOf(x)}
+                </button>
               );
             })}
           </div>
@@ -771,6 +780,9 @@ const AutoPlanModal = ({ open, onClose }) => {
             {pickGroup('pickV', tr('ឡាន','Cars'), pools.vehicles,
               x => (x.plate || x.id) + (x.trans ? ' · ' + x.trans : ''))}
             <div style={{fontSize:11,color:'var(--ink-3)',lineHeight:1.6}}>
+              {tr('លេខ​លើ​ឈ្មោះ = លំដាប់​រៀន។ អ្នក​ប៉ះ​មុន​គេ​បាន​ម៉ោង​មុន​គេ — ប៉ះ​ម្ដង​ទៀត​ដើម្បី​ដក​ចេញ។',
+                  'The number on a name is its turn: whoever is picked first gets the earliest sitting. Tap again to remove.')}
+              <br/>
               {tr('មិន​ជ្រើស = យក​តាម​ចំនួន​ខាង​លើ','Nothing chosen = go by the counts above')}
             </div>
           </div>
