@@ -873,6 +873,14 @@ window.__trRegistry = {
   "No lessons scheduled": "គ្មាន​មេរៀន",
   "')}`.trim() : (s ? s.name : l.type))}</div>\n                    <div style={{fontSize:11,color:'var(--ink-3)": "នាក់",
   "Available slots": "ម៉ោង​ដែល​អាច​កក់​បាន",
+  "That day is already listed": "ថ្ងៃ​នេះ​មាន​រួច​ហើយ",
+  "Added": "បានបន្ថែម",
+  "Closed days": "ថ្ងៃ​ឈប់​សម្រាក",
+  "The auto planner skips these days": "កាលវិភាគ​ស្វ័យប្រវត្ត​នឹង​វៀស​ថ្ងៃ​ទាំង​នេះ",
+  "Name (optional)": "ឈ្មោះ (មិន​ចាំបាច់)",
+  "e.g. Public holiday": "ឧ. បុណ្យ​ជាតិ",
+  "Add closed day": "បន្ថែម​ថ្ងៃ​ឈប់",
+  "No closed days yet": "មិន​ទាន់​មាន​ថ្ងៃ​ឈប់",
   "Admin": "នាយក",
   "Class copied ✓": "បាន​ចម្លង​ថ្នាក់រៀន ✓",
   "Pasted copy ✓": "បាន​ដាក់​ច្បាប់​ចម្លង ✓",
@@ -1044,7 +1052,6 @@ window.__trRegistry = {
   "Add quiz": "បន្ថែម​លំហាត់",
   "Google Form exercise": "លំហាត់ Google Form",
   "question' + (qCount===1?'':'s": "សំណួរ",
-  "Added": "បានបន្ថែម",
   "Delete this item?": "លុប​ទំនិញ​នេះ?",
   "Removed": "បានលុប",
   "LESSON LIBRARY": "បណ្ណាល័យ​មេរៀន",
@@ -2249,6 +2256,14 @@ window.__trGroups = {
     "No lessons scheduled": "គ្មាន​មេរៀន",
     "')}`.trim() : (s ? s.name : l.type))}</div>\n                    <div style={{fontSize:11,color:'var(--ink-3)": "នាក់",
     "Available slots": "ម៉ោង​ដែល​អាច​កក់​បាន",
+    "That day is already listed": "ថ្ងៃ​នេះ​មាន​រួច​ហើយ",
+    "Added": "បាន​បន្ថែម",
+    "Closed days": "ថ្ងៃ​ឈប់​សម្រាក",
+    "The auto planner skips these days": "កាលវិភាគ​ស្វ័យប្រវត្ត​នឹង​វៀស​ថ្ងៃ​ទាំង​នេះ",
+    "Name (optional)": "ឈ្មោះ (មិន​ចាំបាច់)",
+    "e.g. Public holiday": "ឧ. បុណ្យ​ជាតិ",
+    "Add closed day": "បន្ថែម​ថ្ងៃ​ឈប់",
+    "No closed days yet": "មិន​ទាន់​មាន​ថ្ងៃ​ឈប់",
     "Admin": "នាយក",
     "Class copied ✓": "បាន​ចម្លង​ថ្នាក់រៀន ✓",
     "Pasted copy ✓": "បាន​ដាក់​ច្បាប់​ចម្លង ✓",
@@ -2424,7 +2439,6 @@ window.__trGroups = {
     "Add quiz": "បន្ថែម",
     "Google Form exercise": "លំហាត់ Google Form",
     "question' + (qCount===1?'':'s": "សំណួរ",
-    "Added": "បាន​បន្ថែម",
     "Delete this item?": "លុប​មេរៀន?",
     "Removed": "បាន​លុប",
     "LESSON LIBRARY": "បណ្ណាល័យ​មេរៀន",
@@ -21391,6 +21405,11 @@ var autoPlanRoster = o => {
     projected: [...students, ...instructors, ...vehicles].some(x => x.isNew)
   };
 };
+var autoPlanClosed = () => {
+  var ss = window.__schoolSettings;
+  var list = ss && Array.isArray(ss.scheduleHolidays) ? ss.scheduleHolidays : [];
+  return new Set(list.map(h => h && h.date).filter(Boolean));
+};
 var autoPlanSlots = o => {
   var maxLen = Math.max(1, o.maxLen),
     minLen = Math.max(1, Math.min(o.minLen, maxLen));
@@ -21423,6 +21442,8 @@ var autoPlanBuild = o => {
   var spread = o.minSpanDays > 0 ? Math.max(1, Math.round(o.minSpanDays * perWeek / 7)) : 0;
   var visits = Math.max(1, Math.ceil(o.totalHours / maxPerDay));
   var gap = Math.max(1, o.gapDays || 1, spread ? Math.round(spread / visits) : 1);
+  var closed = o.skipClosed === false ? new Set() : autoPlanClosed();
+  var closedHit = 0;
   var need = new Map(students.map(s => [s.id, o.totalHours]));
   var lastSeen = new Map();
   var teachIndex = -1;
@@ -21433,75 +21454,83 @@ var autoPlanBuild = o => {
   var cursor = new Date(o.startDate + 'T00:00:00');
   if (isNaN(cursor.getTime())) cursor = new Date();
   var _loop = function () {
-    if (![...need.values()].some(v => v > 0)) return 1;
-    var iso = autoPlanISO(cursor);
-    if (o.weekdays.includes(cursor.getDay()) && students.length && instructors.length && vehicles.length && grid.length) {
-      var sameDay = existing.filter(l => l.date === iso);
-      var todayH = new Map();
-      var slots = [];
-      teachIndex += 1;
-      var due = new Set(students.filter(s => teachIndex - (lastSeen.has(s.id) ? lastSeen.get(s.id) : -gap) >= gap).map(s => s.id));
-      grid.forEach(({
-        h,
-        len: slotLen
-      }) => {
-        var clash = o.avoidExisting ? sameDay.filter(l => autoPlanOverlaps(h, slotLen, l.h, l.len || 1)) : [];
-        var busyI = new Set(clash.map(l => l.instId).filter(Boolean));
-        var busyV = new Set(clash.map(l => l.veh).filter(Boolean));
-        var busyS = new Set(clash.map(l => l.studentId).filter(Boolean));
-        skipped += clash.length;
-        var freeI = instructors.filter(i => !busyI.has(i.id));
-        var freeV = vehicles.filter(v => !busyV.has(v.id));
-        var cap = Math.min(freeI.length, freeV.length);
-        if (cap <= 0) return;
-        var takeFor = s => {
-          var rem = need.get(s.id) || 0;
-          if (rem <= 0 || busyS.has(s.id)) return 0;
-          if (!due.has(s.id) && !(todayH.get(s.id) > 0)) return 0;
-          var room = maxPerDay - (todayH.get(s.id) || 0);
-          var take = Math.min(slotLen, rem, room);
-          if (take <= 0) return 0;
-          return take >= minLen || take >= rem ? take : 0;
-        };
-        var dueAt = s => lastSeen.has(s.id) ? lastSeen.get(s.id) + gap : Infinity;
-        var queue = students.filter(s => takeFor(s) > 0).sort((a, b) => {
-          var da = dueAt(a),
-            db = dueAt(b);
-          if (da !== db) return da - db;
-          return (need.get(b.id) || 0) - (need.get(a.id) || 0);
-        });
-        if (!queue.length) return;
-        var items = queue.slice(0, cap).map((s, k) => {
-          var take = takeFor(s);
-          need.set(s.id, need.get(s.id) - take);
-          if (!(todayH.get(s.id) > 0)) lastSeen.set(s.id, teachIndex);
-          todayH.set(s.id, (todayH.get(s.id) || 0) + take);
-          return {
-            student: s,
-            len: take,
-            inst: freeI[(instCursor + k) % freeI.length],
-            veh: freeV[(vehCursor + k) % freeV.length]
-          };
-        });
-        vehCursor = (vehCursor + items.length) % freeV.length;
-        instCursor = (instCursor + items.length) % freeI.length;
-        slots.push({
+      if (![...need.values()].some(v => v > 0)) return 0;
+      var iso = autoPlanISO(cursor);
+      if (closed.has(iso)) {
+        closedHit += 1;
+        cursor = new Date(cursor.getTime() + 86400000);
+        return 1;
+      }
+      if (o.weekdays.includes(cursor.getDay()) && students.length && instructors.length && vehicles.length && grid.length) {
+        var sameDay = existing.filter(l => l.date === iso);
+        var todayH = new Map();
+        var slots = [];
+        teachIndex += 1;
+        var due = new Set(students.filter(s => teachIndex - (lastSeen.has(s.id) ? lastSeen.get(s.id) : -gap) >= gap).map(s => s.id));
+        grid.forEach(({
           h,
-          len: slotLen,
-          items,
-          clashes: clash.length
+          len: slotLen
+        }) => {
+          var clash = o.avoidExisting ? sameDay.filter(l => autoPlanOverlaps(h, slotLen, l.h, l.len || 1)) : [];
+          var busyI = new Set(clash.map(l => l.instId).filter(Boolean));
+          var busyV = new Set(clash.map(l => l.veh).filter(Boolean));
+          var busyS = new Set(clash.map(l => l.studentId).filter(Boolean));
+          skipped += clash.length;
+          var freeI = instructors.filter(i => !busyI.has(i.id));
+          var freeV = vehicles.filter(v => !busyV.has(v.id));
+          var cap = Math.min(freeI.length, freeV.length);
+          if (cap <= 0) return;
+          var takeFor = s => {
+            var rem = need.get(s.id) || 0;
+            if (rem <= 0 || busyS.has(s.id)) return 0;
+            if (!due.has(s.id) && !(todayH.get(s.id) > 0)) return 0;
+            var room = maxPerDay - (todayH.get(s.id) || 0);
+            var take = Math.min(slotLen, rem, room);
+            if (take <= 0) return 0;
+            return take >= minLen || take >= rem ? take : 0;
+          };
+          var dueAt = s => lastSeen.has(s.id) ? lastSeen.get(s.id) + gap : Infinity;
+          var queue = students.filter(s => takeFor(s) > 0).sort((a, b) => {
+            var da = dueAt(a),
+              db = dueAt(b);
+            if (da !== db) return da - db;
+            return (need.get(b.id) || 0) - (need.get(a.id) || 0);
+          });
+          if (!queue.length) return;
+          var items = queue.slice(0, cap).map((s, k) => {
+            var take = takeFor(s);
+            need.set(s.id, need.get(s.id) - take);
+            if (!(todayH.get(s.id) > 0)) lastSeen.set(s.id, teachIndex);
+            todayH.set(s.id, (todayH.get(s.id) || 0) + take);
+            return {
+              student: s,
+              len: take,
+              inst: freeI[(instCursor + k) % freeI.length],
+              veh: freeV[(vehCursor + k) % freeV.length]
+            };
+          });
+          vehCursor = (vehCursor + items.length) % freeV.length;
+          instCursor = (instCursor + items.length) % freeI.length;
+          slots.push({
+            h,
+            len: slotLen,
+            items,
+            clashes: clash.length
+          });
         });
-      });
-      if (slots.length) days.push({
-        date: iso,
-        dow: cursor.getDay(),
-        slots
-      });
-    }
-    cursor = new Date(cursor.getTime() + 86400000);
-  };
+        if (slots.length) days.push({
+          date: iso,
+          dow: cursor.getDay(),
+          slots
+        });
+      }
+      cursor = new Date(cursor.getTime() + 86400000);
+    },
+    _ret;
   for (var guard = 0; guard < 1100; guard++) {
-    if (_loop()) break;
+    _ret = _loop();
+    if (_ret === 0) break;
+    if (_ret === 1) continue;
   }
   var sessions = days.reduce((n, d) => n + d.slots.reduce((m, s) => m + s.items.length, 0), 0);
   return {
@@ -21515,6 +21544,7 @@ var autoPlanBuild = o => {
       sessions,
       hoursEach: o.totalHours,
       skipped,
+      closed: closedHit,
       short: [...need.entries()].filter(([, v]) => v > 0).length,
       from: days.length ? days[0].date : '—',
       to: days.length ? days[days.length - 1].date : '—'
@@ -21717,7 +21747,7 @@ var autoPlanPDF = (plan, o, onSave, lang) => {
       ${tile(st.dayCount, L('ថ្ងៃរៀន', 'Teaching days'), '#EAF1FF', '#1A4F96')}
       ${tile(st.sessions, L('វគ្គសរុប', 'Total sessions'), '#E7F7EE', '#12804A')}
       ${tile(st.hoursEach + 'h', L('ម៉ោង / សិស្ស', 'Hours each'), '#FEF3E2', '#B25E09')}
-      ${tile(st.skipped, L('ម៉ោងជាន់គ្នា — វៀស', 'Clashes avoided'), '#F0F2F6', '#475467')}
+      ${tile(st.closed || 0, L('ថ្ងៃឈប់ — វៀស', 'Closed days skipped'), '#F0F2F6', '#475467')}
     </div>
     ${o.view === 'calendar' ? monthGrid() : plan.days.map(dayBlock).join('')}
     ${st.short ? `<div style="margin-top:11px;padding:8px 10px;border-radius:8px;background:#FDECE7;font-size:10.5px;color:#8A2C06;line-height:1.6">
@@ -21865,6 +21895,7 @@ var AutoPlanModal = ({
   });
   var pools = autoPlanPools(o.trans);
   var leftOut = autoPlanLeftOut(o.trans);
+  var closedCount = autoPlanClosed().size;
   var pickLen = {
     pickS: (o.pickS || []).length,
     pickI: (o.pickI || []).length,
@@ -22415,7 +22446,14 @@ var AutoPlanModal = ({
       color: '#B25E09',
       fontSize: 11.5
     }
-  }, tr(`នៅ​សល់ ${idleHours} ម៉ោង​មិន​បាន​ប្រើ — បន្ថយ «រៀន​ម្ដង យ៉ាង​តិច»`, `${idleHours}h of the day goes unused — lower the shortest sitting`)), ok && o.minSpanDays > 0 && React.createElement("span", {
+  }, tr(`នៅ​សល់ ${idleHours} ម៉ោង​មិន​បាន​ប្រើ — បន្ថយ «រៀន​ម្ដង យ៉ាង​តិច»`, `${idleHours}h of the day goes unused — lower the shortest sitting`)), ok && closedCount > 0 && React.createElement("span", {
+    style: {
+      display: 'block',
+      marginTop: 3,
+      color: 'var(--ink-3)',
+      fontSize: 11.5
+    }
+  }, tr(`វៀស​ថ្ងៃ​ឈប់​សម្រាក ${closedCount} ថ្ងៃ`, `Skipping ${closedCount} closed days`)), ok && o.minSpanDays > 0 && React.createElement("span", {
     style: {
       display: 'block',
       marginTop: 3,
@@ -24192,6 +24230,228 @@ var ScheduleAgenda = ({
     }))));
   }));
 };
+var schoolHolidays = () => {
+  var ss = window.__schoolSettings;
+  return ss && Array.isArray(ss.scheduleHolidays) ? ss.scheduleHolidays : [];
+};
+var saveSchoolHolidays = next => {
+  if (!window.__schoolSettings) window.__schoolSettings = {};
+  window.__schoolSettings.scheduleHolidays = next;
+  if (window.saveAllData) window.saveAllData();
+};
+var holidayOn = date => schoolHolidays().find(h => h && h.date === date) || null;
+var HolidayModal = ({
+  open,
+  onClose,
+  defaultDate,
+  onChanged
+}) => {
+  var {
+    tr,
+    toast,
+    lang
+  } = useAppActions();
+  var [list, setList] = React.useState(() => schoolHolidays());
+  var [date, setDate] = React.useState(defaultDate || todayStr());
+  var [name, setName] = React.useState('');
+  React.useEffect(() => {
+    if (open) {
+      setList(schoolHolidays());
+      setDate(defaultDate || todayStr());
+      setName('');
+    }
+  }, [open, defaultDate]);
+  if (!open) return null;
+  var commit = next => {
+    var sorted = [...next].sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+    setList(sorted);
+    saveSchoolHolidays(sorted);
+    onChanged?.();
+  };
+  var add = () => {
+    if (!date) {
+      toast(tr('ត្រូវ​ការ​កាល​បរិច្ឆេទ', 'Date required'), 'warn');
+      return;
+    }
+    if (list.some(h => h.date === date)) {
+      toast(tr('ថ្ងៃ​នេះ​មាន​រួច​ហើយ', 'That day is already listed'), 'warn');
+      return;
+    }
+    commit([...list, {
+      date,
+      name: name.trim()
+    }]);
+    if (window.__logActivity) window.__logActivity('create', 'holiday', date + ' ' + name.trim());
+    setName('');
+    toast(tr('បាន​បន្ថែម', 'Added'), 'good');
+  };
+  var drop = d => {
+    commit(list.filter(h => h.date !== d));
+    if (window.__logActivity) window.__logActivity('delete', 'holiday', d);
+  };
+  var field = {
+    width: '100%',
+    boxSizing: 'border-box',
+    height: 46,
+    padding: '0 13px',
+    fontFamily: 'inherit',
+    fontSize: 15,
+    color: 'var(--ink)',
+    background: 'var(--surface-muted)',
+    border: '1px solid var(--border)',
+    borderRadius: 12,
+    outline: 'none'
+  };
+  return React.createElement(Modal, {
+    open: open,
+    onClose: onClose,
+    width: 560
+  }, React.createElement("div", {
+    style: {
+      padding: '14px 16px 18px'
+    }
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      marginBottom: 14
+    }
+  }, React.createElement(Icon, {
+    name: "cal",
+    size: 28
+  }), React.createElement("div", {
+    style: {
+      minWidth: 0
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700,
+      color: 'var(--ink)'
+    }
+  }, tr('ថ្ងៃ​ឈប់​សម្រាក', 'Closed days')), React.createElement("div", {
+    style: {
+      fontSize: 11.5,
+      color: 'var(--ink-3)'
+    }
+  }, tr('កាលវិភាគ​ស្វ័យប្រវត្ត​នឹង​វៀស​ថ្ងៃ​ទាំង​នេះ', 'The auto planner skips these days')))), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 9,
+      marginBottom: 13
+    }
+  }, React.createElement("label", {
+    style: {
+      flex: 1,
+      minWidth: 0,
+      display: 'block'
+    }
+  }, React.createElement("span", {
+    style: {
+      display: 'block',
+      fontSize: 12,
+      color: 'var(--ink-3)',
+      marginBottom: 5
+    }
+  }, tr('កាល​បរិច្ឆេទ', 'Date')), React.createElement("input", {
+    type: "date",
+    value: date,
+    onChange: e => setDate(e.target.value),
+    style: field
+  })), React.createElement("label", {
+    style: {
+      flex: 1.4,
+      minWidth: 0,
+      display: 'block'
+    }
+  }, React.createElement("span", {
+    style: {
+      display: 'block',
+      fontSize: 12,
+      color: 'var(--ink-3)',
+      marginBottom: 5
+    }
+  }, tr('ឈ្មោះ (មិន​ចាំបាច់)', 'Name (optional)')), React.createElement("input", {
+    type: "text",
+    value: name,
+    onChange: e => setName(e.target.value),
+    placeholder: tr('ឧ. បុណ្យ​ជាតិ', 'e.g. Public holiday'),
+    style: field
+  }))), React.createElement(Btn, {
+    kind: "accent",
+    size: "lg",
+    onClick: add,
+    style: {
+      width: '100%',
+      justifyContent: 'center',
+      marginBottom: 14
+    }
+  }, tr('បន្ថែម​ថ្ងៃ​ឈប់', 'Add closed day')), list.length === 0 ? React.createElement("div", {
+    style: {
+      padding: '18px 0',
+      textAlign: 'center',
+      fontSize: 12.5,
+      color: 'var(--ink-3)'
+    }
+  }, tr('មិន​ទាន់​មាន​ថ្ងៃ​ឈប់', 'No closed days yet')) : React.createElement("div", {
+    style: {
+      maxHeight: 260,
+      overflow: 'auto',
+      border: '1px solid var(--border)',
+      borderRadius: 13
+    }
+  }, list.map((h, i) => React.createElement("div", {
+    key: h.date,
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      padding: '10px 13px',
+      borderTop: i ? '1px solid var(--border)' : 'none'
+    }
+  }, React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 13.5,
+      fontWeight: 700,
+      color: 'var(--ink)',
+      fontFamily: '"JetBrains Mono",monospace'
+    }
+  }, h.date), h.name && React.createElement("div", {
+    style: {
+      fontSize: 11.5,
+      color: 'var(--ink-3)'
+    }
+  }, h.name)), React.createElement("button", {
+    onClick: () => drop(h.date),
+    style: {
+      flexShrink: 0,
+      border: '1px solid var(--border)',
+      background: 'var(--surface)',
+      borderRadius: 9,
+      padding: '6px 11px',
+      cursor: 'pointer',
+      fontFamily: 'inherit',
+      fontSize: 11.5,
+      fontWeight: 600,
+      color: '#B0413E'
+    }
+  }, tr('លុប', 'Remove'))))), React.createElement(Btn, {
+    kind: "ghost",
+    size: "lg",
+    onClick: onClose,
+    style: {
+      width: '100%',
+      justifyContent: 'center',
+      marginTop: 14
+    }
+  }, tr('បិទ', 'Close'))));
+};
 var ScheduleScreen = ({
   view,
   role = 'admin',
@@ -24217,6 +24477,7 @@ var ScheduleScreen = ({
   var [ver, setVer] = React.useState(0);
   var [clip, setClip] = React.useState(null);
   var [autoPlanOpen, setAutoPlanOpen] = React.useState(false);
+  var [holidayOpen, setHolidayOpen] = React.useState(false);
   var [instFilter, setInstFilter] = React.useState('');
   var [vehFilter, setVehFilter] = React.useState('');
   var [studentFilter, setStudentFilter] = React.useState('');
@@ -25610,9 +25871,28 @@ var ScheduleScreen = ({
       name: "cal",
       size: 14
     })
-  }, tr('បង្កើត​កាលវិភាគ​ស្វ័យប្រវត្ត', 'Auto-generate schedule')), role === 'admin' && React.createElement(AutoPlanModal, {
+  }, tr('បង្កើត​កាលវិភាគ​ស្វ័យប្រវត្ត', 'Auto-generate schedule')), bp.mobile && role === 'admin' && React.createElement(Btn, {
+    kind: "ghost",
+    size: "md",
+    style: {
+      justifyContent: 'center'
+    },
+    onClick: () => setHolidayOpen(true),
+    icon: React.createElement(Icon, {
+      name: "bell",
+      size: 14
+    })
+  }, (() => {
+    var n = schoolHolidays().length;
+    return n ? tr(`ថ្ងៃ​ឈប់​សម្រាក (${n})`, `Closed days (${n})`) : tr('ថ្ងៃ​ឈប់​សម្រាក', 'Closed days');
+  })()), role === 'admin' && React.createElement(AutoPlanModal, {
     open: autoPlanOpen,
     onClose: () => setAutoPlanOpen(false)
+  }), role === 'admin' && React.createElement(HolidayModal, {
+    open: holidayOpen,
+    onClose: () => setHolidayOpen(false),
+    defaultDate: bp.mobile ? mobileDate : allWeekDates[0] || today,
+    onChanged: () => setVer(n => n + 1)
   }), studentMode ? React.createElement("div", {
     style: {
       display: 'flex',

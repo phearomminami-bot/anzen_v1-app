@@ -782,6 +782,108 @@ const ScheduleAgenda = ({ lessons = LESSONS, studentMode = false, weekDates = []
   );
 };
 
+// ── Closed days ─────────────────────────────────────────────────────────────
+// Public holidays and the days the school simply shuts. Kept in the shared
+// settings blob like notes and exams, so they reach every device, and read by
+// the auto planner so a generated term never lands a lesson on one.
+const schoolHolidays = () => {
+  const ss = window.__schoolSettings;
+  return (ss && Array.isArray(ss.scheduleHolidays)) ? ss.scheduleHolidays : [];
+};
+const saveSchoolHolidays = (next) => {
+  if (!window.__schoolSettings) window.__schoolSettings = {};
+  window.__schoolSettings.scheduleHolidays = next;
+  if (window.saveAllData) window.saveAllData();
+};
+const holidayOn = (date) => schoolHolidays().find(h => h && h.date === date) || null;
+
+const HolidayModal = ({ open, onClose, defaultDate, onChanged }) => {
+  const { tr, toast, lang } = useAppActions();
+  const [list, setList] = React.useState(() => schoolHolidays());
+  const [date, setDate] = React.useState(defaultDate || todayStr());
+  const [name, setName] = React.useState('');
+  React.useEffect(() => { if (open) { setList(schoolHolidays()); setDate(defaultDate || todayStr()); setName(''); } }, [open, defaultDate]);
+  if (!open) return null;
+
+  const commit = (next) => {
+    const sorted = [...next].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+    setList(sorted); saveSchoolHolidays(sorted); onChanged?.();
+  };
+  const add = () => {
+    if (!date) { toast(tr('ត្រូវ​ការ​កាល​បរិច្ឆេទ','Date required'), 'warn'); return; }
+    if (list.some(h => h.date === date)) { toast(tr('ថ្ងៃ​នេះ​មាន​រួច​ហើយ','That day is already listed'), 'warn'); return; }
+    commit([...list, { date, name: name.trim() }]);
+    if (window.__logActivity) window.__logActivity('create', 'holiday', date + ' ' + name.trim());
+    setName('');
+    toast(tr('បាន​បន្ថែម','Added'), 'good');
+  };
+  const drop = (d) => {
+    commit(list.filter(h => h.date !== d));
+    if (window.__logActivity) window.__logActivity('delete', 'holiday', d);
+  };
+
+  const field = {
+    width:'100%', boxSizing:'border-box', height:46, padding:'0 13px',
+    fontFamily:'inherit', fontSize:15, color:'var(--ink)',
+    background:'var(--surface-muted)', border:'1px solid var(--border)',
+    borderRadius:12, outline:'none',
+  };
+
+  return (
+    <Modal open={open} onClose={onClose} width={560}>
+      <div style={{padding:'14px 16px 18px'}}>
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
+          <Icon name="cal" size={28}/>
+          <div style={{minWidth:0}}>
+            <div style={{fontSize:16,fontWeight:700,color:'var(--ink)'}}>{tr('ថ្ងៃ​ឈប់​សម្រាក','Closed days')}</div>
+            <div style={{fontSize:11.5,color:'var(--ink-3)'}}>{tr('កាលវិភាគ​ស្វ័យប្រវត្ត​នឹង​វៀស​ថ្ងៃ​ទាំង​នេះ','The auto planner skips these days')}</div>
+          </div>
+        </div>
+
+        <div style={{display:'flex',gap:9,marginBottom:13}}>
+          <label style={{flex:1,minWidth:0,display:'block'}}>
+            <span style={{display:'block',fontSize:12,color:'var(--ink-3)',marginBottom:5}}>{tr('កាល​បរិច្ឆេទ','Date')}</span>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} style={field}/>
+          </label>
+          <label style={{flex:1.4,minWidth:0,display:'block'}}>
+            <span style={{display:'block',fontSize:12,color:'var(--ink-3)',marginBottom:5}}>{tr('ឈ្មោះ (មិន​ចាំបាច់)','Name (optional)')}</span>
+            <input type="text" value={name} onChange={e => setName(e.target.value)}
+              placeholder={tr('ឧ. បុណ្យ​ជាតិ','e.g. Public holiday')} style={field}/>
+          </label>
+        </div>
+        <Btn kind="accent" size="lg" onClick={add} style={{width:'100%',justifyContent:'center',marginBottom:14}}>
+          {tr('បន្ថែម​ថ្ងៃ​ឈប់','Add closed day')}
+        </Btn>
+
+        {list.length === 0 ? (
+          <div style={{padding:'18px 0',textAlign:'center',fontSize:12.5,color:'var(--ink-3)'}}>
+            {tr('មិន​ទាន់​មាន​ថ្ងៃ​ឈប់','No closed days yet')}
+          </div>
+        ) : (
+          <div style={{maxHeight:260,overflow:'auto',border:'1px solid var(--border)',borderRadius:13}}>
+            {list.map((h, i) => (
+              <div key={h.date} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 13px',
+                borderTop: i ? '1px solid var(--border)' : 'none'}}>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13.5,fontWeight:700,color:'var(--ink)',fontFamily:'"JetBrains Mono",monospace'}}>{h.date}</div>
+                  {h.name && <div style={{fontSize:11.5,color:'var(--ink-3)'}}>{h.name}</div>}
+                </div>
+                <button onClick={() => drop(h.date)} style={{flexShrink:0,border:'1px solid var(--border)',
+                  background:'var(--surface)',borderRadius:9,padding:'6px 11px',cursor:'pointer',
+                  fontFamily:'inherit',fontSize:11.5,fontWeight:600,color:'#B0413E'}}>{tr('លុប','Remove')}</button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <Btn kind="ghost" size="lg" onClick={onClose} style={{width:'100%',justifyContent:'center',marginTop:14}}>
+          {tr('បិទ','Close')}
+        </Btn>
+      </div>
+    </Modal>
+  );
+};
+
 const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   const { openForm, navigate, tr, lang, openDetail, toast } = useAppActions();
   const bp = useBreakpoint();
@@ -798,6 +900,7 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
   // Copy / move clipboard for scheduled lessons: { lesson, mode:'copy'|'move' }.
   const [clip, setClip] = React.useState(null);
   const [autoPlanOpen, setAutoPlanOpen] = React.useState(false);
+  const [holidayOpen, setHolidayOpen] = React.useState(false);
   const [instFilter,    setInstFilter]    = React.useState('');
   const [vehFilter,     setVehFilter]     = React.useState('');
   const [studentFilter, setStudentFilter] = React.useState('');
@@ -1462,7 +1565,21 @@ const ScheduleScreen = ({ view, role = 'admin', studentId }) => {
         </Btn>
       )}
 
+      {/* Holidays and the days the school shuts, so a generated term skips them */}
+      {bp.mobile && role === 'admin' && (
+        <Btn kind="ghost" size="md" style={{justifyContent:'center'}}
+          onClick={()=>setHolidayOpen(true)} icon={<Icon name="bell" size={14}/>}>
+          {(() => {
+            const n = schoolHolidays().length;
+            return n ? tr(`ថ្ងៃ​ឈប់​សម្រាក (${n})`, `Closed days (${n})`)
+                     : tr('ថ្ងៃ​ឈប់​សម្រាក','Closed days');
+          })()}
+        </Btn>
+      )}
+
       {role === 'admin' && <AutoPlanModal open={autoPlanOpen} onClose={()=>setAutoPlanOpen(false)}/>}
+      {role === 'admin' && <HolidayModal open={holidayOpen} onClose={()=>setHolidayOpen(false)}
+        defaultDate={bp.mobile ? mobileDate : (allWeekDates[0] || today)} onChanged={()=>setVer(n=>n+1)}/>}
 
       {studentMode ? (
         <div style={{display:'flex',gap:18,padding:'8px 4px',fontSize:11,color:'var(--ink-3)'}}>

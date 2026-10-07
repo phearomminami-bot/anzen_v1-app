@@ -83,6 +83,14 @@ const autoPlanRoster = (o) => {
   };
 };
 
+// Days the school is shut, kept by the schedule screen in the shared
+// settings blob so every device sees the same list.
+const autoPlanClosed = () => {
+  const ss = window.__schoolSettings;
+  const list = (ss && Array.isArray(ss.scheduleHolidays)) ? ss.scheduleHolidays : [];
+  return new Set(list.map(h => h && h.date).filter(Boolean));
+};
+
 // ── Slots in a day ──────────────────────────────────────────────────────────
 // The day is cut into sittings of at most maxLen, but the tail of a stretch is
 // kept rather than discarded: 13:00-16:00 with two-hour sittings is 13-15 and
@@ -133,6 +141,12 @@ const autoPlanBuild = (o) => {
   // directly; a minimum course length can only widen it further.
   const gap = Math.max(1, o.gapDays || 1, spread ? Math.round(spread / visits) : 1);
 
+  // Days the school is shut are not teaching days at all: a lesson on one
+  // would have to be moved by hand afterwards, which is the whole point of
+  // generating the term.
+  const closed = o.skipClosed === false ? new Set() : autoPlanClosed();
+  let closedHit = 0;
+
   const need = new Map(students.map(s => [s.id, o.totalHours]));
   const lastSeen = new Map();          // teaching-day index of each student's last lesson
   let teachIndex = -1;
@@ -147,6 +161,8 @@ const autoPlanBuild = (o) => {
   for (let guard = 0; guard < 1100; guard++) {
     if (![...need.values()].some(v => v > 0)) break;
     const iso = autoPlanISO(cursor);
+
+    if (closed.has(iso)) { closedHit += 1; cursor = new Date(cursor.getTime() + 86400000); continue; }
 
     if (o.weekdays.includes(cursor.getDay()) && students.length && instructors.length && vehicles.length && grid.length) {
       const sameDay = existing.filter(l => l.date === iso);
@@ -227,6 +243,7 @@ const autoPlanBuild = (o) => {
       sessions,
       hoursEach: o.totalHours,
       skipped,
+      closed: closedHit,
       short: [...need.entries()].filter(([, v]) => v > 0).length,
       from: days.length ? days[0].date : '—',
       to:   days.length ? days[days.length - 1].date : '—',
@@ -447,7 +464,7 @@ const autoPlanPDF = (plan, o, onSave, lang) => {
       ${tile(st.dayCount, L('ថ្ងៃរៀន','Teaching days'), '#EAF1FF', '#1A4F96')}
       ${tile(st.sessions, L('វគ្គសរុប','Total sessions'), '#E7F7EE', '#12804A')}
       ${tile(st.hoursEach + 'h', L('ម៉ោង / សិស្ស','Hours each'), '#FEF3E2', '#B25E09')}
-      ${tile(st.skipped, L('ម៉ោងជាន់គ្នា — វៀស','Clashes avoided'), '#F0F2F6', '#475467')}
+      ${tile(st.closed || 0, L('ថ្ងៃឈប់ — វៀស','Closed days skipped'), '#F0F2F6', '#475467')}
     </div>
     ${o.view === 'calendar' ? monthGrid() : plan.days.map(dayBlock).join('')}
     ${st.short ? `<div style="margin-top:11px;padding:8px 10px;border-radius:8px;background:#FDECE7;font-size:10.5px;color:#8A2C06;line-height:1.6">
@@ -555,6 +572,7 @@ const AutoPlanModal = ({ open, onClose }) => {
   // Re-read on every render so the hints track the chosen gearbox.
   const pools = autoPlanPools(o.trans);
   const leftOut = autoPlanLeftOut(o.trans);
+  const closedCount = autoPlanClosed().size;
   // A named pick decides its own count; the number field follows it.
   const pickLen = { pickS: (o.pickS || []).length, pickI: (o.pickI || []).length, pickV: (o.pickV || []).length };
   const nS = pickLen.pickS || o.studentCount;
@@ -891,6 +909,11 @@ const AutoPlanModal = ({ open, onClose }) => {
             <span style={{display:'block',marginTop:3,color:'#B25E09',fontSize:11.5}}>
               {tr(`នៅ​សល់ ${idleHours} ម៉ោង​មិន​បាន​ប្រើ — បន្ថយ «រៀន​ម្ដង យ៉ាង​តិច»`,
                   `${idleHours}h of the day goes unused — lower the shortest sitting`)}
+            </span>
+          )}
+          {ok && closedCount > 0 && (
+            <span style={{display:'block',marginTop:3,color:'var(--ink-3)',fontSize:11.5}}>
+              {tr(`វៀស​ថ្ងៃ​ឈប់​សម្រាក ${closedCount} ថ្ងៃ`, `Skipping ${closedCount} closed days`)}
             </span>
           )}
           {ok && o.minSpanDays > 0 && (
