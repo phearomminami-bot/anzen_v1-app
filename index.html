@@ -79688,6 +79688,14 @@ var ROLE_TABS = [{
   badge_en: '',
   badge_jp: ''
 }];
+var __isLocalDev = () => {
+  try {
+    var h = window.location.hostname;
+    return h === 'localhost' || h === '127.0.0.1' || h === '[::1]' || h === '::1' || h.endsWith('.localhost') || h.endsWith('.test');
+  } catch (e) {
+    return false;
+  }
+};
 var RealLoginCard = ({
   onAuthLogin,
   onUseDemo
@@ -79915,7 +79923,7 @@ var RealLoginCard = ({
       cursor: busy ? 'default' : 'pointer',
       fontFamily: 'inherit'
     }
-  }, busy ? tr('កំពុង​ចូល…', 'Signing in…') : tr('ចូល', 'Sign in')), onUseDemo && React.createElement("div", {
+  }, busy ? tr('កំពុង​ចូល…', 'Signing in…') : tr('ចូល', 'Sign in')), onUseDemo && __isLocalDev() && React.createElement("div", {
     style: {
       marginTop: 16,
       paddingTop: 14,
@@ -79958,7 +79966,7 @@ var LoginScreen = ({
   var [showPw, setShowPw] = React.useState(false);
   var configured = !!(window.__sbConfigured && window.__sbConfigured());
   var [demoMode, setDemoMode] = React.useState(false);
-  if (configured && !demoMode) {
+  if (configured && !(demoMode && __isLocalDev())) {
     return React.createElement(RealLoginCard, {
       onAuthLogin: onAuthLogin,
       onUseDemo: () => setDemoMode(true)

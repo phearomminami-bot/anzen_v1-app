@@ -667,6 +667,17 @@ const ROLE_TABS = [
 ];
 
 // ── Real (Supabase) email/password login ───────────────────────────────────
+// True only when the app is being served from a developer's own machine.
+// Anything published - GitHub Pages, a real domain, an installed PWA - is
+// false, so development-only affordances cannot reach a school.
+const __isLocalDev = () => {
+  try {
+    const h = window.location.hostname;
+    return h === 'localhost' || h === '127.0.0.1' || h === '[::1]' || h === '::1'
+      || h.endsWith('.localhost') || h.endsWith('.test');
+  } catch (e) { return false; }
+};
+
 const RealLoginCard = ({ onAuthLogin, onUseDemo }) => {
   const { lang, setLang, tr } = useAppActions();
   const [email, setEmail]   = React.useState('');
@@ -762,9 +773,11 @@ const RealLoginCard = ({ onAuthLogin, onUseDemo }) => {
           background: busy?'var(--ink-3)':'var(--accent)', color:'#fff',
           fontSize:14,fontWeight:700,cursor: busy?'default':'pointer',fontFamily:'inherit',
         }}>{busy ? tr('កំពុង​ចូល…','Signing in…') : tr('ចូល','Sign in')}</button>
-        {/* onUseDemo existed but was never rendered, so demo mode was
-            unreachable from the real login screen. */}
-        {onUseDemo && (
+        {/* Demo mode signs in against the sample accounts and then reads the
+            device's own stored data, so on a school's own tablet it would show
+            every real student without a password. It is a development aid and
+            must never appear on an installed app. */}
+        {onUseDemo && __isLocalDev() && (
           <div style={{marginTop:16,paddingTop:14,borderTop:'1px solid var(--border)',textAlign:'center'}}>
             <button type="button" onClick={onUseDemo} style={{
               border:'none',background:'transparent',cursor:'pointer',fontFamily:'inherit',
@@ -792,7 +805,7 @@ const LoginScreen = ({ onLogin, onStudentLogin, onAuthLogin }) => {
   const [demoMode, setDemoMode] = React.useState(false);
 
   // When connected to Supabase, show the real email/password login.
-  if (configured && !demoMode) {
+  if (configured && !(demoMode && __isLocalDev())) {
     return <RealLoginCard onAuthLogin={onAuthLogin} onUseDemo={() => setDemoMode(true)}/>;
   }
 
