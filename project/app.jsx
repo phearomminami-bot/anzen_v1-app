@@ -791,6 +791,33 @@ const RealLoginCard = ({ onAuthLogin, onUseDemo }) => {
   );
 };
 
+// Credentials exist but the client could not be built - almost always the
+// Supabase library failing to load. Sign-in is impossible, so say that rather
+// than falling through to a screen that needs no password.
+const AuthUnavailableCard = () => {
+  const { tr } = useAppActions();
+  return (
+    <div style={{minHeight:'100svh',display:'flex',alignItems:'center',justifyContent:'center',padding:20,background:'var(--bg)'}}>
+      <div style={{width:'100%',maxWidth:380,background:'var(--surface)',borderRadius:16,
+        padding:'28px 24px',boxShadow:'0 18px 44px -22px rgba(16,24,40,.45), 0 0 0 1px var(--border)',textAlign:'center'}}>
+        <div style={{fontSize:34,lineHeight:1,marginBottom:12}}>📡</div>
+        <div style={{fontSize:17,fontWeight:700,color:'var(--ink)',marginBottom:8}}>
+          {tr('ភ្ជាប់​បណ្ដាញ​មិន​បាន','Cannot reach sign-in')}
+        </div>
+        <div style={{fontSize:13,lineHeight:1.7,color:'var(--ink-2)',marginBottom:20}}>
+          {tr('ត្រូវ​មាន​អ៊ីនធឺណិត​ដើម្បី​ចូល​គណនី។ សូម​ពិនិត្យ​ការ​ភ្ជាប់​រួច​ព្យាយាម​ម្ដង​ទៀត។',
+              'Signing in needs an internet connection. Check the connection and try again.')}
+        </div>
+        <button onClick={() => window.location.reload()} style={{
+          width:'100%',padding:'12px',border:'none',borderRadius:10,
+          background:'var(--accent)',color:'#fff',fontSize:14,fontWeight:700,
+          cursor:'pointer',fontFamily:'inherit',
+        }}>{tr('ព្យាយាម​ម្ដង​ទៀត','Try again')}</button>
+      </div>
+    </div>
+  );
+};
+
 const LoginScreen = ({ onLogin, onStudentLogin, onAuthLogin }) => {
   const { lang, setLang, tr } = useAppActions();
   const [tab, setTab]       = React.useState('admin');
@@ -801,12 +828,17 @@ const LoginScreen = ({ onLogin, onStudentLogin, onAuthLogin }) => {
   const [err, setErr]       = React.useState('');
   const [showPw, setShowPw] = React.useState(false);
 
-  const configured = !!(window.__sbConfigured && window.__sbConfigured());
+  const configured   = !!(window.__sbConfigured && window.__sbConfigured());
+  const authRequired = !!(window.__sbAuthRequired && window.__sbAuthRequired());
   const [demoMode, setDemoMode] = React.useState(false);
 
-  // When connected to Supabase, show the real email/password login.
-  if (configured && !(demoMode && __isLocalDev())) {
-    return <RealLoginCard onAuthLogin={onAuthLogin} onUseDemo={() => setDemoMode(true)}/>;
+  // A school with real credentials always authenticates. The screens below
+  // sign in without a password and then read whatever the device has cached,
+  // so they must stay out of reach of anyone who is merely offline.
+  if (authRequired && !(demoMode && __isLocalDev())) {
+    return configured
+      ? <RealLoginCard onAuthLogin={onAuthLogin} onUseDemo={() => setDemoMode(true)}/>
+      : <AuthUnavailableCard/>;
   }
 
   const handleStudentLogin = () => {

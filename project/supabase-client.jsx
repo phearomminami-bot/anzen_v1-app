@@ -20,8 +20,14 @@
     }
   }
 
-  // Is real login available?
+  // Is real login available right now?
   window.__sbConfigured = () => !!window.sb;
+
+  // Does this build have real credentials at all? A school that has been set
+  // up must authenticate even when the client could not be built, because the
+  // only other way in is the passwordless demo screen, which reads whatever
+  // the device has cached. Losing the network must not unlock the app.
+  window.__sbAuthRequired = () => !!hasCreds;
 
   // ── Storage: upload an image/file (data URL) → returns a public URL ──────────
   // Moves big base64 blobs OUT of the synced DB rows, which is what drove the

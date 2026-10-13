@@ -1016,7 +1016,7 @@ window.__trRegistry = {
   "Open in new tab": "បើក​ក្នុង​ផ្ទាំង​ថ្មី",
   "Mark as done": "សម្គាល់​ថា​បាន​ធ្វើ",
   "Passed! Well done!": "ឆ្លងកាត់! ល្អណាស់!",
-  "Try again": "ព្យាយាមមើលម្ដងទៀត",
+  "Try again": "ព្យាយាម​ម្ដង​ទៀត",
   "correct answers": "ចម្លើយត្រូវ",
   "Submit answers": "ផ្ញើចម្លើយ",
   "PASS": "ត្រូវបាន",
@@ -1964,6 +1964,8 @@ window.__trRegistry = {
   "Enter your email and password": "បញ្ចូល​អ៊ីមែល និង​ពាក្យ​សម្ងាត់​របស់​អ្នក",
   "Signing in…": "កំពុង​ចូល…",
   "Try the demo — sample data": "ប្រើ​ជា Demo — ទិន្នន័យ​សាកល្បង",
+  "Cannot reach sign-in": "ភ្ជាប់​បណ្ដាញ​មិន​បាន",
+  "Signing in needs an internet connection. Check the connection and try again.": "ត្រូវ​មាន​អ៊ីនធឺណិត​ដើម្បី​ចូល​គណនី។ សូម​ពិនិត្យ​ការ​ភ្ជាប់​រួច​ព្យាយាម​ម្ដង​ទៀត។",
   "Incorrect Student ID or password": "Student ID ឬ Password មិន​ត្រឹម​ត្រូវ",
   "Account suspended — please contact the school": "គណនីត្រូវបានផ្អាក — សូម​ទំនាក់ទំនង​គ្រឹះស្ថាន",
   "Please enter ID and password": "សូម​បំពេញ ID និង Password",
@@ -3361,6 +3363,8 @@ window.__trGroups = {
     "Enter your email and password": "បញ្ចូល​អ៊ីមែល និង​ពាក្យ​សម្ងាត់​របស់​អ្នក",
     "Signing in…": "កំពុង​ចូល…",
     "Try the demo — sample data": "ប្រើ​ជា Demo — ទិន្នន័យ​សាកល្បង",
+    "Cannot reach sign-in": "ភ្ជាប់​បណ្ដាញ​មិន​បាន",
+    "Signing in needs an internet connection. Check the connection and try again.": "ត្រូវ​មាន​អ៊ីនធឺណិត​ដើម្បី​ចូល​គណនី។ សូម​ពិនិត្យ​ការ​ភ្ជាប់​រួច​ព្យាយាម​ម្ដង​ទៀត។",
     "Incorrect Student ID or password": "Student ID ឬ Password មិន​ត្រឹម​ត្រូវ",
     "Account suspended — please contact the school": "គណនីត្រូវបានផ្អាក — សូម​ទំនាក់ទំនង​គ្រឹះស្ថាន",
     "Please enter ID and password": "សូម​បំពេញ ID និង Password",
@@ -77920,6 +77924,7 @@ Object.assign(window, {
     }
   }
   window.__sbConfigured = () => !!window.sb;
+  window.__sbAuthRequired = () => !!hasCreds;
   window.__sbUploadMedia = async (dataUrl, opts = {}) => {
     if (!window.sb || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) return null;
     try {
@@ -79947,6 +79952,65 @@ var RealLoginCard = ({
     }
   }, tr('ប្រើ​ជា Demo — ទិន្នន័យ​សាកល្បង', 'Try the demo — sample data')))));
 };
+var AuthUnavailableCard = () => {
+  var {
+    tr
+  } = useAppActions();
+  return React.createElement("div", {
+    style: {
+      minHeight: '100svh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 20,
+      background: 'var(--bg)'
+    }
+  }, React.createElement("div", {
+    style: {
+      width: '100%',
+      maxWidth: 380,
+      background: 'var(--surface)',
+      borderRadius: 16,
+      padding: '28px 24px',
+      boxShadow: '0 18px 44px -22px rgba(16,24,40,.45), 0 0 0 1px var(--border)',
+      textAlign: 'center'
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 34,
+      lineHeight: 1,
+      marginBottom: 12
+    }
+  }, "\uD83D\uDCE1"), React.createElement("div", {
+    style: {
+      fontSize: 17,
+      fontWeight: 700,
+      color: 'var(--ink)',
+      marginBottom: 8
+    }
+  }, tr('ភ្ជាប់​បណ្ដាញ​មិន​បាន', 'Cannot reach sign-in')), React.createElement("div", {
+    style: {
+      fontSize: 13,
+      lineHeight: 1.7,
+      color: 'var(--ink-2)',
+      marginBottom: 20
+    }
+  }, tr('ត្រូវ​មាន​អ៊ីនធឺណិត​ដើម្បី​ចូល​គណនី។ សូម​ពិនិត្យ​ការ​ភ្ជាប់​រួច​ព្យាយាម​ម្ដង​ទៀត។', 'Signing in needs an internet connection. Check the connection and try again.')), React.createElement("button", {
+    onClick: () => window.location.reload(),
+    style: {
+      width: '100%',
+      padding: '12px',
+      border: 'none',
+      borderRadius: 10,
+      background: 'var(--accent)',
+      color: '#fff',
+      fontSize: 14,
+      fontWeight: 700,
+      cursor: 'pointer',
+      fontFamily: 'inherit'
+    }
+  }, tr('ព្យាយាម​ម្ដង​ទៀត', 'Try again'))));
+};
 var LoginScreen = ({
   onLogin,
   onStudentLogin,
@@ -79965,12 +80029,13 @@ var LoginScreen = ({
   var [err, setErr] = React.useState('');
   var [showPw, setShowPw] = React.useState(false);
   var configured = !!(window.__sbConfigured && window.__sbConfigured());
+  var authRequired = !!(window.__sbAuthRequired && window.__sbAuthRequired());
   var [demoMode, setDemoMode] = React.useState(false);
-  if (configured && !(demoMode && __isLocalDev())) {
-    return React.createElement(RealLoginCard, {
+  if (authRequired && !(demoMode && __isLocalDev())) {
+    return configured ? React.createElement(RealLoginCard, {
       onAuthLogin: onAuthLogin,
       onUseDemo: () => setDemoMode(true)
-    });
+    }) : React.createElement(AuthUnavailableCard, null);
   }
   var handleStudentLogin = () => {
     var id = sid.trim().toUpperCase();
