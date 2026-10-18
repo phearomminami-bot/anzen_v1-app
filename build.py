@@ -136,6 +136,7 @@ JSX_ORDER = [
     "screens-scores.jsx",   # Google-Sheets-backed scores (defines ScoreSheetForStudent)
     "screens-autoplan.jsx",  # auto schedule generator (planner + draft PDF)
     "screens-ops.jsx",
+    "screens-attendance.jsx",  # student attendance + report
     "screens-lessons.jsx",
     "screens-admin-lessons.jsx",
     "screens-staff.jsx",

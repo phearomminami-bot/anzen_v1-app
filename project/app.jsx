@@ -507,6 +507,7 @@ function App() {
     myprofile:   <StudentSelfProfile studentId={activeStudentId}/>,
     schedule:    <ScheduleScreen view={t.calendar} role={role} studentId={activeStudentId}/>,
     lessons:     <LessonsScreen role={role}/>,
+    attendance:  <AttendanceScreen role={role}/>,
     instructors: <InstructorsScreen role={role}/>,
     fleet:       <FleetScreen role={role}/>,
     progress:    <ProgressScreen role={role} studentId={activeStudentId}/>,
