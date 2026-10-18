@@ -612,6 +612,20 @@ const InstructorNotes = ({ inst }) => {
 
 const SfDetailRow = ({ s, onEdit, onSavePhoto, onOffboard, onRestore }) => {
   const { toast, navigate, tr, lang } = useAppActions();
+  const [noteOpen, setNoteOpen] = React.useState(false);
+  const [noteText, setNoteText] = React.useState('');
+  const openNote = () => { setNoteText(String(s.note || '')); setNoteOpen(true); };
+  const saveNote = () => {
+    const was = String(s.note || ''), now = noteText.trim();
+    if (was !== now) {
+      s.note = now;
+      if (window.__logActivity) window.__logActivity('edit', 'staff', 'note ' + s.id);
+      if (window.saveAllData) window.saveAllData();
+      if (window.__notifyStaffChanged) window.__notifyStaffChanged();
+      toast(now ? tr('បាន​រក្សាទុក​ចំណាំ ✓','Note saved ✓') : tr('បាន​លុប​ចំណាំ','Note cleared'), 'good');
+    }
+    setNoteOpen(false);
+  };
   const [showPw, setShowPw] = React.useState(false);
   const [settingPw, setSettingPw] = React.useState(false);   // editing credentials (ID + password)
   const [newPw, setNewPw] = React.useState('');
@@ -825,7 +839,51 @@ const SfDetailRow = ({ s, onEdit, onSavePhoto, onOffboard, onRestore }) => {
             </div>
           </div>
         )}
+
+        <div style={{marginTop:14}}>
+          <div style={{font:'500 10px/1 "JetBrains Mono",monospace',letterSpacing:'.08em',
+            textTransform:'uppercase',color:'var(--ink-3)',marginBottom:8}}>NOTE</div>
+          {s.note ? (
+            <button onClick={openNote}
+              style={{display:'block',width:'100%',textAlign:'left',padding:'10px 12px',borderRadius:10,
+                border:'none',cursor:'pointer',fontFamily:'inherit',background:'var(--accent-soft)',
+                color:'var(--accent)',fontSize:12.5,lineHeight:1.6,whiteSpace:'pre-wrap'}}>✎ {s.note}</button>
+          ) : (
+            <button onClick={openNote}
+              style={{display:'block',width:'100%',padding:'9px 12px',borderRadius:10,
+                border:'1px dashed var(--border-strong)',cursor:'pointer',fontFamily:'inherit',
+                background:'transparent',color:'var(--ink-3)',fontSize:12.5}}>
+              + {tr('ចំណាំ','Note')}</button>
+          )}
+        </div>
       </div>
+
+      <Modal open={noteOpen} onClose={() => setNoteOpen(false)} width={520}>
+        <div style={{padding:'14px 16px 18px'}}>
+          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+            <Icon name="briefcase" size={26}/>
+            <div style={{minWidth:0}}>
+              <div style={{fontSize:16,fontWeight:700,color:'var(--ink)'}}>{tr('ចំណាំ','Note')}</div>
+              <div style={{fontSize:11.5,color:'var(--ink-3)'}}>
+                {(lang === 'km' ? (s.name || s.en) : (s.en || s.name)) || s.id}
+                {s.role ? ' · ' + s.role : ''}</div>
+            </div>
+          </div>
+          <textarea value={noteText} onChange={e => setNoteText(e.target.value)} rows={5}
+            placeholder={tr('ឧ. ធ្វើ​ការ​ពេល​ព្រឹក​ប៉ុណ្ណោះ · ទទួល​បន្ទុក​ការ​ទូទាត់',
+                            'e.g. Mornings only, handles payments')}
+            style={{width:'100%',boxSizing:'border-box',padding:'11px 13px',resize:'vertical',
+              fontFamily:'var(--font-km), var(--font-en), sans-serif',fontSize:15,lineHeight:1.65,
+              color:'var(--ink)',background:'var(--surface-muted)',
+              border:'1px solid var(--border)',borderRadius:12,outline:'none'}}/>
+          <div style={{display:'flex',gap:9,marginTop:14}}>
+            <Btn kind="ghost" size="lg" onClick={() => setNoteOpen(false)} style={{flex:1,justifyContent:'center'}}>
+              {tr('បោះបង់','Cancel')}</Btn>
+            <Btn kind="accent" size="lg" onClick={saveNote} style={{flex:2,justifyContent:'center',fontWeight:700}}>
+              {tr('រក្សាទុក','Save')}</Btn>
+          </div>
+        </div>
+      </Modal>
     </Card>
   );
 };

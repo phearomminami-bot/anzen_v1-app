@@ -1158,6 +1158,7 @@ window.__trRegistry = {
   "ID (Username) — can be long": "ID (Username) — អាច​វែង",
   "e.g. chhorn.sovannara": "ឧ. chhorn.sovannara",
   "(blank = keep)": "(ទុក​ទទេ​បើ​មិន​ប្ដូរ)",
+  "e.g. Mornings only, handles payments": "ឧ. ធ្វើ​ការ​ពេល​ព្រឹក​ប៉ុណ្ណោះ · ទទួល​បន្ទុក​ការ​ទូទាត់",
   "Father": "ឪពុក",
   "Mother": "ម្ដាយ",
   "Spouse": "ប្ដី/ប្រពន្ធ",
@@ -2653,6 +2654,7 @@ window.__trGroups = {
     "ID (Username) — can be long": "ID (Username) — អាច​វែង",
     "e.g. chhorn.sovannara": "ឧ. chhorn.sovannara",
     "(blank = keep)": "(ទុក​ទទេ​បើ​មិន​ប្ដូរ)",
+    "e.g. Mornings only, handles payments": "ឧ. ធ្វើ​ការ​ពេល​ព្រឹក​ប៉ុណ្ណោះ · ទទួល​បន្ទុក​ការ​ទូទាត់",
     "Father": "ឪពុក",
     "Mother": "ម្ដាយ",
     "Spouse": "ប្ដី/ប្រពន្ធ",
@@ -38797,6 +38799,24 @@ var SfDetailRow = ({
     tr,
     lang
   } = useAppActions();
+  var [noteOpen, setNoteOpen] = React.useState(false);
+  var [noteText, setNoteText] = React.useState('');
+  var openNote = () => {
+    setNoteText(String(s.note || ''));
+    setNoteOpen(true);
+  };
+  var saveNote = () => {
+    var was = String(s.note || ''),
+      now = noteText.trim();
+    if (was !== now) {
+      s.note = now;
+      if (window.__logActivity) window.__logActivity('edit', 'staff', 'note ' + s.id);
+      if (window.saveAllData) window.saveAllData();
+      if (window.__notifyStaffChanged) window.__notifyStaffChanged();
+      toast(now ? tr('បាន​រក្សាទុក​ចំណាំ ✓', 'Note saved ✓') : tr('បាន​លុប​ចំណាំ', 'Note cleared'), 'good');
+    }
+    setNoteOpen(false);
+  };
   var [showPw, setShowPw] = React.useState(false);
   var [settingPw, setSettingPw] = React.useState(false);
   var [newPw, setNewPw] = React.useState('');
@@ -39426,7 +39446,125 @@ var SfDetailRow = ({
       fontSize: 12,
       fontWeight: 700
     }
-  }, tr('រក្សា​ទុក', 'Save'))))));
+  }, tr('រក្សា​ទុក', 'Save')))), React.createElement("div", {
+    style: {
+      marginTop: 14
+    }
+  }, React.createElement("div", {
+    style: {
+      font: '500 10px/1 "JetBrains Mono",monospace',
+      letterSpacing: '.08em',
+      textTransform: 'uppercase',
+      color: 'var(--ink-3)',
+      marginBottom: 8
+    }
+  }, "NOTE"), s.note ? React.createElement("button", {
+    onClick: openNote,
+    style: {
+      display: 'block',
+      width: '100%',
+      textAlign: 'left',
+      padding: '10px 12px',
+      borderRadius: 10,
+      border: 'none',
+      cursor: 'pointer',
+      fontFamily: 'inherit',
+      background: 'var(--accent-soft)',
+      color: 'var(--accent)',
+      fontSize: 12.5,
+      lineHeight: 1.6,
+      whiteSpace: 'pre-wrap'
+    }
+  }, "\u270E ", s.note) : React.createElement("button", {
+    onClick: openNote,
+    style: {
+      display: 'block',
+      width: '100%',
+      padding: '9px 12px',
+      borderRadius: 10,
+      border: '1px dashed var(--border-strong)',
+      cursor: 'pointer',
+      fontFamily: 'inherit',
+      background: 'transparent',
+      color: 'var(--ink-3)',
+      fontSize: 12.5
+    }
+  }, "+ ", tr('ចំណាំ', 'Note')))), React.createElement(Modal, {
+    open: noteOpen,
+    onClose: () => setNoteOpen(false),
+    width: 520
+  }, React.createElement("div", {
+    style: {
+      padding: '14px 16px 18px'
+    }
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      marginBottom: 12
+    }
+  }, React.createElement(Icon, {
+    name: "briefcase",
+    size: 26
+  }), React.createElement("div", {
+    style: {
+      minWidth: 0
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700,
+      color: 'var(--ink)'
+    }
+  }, tr('ចំណាំ', 'Note')), React.createElement("div", {
+    style: {
+      fontSize: 11.5,
+      color: 'var(--ink-3)'
+    }
+  }, (lang === 'km' ? s.name || s.en : s.en || s.name) || s.id, s.role ? ' · ' + s.role : ''))), React.createElement("textarea", {
+    value: noteText,
+    onChange: e => setNoteText(e.target.value),
+    rows: 5,
+    placeholder: tr('ឧ. ធ្វើ​ការ​ពេល​ព្រឹក​ប៉ុណ្ណោះ · ទទួល​បន្ទុក​ការ​ទូទាត់', 'e.g. Mornings only, handles payments'),
+    style: {
+      width: '100%',
+      boxSizing: 'border-box',
+      padding: '11px 13px',
+      resize: 'vertical',
+      fontFamily: 'var(--font-km), var(--font-en), sans-serif',
+      fontSize: 15,
+      lineHeight: 1.65,
+      color: 'var(--ink)',
+      background: 'var(--surface-muted)',
+      border: '1px solid var(--border)',
+      borderRadius: 12,
+      outline: 'none'
+    }
+  }), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 9,
+      marginTop: 14
+    }
+  }, React.createElement(Btn, {
+    kind: "ghost",
+    size: "lg",
+    onClick: () => setNoteOpen(false),
+    style: {
+      flex: 1,
+      justifyContent: 'center'
+    }
+  }, tr('បោះបង់', 'Cancel')), React.createElement(Btn, {
+    kind: "accent",
+    size: "lg",
+    onClick: saveNote,
+    style: {
+      flex: 2,
+      justifyContent: 'center',
+      fontWeight: 700
+    }
+  }, tr('រក្សាទុក', 'Save'))))));
 };
 var SfEditPanel = ({
   s,
