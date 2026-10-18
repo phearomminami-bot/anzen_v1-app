@@ -770,10 +770,14 @@ window.__trRegistry = {
   "Full profile": "បើក​ប្រវត្តិ​រូប",
   "Schedule": "ប្រតិទិន",
   "Thank you for your rating!": "អរគុណ​ចំពោះ​ការ​វាយ​តម្លៃ!",
+  "note": "ចំណាំ",
+  "Note saved ✓": "បាន​រក្សាទុក​ចំណាំ ✓",
+  "Note cleared": "បាន​លុប​ចំណាំ",
   "No ratings yet": "មិន​ទាន់​មាន​ការ​វាយ​តម្លៃ",
   "reviews": "មតិ",
   "Rated": "បាន​វាយ​តម្លៃ",
   "Rate": "វត្តមាន",
+  "e.g. Off on Wednesdays, manual only": "ឧ. ឈប់​សម្រាក​ថ្ងៃ​ពុធ · បង្រៀន​តែ​លេខ​ដៃ",
   "Couldn\\'t load the sheet": "ទាញ​តារាង​មិន​បាន",
   "Make the sheet public: Google Sheets → Share → “Anyone with the link” → Viewer. Or File → Share → Publish to web → CSV, then paste that URL.": "សូម​ចែករំលែក​សន្លឹក​ជា​សាធារណៈ៖ Google Sheets → Share → “Anyone with the link” → Viewer។ ឬ File → Share → Publish to web → CSV រួច​ដាក់ URL នោះ។",
   "Couldn\\'t auto-detect columns — tap ⚙ → ↻ → choose the date/student/company/score columns. Showing all data for now.": "រក​ជួរ​ឈរ​ស្វ័យ​ប្រវត្តិ​មិន​ឃើញ​ទេ — ចុច ⚙ → ↻ → ជ្រើស​ជួរ​ឈរ (កាលបរិច្ឆេទ/សិស្ស/ក្រុមហ៊ុន/ពិន្ទុ)។ ខាង​ក្រោម​បង្ហាញ​ទិន្នន័យ​ទាំង​អស់​សិន។",
@@ -1003,9 +1007,6 @@ window.__trRegistry = {
   "Amount · Status": "ចំនួន · ស្ថានភាព",
   "PAYMENT METHODS": "វិធី​សាស្ត្រ​ទូទាត់",
   "COURSE PLANS": "គម្រោង​វគ្គ​សិក្សា",
-  "note": "ចំណាំ",
-  "Note saved ✓": "បាន​រក្សាទុក​ចំណាំ ✓",
-  "Note cleared": "បាន​លុប​ចំណាំ",
   "added": "បន្ថែម",
   "Mark all present": "កត់​ទាំង​អស់​ថា «មក»",
   "Tap a box to step through: present → late → absent → excused → clear": "ប៉ះ​ប្រអប់​ដើម្បី​កត់ — ម្ដង​មួយ​ជំហាន៖ មក → មកយឺត → អវត្តមាន → សុំច្បាប់ → លុប",
@@ -2284,10 +2285,14 @@ window.__trGroups = {
     "Full profile": "បើក​ប្រវត្តិ​រូប",
     "Schedule": "ប្រតិទិន",
     "Thank you for your rating!": "អរគុណ​ចំពោះ​ការ​វាយ​តម្លៃ!",
+    "note": "ចំណាំ",
+    "Note saved ✓": "បាន​រក្សាទុក​ចំណាំ ✓",
+    "Note cleared": "បាន​លុប​ចំណាំ",
     "No ratings yet": "មិន​ទាន់​មាន​ការ​វាយ​តម្លៃ",
     "reviews": "មតិ",
     "Rated": "បាន​វាយ​តម្លៃ",
-    "Rate": "វាយ​តម្លៃ"
+    "Rate": "វាយ​តម្លៃ",
+    "e.g. Off on Wednesdays, manual only": "ឧ. ឈប់​សម្រាក​ថ្ងៃ​ពុធ · បង្រៀន​តែ​លេខ​ដៃ"
   },
   "កាលវិភាគ · Schedule": {
     "Closed": "ឈប់​សម្រាក",
@@ -3478,9 +3483,6 @@ window.__trGroups = {
     "Capacity per day": "ចំណុះ ១ ថ្ងៃ",
     "Hours needed": "ម៉ោង​ត្រូវ​ការ​ទាំង​អស់",
     "Generate — preview PDF": "បង្កើត — មើល PDF",
-    "note": "ចំណាំ",
-    "Note saved ✓": "បាន​រក្សាទុក​ចំណាំ ✓",
-    "Note cleared": "បាន​លុប​ចំណាំ",
     "added": "បន្ថែម",
     "Mark all present": "កត់​ទាំង​អស់​ថា «មក»",
     "Tap a box to step through: present → late → absent → excused → clear": "ប៉ះ​ប្រអប់​ដើម្បី​កត់ — ម្ដង​មួយ​ជំហាន៖ មក → មកយឺត → អវត្តមាន → សុំច្បាប់ → លុប",
@@ -19627,6 +19629,27 @@ var InstructorsScreen = ({
   };
   var myRating = instId => studentId ? window.__studentRatings[studentId]?.[instId] || 0 : 0;
   var hasRated = instId => !!myRating(instId);
+  var [noteFor, setNoteFor] = React.useState(null);
+  var [noteText, setNoteText] = React.useState('');
+  var canNote = role !== 'student';
+  var instName = i => !i ? '' : (lang === 'km' ? i.name || i.en : i.en || i.name) || i.id;
+  var openNote = inst => {
+    setNoteFor(inst);
+    setNoteText(String(inst.note || ''));
+  };
+  var saveNote = () => {
+    if (!noteFor) return;
+    var was = String(noteFor.note || ''),
+      now = noteText.trim();
+    if (was !== now) {
+      noteFor.note = now;
+      if (window.__logActivity) window.__logActivity('edit', 'instructor', `${tr('ចំណាំ', 'note')} ${noteFor.id}`);
+      if (window.saveAllData) window.saveAllData();
+      toast(now ? tr('បាន​រក្សាទុក​ចំណាំ ✓', 'Note saved ✓') : tr('បាន​លុប​ចំណាំ', 'Note cleared'), 'good');
+    }
+    setNoteFor(null);
+    forceUpdate();
+  };
   return React.createElement("div", {
     style: {
       display: 'flex',
@@ -19925,8 +19948,116 @@ var InstructorsScreen = ({
         fontSize: 11,
         color: 'var(--ink-3)'
       }
-    }, tr('វាយ​តម្លៃ', 'Rate')))) : null)));
-  })));
+    }, tr('វាយ​តម្លៃ', 'Rate')))) : null)), canNote && (i.note ? React.createElement("button", {
+      onClick: () => openNote(i),
+      style: {
+        display: 'block',
+        width: '100%',
+        textAlign: 'left',
+        marginTop: 10,
+        padding: '8px 10px',
+        borderRadius: 9,
+        border: 'none',
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+        background: 'var(--accent-soft)',
+        color: 'var(--accent)',
+        fontSize: 11.5,
+        lineHeight: 1.55,
+        whiteSpace: 'pre-wrap'
+      }
+    }, "\u270E ", i.note) : React.createElement("button", {
+      onClick: () => openNote(i),
+      style: {
+        display: 'block',
+        width: '100%',
+        marginTop: 10,
+        padding: '7px 10px',
+        borderRadius: 9,
+        border: '1px dashed var(--border-strong)',
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+        background: 'transparent',
+        color: 'var(--ink-3)',
+        fontSize: 11.5
+      }
+    }, "+ ", tr('ចំណាំ', 'Note'))));
+  })), React.createElement(Modal, {
+    open: !!noteFor,
+    onClose: () => setNoteFor(null),
+    width: 520
+  }, React.createElement("div", {
+    style: {
+      padding: '14px 16px 18px'
+    }
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      marginBottom: 12
+    }
+  }, React.createElement(Icon, {
+    name: "clipboard",
+    size: 26
+  }), React.createElement("div", {
+    style: {
+      minWidth: 0
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700,
+      color: 'var(--ink)'
+    }
+  }, tr('ចំណាំ', 'Note')), React.createElement("div", {
+    style: {
+      fontSize: 11.5,
+      color: 'var(--ink-3)'
+    }
+  }, instName(noteFor)))), React.createElement("textarea", {
+    value: noteText,
+    onChange: e => setNoteText(e.target.value),
+    rows: 5,
+    placeholder: tr('ឧ. ឈប់​សម្រាក​ថ្ងៃ​ពុធ · បង្រៀន​តែ​លេខ​ដៃ', 'e.g. Off on Wednesdays, manual only'),
+    style: {
+      width: '100%',
+      boxSizing: 'border-box',
+      padding: '11px 13px',
+      resize: 'vertical',
+      fontFamily: 'var(--font-km), var(--font-en), sans-serif',
+      fontSize: 15,
+      lineHeight: 1.65,
+      color: 'var(--ink)',
+      background: 'var(--surface-muted)',
+      border: '1px solid var(--border)',
+      borderRadius: 12,
+      outline: 'none'
+    }
+  }), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 9,
+      marginTop: 14
+    }
+  }, React.createElement(Btn, {
+    kind: "ghost",
+    size: "lg",
+    onClick: () => setNoteFor(null),
+    style: {
+      flex: 1,
+      justifyContent: 'center'
+    }
+  }, tr('បោះបង់', 'Cancel')), React.createElement(Btn, {
+    kind: "accent",
+    size: "lg",
+    onClick: saveNote,
+    style: {
+      flex: 2,
+      justifyContent: 'center',
+      fontWeight: 700
+    }
+  }, tr('រក្សាទុក', 'Save'))))));
 };
 Object.assign(window, {
   StudentsScreen,

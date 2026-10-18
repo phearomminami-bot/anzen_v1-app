@@ -303,6 +303,24 @@ const InstructorsScreen = ({ role = 'admin' }) => {
   const myRating = (instId) => studentId ? (window.__studentRatings[studentId]?.[instId] || 0) : 0;
   const hasRated = (instId) => !!myRating(instId);
 
+  const [noteFor, setNoteFor] = React.useState(null);
+  const [noteText, setNoteText] = React.useState('');
+  const canNote = role !== 'student';
+  const instName = (i) => !i ? '' : ((lang === 'km' ? (i.name || i.en) : (i.en || i.name)) || i.id);
+  const openNote = (inst) => { setNoteFor(inst); setNoteText(String(inst.note || '')); };
+  const saveNote = () => {
+    if (!noteFor) return;
+    const was = String(noteFor.note || ''), now = noteText.trim();
+    if (was !== now) {
+      noteFor.note = now;
+      if (window.__logActivity) window.__logActivity('edit', 'instructor', `${tr('ចំណាំ','note')} ${noteFor.id}`);
+      if (window.saveAllData) window.saveAllData();
+      toast(now ? tr('បាន​រក្សាទុក​ចំណាំ ✓','Note saved ✓') : tr('បាន​លុប​ចំណាំ','Note cleared'), 'good');
+    }
+    setNoteFor(null);
+    forceUpdate();
+  };
+
   return (
   <div style={{display:'flex',flexDirection:'column',gap:14}}>
     {!bp.mobile && <SectionTitle
@@ -458,10 +476,50 @@ const InstructorsScreen = ({ role = 'admin' }) => {
               </div>
             )}
           </div>
+
+          {canNote && (
+            i.note ? (
+              <button onClick={() => openNote(i)}
+                style={{display:'block',width:'100%',textAlign:'left',marginTop:10,padding:'8px 10px',
+                  borderRadius:9,border:'none',cursor:'pointer',fontFamily:'inherit',
+                  background:'var(--accent-soft)',color:'var(--accent)',
+                  fontSize:11.5,lineHeight:1.55,whiteSpace:'pre-wrap'}}>✎ {i.note}</button>
+            ) : (
+              <button onClick={() => openNote(i)}
+                style={{display:'block',width:'100%',marginTop:10,padding:'7px 10px',
+                  borderRadius:9,border:'1px dashed var(--border-strong)',cursor:'pointer',
+                  fontFamily:'inherit',background:'transparent',color:'var(--ink-3)',fontSize:11.5}}>
+                + {tr('ចំណាំ','Note')}</button>
+            )
+          )}
         </Card>
         );
       })}
     </div>
+
+    <Modal open={!!noteFor} onClose={() => setNoteFor(null)} width={520}>
+      <div style={{padding:'14px 16px 18px'}}>
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+          <Icon name="clipboard" size={26}/>
+          <div style={{minWidth:0}}>
+            <div style={{fontSize:16,fontWeight:700,color:'var(--ink)'}}>{tr('ចំណាំ','Note')}</div>
+            <div style={{fontSize:11.5,color:'var(--ink-3)'}}>{instName(noteFor)}</div>
+          </div>
+        </div>
+        <textarea value={noteText} onChange={e => setNoteText(e.target.value)} rows={5}
+          placeholder={tr('ឧ. ឈប់​សម្រាក​ថ្ងៃ​ពុធ · បង្រៀន​តែ​លេខ​ដៃ','e.g. Off on Wednesdays, manual only')}
+          style={{width:'100%',boxSizing:'border-box',padding:'11px 13px',resize:'vertical',
+            fontFamily:'var(--font-km), var(--font-en), sans-serif',fontSize:15,lineHeight:1.65,
+            color:'var(--ink)',background:'var(--surface-muted)',
+            border:'1px solid var(--border)',borderRadius:12,outline:'none'}}/>
+        <div style={{display:'flex',gap:9,marginTop:14}}>
+          <Btn kind="ghost" size="lg" onClick={() => setNoteFor(null)} style={{flex:1,justifyContent:'center'}}>
+            {tr('បោះបង់','Cancel')}</Btn>
+          <Btn kind="accent" size="lg" onClick={saveNote} style={{flex:2,justifyContent:'center',fontWeight:700}}>
+            {tr('រក្សាទុក','Save')}</Btn>
+        </div>
+      </div>
+    </Modal>
   </div>
   );
 };
