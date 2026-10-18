@@ -46982,6 +46982,24 @@ var FvDetailRow = ({
   onClose,
   forceUpdate
 }) => {
+  var [noteOpen, setNoteOpen] = React.useState(false);
+  var [noteText, setNoteText] = React.useState('');
+  var openNote = () => {
+    setNoteText(String(v.note || ''));
+    setNoteOpen(true);
+  };
+  var saveNote = () => {
+    var was = String(v.note || ''),
+      now = noteText.trim();
+    if (was !== now) {
+      v.note = now;
+      if (window.__logActivity) window.__logActivity('edit', 'vehicle', 'note ' + v.id);
+      if (window.saveAllData) window.saveAllData();
+      if (window.__notifyVehiclesChanged) window.__notifyVehiclesChanged();
+      forceUpdate?.();
+    }
+    setNoteOpen(false);
+  };
   var {
     toast,
     tr
@@ -47476,7 +47494,126 @@ var FvDetailRow = ({
         color
       }
     }, doc.d || '—'));
-  }))))));
+  })))), React.createElement("div", {
+    style: {
+      padding: '0 16px 16px'
+    }
+  }, React.createElement("div", {
+    style: {
+      font: '500 10px/1 "JetBrains Mono",monospace',
+      letterSpacing: '.08em',
+      textTransform: 'uppercase',
+      color: 'var(--ink-3)',
+      marginBottom: 8
+    }
+  }, "NOTE"), v.note ? React.createElement("button", {
+    onClick: openNote,
+    style: {
+      display: 'block',
+      width: '100%',
+      textAlign: 'left',
+      padding: '10px 12px',
+      borderRadius: 10,
+      border: 'none',
+      cursor: 'pointer',
+      fontFamily: 'inherit',
+      background: 'var(--accent-soft)',
+      color: 'var(--accent)',
+      fontSize: 12.5,
+      lineHeight: 1.6,
+      whiteSpace: 'pre-wrap'
+    }
+  }, "\u270E ", v.note) : React.createElement("button", {
+    onClick: openNote,
+    style: {
+      display: 'block',
+      width: '100%',
+      padding: '9px 12px',
+      borderRadius: 10,
+      border: '1px dashed var(--border-strong)',
+      cursor: 'pointer',
+      fontFamily: 'inherit',
+      background: 'transparent',
+      color: 'var(--ink-3)',
+      fontSize: 12.5
+    }
+  }, "+ \u1785\u17C6\u178E\u17B6\u17C6 \xB7 Note"))), React.createElement(Modal, {
+    open: noteOpen,
+    onClose: () => setNoteOpen(false),
+    width: 520
+  }, React.createElement("div", {
+    style: {
+      padding: '14px 16px 18px'
+    }
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      marginBottom: 12
+    }
+  }, React.createElement(Icon, {
+    name: "car",
+    size: 26
+  }), React.createElement("div", {
+    style: {
+      minWidth: 0
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700,
+      color: 'var(--ink)'
+    }
+  }, "\u1785\u17C6\u178E\u17B6\u17C6 \xB7 Note"), React.createElement("div", {
+    style: {
+      fontSize: 11.5,
+      color: 'var(--ink-3)',
+      fontFamily: '"JetBrains Mono",monospace'
+    }
+  }, v.plate, v.make ? ' · ' + v.make : ''))), React.createElement("textarea", {
+    value: noteText,
+    onChange: e => setNoteText(e.target.value),
+    rows: 5,
+    placeholder: 'ឧ. ម៉ាស៊ីនត្រជាក់ខ្សោយ · សោបម្រុងនៅការិយាល័យ',
+    style: {
+      width: '100%',
+      boxSizing: 'border-box',
+      padding: '11px 13px',
+      resize: 'vertical',
+      fontFamily: 'var(--font-km), var(--font-en), sans-serif',
+      fontSize: 15,
+      lineHeight: 1.65,
+      color: 'var(--ink)',
+      background: 'var(--surface-muted)',
+      border: '1px solid var(--border)',
+      borderRadius: 12,
+      outline: 'none'
+    }
+  }), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 9,
+      marginTop: 14
+    }
+  }, React.createElement(Btn, {
+    kind: "ghost",
+    size: "lg",
+    onClick: () => setNoteOpen(false),
+    style: {
+      flex: 1,
+      justifyContent: 'center'
+    }
+  }, "\u1794\u17C4\u17C7\u1794\u1784\u17CB"), React.createElement(Btn, {
+    kind: "accent",
+    size: "lg",
+    onClick: saveNote,
+    style: {
+      flex: 2,
+      justifyContent: 'center',
+      fontWeight: 700
+    }
+  }, "\u179A\u1780\u17D2\u179F\u17B6\u1791\u17BB\u1780")))));
 };
 var FvLbl = ({
   children

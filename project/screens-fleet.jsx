@@ -1602,6 +1602,20 @@ const FvTable = ({ vehicles, onSelect, selectedId }) => (
 
 // ── Detail row ────────────────────────────────────────────────────────────────
 const FvDetailRow = ({ v, onEdit, onClose, forceUpdate }) => {
+  const [noteOpen, setNoteOpen] = React.useState(false);
+  const [noteText, setNoteText] = React.useState('');
+  const openNote = () => { setNoteText(String(v.note || '')); setNoteOpen(true); };
+  const saveNote = () => {
+    const was = String(v.note || ''), now = noteText.trim();
+    if (was !== now) {
+      v.note = now;
+      if (window.__logActivity) window.__logActivity('edit', 'vehicle', 'note ' + v.id);
+      if (window.saveAllData) window.saveAllData();
+      if (window.__notifyVehiclesChanged) window.__notifyVehiclesChanged();
+      forceUpdate?.();
+    }
+    setNoteOpen(false);
+  };
   const { toast, tr } = useAppActions();
   const bp = useBreakpoint();
   const uploadRef = React.useRef();
@@ -1826,7 +1840,48 @@ const FvDetailRow = ({ v, onEdit, onClose, forceUpdate }) => {
           </div>
         </div>
       </div>
+
+      <div style={{padding:'0 16px 16px'}}>
+        <div style={{font:'500 10px/1 "JetBrains Mono",monospace',letterSpacing:'.08em',
+          textTransform:'uppercase',color:'var(--ink-3)',marginBottom:8}}>NOTE</div>
+        {v.note ? (
+          <button onClick={openNote}
+            style={{display:'block',width:'100%',textAlign:'left',padding:'10px 12px',borderRadius:10,
+              border:'none',cursor:'pointer',fontFamily:'inherit',background:'var(--accent-soft)',
+              color:'var(--accent)',fontSize:12.5,lineHeight:1.6,whiteSpace:'pre-wrap'}}>✎ {v.note}</button>
+        ) : (
+          <button onClick={openNote}
+            style={{display:'block',width:'100%',padding:'9px 12px',borderRadius:10,
+              border:'1px dashed var(--border-strong)',cursor:'pointer',fontFamily:'inherit',
+              background:'transparent',color:'var(--ink-3)',fontSize:12.5}}>+ ចំណាំ · Note</button>
+        )}
+      </div>
     </Card>
+
+    <Modal open={noteOpen} onClose={() => setNoteOpen(false)} width={520}>
+      <div style={{padding:'14px 16px 18px'}}>
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+          <Icon name="car" size={26}/>
+          <div style={{minWidth:0}}>
+            <div style={{fontSize:16,fontWeight:700,color:'var(--ink)'}}>ចំណាំ · Note</div>
+            <div style={{fontSize:11.5,color:'var(--ink-3)',fontFamily:'"JetBrains Mono",monospace'}}>
+              {v.plate}{v.make ? ' · ' + v.make : ''}</div>
+          </div>
+        </div>
+        <textarea value={noteText} onChange={e => setNoteText(e.target.value)} rows={5}
+          placeholder={'ឧ. ម៉ាស៊ីនត្រជាក់ខ្សោយ · សោបម្រុងនៅការិយាល័យ'}
+          style={{width:'100%',boxSizing:'border-box',padding:'11px 13px',resize:'vertical',
+            fontFamily:'var(--font-km), var(--font-en), sans-serif',fontSize:15,lineHeight:1.65,
+            color:'var(--ink)',background:'var(--surface-muted)',
+            border:'1px solid var(--border)',borderRadius:12,outline:'none'}}/>
+        <div style={{display:'flex',gap:9,marginTop:14}}>
+          <Btn kind="ghost" size="lg" onClick={() => setNoteOpen(false)} style={{flex:1,justifyContent:'center'}}>
+            បោះបង់</Btn>
+          <Btn kind="accent" size="lg" onClick={saveNote} style={{flex:2,justifyContent:'center',fontWeight:700}}>
+            រក្សាទុក</Btn>
+        </div>
+      </div>
+    </Modal>
     </>
   );
 };
