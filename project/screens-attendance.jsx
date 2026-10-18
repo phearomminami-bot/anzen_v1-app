@@ -94,6 +94,7 @@ const attendanceReportPDF = (rows, meta, lang) => {
       ${td(r.t.rate == null ? '—' : `<b style="color:${low ? '#9B2C2C' : '#101828'}">${kd(r.t.rate)}%</b>`, 'text-align:center')}
       ${td(kd(Math.max(0, Math.round((r.s.hours || 0) * 10) / 10)) + 'h', 'text-align:center')}
       ${td(r.s.target ? kd(Math.max(0, Math.round((r.s.target - (r.s.hours || 0)) * 10) / 10)) + 'h' : '—', 'text-align:center')}
+      ${td(r.days == null ? '—' : (r.days === 0 ? '✓' : kd(r.days)), 'text-align:center')}
       ${td(low ? `<span style="color:#9B2C2C;font-weight:700">${L('ត្រូវតាមដាន','Follow up')}</span>` : '')}
     </tr>`;
   }).join('');
@@ -124,7 +125,7 @@ const attendanceReportPDF = (rows, meta, lang) => {
       <thead><tr>
         ${th(L('សិស្ស','Student'), '21%')}
         ${ATTEND_ORDER.map(k => th(L(ATTEND_MARKS[k].km, ATTEND_MARKS[k].en))).join('')}
-        ${th(L('វត្តមាន','Rate'))}${th(L('រៀនរួច','Done'))}${th(L('នៅសល់','Left'))}${th(L('កំណត់សម្គាល់','Note'), '16%')}
+        ${th(L('វត្តមាន','Rate'))}${th(L('រៀនរួច','Done'))}${th(L('ម៉ោងនៅសល់','Hours left'))}${th(L('ថ្ងៃនៅសល់','Days left'))}${th(L('កំណត់សម្គាល់','Note'), '14%')}
       </tr></thead>
       <tbody>${body}</tbody></table>
     ${watch.length ? `<div style="margin-top:14px;padding:10px 12px;border-radius:9px;background:#FDECEC">
@@ -294,6 +295,20 @@ const AttendanceScreen = ({ role = 'admin' }) => {
   const doneHours = (s) => Math.max(0, Math.round((s.hours || 0) * 10) / 10);
   const leftHours = (s) => (s.target ? Math.max(0, Math.round((s.target - (s.hours || 0)) * 10) / 10) : null);
 
+  const usualLen = (sid) => {
+    const mine = (LESSONS || []).filter(l => l.studentId === sid && attendCountable(l) && l.len);
+    if (!mine.length) return 2;
+    return mine.reduce((a, l) => a + l.len, 0) / mine.length;
+  };
+  // Days still to come, at the length that student usually sits. An estimate,
+  // and the only honest one: the rest of the term may not be booked yet.
+  const leftDays = (s) => {
+    const h = leftHours(s);
+    if (h == null) return null;
+    if (h <= 0) return 0;
+    return Math.ceil(h / Math.max(0.5, usualLen(s.id)));
+  };
+
   const dayView = (
     <>
       <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
@@ -338,7 +353,7 @@ const AttendanceScreen = ({ role = 'admin' }) => {
 
       <Card>
         <div style={{overflowX:'auto',overflowY:'hidden',WebkitOverflowScrolling:'touch'}}>
-          <div style={{minWidth: NAME_W + monthDays.length * CELL_W + SUM_W * 3}}>
+          <div style={{minWidth: NAME_W + monthDays.length * CELL_W + SUM_W * 4}}>
 
             {/* day numbers */}
             <div style={{display:'flex',alignItems:'stretch',borderBottom:'1px solid var(--border)'}}>
@@ -356,7 +371,7 @@ const AttendanceScreen = ({ role = 'admin' }) => {
                     color: d.rest ? '#b0413e' : (d.iso === todayStr() ? 'var(--accent)' : 'var(--ink)')}}>{d.dn}</div>
                 </div>
               ))}
-              {[tr('វត្តមាន','Rate'), tr('រៀន​រួច','Done'), tr('នៅ​សល់','Left')].map((t, k) => (
+              {[tr('វត្តមាន','Rate'), tr('រៀន​រួច','Done'), tr('ម៉ោង​នៅ​សល់','Hours left'), tr('ថ្ងៃ​នៅ​សល់','Days left')].map((t, k) => (
                 <div key={k} style={{width:SUM_W,flexShrink:0,display:'flex',alignItems:'flex-end',justifyContent:'center',
                   padding:'6px 0',borderLeft: k ? '1px solid var(--border)' : 'none'}}>
                   <span style={{fontSize:10.5,fontWeight:700,color:'var(--ink-3)',textAlign:'center'}}>{t}</span>
@@ -435,6 +450,17 @@ const AttendanceScreen = ({ role = 'admin' }) => {
                         {leftHours(s) === 0 ? tr('ចប់ ✓','Done ✓') : leftHours(s) + 'h'}</span>
                     )}
                   </div>
+                  <div style={{width:SUM_W,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',
+                    borderLeft:'1px solid var(--border)'}}>
+                    {leftDays(s) == null ? (
+                      <span style={{fontSize:12,color:'var(--ink-3)'}}>—</span>
+                    ) : leftDays(s) === 0 ? (
+                      <span style={{fontSize:12.5,fontWeight:800,color:ATTEND_MARKS.present.fg}}>✓</span>
+                    ) : (
+                      <span style={{fontSize:12.5,fontWeight:800,color:'var(--ink-2)'}}>
+                        {leftDays(s)} {tr('ថ្ងៃ','d')}</span>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -459,6 +485,10 @@ const AttendanceScreen = ({ role = 'admin' }) => {
           <span style={{width:4,height:4,borderRadius:999,background:'var(--border)'}}/>
           {tr('គ្មាន​មេរៀន','No lesson')}
         </span>
+        <span style={{width:'100%',color:'var(--ink-3)'}}>
+          {tr('«ថ្ងៃ​នៅ​សល់» ប៉ាន់​ស្មាន​ពី​ម៉ោង​នៅ​សល់ ចែក​នឹង​រយៈពេល​ដែល​សិស្ស​នោះ​រៀន​ម្ដងៗ។',
+              'Days left is an estimate: hours left divided by how long that student usually sits.')}
+        </span>
       </div>
     </>
   );
@@ -477,7 +507,7 @@ const AttendanceScreen = ({ role = 'admin' }) => {
 
   const rows = (STUDENTS || [])
     .filter(s => s && s.status !== 'Former')
-    .map(s => ({ s, t: attendTally((LESSONS || []).filter(l => l.studentId === s.id && inSpan(l) && mine(l))) }))
+    .map(s => ({ s, t: attendTally((LESSONS || []).filter(l => l.studentId === s.id && inSpan(l) && mine(l))), days: leftDays(s) }))
     .filter(r => r.t.marked + r.t.unmarked > 0)
     .sort((a, b) => (a.t.rate ?? 999) - (b.t.rate ?? 999));
 
@@ -508,6 +538,7 @@ const AttendanceScreen = ({ role = 'admin' }) => {
       [tr('ម៉ោង​ខែ​នេះ','Hours this month'), r => r.t.hours],
       [tr('សរុប​ម៉ោង​រៀន','Hours done total'), r => Math.max(0, Math.round((r.s.hours || 0) * 10) / 10)],
       [tr('ម៉ោង​នៅ​សល់','Hours left'), r => (r.s.target ? Math.max(0, Math.round((r.s.target - (r.s.hours || 0)) * 10) / 10) : '')],
+      [tr('ថ្ងៃ​នៅ​សល់ (ប៉ាន់​ស្មាន)','Days left (estimate)'), r => (leftDays(r.s) == null ? '' : leftDays(r.s))],
       [tr('ម៉ោង​គោលដៅ','Target hours'), r => r.s.target || ''],
     ];
     const ok = (typeof exportCSV === 'function') &&
