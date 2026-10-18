@@ -192,7 +192,6 @@ const attendanceReportPDF = (rows, meta, lang) => {
 const AttendanceScreen = ({ role = 'admin' }) => {
   const { tr, lang, toast, openDetail } = useAppActions();
   const [tab, setTab]   = React.useState('day');
-  const [date, setDate] = React.useState(() => todayStr());
   const [span, setSpan] = React.useState('month');     // week | month | all
   const [ver, setVer]   = React.useState(0);
   const force = () => setVer(n => n + 1);
@@ -221,39 +220,84 @@ const AttendanceScreen = ({ role = 'admin' }) => {
   const vehOf     = (id) => (VEHICLES || []).find(v => v.id === id);
   const nm = (x) => !x ? '—' : ((lang === 'km' ? (x.name || x.en) : (x.en || x.name)) || x.id);
 
-  // ── day ───────────────────────────────────────────────────────────────────
-  const dayLessons = (LESSONS || [])
-    .filter(l => l.date === date && attendCountable(l) && mine(l))
-    .sort((a, b) => (a.h || 0) - (b.h || 0));
-  const dayCount = (k) => dayLessons.filter(l => l.attend === k).length;
-  const unmarked = dayLessons.filter(l => !ATTEND_MARKS[l.attend]);
+  // ── the register ──────────────────────────────────────────────────────────
+  // A month at a time, students down and days across — the shape a paper
+  // register already has, so a whole class is marked without changing screen.
+  const [month, setMonth] = React.useState(() => todayStr().slice(0, 7));
 
-  const shiftDay = (n) => {
-    const d = new Date(date + 'T00:00:00');
-    d.setDate(d.getDate() + n);
+  const monthDays = React.useMemo(() => {
+    const [y, m] = month.split('-').map(Number);
+    if (!y || !m) return [];
+    const n = new Date(y, m, 0).getDate();
     const p = x => String(x).padStart(2, '0');
-    setDate(`${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`);
+    return Array.from({ length: n }, (_, i) => {
+      const iso = `${y}-${p(m)}-${p(i + 1)}`;
+      const d = new Date(iso + 'T00:00:00');
+      return { iso, dn: i + 1, dow: d.getDay(), rest: typeof isRestDay === 'function' ? isRestDay(iso) : d.getDay() === 0 };
+    });
+  }, [month]);
+
+  const shiftMonth = (n) => {
+    const [y, m] = month.split('-').map(Number);
+    const d = new Date(y, m - 1 + n, 1);
+    setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
   };
 
-  const markAllPresent = () => {
-    if (!unmarked.length) return;
-    unmarked.forEach(l => attendApply(l, 'present', meName));
+  // studentId|date → the lessons that day. A student can sit twice in a day,
+  // so a cell is a list and a mark applies to all of it.
+  const cells = React.useMemo(() => {
+    const map = new Map();
+    (LESSONS || []).forEach(l => {
+      if (!l || !l.date || !l.date.startsWith(month) || !attendCountable(l) || !mine(l)) return;
+      const k = l.studentId + '|' + l.date;
+      if (!map.has(k)) map.set(k, []);
+      map.get(k).push(l);
+    });
+    return map;
+  }, [month, ver, myInstId]);
+
+  const roster = (STUDENTS || []).filter(s => s && s.status !== 'Former' && s.status !== 'Cleared');
+
+  // One tap steps through the marks. Marking is mostly confirming that people
+  // turned up, so the first tap is the common answer and the rest follow.
+  const CYCLE = ['present', 'late', 'absent', 'excused', ''];
+  const stepCell = (list) => {
+    const cur = list[0] ? (list[0].attend || '') : '';
+    const next = CYCLE[(CYCLE.indexOf(cur) + 1) % CYCLE.length];
+    list.forEach(l => attendApply(l, next, meName));
     save();
-    toast(tr(`បាន​កត់ ${unmarked.length} មេរៀន​ថា «មក» ✓`, `Marked ${unmarked.length} present ✓`), 'good');
   };
+
+  const monthUnmarked = [...cells.values()].flat().filter(l => !ATTEND_MARKS[l.attend]);
+  const markMonthPresent = () => {
+    if (!monthUnmarked.length) return;
+    monthUnmarked.forEach(l => attendApply(l, 'present', meName));
+    save();
+    toast(tr(`បាន​កត់ ${monthUnmarked.length} មេរៀន​ថា «មក» ✓`, `Marked ${monthUnmarked.length} present ✓`), 'good');
+  };
+
+  const monthTally = (k) => [...cells.values()].flat().filter(l => l.attend === k).length;
+  const KM_MON = ['មករា','កុម្ភៈ','មីនា','មេសា','ឧសភា','មិថុនា','កក្កដា','សីហា','កញ្ញា','តុលា','វិច្ឆិកា','ធ្នូ'];
+  const EN_MON = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const monthLabel = (() => {
+    const [y, m] = month.split('-').map(Number);
+    return tr(`${KM_MON[m - 1]} ${y}`, `${EN_MON[m - 1]} ${y}`);
+  })();
+  const DOW_KM = ['អា','ច','អ','ព','ព្រ','សុ','ស'];
+  const DOW_EN = ['S','M','T','W','T','F','S'];
+
+  const NAME_W = 118, CELL_W = 30, CELL_H = 34;
 
   const dayView = (
     <>
       <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
-        <Btn kind="ghost" size="md" onClick={() => shiftDay(-1)}>◀</Btn>
+        <Btn kind="ghost" size="md" onClick={() => shiftMonth(-1)}>◀</Btn>
         <div style={{flex:1,minWidth:0,textAlign:'center',padding:'8px 10px',borderRadius:12,
-          background:'var(--surface)',border:'1px solid var(--border)',position:'relative'}}>
-          <div style={{fontSize:14,fontWeight:700,color:'var(--ink)'}}>{date}</div>
-          <input type="date" value={date} onChange={e => e.target.value && setDate(e.target.value)}
-            style={{position:'absolute',inset:0,opacity:0,width:'100%',height:'100%',cursor:'pointer'}}/>
+          background:'var(--surface)',border:'1px solid var(--border)'}}>
+          <div style={{fontSize:14,fontWeight:700,color:'var(--ink)'}}>{monthLabel}</div>
         </div>
-        <Btn kind="ghost" size="md" onClick={() => shiftDay(1)}>▶</Btn>
-        <Btn kind="ghost" size="md" onClick={() => setDate(todayStr())}>{tr('ថ្ងៃ​នេះ','Today')}</Btn>
+        <Btn kind="ghost" size="md" onClick={() => shiftMonth(1)}>▶</Btn>
+        <Btn kind="ghost" size="md" onClick={() => setMonth(todayStr().slice(0, 7))}>{tr('ខែ​នេះ','This month')}</Btn>
       </div>
 
       <div style={{display:'flex',gap:7,marginBottom:12}}>
@@ -261,72 +305,141 @@ const AttendanceScreen = ({ role = 'admin' }) => {
           const c = ATTEND_MARKS[k];
           return (
             <div key={k} style={{flex:1,minWidth:0,background:c.bg,borderRadius:13,padding:'9px 10px'}}>
-              <div style={{fontSize:19,fontWeight:800,color:c.fg,lineHeight:1.1}}>{dayCount(k)}</div>
-              <div style={{fontSize:10.5,color:c.fg,opacity:.85,marginTop:1}}>{tr(c.km, c.en)}</div>
+              <div style={{fontSize:19,fontWeight:800,color:c.fg,lineHeight:1.1}}>{monthTally(k)}</div>
+              <div style={{fontSize:10.5,color:c.fg,opacity:.85,marginTop:1}}>{c.ico} {tr(c.km, c.en)}</div>
             </div>
           );
         })}
       </div>
 
-      {unmarked.length > 0 && (
+      {monthUnmarked.length > 0 && (
         <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:12,padding:'10px 13px',
           borderRadius:13,background:'rgba(202,138,4,.12)'}}>
           <span style={{flex:1,minWidth:0,fontSize:12,color:'#8A6206',lineHeight:1.5}}>
-            {tr(`នៅ​សល់ ${unmarked.length} មេរៀន​មិន​ទាន់​កត់`, `${unmarked.length} not marked yet`)}
+            {tr(`នៅ​សល់ ${monthUnmarked.length} មេរៀន​មិន​ទាន់​កត់​ក្នុង​ខែ​នេះ`, `${monthUnmarked.length} unmarked this month`)}
           </span>
-          <Btn kind="accent" size="sm" onClick={markAllPresent}
+          <Btn kind="accent" size="sm" onClick={markMonthPresent}
             style={{flexShrink:0,background:'#2FBF71',borderColor:'#2FBF71'}}>
             {tr('កត់​ទាំង​អស់​ថា «មក»','Mark all present')}
           </Btn>
         </div>
       )}
 
-      {dayLessons.length === 0 ? (
-        <Card><div style={{padding:'28px 16px',textAlign:'center',fontSize:13,color:'var(--ink-3)'}}>
-          {tr('គ្មាន​មេរៀន​ថ្ងៃ​នេះ','No lessons on this day')}
-        </div></Card>
-      ) : (
-        <Card>
-          {dayLessons.map((l, i) => {
-            const c = ATTEND_MARKS[l.attend];
-            const s = studentOf(l.studentId);
-            return (
-              <div key={l.id} style={{display:'flex',alignItems:'center',gap:11,padding:'11px 13px',
-                borderTop: i ? '1px solid var(--border)' : 'none', background: c ? c.bg : 'transparent'}}>
-                <div style={{flexShrink:0,width:52}}>
-                  <div style={{fontSize:13,fontWeight:800,color:'var(--ink)',lineHeight:1.2}}>
-                    {String(l.h).padStart(2,'0')}:00</div>
-                  <div style={{fontSize:10,color:'var(--ink-3)'}}>{l.len}h</div>
+      <div style={{fontSize:11.5,color:'var(--ink-3)',lineHeight:1.6,marginBottom:9}}>
+        {tr('ប៉ះ​ប្រអប់​ដើម្បី​កត់ — ម្ដង​មួយ​ជំហាន៖ មក → មកយឺត → អវត្តមាន → សុំច្បាប់ → លុប',
+            'Tap a box to step through: present → late → absent → excused → clear')}
+      </div>
+
+      <Card>
+        <div style={{overflowX:'auto',overflowY:'hidden',WebkitOverflowScrolling:'touch'}}>
+          <div style={{minWidth: NAME_W + monthDays.length * CELL_W + 56}}>
+
+            {/* day numbers */}
+            <div style={{display:'flex',alignItems:'stretch',borderBottom:'1px solid var(--border)'}}>
+              <div style={{position:'sticky',left:0,zIndex:2,width:NAME_W,flexShrink:0,
+                background:'var(--surface)',borderRight:'1px solid var(--border)',
+                display:'flex',alignItems:'flex-end',padding:'6px 10px 6px'}}>
+                <span style={{fontSize:11,fontWeight:700,color:'var(--ink-3)'}}>{tr('សិស្ស','Student')}</span>
+              </div>
+              {monthDays.map(d => (
+                <div key={d.iso} style={{width:CELL_W,flexShrink:0,textAlign:'center',padding:'5px 0 4px',
+                  background: d.rest ? 'rgba(176,65,62,.13)' : 'transparent'}}>
+                  <div style={{fontSize:9,color: d.rest ? '#b0413e' : 'var(--ink-3)',lineHeight:1.2}}>
+                    {tr(DOW_KM[d.dow], DOW_EN[d.dow])}</div>
+                  <div style={{fontSize:11,fontWeight:700,lineHeight:1.3,
+                    color: d.rest ? '#b0413e' : (d.iso === todayStr() ? 'var(--accent)' : 'var(--ink)')}}>{d.dn}</div>
                 </div>
-                <div style={{flex:1,minWidth:0,cursor:'pointer'}} onClick={() => openDetail?.('lesson', l)}>
-                  <div style={{fontSize:14,fontWeight:700,color:'var(--ink)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{nm(s)}</div>
-                  <div style={{fontSize:10.5,color:'var(--ink-3)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
-                    {nm(instOf(l.instId))}{l.veh ? ' · ' + ((vehOf(l.veh) || {}).plate || l.veh) : ''}
+              ))}
+              <div style={{width:56,flexShrink:0,display:'flex',alignItems:'flex-end',justifyContent:'center',padding:'6px 0'}}>
+                <span style={{fontSize:10.5,fontWeight:700,color:'var(--ink-3)'}}>{tr('វត្តមាន','Rate')}</span>
+              </div>
+            </div>
+
+            {/* one row per student */}
+            {roster.length === 0 ? (
+              <div style={{padding:'28px 16px',textAlign:'center',fontSize:13,color:'var(--ink-3)'}}>
+                {tr('គ្មាន​សិស្ស','No students')}
+              </div>
+            ) : roster.map((s, ri) => {
+              const rowLessons = monthDays.flatMap(d => cells.get(s.id + '|' + d.iso) || []);
+              const t = attendTally(rowLessons);
+              const low = t.rate != null && t.rate < ATTEND_LOW;
+              return (
+                <div key={s.id} style={{display:'flex',alignItems:'stretch',
+                  borderTop: ri ? '1px solid var(--border)' : 'none'}}>
+                  <div style={{position:'sticky',left:0,zIndex:2,width:NAME_W,flexShrink:0,
+                    background:'var(--surface)',borderRight:'1px solid var(--border)',
+                    display:'flex',flexDirection:'column',justifyContent:'center',padding:'4px 10px'}}>
+                    <div style={{fontSize:12.5,fontWeight:600,color:'var(--ink)',
+                      whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{nm(s)}</div>
+                    <div style={{fontSize:9.5,color:'var(--ink-3)'}}>
+                      {t.hours}{s.target ? '/' + s.target : ''}{tr('ម៉ោង','h')}</div>
                   </div>
-                </div>
-                <div style={{flexShrink:0,display:'flex',gap:5,flexWrap:'wrap',justifyContent:'flex-end',maxWidth:260}}>
-                  {ATTEND_ORDER.map(k => {
-                    const m = ATTEND_MARKS[k];
-                    const on = l.attend === k;
+
+                  {monthDays.map(d => {
+                    const list = cells.get(s.id + '|' + d.iso) || [];
+                    const has = list.length > 0;
+                    const m = has ? ATTEND_MARKS[list[0].attend] : null;
+                    const mixed = has && list.length > 1 && list.some(l => l.attend !== list[0].attend);
                     return (
-                      <button key={k} onClick={() => mark(l, on ? '' : k)}
-                        style={{border: on ? 'none' : '1px solid var(--border)',
-                          background: on ? m.edge : 'var(--surface)',
-                          color: on ? '#fff' : m.fg,
-                          fontSize:11.5,fontWeight:700,padding:'7px 10px',borderRadius:10,
-                          cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>
-                        {m.ico} {tr(m.km, m.en)}
-                      </button>
+                      <div key={d.iso} style={{width:CELL_W,height:CELL_H,flexShrink:0,
+                        display:'flex',alignItems:'center',justifyContent:'center',
+                        background: d.rest ? 'rgba(176,65,62,.06)' : 'transparent'}}>
+                        {has ? (
+                          <button onClick={() => stepCell(list)}
+                            title={`${nm(s)} · ${d.iso}${m ? ' · ' + tr(m.km, m.en) : ''}`}
+                            aria-label={`${nm(s)} ${d.iso}`}
+                            style={{width:24,height:24,borderRadius:7,cursor:'pointer',fontFamily:'inherit',
+                              display:'flex',alignItems:'center',justifyContent:'center',
+                              fontSize:12,fontWeight:800,lineHeight:1,
+                              border: m ? 'none' : '1.5px dashed var(--border-strong)',
+                              background: m ? m.edge : 'transparent',
+                              color: m ? '#fff' : 'var(--ink-3)'}}>
+                            {mixed ? '•' : (m ? m.ico : '')}
+                            {list.length > 1 && !mixed && (
+                              <span style={{fontSize:7,marginLeft:1,opacity:.85}}>{list.length}</span>
+                            )}
+                          </button>
+                        ) : (
+                          <span style={{width:4,height:4,borderRadius:999,background:'var(--border)'}}/>
+                        )}
+                      </div>
                     );
                   })}
+
+                  <div style={{width:56,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    <span style={{fontSize:12.5,fontWeight:800,
+                      color: t.rate == null ? 'var(--ink-3)' : low ? ATTEND_MARKS.absent.fg : 'var(--ink)'}}>
+                      {t.rate == null ? '—' : t.rate + '%'}</span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </Card>
-      )}
+              );
+            })}
+          </div>
+        </div>
+      </Card>
+
+      <div style={{display:'flex',flexWrap:'wrap',gap:'6px 14px',marginTop:10,fontSize:11,color:'var(--ink-3)'}}>
+        {ATTEND_ORDER.map(k => (
+          <span key={k} style={{display:'inline-flex',alignItems:'center',gap:5}}>
+            <span style={{width:16,height:16,borderRadius:5,background:ATTEND_MARKS[k].edge,color:'#fff',
+              display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:800}}>
+              {ATTEND_MARKS[k].ico}</span>
+            {tr(ATTEND_MARKS[k].km, ATTEND_MARKS[k].en)}
+          </span>
+        ))}
+        <span style={{display:'inline-flex',alignItems:'center',gap:5}}>
+          <span style={{width:16,height:16,borderRadius:5,border:'1.5px dashed var(--border-strong)'}}/>
+          {tr('មាន​មេរៀន — មិន​ទាន់​កត់','Lesson, not marked')}
+        </span>
+        <span style={{display:'inline-flex',alignItems:'center',gap:5}}>
+          <span style={{width:4,height:4,borderRadius:999,background:'var(--border)'}}/>
+          {tr('គ្មាន​មេរៀន','No lesson')}
+        </span>
+      </div>
     </>
   );
+
 
   // ── overview ──────────────────────────────────────────────────────────────
   const inSpan = (l) => {

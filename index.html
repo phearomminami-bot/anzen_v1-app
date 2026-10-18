@@ -773,7 +773,7 @@ window.__trRegistry = {
   "No ratings yet": "មិន​ទាន់​មាន​ការ​វាយ​តម្លៃ",
   "reviews": "មតិ",
   "Rated": "បាន​វាយ​តម្លៃ",
-  "Rate": "វាយ​តម្លៃ",
+  "Rate": "វត្តមាន",
   "Couldn\\'t load the sheet": "ទាញ​តារាង​មិន​បាន",
   "Make the sheet public: Google Sheets → Share → “Anyone with the link” → Viewer. Or File → Share → Publish to web → CSV, then paste that URL.": "សូម​ចែករំលែក​សន្លឹក​ជា​សាធារណៈ៖ Google Sheets → Share → “Anyone with the link” → Viewer។ ឬ File → Share → Publish to web → CSV រួច​ដាក់ URL នោះ។",
   "Couldn\\'t auto-detect columns — tap ⚙ → ↻ → choose the date/student/company/score columns. Showing all data for now.": "រក​ជួរ​ឈរ​ស្វ័យ​ប្រវត្តិ​មិន​ឃើញ​ទេ — ចុច ⚙ → ↻ → ជ្រើស​ជួរ​ឈរ (កាលបរិច្ឆេទ/សិស្ស/ក្រុមហ៊ុន/ពិន្ទុ)។ ខាង​ក្រោម​បង្ហាញ​ទិន្នន័យ​ទាំង​អស់​សិន។",
@@ -1004,7 +1004,9 @@ window.__trRegistry = {
   "PAYMENT METHODS": "វិធី​សាស្ត្រ​ទូទាត់",
   "COURSE PLANS": "គម្រោង​វគ្គ​សិក្សា",
   "Mark all present": "កត់​ទាំង​អស់​ថា «មក»",
-  "No lessons on this day": "គ្មាន​មេរៀន​ថ្ងៃ​នេះ",
+  "Tap a box to step through: present → late → absent → excused → clear": "ប៉ះ​ប្រអប់​ដើម្បី​កត់ — ម្ដង​មួយ​ជំហាន៖ មក → មកយឺត → អវត្តមាន → សុំច្បាប់ → លុប",
+  "Lesson, not marked": "មាន​មេរៀន — មិន​ទាន់​កត់",
+  "No lesson": "គ្មាន​មេរៀន",
   "Everything": "វគ្គ​ទាំង​មូល",
   "Nothing to report": "គ្មាន​ទិន្នន័យ​ដើម្បី​បង្ហាញ",
   "Nothing to export": "គ្មាន​ទំនិញ​សម្រាប់​នាំចេញ",
@@ -3460,7 +3462,9 @@ window.__trGroups = {
     "Hours needed": "ម៉ោង​ត្រូវ​ការ​ទាំង​អស់",
     "Generate — preview PDF": "បង្កើត — មើល PDF",
     "Mark all present": "កត់​ទាំង​អស់​ថា «មក»",
-    "No lessons on this day": "គ្មាន​មេរៀន​ថ្ងៃ​នេះ",
+    "Tap a box to step through: present → late → absent → excused → clear": "ប៉ះ​ប្រអប់​ដើម្បី​កត់ — ម្ដង​មួយ​ជំហាន៖ មក → មកយឺត → អវត្តមាន → សុំច្បាប់ → លុប",
+    "Lesson, not marked": "មាន​មេរៀន — មិន​ទាន់​កត់",
+    "No lesson": "គ្មាន​មេរៀន",
     "Everything": "វគ្គ​ទាំង​មូល",
     "Nothing to report": "គ្មាន​ទិន្នន័យ​ដើម្បី​បង្ហាញ",
     "Nothing to export": "គ្មាន​ទិន្នន័យ​ដើម្បី​បង្ហាញ",
@@ -29130,7 +29134,6 @@ var AttendanceScreen = ({
     openDetail
   } = useAppActions();
   var [tab, setTab] = React.useState('day');
-  var [date, setDate] = React.useState(() => todayStr());
   var [span, setSpan] = React.useState('month');
   var [ver, setVer] = React.useState(0);
   var force = () => setVer(n => n + 1);
@@ -29156,21 +29159,67 @@ var AttendanceScreen = ({
   var instOf = id => (INSTRUCTORS || []).find(i => i.id === id);
   var vehOf = id => (VEHICLES || []).find(v => v.id === id);
   var nm = x => !x ? '—' : (lang === 'km' ? x.name || x.en : x.en || x.name) || x.id;
-  var dayLessons = (LESSONS || []).filter(l => l.date === date && attendCountable(l) && mine(l)).sort((a, b) => (a.h || 0) - (b.h || 0));
-  var dayCount = k => dayLessons.filter(l => l.attend === k).length;
-  var unmarked = dayLessons.filter(l => !ATTEND_MARKS[l.attend]);
-  var shiftDay = n => {
-    var d = new Date(date + 'T00:00:00');
-    d.setDate(d.getDate() + n);
+  var [month, setMonth] = React.useState(() => todayStr().slice(0, 7));
+  var monthDays = React.useMemo(() => {
+    var [y, m] = month.split('-').map(Number);
+    if (!y || !m) return [];
+    var n = new Date(y, m, 0).getDate();
     var p = x => String(x).padStart(2, '0');
-    setDate(`${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`);
+    return Array.from({
+      length: n
+    }, (_, i) => {
+      var iso = `${y}-${p(m)}-${p(i + 1)}`;
+      var d = new Date(iso + 'T00:00:00');
+      return {
+        iso,
+        dn: i + 1,
+        dow: d.getDay(),
+        rest: typeof isRestDay === 'function' ? isRestDay(iso) : d.getDay() === 0
+      };
+    });
+  }, [month]);
+  var shiftMonth = n => {
+    var [y, m] = month.split('-').map(Number);
+    var d = new Date(y, m - 1 + n, 1);
+    setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
   };
-  var markAllPresent = () => {
-    if (!unmarked.length) return;
-    unmarked.forEach(l => attendApply(l, 'present', meName));
+  var cells = React.useMemo(() => {
+    var map = new Map();
+    (LESSONS || []).forEach(l => {
+      if (!l || !l.date || !l.date.startsWith(month) || !attendCountable(l) || !mine(l)) return;
+      var k = l.studentId + '|' + l.date;
+      if (!map.has(k)) map.set(k, []);
+      map.get(k).push(l);
+    });
+    return map;
+  }, [month, ver, myInstId]);
+  var roster = (STUDENTS || []).filter(s => s && s.status !== 'Former' && s.status !== 'Cleared');
+  var CYCLE = ['present', 'late', 'absent', 'excused', ''];
+  var stepCell = list => {
+    var cur = list[0] ? list[0].attend || '' : '';
+    var next = CYCLE[(CYCLE.indexOf(cur) + 1) % CYCLE.length];
+    list.forEach(l => attendApply(l, next, meName));
     save();
-    toast(tr(`បាន​កត់ ${unmarked.length} មេរៀន​ថា «មក» ✓`, `Marked ${unmarked.length} present ✓`), 'good');
   };
+  var monthUnmarked = [...cells.values()].flat().filter(l => !ATTEND_MARKS[l.attend]);
+  var markMonthPresent = () => {
+    if (!monthUnmarked.length) return;
+    monthUnmarked.forEach(l => attendApply(l, 'present', meName));
+    save();
+    toast(tr(`បាន​កត់ ${monthUnmarked.length} មេរៀន​ថា «មក» ✓`, `Marked ${monthUnmarked.length} present ✓`), 'good');
+  };
+  var monthTally = k => [...cells.values()].flat().filter(l => l.attend === k).length;
+  var KM_MON = ['មករា', 'កុម្ភៈ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា', 'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ'];
+  var EN_MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  var monthLabel = (() => {
+    var [y, m] = month.split('-').map(Number);
+    return tr(`${KM_MON[m - 1]} ${y}`, `${EN_MON[m - 1]} ${y}`);
+  })();
+  var DOW_KM = ['អា', 'ច', 'អ', 'ព', 'ព្រ', 'សុ', 'ស'];
+  var DOW_EN = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  var NAME_W = 118,
+    CELL_W = 30,
+    CELL_H = 34;
   var dayView = React.createElement(React.Fragment, null, React.createElement("div", {
     style: {
       display: 'flex',
@@ -29181,7 +29230,7 @@ var AttendanceScreen = ({
   }, React.createElement(Btn, {
     kind: "ghost",
     size: "md",
-    onClick: () => shiftDay(-1)
+    onClick: () => shiftMonth(-1)
   }, "\u25C0"), React.createElement("div", {
     style: {
       flex: 1,
@@ -29190,8 +29239,7 @@ var AttendanceScreen = ({
       padding: '8px 10px',
       borderRadius: 12,
       background: 'var(--surface)',
-      border: '1px solid var(--border)',
-      position: 'relative'
+      border: '1px solid var(--border)'
     }
   }, React.createElement("div", {
     style: {
@@ -29199,27 +29247,15 @@ var AttendanceScreen = ({
       fontWeight: 700,
       color: 'var(--ink)'
     }
-  }, date), React.createElement("input", {
-    type: "date",
-    value: date,
-    onChange: e => e.target.value && setDate(e.target.value),
-    style: {
-      position: 'absolute',
-      inset: 0,
-      opacity: 0,
-      width: '100%',
-      height: '100%',
-      cursor: 'pointer'
-    }
-  })), React.createElement(Btn, {
+  }, monthLabel)), React.createElement(Btn, {
     kind: "ghost",
     size: "md",
-    onClick: () => shiftDay(1)
+    onClick: () => shiftMonth(1)
   }, "\u25B6"), React.createElement(Btn, {
     kind: "ghost",
     size: "md",
-    onClick: () => setDate(todayStr())
-  }, tr('ថ្ងៃ​នេះ', 'Today'))), React.createElement("div", {
+    onClick: () => setMonth(todayStr().slice(0, 7))
+  }, tr('ខែ​នេះ', 'This month'))), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 7,
@@ -29243,15 +29279,15 @@ var AttendanceScreen = ({
         color: c.fg,
         lineHeight: 1.1
       }
-    }, dayCount(k)), React.createElement("div", {
+    }, monthTally(k)), React.createElement("div", {
       style: {
         fontSize: 10.5,
         color: c.fg,
         opacity: .85,
         marginTop: 1
       }
-    }, tr(c.km, c.en)));
-  })), unmarked.length > 0 && React.createElement("div", {
+    }, c.ico, " ", tr(c.km, c.en)));
+  })), monthUnmarked.length > 0 && React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -29269,63 +29305,130 @@ var AttendanceScreen = ({
       color: '#8A6206',
       lineHeight: 1.5
     }
-  }, tr(`នៅ​សល់ ${unmarked.length} មេរៀន​មិន​ទាន់​កត់`, `${unmarked.length} not marked yet`)), React.createElement(Btn, {
+  }, tr(`នៅ​សល់ ${monthUnmarked.length} មេរៀន​មិន​ទាន់​កត់​ក្នុង​ខែ​នេះ`, `${monthUnmarked.length} unmarked this month`)), React.createElement(Btn, {
     kind: "accent",
     size: "sm",
-    onClick: markAllPresent,
+    onClick: markMonthPresent,
     style: {
       flexShrink: 0,
       background: '#2FBF71',
       borderColor: '#2FBF71'
     }
-  }, tr('កត់​ទាំង​អស់​ថា «មក»', 'Mark all present'))), dayLessons.length === 0 ? React.createElement(Card, null, React.createElement("div", {
+  }, tr('កត់​ទាំង​អស់​ថា «មក»', 'Mark all present'))), React.createElement("div", {
+    style: {
+      fontSize: 11.5,
+      color: 'var(--ink-3)',
+      lineHeight: 1.6,
+      marginBottom: 9
+    }
+  }, tr('ប៉ះ​ប្រអប់​ដើម្បី​កត់ — ម្ដង​មួយ​ជំហាន៖ មក → មកយឺត → អវត្តមាន → សុំច្បាប់ → លុប', 'Tap a box to step through: present → late → absent → excused → clear')), React.createElement(Card, null, React.createElement("div", {
+    style: {
+      overflowX: 'auto',
+      overflowY: 'hidden',
+      WebkitOverflowScrolling: 'touch'
+    }
+  }, React.createElement("div", {
+    style: {
+      minWidth: NAME_W + monthDays.length * CELL_W + 56
+    }
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'stretch',
+      borderBottom: '1px solid var(--border)'
+    }
+  }, React.createElement("div", {
+    style: {
+      position: 'sticky',
+      left: 0,
+      zIndex: 2,
+      width: NAME_W,
+      flexShrink: 0,
+      background: 'var(--surface)',
+      borderRight: '1px solid var(--border)',
+      display: 'flex',
+      alignItems: 'flex-end',
+      padding: '6px 10px 6px'
+    }
+  }, React.createElement("span", {
+    style: {
+      fontSize: 11,
+      fontWeight: 700,
+      color: 'var(--ink-3)'
+    }
+  }, tr('សិស្ស', 'Student'))), monthDays.map(d => React.createElement("div", {
+    key: d.iso,
+    style: {
+      width: CELL_W,
+      flexShrink: 0,
+      textAlign: 'center',
+      padding: '5px 0 4px',
+      background: d.rest ? 'rgba(176,65,62,.13)' : 'transparent'
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 9,
+      color: d.rest ? '#b0413e' : 'var(--ink-3)',
+      lineHeight: 1.2
+    }
+  }, tr(DOW_KM[d.dow], DOW_EN[d.dow])), React.createElement("div", {
+    style: {
+      fontSize: 11,
+      fontWeight: 700,
+      lineHeight: 1.3,
+      color: d.rest ? '#b0413e' : d.iso === todayStr() ? 'var(--accent)' : 'var(--ink)'
+    }
+  }, d.dn))), React.createElement("div", {
+    style: {
+      width: 56,
+      flexShrink: 0,
+      display: 'flex',
+      alignItems: 'flex-end',
+      justifyContent: 'center',
+      padding: '6px 0'
+    }
+  }, React.createElement("span", {
+    style: {
+      fontSize: 10.5,
+      fontWeight: 700,
+      color: 'var(--ink-3)'
+    }
+  }, tr('វត្តមាន', 'Rate')))), roster.length === 0 ? React.createElement("div", {
     style: {
       padding: '28px 16px',
       textAlign: 'center',
       fontSize: 13,
       color: 'var(--ink-3)'
     }
-  }, tr('គ្មាន​មេរៀន​ថ្ងៃ​នេះ', 'No lessons on this day'))) : React.createElement(Card, null, dayLessons.map((l, i) => {
-    var c = ATTEND_MARKS[l.attend];
-    var s = studentOf(l.studentId);
+  }, tr('គ្មាន​សិស្ស', 'No students')) : roster.map((s, ri) => {
+    var rowLessons = monthDays.flatMap(d => cells.get(s.id + '|' + d.iso) || []);
+    var t = attendTally(rowLessons);
+    var low = t.rate != null && t.rate < ATTEND_LOW;
     return React.createElement("div", {
-      key: l.id,
+      key: s.id,
       style: {
         display: 'flex',
-        alignItems: 'center',
-        gap: 11,
-        padding: '11px 13px',
-        borderTop: i ? '1px solid var(--border)' : 'none',
-        background: c ? c.bg : 'transparent'
+        alignItems: 'stretch',
+        borderTop: ri ? '1px solid var(--border)' : 'none'
       }
     }, React.createElement("div", {
       style: {
+        position: 'sticky',
+        left: 0,
+        zIndex: 2,
+        width: NAME_W,
         flexShrink: 0,
-        width: 52
+        background: 'var(--surface)',
+        borderRight: '1px solid var(--border)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        padding: '4px 10px'
       }
     }, React.createElement("div", {
       style: {
-        fontSize: 13,
-        fontWeight: 800,
-        color: 'var(--ink)',
-        lineHeight: 1.2
-      }
-    }, String(l.h).padStart(2, '0'), ":00"), React.createElement("div", {
-      style: {
-        fontSize: 10,
-        color: 'var(--ink-3)'
-      }
-    }, l.len, "h")), React.createElement("div", {
-      style: {
-        flex: 1,
-        minWidth: 0,
-        cursor: 'pointer'
-      },
-      onClick: () => openDetail?.('lesson', l)
-    }, React.createElement("div", {
-      style: {
-        fontSize: 14,
-        fontWeight: 700,
+        fontSize: 12.5,
+        fontWeight: 600,
         color: 'var(--ink)',
         whiteSpace: 'nowrap',
         overflow: 'hidden',
@@ -29333,42 +29436,130 @@ var AttendanceScreen = ({
       }
     }, nm(s)), React.createElement("div", {
       style: {
-        fontSize: 10.5,
-        color: 'var(--ink-3)',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
+        fontSize: 9.5,
+        color: 'var(--ink-3)'
       }
-    }, nm(instOf(l.instId)), l.veh ? ' · ' + ((vehOf(l.veh) || {}).plate || l.veh) : '')), React.createElement("div", {
-      style: {
-        flexShrink: 0,
-        display: 'flex',
-        gap: 5,
-        flexWrap: 'wrap',
-        justifyContent: 'flex-end',
-        maxWidth: 260
-      }
-    }, ATTEND_ORDER.map(k => {
-      var m = ATTEND_MARKS[k];
-      var on = l.attend === k;
-      return React.createElement("button", {
-        key: k,
-        onClick: () => mark(l, on ? '' : k),
+    }, t.hours, s.target ? '/' + s.target : '', tr('ម៉ោង', 'h'))), monthDays.map(d => {
+      var list = cells.get(s.id + '|' + d.iso) || [];
+      var has = list.length > 0;
+      var m = has ? ATTEND_MARKS[list[0].attend] : null;
+      var mixed = has && list.length > 1 && list.some(l => l.attend !== list[0].attend);
+      return React.createElement("div", {
+        key: d.iso,
         style: {
-          border: on ? 'none' : '1px solid var(--border)',
-          background: on ? m.edge : 'var(--surface)',
-          color: on ? '#fff' : m.fg,
-          fontSize: 11.5,
-          fontWeight: 700,
-          padding: '7px 10px',
-          borderRadius: 10,
+          width: CELL_W,
+          height: CELL_H,
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: d.rest ? 'rgba(176,65,62,.06)' : 'transparent'
+        }
+      }, has ? React.createElement("button", {
+        onClick: () => stepCell(list),
+        title: `${nm(s)} · ${d.iso}${m ? ' · ' + tr(m.km, m.en) : ''}`,
+        "aria-label": `${nm(s)} ${d.iso}`,
+        style: {
+          width: 24,
+          height: 24,
+          borderRadius: 7,
           cursor: 'pointer',
           fontFamily: 'inherit',
-          whiteSpace: 'nowrap'
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 12,
+          fontWeight: 800,
+          lineHeight: 1,
+          border: m ? 'none' : '1.5px dashed var(--border-strong)',
+          background: m ? m.edge : 'transparent',
+          color: m ? '#fff' : 'var(--ink-3)'
         }
-      }, m.ico, " ", tr(m.km, m.en));
-    })));
-  })));
+      }, mixed ? '•' : m ? m.ico : '', list.length > 1 && !mixed && React.createElement("span", {
+        style: {
+          fontSize: 7,
+          marginLeft: 1,
+          opacity: .85
+        }
+      }, list.length)) : React.createElement("span", {
+        style: {
+          width: 4,
+          height: 4,
+          borderRadius: 999,
+          background: 'var(--border)'
+        }
+      }));
+    }), React.createElement("div", {
+      style: {
+        width: 56,
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }
+    }, React.createElement("span", {
+      style: {
+        fontSize: 12.5,
+        fontWeight: 800,
+        color: t.rate == null ? 'var(--ink-3)' : low ? ATTEND_MARKS.absent.fg : 'var(--ink)'
+      }
+    }, t.rate == null ? '—' : t.rate + '%')));
+  })))), React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: '6px 14px',
+      marginTop: 10,
+      fontSize: 11,
+      color: 'var(--ink-3)'
+    }
+  }, ATTEND_ORDER.map(k => React.createElement("span", {
+    key: k,
+    style: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 5
+    }
+  }, React.createElement("span", {
+    style: {
+      width: 16,
+      height: 16,
+      borderRadius: 5,
+      background: ATTEND_MARKS[k].edge,
+      color: '#fff',
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: 9,
+      fontWeight: 800
+    }
+  }, ATTEND_MARKS[k].ico), tr(ATTEND_MARKS[k].km, ATTEND_MARKS[k].en))), React.createElement("span", {
+    style: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 5
+    }
+  }, React.createElement("span", {
+    style: {
+      width: 16,
+      height: 16,
+      borderRadius: 5,
+      border: '1.5px dashed var(--border-strong)'
+    }
+  }), tr('មាន​មេរៀន — មិន​ទាន់​កត់', 'Lesson, not marked')), React.createElement("span", {
+    style: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 5
+    }
+  }, React.createElement("span", {
+    style: {
+      width: 4,
+      height: 4,
+      borderRadius: 999,
+      background: 'var(--border)'
+    }
+  }), tr('គ្មាន​មេរៀន', 'No lesson'))));
   var inSpan = l => {
     if (span === 'all') return true;
     var d = new Date(l.date + 'T00:00:00'),
