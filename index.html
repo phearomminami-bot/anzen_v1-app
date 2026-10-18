@@ -1339,6 +1339,7 @@ window.__trRegistry = {
   "Usage this month": "ម៉ោងប្រើប្រាស់ខែនេះ",
   "lessons": "មេរៀន",
   "Daily Inspection": "ពិនិត្យប្រចាំថ្ងៃ",
+  "e.g. Weak air conditioning, spare key in the office": "ឧ. ម៉ាស៊ីនត្រជាក់ខ្សោយ · សោបម្រុងនៅការិយាល័យ",
   "Sort": "តម្រៀប",
   "Sort by": "តម្រៀបតាម",
   "No vehicles to display": "មិន​ទាន់​មាន​យានយន្ត",
@@ -2602,6 +2603,7 @@ window.__trGroups = {
     "Usage this month": "ម៉ោងប្រើប្រាស់ខែនេះ",
     "lessons": "មេរៀន",
     "Daily Inspection": "ពិនិត្យប្រចាំថ្ងៃ",
+    "e.g. Weak air conditioning, spare key in the office": "ឧ. ម៉ាស៊ីនត្រជាក់ខ្សោយ · សោបម្រុងនៅការិយាល័យ",
     "Sort": "តម្រៀប",
     "Sort by": "តម្រៀបតាម",
     "No vehicles to display": "មិន​ទាន់​មាន​យានយន្ត",
@@ -50139,6 +50141,26 @@ var VehicleMobileDetail = ({
   onStatusChange,
   onParkingChange
 }) => {
+  var [noteOpen, setNoteOpen] = React.useState(false);
+  var [noteText, setNoteText] = React.useState('');
+  var [, forceNote] = React.useReducer(n => n + 1, 0);
+  var openNote = () => {
+    setNoteText(String(v.note || ''));
+    setNoteOpen(true);
+  };
+  var saveNote = () => {
+    var was = String(v.note || ''),
+      now = noteText.trim();
+    if (was !== now) {
+      v.note = now;
+      if (window.__logActivity) window.__logActivity('edit', 'vehicle', 'note ' + v.id);
+      if (window.saveAllData) window.saveAllData();
+      if (window.__notifyVehiclesChanged) window.__notifyVehiclesChanged();
+      onSaved?.();
+      forceNote();
+    }
+    setNoteOpen(false);
+  };
   useBackHandler(true, onClose);
   var {
     hideChrome
@@ -50725,7 +50747,46 @@ var VehicleMobileDetail = ({
         marginLeft: 6
       }
     }, cnt, " ", tr('មេរៀន', 'lessons'))));
-  })(), React.createElement("button", {
+  })(), React.createElement("div", null, React.createElement("div", {
+    style: {
+      font: '500 10px/1 "JetBrains Mono",monospace',
+      letterSpacing: '.08em',
+      textTransform: 'uppercase',
+      color: 'var(--ink-3)',
+      marginBottom: 8
+    }
+  }, "NOTE"), v.note ? React.createElement("button", {
+    onClick: openNote,
+    style: {
+      display: 'block',
+      width: '100%',
+      textAlign: 'left',
+      padding: '11px 13px',
+      borderRadius: 12,
+      border: 'none',
+      cursor: 'pointer',
+      fontFamily: 'inherit',
+      background: 'var(--accent-soft)',
+      color: 'var(--accent)',
+      fontSize: 13,
+      lineHeight: 1.6,
+      whiteSpace: 'pre-wrap'
+    }
+  }, "\u270E ", v.note) : React.createElement("button", {
+    onClick: openNote,
+    style: {
+      display: 'block',
+      width: '100%',
+      padding: '11px 13px',
+      borderRadius: 12,
+      border: '1px dashed var(--border-strong)',
+      cursor: 'pointer',
+      fontFamily: 'inherit',
+      background: 'transparent',
+      color: 'var(--ink-3)',
+      fontSize: 13
+    }
+  }, "+ ", tr('ចំណាំ', 'Note'))), React.createElement("button", {
     onClick: () => setInspOpen(true),
     style: {
       padding: '14px 0',
@@ -50738,7 +50799,83 @@ var VehicleMobileDetail = ({
       fontWeight: 700,
       fontFamily: 'var(--font-km)'
     }
-  }, tr('ពិនិត្យប្រចាំថ្ងៃ', 'Daily Inspection')))));
+  }, tr('ពិនិត្យប្រចាំថ្ងៃ', 'Daily Inspection')))), React.createElement(Modal, {
+    open: noteOpen,
+    onClose: () => setNoteOpen(false),
+    width: 520
+  }, React.createElement("div", {
+    style: {
+      padding: '14px 16px 18px'
+    }
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      marginBottom: 12
+    }
+  }, React.createElement(Icon, {
+    name: "car",
+    size: 26
+  }), React.createElement("div", {
+    style: {
+      minWidth: 0
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700,
+      color: 'var(--ink)'
+    }
+  }, tr('ចំណាំ', 'Note')), React.createElement("div", {
+    style: {
+      fontSize: 11.5,
+      color: 'var(--ink-3)',
+      fontFamily: '"JetBrains Mono",monospace'
+    }
+  }, v.plate, v.make ? ' · ' + v.make : ''))), React.createElement("textarea", {
+    value: noteText,
+    onChange: e => setNoteText(e.target.value),
+    rows: 5,
+    placeholder: tr('ឧ. ម៉ាស៊ីនត្រជាក់ខ្សោយ · សោបម្រុងនៅការិយាល័យ', 'e.g. Weak air conditioning, spare key in the office'),
+    style: {
+      width: '100%',
+      boxSizing: 'border-box',
+      padding: '11px 13px',
+      resize: 'vertical',
+      fontFamily: 'var(--font-km), var(--font-en), sans-serif',
+      fontSize: 15,
+      lineHeight: 1.65,
+      color: 'var(--ink)',
+      background: 'var(--surface-muted)',
+      border: '1px solid var(--border)',
+      borderRadius: 12,
+      outline: 'none'
+    }
+  }), React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 9,
+      marginTop: 14
+    }
+  }, React.createElement(Btn, {
+    kind: "ghost",
+    size: "lg",
+    onClick: () => setNoteOpen(false),
+    style: {
+      flex: 1,
+      justifyContent: 'center'
+    }
+  }, tr('បោះបង់', 'Cancel')), React.createElement(Btn, {
+    kind: "accent",
+    size: "lg",
+    onClick: saveNote,
+    style: {
+      flex: 2,
+      justifyContent: 'center',
+      fontWeight: 700
+    }
+  }, tr('រក្សាទុក', 'Save'))))));
 };
 var VehicleScreen = () => {
   var {
