@@ -92,7 +92,8 @@ const attendanceReportPDF = (rows, meta, lang) => {
       ${td('<b>' + nameOf(r.s) + '</b>')}
       ${ATTEND_ORDER.map(k => td(kd(r.t[k]), 'text-align:center;color:' + ATTEND_MARKS[k].fg + (k === 'absent' && r.t.absent >= 3 ? ';font-weight:800' : ''))).join('')}
       ${td(r.t.rate == null ? '—' : `<b style="color:${low ? '#9B2C2C' : '#101828'}">${kd(r.t.rate)}%</b>`, 'text-align:center')}
-      ${td(kd(r.t.hours) + (r.s.target ? '/' + kd(r.s.target) : ''), 'text-align:center')}
+      ${td(kd(Math.max(0, Math.round((r.s.hours || 0) * 10) / 10)) + 'h', 'text-align:center')}
+      ${td(r.s.target ? kd(Math.max(0, Math.round((r.s.target - (r.s.hours || 0)) * 10) / 10)) + 'h' : '—', 'text-align:center')}
       ${td(low ? `<span style="color:#9B2C2C;font-weight:700">${L('ត្រូវតាមដាន','Follow up')}</span>` : '')}
     </tr>`;
   }).join('');
@@ -123,7 +124,7 @@ const attendanceReportPDF = (rows, meta, lang) => {
       <thead><tr>
         ${th(L('សិស្ស','Student'), '21%')}
         ${ATTEND_ORDER.map(k => th(L(ATTEND_MARKS[k].km, ATTEND_MARKS[k].en))).join('')}
-        ${th(L('វត្តមាន','Rate'))}${th(L('ម៉ោង','Hours'))}${th(L('កំណត់សម្គាល់','Note'), '18%')}
+        ${th(L('វត្តមាន','Rate'))}${th(L('រៀនរួច','Done'))}${th(L('នៅសល់','Left'))}${th(L('កំណត់សម្គាល់','Note'), '16%')}
       </tr></thead>
       <tbody>${body}</tbody></table>
     ${watch.length ? `<div style="margin-top:14px;padding:10px 12px;border-radius:9px;background:#FDECEC">
@@ -286,7 +287,12 @@ const AttendanceScreen = ({ role = 'admin' }) => {
   const DOW_KM = ['អា','ច','អ','ព','ព្រ','សុ','ស'];
   const DOW_EN = ['S','M','T','W','T','F','S'];
 
-  const NAME_W = 118, CELL_W = 30, CELL_H = 34;
+  const NAME_W = 118, CELL_W = 30, CELL_H = 34, SUM_W = 54;
+
+  // Hours across the whole course, which is what a school is actually counting
+  // down. `hours` is kept on the student and credited as lessons are marked.
+  const doneHours = (s) => Math.max(0, Math.round((s.hours || 0) * 10) / 10);
+  const leftHours = (s) => (s.target ? Math.max(0, Math.round((s.target - (s.hours || 0)) * 10) / 10) : null);
 
   const dayView = (
     <>
@@ -332,7 +338,7 @@ const AttendanceScreen = ({ role = 'admin' }) => {
 
       <Card>
         <div style={{overflowX:'auto',overflowY:'hidden',WebkitOverflowScrolling:'touch'}}>
-          <div style={{minWidth: NAME_W + monthDays.length * CELL_W + 56}}>
+          <div style={{minWidth: NAME_W + monthDays.length * CELL_W + SUM_W * 3}}>
 
             {/* day numbers */}
             <div style={{display:'flex',alignItems:'stretch',borderBottom:'1px solid var(--border)'}}>
@@ -350,9 +356,12 @@ const AttendanceScreen = ({ role = 'admin' }) => {
                     color: d.rest ? '#b0413e' : (d.iso === todayStr() ? 'var(--accent)' : 'var(--ink)')}}>{d.dn}</div>
                 </div>
               ))}
-              <div style={{width:56,flexShrink:0,display:'flex',alignItems:'flex-end',justifyContent:'center',padding:'6px 0'}}>
-                <span style={{fontSize:10.5,fontWeight:700,color:'var(--ink-3)'}}>{tr('វត្តមាន','Rate')}</span>
-              </div>
+              {[tr('វត្តមាន','Rate'), tr('រៀន​រួច','Done'), tr('នៅ​សល់','Left')].map((t, k) => (
+                <div key={k} style={{width:SUM_W,flexShrink:0,display:'flex',alignItems:'flex-end',justifyContent:'center',
+                  padding:'6px 0',borderLeft: k ? '1px solid var(--border)' : 'none'}}>
+                  <span style={{fontSize:10.5,fontWeight:700,color:'var(--ink-3)',textAlign:'center'}}>{t}</span>
+                </div>
+              ))}
             </div>
 
             {/* one row per student */}
@@ -373,7 +382,7 @@ const AttendanceScreen = ({ role = 'admin' }) => {
                     <div style={{fontSize:12.5,fontWeight:600,color:'var(--ink)',
                       whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{nm(s)}</div>
                     <div style={{fontSize:9.5,color:'var(--ink-3)'}}>
-                      {t.hours}{s.target ? '/' + s.target : ''}{tr('ម៉ោង','h')}</div>
+                      {tr('ខែ​នេះ','this month')} {t.hours}{tr('ម៉ោង','h')}</div>
                   </div>
 
                   {monthDays.map(d => {
@@ -407,10 +416,24 @@ const AttendanceScreen = ({ role = 'admin' }) => {
                     );
                   })}
 
-                  <div style={{width:56,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                  <div style={{width:SUM_W,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
                     <span style={{fontSize:12.5,fontWeight:800,
                       color: t.rate == null ? 'var(--ink-3)' : low ? ATTEND_MARKS.absent.fg : 'var(--ink)'}}>
                       {t.rate == null ? '—' : t.rate + '%'}</span>
+                  </div>
+                  <div style={{width:SUM_W,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',
+                    borderLeft:'1px solid var(--border)'}}>
+                    <span style={{fontSize:12.5,fontWeight:700,color:'var(--ink)'}}>{doneHours(s)}h</span>
+                  </div>
+                  <div style={{width:SUM_W,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',
+                    borderLeft:'1px solid var(--border)'}}>
+                    {leftHours(s) == null ? (
+                      <span style={{fontSize:12,color:'var(--ink-3)'}}>—</span>
+                    ) : (
+                      <span style={{fontSize:12.5,fontWeight:800,
+                        color: leftHours(s) === 0 ? ATTEND_MARKS.present.fg : 'var(--ink-2)'}}>
+                        {leftHours(s) === 0 ? tr('ចប់ ✓','Done ✓') : leftHours(s) + 'h'}</span>
+                    )}
                   </div>
                 </div>
               );
@@ -482,7 +505,9 @@ const AttendanceScreen = ({ role = 'admin' }) => {
       ...ATTEND_ORDER.map(k => [tr(ATTEND_MARKS[k].km, ATTEND_MARKS[k].en), r => r.t[k]]),
       [tr('មិន​ទាន់​កត់','Not marked'), r => r.t.unmarked],
       [tr('វត្តមាន %','Attendance %'), r => (r.t.rate == null ? '' : r.t.rate)],
-      [tr('ម៉ោង​បាន​រៀន','Hours done'), r => r.t.hours],
+      [tr('ម៉ោង​ខែ​នេះ','Hours this month'), r => r.t.hours],
+      [tr('សរុប​ម៉ោង​រៀន','Hours done total'), r => Math.max(0, Math.round((r.s.hours || 0) * 10) / 10)],
+      [tr('ម៉ោង​នៅ​សល់','Hours left'), r => (r.s.target ? Math.max(0, Math.round((r.s.target - (r.s.hours || 0)) * 10) / 10) : '')],
       [tr('ម៉ោង​គោលដៅ','Target hours'), r => r.s.target || ''],
     ];
     const ok = (typeof exportCSV === 'function') &&

@@ -552,7 +552,7 @@ window.__trRegistry = {
   "Or type manually": "ឬ បំពេញ​ដោយ​ដៃ",
   "Custom location...": "ទីតាំង​ផ្សេង...",
   "Scheduled": "កំណត់​ពេល",
-  "Done ✓": "រួច​រាល់",
+  "Done ✓": "ចប់ ✓",
   "Cancelled": "លុប",
   "Theory": "ទ្រឹស្ដី",
   "Practical": "ការ​អនុ​វត្ត​ន៍",
@@ -1005,6 +1005,8 @@ window.__trRegistry = {
   "COURSE PLANS": "គម្រោង​វគ្គ​សិក្សា",
   "Mark all present": "កត់​ទាំង​អស់​ថា «មក»",
   "Tap a box to step through: present → late → absent → excused → clear": "ប៉ះ​ប្រអប់​ដើម្បី​កត់ — ម្ដង​មួយ​ជំហាន៖ មក → មកយឺត → អវត្តមាន → សុំច្បាប់ → លុប",
+  "Left": "នៅ​សល់",
+  "this month": "ខែ​នេះ",
   "Lesson, not marked": "មាន​មេរៀន — មិន​ទាន់​កត់",
   "No lesson": "គ្មាន​មេរៀន",
   "Everything": "វគ្គ​ទាំង​មូល",
@@ -1013,7 +1015,9 @@ window.__trRegistry = {
   "ID": "លេខ​សម្គាល់",
   "Not marked": "មិន​ទាន់​កត់",
   "Attendance %": "វត្តមាន %",
-  "Hours done": "ម៉ោង​បាន​រៀន",
+  "Hours this month": "ម៉ោង​ខែ​នេះ",
+  "Hours done total": "សរុប​ម៉ោង​រៀន",
+  "Hours left": "ម៉ោង​នៅ​សល់",
   "Target hours": "ម៉ោង​គោលដៅ",
   "Exported ✓": "បាន​ទាញ​យក Excel ✓",
   "Export failed": "នាំចេញ​មិន​បាន",
@@ -3463,6 +3467,8 @@ window.__trGroups = {
     "Generate — preview PDF": "បង្កើត — មើល PDF",
     "Mark all present": "កត់​ទាំង​អស់​ថា «មក»",
     "Tap a box to step through: present → late → absent → excused → clear": "ប៉ះ​ប្រអប់​ដើម្បី​កត់ — ម្ដង​មួយ​ជំហាន៖ មក → មកយឺត → អវត្តមាន → សុំច្បាប់ → លុប",
+    "Left": "នៅ​សល់",
+    "this month": "ខែ​នេះ",
     "Lesson, not marked": "មាន​មេរៀន — មិន​ទាន់​កត់",
     "No lesson": "គ្មាន​មេរៀន",
     "Everything": "វគ្គ​ទាំង​មូល",
@@ -3471,7 +3477,9 @@ window.__trGroups = {
     "ID": "លេខ​សម្គាល់",
     "Not marked": "មិន​ទាន់​កត់",
     "Attendance %": "វត្តមាន %",
-    "Hours done": "ម៉ោង​បាន​រៀន",
+    "Hours this month": "ម៉ោង​ខែ​នេះ",
+    "Hours done total": "សរុប​ម៉ោង​រៀន",
+    "Hours left": "ម៉ោង​នៅ​សល់",
     "Target hours": "ម៉ោង​គោលដៅ",
     "Exported ✓": "បាន​ទាញ​យក Excel ✓",
     "Export failed": "ទាញ​យក​មិន​បាន",
@@ -29017,7 +29025,8 @@ var attendanceReportPDF = (rows, meta, lang) => {
       ${td('<b>' + nameOf(r.s) + '</b>')}
       ${ATTEND_ORDER.map(k => td(kd(r.t[k]), 'text-align:center;color:' + ATTEND_MARKS[k].fg + (k === 'absent' && r.t.absent >= 3 ? ';font-weight:800' : ''))).join('')}
       ${td(r.t.rate == null ? '—' : `<b style="color:${low ? '#9B2C2C' : '#101828'}">${kd(r.t.rate)}%</b>`, 'text-align:center')}
-      ${td(kd(r.t.hours) + (r.s.target ? '/' + kd(r.s.target) : ''), 'text-align:center')}
+      ${td(kd(Math.max(0, Math.round((r.s.hours || 0) * 10) / 10)) + 'h', 'text-align:center')}
+      ${td(r.s.target ? kd(Math.max(0, Math.round((r.s.target - (r.s.hours || 0)) * 10) / 10)) + 'h' : '—', 'text-align:center')}
       ${td(low ? `<span style="color:#9B2C2C;font-weight:700">${L('ត្រូវតាមដាន', 'Follow up')}</span>` : '')}
     </tr>`;
   }).join('');
@@ -29046,7 +29055,7 @@ var attendanceReportPDF = (rows, meta, lang) => {
       <thead><tr>
         ${th(L('សិស្ស', 'Student'), '21%')}
         ${ATTEND_ORDER.map(k => th(L(ATTEND_MARKS[k].km, ATTEND_MARKS[k].en))).join('')}
-        ${th(L('វត្តមាន', 'Rate'))}${th(L('ម៉ោង', 'Hours'))}${th(L('កំណត់សម្គាល់', 'Note'), '18%')}
+        ${th(L('វត្តមាន', 'Rate'))}${th(L('រៀនរួច', 'Done'))}${th(L('នៅសល់', 'Left'))}${th(L('កំណត់សម្គាល់', 'Note'), '16%')}
       </tr></thead>
       <tbody>${body}</tbody></table>
     ${watch.length ? `<div style="margin-top:14px;padding:10px 12px;border-radius:9px;background:#FDECEC">
@@ -29219,7 +29228,10 @@ var AttendanceScreen = ({
   var DOW_EN = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   var NAME_W = 118,
     CELL_W = 30,
-    CELL_H = 34;
+    CELL_H = 34,
+    SUM_W = 54;
+  var doneHours = s => Math.max(0, Math.round((s.hours || 0) * 10) / 10);
+  var leftHours = s => s.target ? Math.max(0, Math.round((s.target - (s.hours || 0)) * 10) / 10) : null;
   var dayView = React.createElement(React.Fragment, null, React.createElement("div", {
     style: {
       display: 'flex',
@@ -29329,7 +29341,7 @@ var AttendanceScreen = ({
     }
   }, React.createElement("div", {
     style: {
-      minWidth: NAME_W + monthDays.length * CELL_W + 56
+      minWidth: NAME_W + monthDays.length * CELL_W + SUM_W * 3
     }
   }, React.createElement("div", {
     style: {
@@ -29378,22 +29390,25 @@ var AttendanceScreen = ({
       lineHeight: 1.3,
       color: d.rest ? '#b0413e' : d.iso === todayStr() ? 'var(--accent)' : 'var(--ink)'
     }
-  }, d.dn))), React.createElement("div", {
+  }, d.dn))), [tr('វត្តមាន', 'Rate'), tr('រៀន​រួច', 'Done'), tr('នៅ​សល់', 'Left')].map((t, k) => React.createElement("div", {
+    key: k,
     style: {
-      width: 56,
+      width: SUM_W,
       flexShrink: 0,
       display: 'flex',
       alignItems: 'flex-end',
       justifyContent: 'center',
-      padding: '6px 0'
+      padding: '6px 0',
+      borderLeft: k ? '1px solid var(--border)' : 'none'
     }
   }, React.createElement("span", {
     style: {
       fontSize: 10.5,
       fontWeight: 700,
-      color: 'var(--ink-3)'
+      color: 'var(--ink-3)',
+      textAlign: 'center'
     }
-  }, tr('វត្តមាន', 'Rate')))), roster.length === 0 ? React.createElement("div", {
+  }, t)))), roster.length === 0 ? React.createElement("div", {
     style: {
       padding: '28px 16px',
       textAlign: 'center',
@@ -29439,7 +29454,7 @@ var AttendanceScreen = ({
         fontSize: 9.5,
         color: 'var(--ink-3)'
       }
-    }, t.hours, s.target ? '/' + s.target : '', tr('ម៉ោង', 'h'))), monthDays.map(d => {
+    }, tr('ខែ​នេះ', 'this month'), " ", t.hours, tr('ម៉ោង', 'h'))), monthDays.map(d => {
       var list = cells.get(s.id + '|' + d.iso) || [];
       var has = list.length > 0;
       var m = has ? ATTEND_MARKS[list[0].attend] : null;
@@ -29491,7 +29506,7 @@ var AttendanceScreen = ({
       }));
     }), React.createElement("div", {
       style: {
-        width: 56,
+        width: SUM_W,
         flexShrink: 0,
         display: 'flex',
         alignItems: 'center',
@@ -29503,7 +29518,42 @@ var AttendanceScreen = ({
         fontWeight: 800,
         color: t.rate == null ? 'var(--ink-3)' : low ? ATTEND_MARKS.absent.fg : 'var(--ink)'
       }
-    }, t.rate == null ? '—' : t.rate + '%')));
+    }, t.rate == null ? '—' : t.rate + '%')), React.createElement("div", {
+      style: {
+        width: SUM_W,
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderLeft: '1px solid var(--border)'
+      }
+    }, React.createElement("span", {
+      style: {
+        fontSize: 12.5,
+        fontWeight: 700,
+        color: 'var(--ink)'
+      }
+    }, doneHours(s), "h")), React.createElement("div", {
+      style: {
+        width: SUM_W,
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderLeft: '1px solid var(--border)'
+      }
+    }, leftHours(s) == null ? React.createElement("span", {
+      style: {
+        fontSize: 12,
+        color: 'var(--ink-3)'
+      }
+    }, "\u2014") : React.createElement("span", {
+      style: {
+        fontSize: 12.5,
+        fontWeight: 800,
+        color: leftHours(s) === 0 ? ATTEND_MARKS.present.fg : 'var(--ink-2)'
+      }
+    }, leftHours(s) === 0 ? tr('ចប់ ✓', 'Done ✓') : leftHours(s) + 'h')));
   })))), React.createElement("div", {
     style: {
       display: 'flex',
@@ -29615,7 +29665,7 @@ var AttendanceScreen = ({
       toast(tr('គ្មាន​ទិន្នន័យ​ដើម្បី​បង្ហាញ', 'Nothing to export'), 'warn');
       return;
     }
-    var cols = [[tr('សិស្ស', 'Student'), r => nm(r.s)], [tr('លេខ​សម្គាល់', 'ID'), r => r.s.id], ...ATTEND_ORDER.map(k => [tr(ATTEND_MARKS[k].km, ATTEND_MARKS[k].en), r => r.t[k]]), [tr('មិន​ទាន់​កត់', 'Not marked'), r => r.t.unmarked], [tr('វត្តមាន %', 'Attendance %'), r => r.t.rate == null ? '' : r.t.rate], [tr('ម៉ោង​បាន​រៀន', 'Hours done'), r => r.t.hours], [tr('ម៉ោង​គោលដៅ', 'Target hours'), r => r.s.target || '']];
+    var cols = [[tr('សិស្ស', 'Student'), r => nm(r.s)], [tr('លេខ​សម្គាល់', 'ID'), r => r.s.id], ...ATTEND_ORDER.map(k => [tr(ATTEND_MARKS[k].km, ATTEND_MARKS[k].en), r => r.t[k]]), [tr('មិន​ទាន់​កត់', 'Not marked'), r => r.t.unmarked], [tr('វត្តមាន %', 'Attendance %'), r => r.t.rate == null ? '' : r.t.rate], [tr('ម៉ោង​ខែ​នេះ', 'Hours this month'), r => r.t.hours], [tr('សរុប​ម៉ោង​រៀន', 'Hours done total'), r => Math.max(0, Math.round((r.s.hours || 0) * 10) / 10)], [tr('ម៉ោង​នៅ​សល់', 'Hours left'), r => r.s.target ? Math.max(0, Math.round((r.s.target - (r.s.hours || 0)) * 10) / 10) : ''], [tr('ម៉ោង​គោលដៅ', 'Target hours'), r => r.s.target || '']];
     var ok = typeof exportCSV === 'function' && exportCSV(`anzen-attendance-${span}-${todayStr()}.csv`, cols, rows);
     toast(ok ? tr('បាន​ទាញ​យក Excel ✓', 'Exported ✓') : tr('ទាញ​យក​មិន​បាន', 'Export failed'), ok ? 'good' : 'warn');
   };
