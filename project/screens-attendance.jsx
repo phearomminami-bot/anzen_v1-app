@@ -263,9 +263,46 @@ const AttendanceScreen = ({ role = 'admin' }) => {
   // One tap steps through the marks. Marking is mostly confirming that people
   // turned up, so the first tap is the common answer and the rest follow.
   const CYCLE = ['present', 'late', 'absent', 'excused', ''];
-  const stepCell = (list) => {
-    const cur = list[0] ? (list[0].attend || '') : '';
+
+  // Times and lengths are taken from what this student usually does, so an
+  // added lesson looks like the rest of their record rather than a guess.
+  const makeAdhoc = (stu, iso) => {
+    const past = (LESSONS || []).filter(l => l.studentId === stu.id && l.len);
+    const len = past.length ? Math.round(past.reduce((a, l) => a + l.len, 0) / past.length) : 2;
+    const h = past.length ? (past[past.length - 1].h || 7) : 7;
+    return {
+      id: (typeof nextLessonId === 'function') ? nextLessonId() : 'L-' + Date.now(),
+      studentId: stu.id, date: iso, h, len: Math.max(1, len || 2),
+      instId: (role !== 'admin' && myInstId) ? myInstId : '',
+      veh: '', guests: [], type: '', color: 'a',
+      phase: stu.phase || 'KH', pickup: '', location: '', note: '',
+      status: 'scheduled', adhoc: true,
+      createdBy: meName, createdAt: new Date().toISOString(),
+    };
+  };
+
+  const stepCell = (list, stu, iso) => {
+    if (!list.length) {
+      const l = makeAdhoc(stu, iso);
+      LESSONS.push(l);
+      attendApply(l, 'present', meName);
+      if (window.__logActivity) window.__logActivity('create', 'lesson', `${iso} ${nm(stu)} (${tr('បន្ថែម','added')})`);
+      save();
+      return;
+    }
+    const cur = list[0].attend || '';
     const next = CYCLE[(CYCLE.indexOf(cur) + 1) % CYCLE.length];
+    // Cycling an added lesson back past the end removes it, so tapping around
+    // the grid cannot leave a trail of empty bookings.
+    if (next === '' && list.every(l => l.adhoc)) {
+      list.forEach(l => {
+        attendApply(l, '', meName);              // hand back any credited hours
+        const i = LESSONS.indexOf(l);
+        if (i >= 0) LESSONS.splice(i, 1);
+      });
+      save();
+      return;
+    }
     list.forEach(l => attendApply(l, next, meName));
     save();
   };
@@ -413,24 +450,25 @@ const AttendanceScreen = ({ role = 'admin' }) => {
                       <div key={d.iso} style={{width:CELL_W,height:CELL_H,flexShrink:0,
                         display:'flex',alignItems:'center',justifyContent:'center',
                         background: d.rest ? 'rgba(176,65,62,.06)' : 'transparent'}}>
-                        {has ? (
-                          <button onClick={() => stepCell(list)}
-                            title={`${nm(s)} · ${d.iso}${m ? ' · ' + tr(m.km, m.en) : ''}`}
-                            aria-label={`${nm(s)} ${d.iso}`}
-                            style={{width:24,height:24,borderRadius:7,cursor:'pointer',fontFamily:'inherit',
-                              display:'flex',alignItems:'center',justifyContent:'center',
-                              fontSize:12,fontWeight:800,lineHeight:1,
-                              border: m ? 'none' : '1.5px dashed var(--border-strong)',
-                              background: m ? m.edge : 'transparent',
-                              color: m ? '#fff' : 'var(--ink-3)'}}>
-                            {mixed ? '•' : (m ? m.ico : '')}
-                            {list.length > 1 && !mixed && (
-                              <span style={{fontSize:7,marginLeft:1,opacity:.85}}>{list.length}</span>
-                            )}
-                          </button>
-                        ) : (
-                          <span style={{width:4,height:4,borderRadius:999,background:'var(--border)'}}/>
-                        )}
+                        <button onClick={() => stepCell(list, s, d.iso)}
+                          title={has
+                            ? `${nm(s)} · ${d.iso}${m ? ' · ' + tr(m.km, m.en) : ''}`
+                            : `${nm(s)} · ${d.iso} · ${tr('បន្ថែម​មេរៀន​ក្រៅ​កាលវិភាគ','add an unscheduled lesson')}`}
+                          aria-label={`${nm(s)} ${d.iso}`}
+                          style={{width:24,height:24,borderRadius:7,cursor:'pointer',fontFamily:'inherit',
+                            display:'flex',alignItems:'center',justifyContent:'center',
+                            fontSize: has ? 12 : 13, fontWeight:800, lineHeight:1,
+                            border: m ? 'none' : (has ? '1.5px dashed var(--border-strong)' : 'none'),
+                            background: m ? m.edge : 'transparent',
+                            color: m ? '#fff' : (has ? 'var(--ink-3)' : 'var(--border-strong)'),
+                            opacity: has ? 1 : .55}}>
+                          {has
+                            ? (mixed ? '•' : (m ? m.ico : ''))
+                            : '+'}
+                          {has && list.length > 1 && !mixed && (
+                            <span style={{fontSize:7,marginLeft:1,opacity:.85}}>{list.length}</span>
+                          )}
+                        </button>
                       </div>
                     );
                   })}
@@ -493,12 +531,16 @@ const AttendanceScreen = ({ role = 'admin' }) => {
           {tr('មាន​មេរៀន — មិន​ទាន់​កត់','Lesson, not marked')}
         </span>
         <span style={{display:'inline-flex',alignItems:'center',gap:5}}>
-          <span style={{width:4,height:4,borderRadius:999,background:'var(--border)'}}/>
-          {tr('គ្មាន​មេរៀន','No lesson')}
+          <span style={{width:16,height:16,borderRadius:5,display:'inline-flex',alignItems:'center',
+            justifyContent:'center',color:'var(--border-strong)',fontWeight:800,fontSize:11}}>+</span>
+          {tr('គ្មាន​មេរៀន — ប៉ះ​ដើម្បី​បន្ថែម','No lesson — tap to add one')}
         </span>
         <span style={{width:'100%',color:'var(--ink-3)'}}>
           {tr('«ថ្ងៃ​នៅ​សល់» រាប់​មេរៀន​ក្នុង​កាលវិភាគ​ពិត ចាប់​ពី​ថ្ងៃ​នេះ​ទៅ។ ⚠ = ម៉ោង​ដែល​កំណត់​រួច​មិន​គ្រប់​ម៉ោង​នៅ​សល់។',
               'Days booked counts real scheduled lessons from today on. The warning means what is booked does not cover the hours left.')}
+          <br/>
+          {tr('ប៉ះ «+» លើ​ថ្ងៃ​ដែល​គ្មាន​មេរៀន ដើម្បី​កត់​វត្តមាន​សិស្ស​ដែល​មក​ក្រៅ​កាលវិភាគ — មេរៀន​នឹង​បន្ថែម​ចូល​កាលវិភាគ​ដែរ។',
+              'Tap + on a day with no lesson to record a student who came unscheduled; the lesson is added to the schedule too.')}
         </span>
       </div>
     </>

@@ -1003,16 +1003,19 @@ window.__trRegistry = {
   "Amount · Status": "ចំនួន · ស្ថានភាព",
   "PAYMENT METHODS": "វិធី​សាស្ត្រ​ទូទាត់",
   "COURSE PLANS": "គម្រោង​វគ្គ​សិក្សា",
+  "added": "បន្ថែម",
   "Mark all present": "កត់​ទាំង​អស់​ថា «មក»",
   "Tap a box to step through: present → late → absent → excused → clear": "ប៉ះ​ប្រអប់​ដើម្បី​កត់ — ម្ដង​មួយ​ជំហាន៖ មក → មកយឺត → អវត្តមាន → សុំច្បាប់ → លុប",
   "Hours left": "ម៉ោង​នៅ​សល់",
   "Days booked": "ថ្ងៃ​នៅ​សល់",
   "this month": "ខែ​នេះ",
+  "add an unscheduled lesson": "បន្ថែម​មេរៀន​ក្រៅ​កាលវិភាគ",
   "none": "មិន​ទាន់​កំណត់",
   "d": "ថ្ងៃ",
   "Lesson, not marked": "មាន​មេរៀន — មិន​ទាន់​កត់",
-  "No lesson": "គ្មាន​មេរៀន",
+  "No lesson — tap to add one": "គ្មាន​មេរៀន — ប៉ះ​ដើម្បី​បន្ថែម",
   "Days booked counts real scheduled lessons from today on. The warning means what is booked does not cover the hours left.": "«ថ្ងៃ​នៅ​សល់» រាប់​មេរៀន​ក្នុង​កាលវិភាគ​ពិត ចាប់​ពី​ថ្ងៃ​នេះ​ទៅ។ ⚠ = ម៉ោង​ដែល​កំណត់​រួច​មិន​គ្រប់​ម៉ោង​នៅ​សល់។",
+  "Tap + on a day with no lesson to record a student who came unscheduled; the lesson is added to the schedule too.": "ប៉ះ «+» លើ​ថ្ងៃ​ដែល​គ្មាន​មេរៀន ដើម្បី​កត់​វត្តមាន​សិស្ស​ដែល​មក​ក្រៅ​កាលវិភាគ — មេរៀន​នឹង​បន្ថែម​ចូល​កាលវិភាគ​ដែរ។",
   "Everything": "វគ្គ​ទាំង​មូល",
   "Nothing to report": "គ្មាន​ទិន្នន័យ​ដើម្បី​បង្ហាញ",
   "Nothing to export": "គ្មាន​ទំនិញ​សម្រាប់​នាំចេញ",
@@ -3469,16 +3472,19 @@ window.__trGroups = {
     "Capacity per day": "ចំណុះ ១ ថ្ងៃ",
     "Hours needed": "ម៉ោង​ត្រូវ​ការ​ទាំង​អស់",
     "Generate — preview PDF": "បង្កើត — មើល PDF",
+    "added": "បន្ថែម",
     "Mark all present": "កត់​ទាំង​អស់​ថា «មក»",
     "Tap a box to step through: present → late → absent → excused → clear": "ប៉ះ​ប្រអប់​ដើម្បី​កត់ — ម្ដង​មួយ​ជំហាន៖ មក → មកយឺត → អវត្តមាន → សុំច្បាប់ → លុប",
     "Hours left": "ម៉ោង​នៅ​សល់",
     "Days booked": "ថ្ងៃ​នៅ​សល់",
     "this month": "ខែ​នេះ",
+    "add an unscheduled lesson": "បន្ថែម​មេរៀន​ក្រៅ​កាលវិភាគ",
     "none": "មិន​ទាន់​កំណត់",
     "d": "ថ្ងៃ",
     "Lesson, not marked": "មាន​មេរៀន — មិន​ទាន់​កត់",
-    "No lesson": "គ្មាន​មេរៀន",
+    "No lesson — tap to add one": "គ្មាន​មេរៀន — ប៉ះ​ដើម្បី​បន្ថែម",
     "Days booked counts real scheduled lessons from today on. The warning means what is booked does not cover the hours left.": "«ថ្ងៃ​នៅ​សល់» រាប់​មេរៀន​ក្នុង​កាលវិភាគ​ពិត ចាប់​ពី​ថ្ងៃ​នេះ​ទៅ។ ⚠ = ម៉ោង​ដែល​កំណត់​រួច​មិន​គ្រប់​ម៉ោង​នៅ​សល់។",
+    "Tap + on a day with no lesson to record a student who came unscheduled; the lesson is added to the schedule too.": "ប៉ះ «+» លើ​ថ្ងៃ​ដែល​គ្មាន​មេរៀន ដើម្បី​កត់​វត្តមាន​សិស្ស​ដែល​មក​ក្រៅ​កាលវិភាគ — មេរៀន​នឹង​បន្ថែម​ចូល​កាលវិភាគ​ដែរ។",
     "Everything": "វគ្គ​ទាំង​មូល",
     "Nothing to report": "គ្មាន​ទិន្នន័យ​ដើម្បី​បង្ហាញ",
     "Nothing to export": "គ្មាន​ទិន្នន័យ​ដើម្បី​បង្ហាញ",
@@ -29213,9 +29219,51 @@ var AttendanceScreen = ({
   }, [month, ver, myInstId]);
   var roster = (STUDENTS || []).filter(s => s && s.status !== 'Former' && s.status !== 'Cleared');
   var CYCLE = ['present', 'late', 'absent', 'excused', ''];
-  var stepCell = list => {
-    var cur = list[0] ? list[0].attend || '' : '';
+  var makeAdhoc = (stu, iso) => {
+    var past = (LESSONS || []).filter(l => l.studentId === stu.id && l.len);
+    var len = past.length ? Math.round(past.reduce((a, l) => a + l.len, 0) / past.length) : 2;
+    var h = past.length ? past[past.length - 1].h || 7 : 7;
+    return {
+      id: typeof nextLessonId === 'function' ? nextLessonId() : 'L-' + Date.now(),
+      studentId: stu.id,
+      date: iso,
+      h,
+      len: Math.max(1, len || 2),
+      instId: role !== 'admin' && myInstId ? myInstId : '',
+      veh: '',
+      guests: [],
+      type: '',
+      color: 'a',
+      phase: stu.phase || 'KH',
+      pickup: '',
+      location: '',
+      note: '',
+      status: 'scheduled',
+      adhoc: true,
+      createdBy: meName,
+      createdAt: new Date().toISOString()
+    };
+  };
+  var stepCell = (list, stu, iso) => {
+    if (!list.length) {
+      var l = makeAdhoc(stu, iso);
+      LESSONS.push(l);
+      attendApply(l, 'present', meName);
+      if (window.__logActivity) window.__logActivity('create', 'lesson', `${iso} ${nm(stu)} (${tr('បន្ថែម', 'added')})`);
+      save();
+      return;
+    }
+    var cur = list[0].attend || '';
     var next = CYCLE[(CYCLE.indexOf(cur) + 1) % CYCLE.length];
+    if (next === '' && list.every(l => l.adhoc)) {
+      list.forEach(l => {
+        attendApply(l, '', meName);
+        var i = LESSONS.indexOf(l);
+        if (i >= 0) LESSONS.splice(i, 1);
+      });
+      save();
+      return;
+    }
     list.forEach(l => attendApply(l, next, meName));
     save();
   };
@@ -29496,9 +29544,9 @@ var AttendanceScreen = ({
           justifyContent: 'center',
           background: d.rest ? 'rgba(176,65,62,.06)' : 'transparent'
         }
-      }, has ? React.createElement("button", {
-        onClick: () => stepCell(list),
-        title: `${nm(s)} · ${d.iso}${m ? ' · ' + tr(m.km, m.en) : ''}`,
+      }, React.createElement("button", {
+        onClick: () => stepCell(list, s, d.iso),
+        title: has ? `${nm(s)} · ${d.iso}${m ? ' · ' + tr(m.km, m.en) : ''}` : `${nm(s)} · ${d.iso} · ${tr('បន្ថែម​មេរៀន​ក្រៅ​កាលវិភាគ', 'add an unscheduled lesson')}`,
         "aria-label": `${nm(s)} ${d.iso}`,
         style: {
           width: 24,
@@ -29509,27 +29557,21 @@ var AttendanceScreen = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: 12,
+          fontSize: has ? 12 : 13,
           fontWeight: 800,
           lineHeight: 1,
-          border: m ? 'none' : '1.5px dashed var(--border-strong)',
+          border: m ? 'none' : has ? '1.5px dashed var(--border-strong)' : 'none',
           background: m ? m.edge : 'transparent',
-          color: m ? '#fff' : 'var(--ink-3)'
+          color: m ? '#fff' : has ? 'var(--ink-3)' : 'var(--border-strong)',
+          opacity: has ? 1 : .55
         }
-      }, mixed ? '•' : m ? m.ico : '', list.length > 1 && !mixed && React.createElement("span", {
+      }, has ? mixed ? '•' : m ? m.ico : '' : '+', has && list.length > 1 && !mixed && React.createElement("span", {
         style: {
           fontSize: 7,
           marginLeft: 1,
           opacity: .85
         }
-      }, list.length)) : React.createElement("span", {
-        style: {
-          width: 4,
-          height: 4,
-          borderRadius: 999,
-          background: 'var(--border)'
-        }
-      }));
+      }, list.length)));
     }), React.createElement("div", {
       style: {
         width: SUM_W,
@@ -29664,17 +29706,22 @@ var AttendanceScreen = ({
     }
   }, React.createElement("span", {
     style: {
-      width: 4,
-      height: 4,
-      borderRadius: 999,
-      background: 'var(--border)'
+      width: 16,
+      height: 16,
+      borderRadius: 5,
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'var(--border-strong)',
+      fontWeight: 800,
+      fontSize: 11
     }
-  }), tr('គ្មាន​មេរៀន', 'No lesson')), React.createElement("span", {
+  }, "+"), tr('គ្មាន​មេរៀន — ប៉ះ​ដើម្បី​បន្ថែម', 'No lesson — tap to add one')), React.createElement("span", {
     style: {
       width: '100%',
       color: 'var(--ink-3)'
     }
-  }, tr('«ថ្ងៃ​នៅ​សល់» រាប់​មេរៀន​ក្នុង​កាលវិភាគ​ពិត ចាប់​ពី​ថ្ងៃ​នេះ​ទៅ។ ⚠ = ម៉ោង​ដែល​កំណត់​រួច​មិន​គ្រប់​ម៉ោង​នៅ​សល់។', 'Days booked counts real scheduled lessons from today on. The warning means what is booked does not cover the hours left.'))));
+  }, tr('«ថ្ងៃ​នៅ​សល់» រាប់​មេរៀន​ក្នុង​កាលវិភាគ​ពិត ចាប់​ពី​ថ្ងៃ​នេះ​ទៅ។ ⚠ = ម៉ោង​ដែល​កំណត់​រួច​មិន​គ្រប់​ម៉ោង​នៅ​សល់។', 'Days booked counts real scheduled lessons from today on. The warning means what is booked does not cover the hours left.'), React.createElement("br", null), tr('ប៉ះ «+» លើ​ថ្ងៃ​ដែល​គ្មាន​មេរៀន ដើម្បី​កត់​វត្តមាន​សិស្ស​ដែល​មក​ក្រៅ​កាលវិភាគ — មេរៀន​នឹង​បន្ថែម​ចូល​កាលវិភាគ​ដែរ។', 'Tap + on a day with no lesson to record a student who came unscheduled; the lesson is added to the schedule too.'))));
   var inSpan = l => {
     if (span === 'all') return true;
     var d = new Date(l.date + 'T00:00:00'),
