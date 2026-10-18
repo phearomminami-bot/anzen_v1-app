@@ -95,7 +95,10 @@ const attendanceReportPDF = (rows, meta, lang) => {
       ${td(kd(Math.max(0, Math.round((r.s.hours || 0) * 10) / 10)) + 'h', 'text-align:center')}
       ${td(r.s.target ? kd(Math.max(0, Math.round((r.s.target - (r.s.hours || 0)) * 10) / 10)) + 'h' : '—', 'text-align:center')}
       ${td(r.booked == null ? '—' : (r.booked.days === 0 ? '✓' : kd(r.booked.days)), 'text-align:center')}
-      ${td(low ? `<span style="color:#9B2C2C;font-weight:700">${L('ត្រូវតាមដាន','Follow up')}</span>` : '')}
+      ${td([
+        low ? `<span style="color:#9B2C2C;font-weight:700">${L('ត្រូវតាមដាន','Follow up')}</span>` : '',
+        r.s.note ? esc(r.s.note) : '',
+      ].filter(Boolean).join('<br>'), 'line-height:1.5')}
     </tr>`;
   }).join('');
 
@@ -195,6 +198,8 @@ const AttendanceScreen = ({ role = 'admin' }) => {
   const { tr, lang, toast, openDetail } = useAppActions();
   const [tab, setTab]   = React.useState('day');
   const [span, setSpan] = React.useState('month');     // week | month | all
+  const [noteFor, setNoteFor] = React.useState(null);  // student being annotated
+  const [noteText, setNoteText] = React.useState('');
   const [ver, setVer]   = React.useState(0);
   const force = () => setVer(n => n + 1);
 
@@ -216,6 +221,20 @@ const AttendanceScreen = ({ role = 'admin' }) => {
     force();
   };
   const mark = (lesson, k) => { attendApply(lesson, k, meName); save(); };
+
+  const openNote = (stu) => { setNoteFor(stu); setNoteText(String(stu.note || '')); };
+  const saveNote = () => {
+    if (!noteFor) return;
+    const was = String(noteFor.note || ''), now = noteText.trim();
+    if (was !== now) {
+      noteFor.note = now;
+      if (window.__logActivity) window.__logActivity('edit', 'student', `${tr('ចំណាំ','note')} ${noteFor.id}`);
+      if (window.saveAllData) window.saveAllData();
+      toast(now ? tr('បាន​រក្សាទុក​ចំណាំ ✓','Note saved ✓') : tr('បាន​លុប​ចំណាំ','Note cleared'), 'good');
+    }
+    setNoteFor(null);
+    force();
+  };
 
   const studentOf = (id) => (STUDENTS || []).find(s => s.id === id);
   const instOf    = (id) => (INSTRUCTORS || []).find(i => i.id === id);
@@ -394,7 +413,7 @@ const AttendanceScreen = ({ role = 'admin' }) => {
 
       <Card>
         <div style={{overflowX:'auto',overflowY:'hidden',WebkitOverflowScrolling:'touch'}}>
-          <div style={{minWidth: NAME_W + monthDays.length * CELL_W + SUM_W * 4}}>
+          <div style={{minWidth: NAME_W + monthDays.length * CELL_W + SUM_W * 5}}>
 
             {/* day numbers */}
             <div style={{display:'flex',alignItems:'stretch',borderBottom:'1px solid var(--border)'}}>
@@ -412,7 +431,7 @@ const AttendanceScreen = ({ role = 'admin' }) => {
                     color: d.rest ? '#b0413e' : (d.iso === todayStr() ? 'var(--accent)' : 'var(--ink)')}}>{d.dn}</div>
                 </div>
               ))}
-              {[tr('វត្តមាន','Rate'), tr('រៀន​រួច','Done'), tr('ម៉ោង​នៅ​សល់','Hours left'), tr('ថ្ងៃ​នៅ​សល់','Days booked')].map((t, k) => (
+              {[tr('វត្តមាន','Rate'), tr('រៀន​រួច','Done'), tr('ម៉ោង​នៅ​សល់','Hours left'), tr('ថ្ងៃ​នៅ​សល់','Days booked'), tr('ចំណាំ','Note')].map((t, k) => (
                 <div key={k} style={{width:SUM_W,flexShrink:0,display:'flex',alignItems:'flex-end',justifyContent:'center',
                   padding:'6px 0',borderLeft: k ? '1px solid var(--border)' : 'none'}}>
                   <span style={{fontSize:10.5,fontWeight:700,color:'var(--ink-3)',textAlign:'center'}}>{t}</span>
@@ -510,6 +529,19 @@ const AttendanceScreen = ({ role = 'admin' }) => {
                       );
                     })()}
                   </div>
+                  <div style={{width:SUM_W,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',
+                    borderLeft:'1px solid var(--border)'}}>
+                    <button onClick={() => openNote(s)}
+                      title={s.note ? String(s.note) : tr('បន្ថែម​ចំណាំ','Add a note')}
+                      aria-label={`${tr('ចំណាំ','Note')} ${nm(s)}`}
+                      style={{width:28,height:28,borderRadius:8,cursor:'pointer',fontFamily:'inherit',
+                        display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,
+                        border: s.note ? 'none' : '1px solid var(--border)',
+                        background: s.note ? 'var(--accent-soft)' : 'transparent',
+                        color: s.note ? 'var(--accent)' : 'var(--ink-3)'}}>
+                      {s.note ? '✎' : '+'}
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -541,6 +573,9 @@ const AttendanceScreen = ({ role = 'admin' }) => {
           <br/>
           {tr('ប៉ះ «+» លើ​ថ្ងៃ​ដែល​គ្មាន​មេរៀន ដើម្បី​កត់​វត្តមាន​សិស្ស​ដែល​មក​ក្រៅ​កាលវិភាគ — មេរៀន​នឹង​បន្ថែម​ចូល​កាលវិភាគ​ដែរ។',
               'Tap + on a day with no lesson to record a student who came unscheduled; the lesson is added to the schedule too.')}
+          <br/>
+          {tr('ជួរ «ចំណាំ» សម្រាប់​សរសេរ​អំពី​សិស្ស​ម្នាក់ៗ — ចំណាំ​នេះ​ចេញ​ក្នុង​របាយការណ៍​ដែរ។',
+              'The note column is for anything about that student; it appears on the report too.')}
         </span>
       </div>
     </>
@@ -594,6 +629,7 @@ const AttendanceScreen = ({ role = 'admin' }) => {
       [tr('ថ្ងៃ​នៅ​សល់','Days booked'), r => booked(r.s).days],
       [tr('ម៉ោង​កំណត់​រួច','Hours booked'), r => booked(r.s).hours],
       [tr('ម៉ោង​គោលដៅ','Target hours'), r => r.s.target || ''],
+      [tr('ចំណាំ','Note'), r => r.s.note || ''],
     ];
     const ok = (typeof exportCSV === 'function') &&
       exportCSV(`anzen-attendance-${span}-${todayStr()}.csv`, cols, rows);
@@ -656,6 +692,11 @@ const AttendanceScreen = ({ role = 'admin' }) => {
                       {r.t.hours}{r.s.target ? '/' + r.s.target : ''} {tr('ម៉ោង','h')}
                       {r.t.unmarked ? ` · ${r.t.unmarked} ${tr('មិន​ទាន់​កត់','unmarked')}` : ''}
                     </div>
+                    {r.s.note && (
+                      <div onClick={() => openNote(r.s)} style={{marginTop:4,padding:'5px 8px',borderRadius:8,
+                        background:'var(--accent-soft)',color:'var(--accent)',fontSize:11,lineHeight:1.5,
+                        cursor:'pointer',whiteSpace:'pre-wrap'}}>✎ {r.s.note}</div>
+                    )}
                   </div>
                   {low && (
                     <span style={{flexShrink:0,background:ATTEND_MARKS.absent.bg,color:ATTEND_MARKS.absent.fg,
@@ -708,6 +749,30 @@ const AttendanceScreen = ({ role = 'admin' }) => {
       </div>
 
       {tab === 'day' ? dayView : overviewView}
+
+      <Modal open={!!noteFor} onClose={() => setNoteFor(null)} width={520}>
+        <div style={{padding:'14px 16px 18px'}}>
+          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+            <Icon name="clipboard" size={26}/>
+            <div style={{minWidth:0}}>
+              <div style={{fontSize:16,fontWeight:700,color:'var(--ink)'}}>{tr('ចំណាំ','Note')}</div>
+              <div style={{fontSize:11.5,color:'var(--ink-3)'}}>{noteFor ? nm(noteFor) : ''}</div>
+            </div>
+          </div>
+          <textarea value={noteText} onChange={e => setNoteText(e.target.value)} rows={5}
+            placeholder={tr('ឧ. ម្ដាយ​ទូរស័ព្ទ​មក — សុំ​រៀន​ពេល​ព្រឹក','e.g. Mother called — mornings only')}
+            style={{width:'100%',boxSizing:'border-box',padding:'11px 13px',resize:'vertical',
+              fontFamily:'var(--font-km), var(--font-en), sans-serif',fontSize:15,lineHeight:1.65,
+              color:'var(--ink)',background:'var(--surface-muted)',
+              border:'1px solid var(--border)',borderRadius:12,outline:'none'}}/>
+          <div style={{display:'flex',gap:9,marginTop:14}}>
+            <Btn kind="ghost" size="lg" onClick={() => setNoteFor(null)} style={{flex:1,justifyContent:'center'}}>
+              {tr('បោះបង់','Cancel')}</Btn>
+            <Btn kind="accent" size="lg" onClick={saveNote} style={{flex:2,justifyContent:'center',fontWeight:700}}>
+              {tr('រក្សាទុក','Save')}</Btn>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
