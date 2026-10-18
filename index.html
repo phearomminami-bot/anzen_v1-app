@@ -1006,12 +1006,13 @@ window.__trRegistry = {
   "Mark all present": "កត់​ទាំង​អស់​ថា «មក»",
   "Tap a box to step through: present → late → absent → excused → clear": "ប៉ះ​ប្រអប់​ដើម្បី​កត់ — ម្ដង​មួយ​ជំហាន៖ មក → មកយឺត → អវត្តមាន → សុំច្បាប់ → លុប",
   "Hours left": "ម៉ោង​នៅ​សល់",
-  "Days left": "ថ្ងៃ​នៅ​សល់",
+  "Days booked": "ថ្ងៃ​នៅ​សល់",
   "this month": "ខែ​នេះ",
+  "none": "មិន​ទាន់​កំណត់",
   "d": "ថ្ងៃ",
   "Lesson, not marked": "មាន​មេរៀន — មិន​ទាន់​កត់",
   "No lesson": "គ្មាន​មេរៀន",
-  "Days left is an estimate: hours left divided by how long that student usually sits.": "«ថ្ងៃ​នៅ​សល់» ប៉ាន់​ស្មាន​ពី​ម៉ោង​នៅ​សល់ ចែក​នឹង​រយៈពេល​ដែល​សិស្ស​នោះ​រៀន​ម្ដងៗ។",
+  "Days booked counts real scheduled lessons from today on. The warning means what is booked does not cover the hours left.": "«ថ្ងៃ​នៅ​សល់» រាប់​មេរៀន​ក្នុង​កាលវិភាគ​ពិត ចាប់​ពី​ថ្ងៃ​នេះ​ទៅ។ ⚠ = ម៉ោង​ដែល​កំណត់​រួច​មិន​គ្រប់​ម៉ោង​នៅ​សល់។",
   "Everything": "វគ្គ​ទាំង​មូល",
   "Nothing to report": "គ្មាន​ទិន្នន័យ​ដើម្បី​បង្ហាញ",
   "Nothing to export": "គ្មាន​ទំនិញ​សម្រាប់​នាំចេញ",
@@ -1020,7 +1021,7 @@ window.__trRegistry = {
   "Attendance %": "វត្តមាន %",
   "Hours this month": "ម៉ោង​ខែ​នេះ",
   "Hours done total": "សរុប​ម៉ោង​រៀន",
-  "Days left (estimate)": "ថ្ងៃ​នៅ​សល់ (ប៉ាន់​ស្មាន)",
+  "Hours booked": "ម៉ោង​កំណត់​រួច",
   "Target hours": "ម៉ោង​គោលដៅ",
   "Exported ✓": "បាន​ទាញ​យក Excel ✓",
   "Export failed": "នាំចេញ​មិន​បាន",
@@ -3471,12 +3472,13 @@ window.__trGroups = {
     "Mark all present": "កត់​ទាំង​អស់​ថា «មក»",
     "Tap a box to step through: present → late → absent → excused → clear": "ប៉ះ​ប្រអប់​ដើម្បី​កត់ — ម្ដង​មួយ​ជំហាន៖ មក → មកយឺត → អវត្តមាន → សុំច្បាប់ → លុប",
     "Hours left": "ម៉ោង​នៅ​សល់",
-    "Days left": "ថ្ងៃ​នៅ​សល់",
+    "Days booked": "ថ្ងៃ​នៅ​សល់",
     "this month": "ខែ​នេះ",
+    "none": "មិន​ទាន់​កំណត់",
     "d": "ថ្ងៃ",
     "Lesson, not marked": "មាន​មេរៀន — មិន​ទាន់​កត់",
     "No lesson": "គ្មាន​មេរៀន",
-    "Days left is an estimate: hours left divided by how long that student usually sits.": "«ថ្ងៃ​នៅ​សល់» ប៉ាន់​ស្មាន​ពី​ម៉ោង​នៅ​សល់ ចែក​នឹង​រយៈពេល​ដែល​សិស្ស​នោះ​រៀន​ម្ដងៗ។",
+    "Days booked counts real scheduled lessons from today on. The warning means what is booked does not cover the hours left.": "«ថ្ងៃ​នៅ​សល់» រាប់​មេរៀន​ក្នុង​កាលវិភាគ​ពិត ចាប់​ពី​ថ្ងៃ​នេះ​ទៅ។ ⚠ = ម៉ោង​ដែល​កំណត់​រួច​មិន​គ្រប់​ម៉ោង​នៅ​សល់។",
     "Everything": "វគ្គ​ទាំង​មូល",
     "Nothing to report": "គ្មាន​ទិន្នន័យ​ដើម្បី​បង្ហាញ",
     "Nothing to export": "គ្មាន​ទិន្នន័យ​ដើម្បី​បង្ហាញ",
@@ -3485,7 +3487,7 @@ window.__trGroups = {
     "Attendance %": "វត្តមាន %",
     "Hours this month": "ម៉ោង​ខែ​នេះ",
     "Hours done total": "សរុប​ម៉ោង​រៀន",
-    "Days left (estimate)": "ថ្ងៃ​នៅ​សល់ (ប៉ាន់​ស្មាន)",
+    "Hours booked": "ម៉ោង​កំណត់​រួច",
     "Target hours": "ម៉ោង​គោលដៅ",
     "Exported ✓": "បាន​ទាញ​យក Excel ✓",
     "Export failed": "ទាញ​យក​មិន​បាន",
@@ -29033,7 +29035,7 @@ var attendanceReportPDF = (rows, meta, lang) => {
       ${td(r.t.rate == null ? '—' : `<b style="color:${low ? '#9B2C2C' : '#101828'}">${kd(r.t.rate)}%</b>`, 'text-align:center')}
       ${td(kd(Math.max(0, Math.round((r.s.hours || 0) * 10) / 10)) + 'h', 'text-align:center')}
       ${td(r.s.target ? kd(Math.max(0, Math.round((r.s.target - (r.s.hours || 0)) * 10) / 10)) + 'h' : '—', 'text-align:center')}
-      ${td(r.days == null ? '—' : r.days === 0 ? '✓' : kd(r.days), 'text-align:center')}
+      ${td(r.booked == null ? '—' : r.booked.days === 0 ? '✓' : kd(r.booked.days), 'text-align:center')}
       ${td(low ? `<span style="color:#9B2C2C;font-weight:700">${L('ត្រូវតាមដាន', 'Follow up')}</span>` : '')}
     </tr>`;
   }).join('');
@@ -29062,7 +29064,7 @@ var attendanceReportPDF = (rows, meta, lang) => {
       <thead><tr>
         ${th(L('សិស្ស', 'Student'), '21%')}
         ${ATTEND_ORDER.map(k => th(L(ATTEND_MARKS[k].km, ATTEND_MARKS[k].en))).join('')}
-        ${th(L('វត្តមាន', 'Rate'))}${th(L('រៀនរួច', 'Done'))}${th(L('ម៉ោងនៅសល់', 'Hours left'))}${th(L('ថ្ងៃនៅសល់', 'Days left'))}${th(L('កំណត់សម្គាល់', 'Note'), '14%')}
+        ${th(L('វត្តមាន', 'Rate'))}${th(L('រៀនរួច', 'Done'))}${th(L('ម៉ោងនៅសល់', 'Hours left'))}${th(L('ថ្ងៃនៅសល់', 'Days booked'))}${th(L('កំណត់សម្គាល់', 'Note'), '14%')}
       </tr></thead>
       <tbody>${body}</tbody></table>
     ${watch.length ? `<div style="margin-top:14px;padding:10px 12px;border-radius:9px;background:#FDECEC">
@@ -29239,16 +29241,22 @@ var AttendanceScreen = ({
     SUM_W = 54;
   var doneHours = s => Math.max(0, Math.round((s.hours || 0) * 10) / 10);
   var leftHours = s => s.target ? Math.max(0, Math.round((s.target - (s.hours || 0)) * 10) / 10) : null;
-  var usualLen = sid => {
-    var mine = (LESSONS || []).filter(l => l.studentId === sid && attendCountable(l) && l.len);
-    if (!mine.length) return 2;
-    return mine.reduce((a, l) => a + l.len, 0) / mine.length;
-  };
-  var leftDays = s => {
-    var h = leftHours(s);
-    if (h == null) return null;
-    if (h <= 0) return 0;
-    return Math.ceil(h / Math.max(0.5, usualLen(s.id)));
+  var booked = s => {
+    var t = todayStr();
+    var days = new Set();
+    var hours = 0;
+    (LESSONS || []).forEach(l => {
+      if (!l || l.studentId !== s.id || !attendCountable(l)) return;
+      if (!l.date || l.date < t) return;
+      var m = ATTEND_MARKS[l.attend];
+      if (m && m.credits) return;
+      days.add(l.date);
+      hours += l.len || 0;
+    });
+    return {
+      days: days.size,
+      hours
+    };
   };
   var dayView = React.createElement(React.Fragment, null, React.createElement("div", {
     style: {
@@ -29408,7 +29416,7 @@ var AttendanceScreen = ({
       lineHeight: 1.3,
       color: d.rest ? '#b0413e' : d.iso === todayStr() ? 'var(--accent)' : 'var(--ink)'
     }
-  }, d.dn))), [tr('វត្តមាន', 'Rate'), tr('រៀន​រួច', 'Done'), tr('ម៉ោង​នៅ​សល់', 'Hours left'), tr('ថ្ងៃ​នៅ​សល់', 'Days left')].map((t, k) => React.createElement("div", {
+  }, d.dn))), [tr('វត្តមាន', 'Rate'), tr('រៀន​រួច', 'Done'), tr('ម៉ោង​នៅ​សល់', 'Hours left'), tr('ថ្ងៃ​នៅ​សល់', 'Days booked')].map((t, k) => React.createElement("div", {
     key: k,
     style: {
       width: SUM_W,
@@ -29580,24 +29588,32 @@ var AttendanceScreen = ({
         justifyContent: 'center',
         borderLeft: '1px solid var(--border)'
       }
-    }, leftDays(s) == null ? React.createElement("span", {
-      style: {
-        fontSize: 12,
-        color: 'var(--ink-3)'
-      }
-    }, "\u2014") : leftDays(s) === 0 ? React.createElement("span", {
-      style: {
-        fontSize: 12.5,
-        fontWeight: 800,
-        color: ATTEND_MARKS.present.fg
-      }
-    }, "\u2713") : React.createElement("span", {
-      style: {
-        fontSize: 12.5,
-        fontWeight: 800,
-        color: 'var(--ink-2)'
-      }
-    }, leftDays(s), " ", tr('ថ្ងៃ', 'd'))));
+    }, (() => {
+      var bk = booked(s),
+        lh = leftHours(s);
+      if (!bk.days) return lh === 0 || lh == null ? React.createElement("span", {
+        style: {
+          fontSize: 12.5,
+          fontWeight: 800,
+          color: ATTEND_MARKS.present.fg
+        }
+      }, "\u2713") : React.createElement("span", {
+        style: {
+          fontSize: 11.5,
+          fontWeight: 800,
+          color: ATTEND_MARKS.absent.fg
+        }
+      }, tr('មិន​ទាន់​កំណត់', 'none'));
+      var short = lh != null && lh > 0 && bk.hours < lh;
+      return React.createElement("span", {
+        title: tr(`កំណត់​រួច ${bk.hours} ម៉ោង`, `${bk.hours}h booked`),
+        style: {
+          fontSize: 12.5,
+          fontWeight: 800,
+          color: short ? ATTEND_MARKS.late.fg : 'var(--ink-2)'
+        }
+      }, bk.days, " ", tr('ថ្ងៃ', 'd'), short ? ' ⚠' : '');
+    })()));
   })))), React.createElement("div", {
     style: {
       display: 'flex',
@@ -29658,7 +29674,7 @@ var AttendanceScreen = ({
       width: '100%',
       color: 'var(--ink-3)'
     }
-  }, tr('«ថ្ងៃ​នៅ​សល់» ប៉ាន់​ស្មាន​ពី​ម៉ោង​នៅ​សល់ ចែក​នឹង​រយៈពេល​ដែល​សិស្ស​នោះ​រៀន​ម្ដងៗ។', 'Days left is an estimate: hours left divided by how long that student usually sits.'))));
+  }, tr('«ថ្ងៃ​នៅ​សល់» រាប់​មេរៀន​ក្នុង​កាលវិភាគ​ពិត ចាប់​ពី​ថ្ងៃ​នេះ​ទៅ។ ⚠ = ម៉ោង​ដែល​កំណត់​រួច​មិន​គ្រប់​ម៉ោង​នៅ​សល់។', 'Days booked counts real scheduled lessons from today on. The warning means what is booked does not cover the hours left.'))));
   var inSpan = l => {
     if (span === 'all') return true;
     var d = new Date(l.date + 'T00:00:00'),
@@ -29674,7 +29690,7 @@ var AttendanceScreen = ({
   var rows = (STUDENTS || []).filter(s => s && s.status !== 'Former').map(s => ({
     s,
     t: attendTally((LESSONS || []).filter(l => l.studentId === s.id && inSpan(l) && mine(l))),
-    days: leftDays(s)
+    booked: booked(s)
   })).filter(r => r.t.marked + r.t.unmarked > 0).sort((a, b) => (a.t.rate ?? 999) - (b.t.rate ?? 999));
   var spanLabel = span === 'week' ? tr('សប្ដាហ៍​នេះ', 'This week') : span === 'month' ? tr('ខែ​នេះ', 'This month') : tr('វគ្គ​ទាំង​មូល', 'Everything');
   var spanDates = (() => {
@@ -29715,7 +29731,7 @@ var AttendanceScreen = ({
       toast(tr('គ្មាន​ទិន្នន័យ​ដើម្បី​បង្ហាញ', 'Nothing to export'), 'warn');
       return;
     }
-    var cols = [[tr('សិស្ស', 'Student'), r => nm(r.s)], [tr('លេខ​សម្គាល់', 'ID'), r => r.s.id], ...ATTEND_ORDER.map(k => [tr(ATTEND_MARKS[k].km, ATTEND_MARKS[k].en), r => r.t[k]]), [tr('មិន​ទាន់​កត់', 'Not marked'), r => r.t.unmarked], [tr('វត្តមាន %', 'Attendance %'), r => r.t.rate == null ? '' : r.t.rate], [tr('ម៉ោង​ខែ​នេះ', 'Hours this month'), r => r.t.hours], [tr('សរុប​ម៉ោង​រៀន', 'Hours done total'), r => Math.max(0, Math.round((r.s.hours || 0) * 10) / 10)], [tr('ម៉ោង​នៅ​សល់', 'Hours left'), r => r.s.target ? Math.max(0, Math.round((r.s.target - (r.s.hours || 0)) * 10) / 10) : ''], [tr('ថ្ងៃ​នៅ​សល់ (ប៉ាន់​ស្មាន)', 'Days left (estimate)'), r => leftDays(r.s) == null ? '' : leftDays(r.s)], [tr('ម៉ោង​គោលដៅ', 'Target hours'), r => r.s.target || '']];
+    var cols = [[tr('សិស្ស', 'Student'), r => nm(r.s)], [tr('លេខ​សម្គាល់', 'ID'), r => r.s.id], ...ATTEND_ORDER.map(k => [tr(ATTEND_MARKS[k].km, ATTEND_MARKS[k].en), r => r.t[k]]), [tr('មិន​ទាន់​កត់', 'Not marked'), r => r.t.unmarked], [tr('វត្តមាន %', 'Attendance %'), r => r.t.rate == null ? '' : r.t.rate], [tr('ម៉ោង​ខែ​នេះ', 'Hours this month'), r => r.t.hours], [tr('សរុប​ម៉ោង​រៀន', 'Hours done total'), r => Math.max(0, Math.round((r.s.hours || 0) * 10) / 10)], [tr('ម៉ោង​នៅ​សល់', 'Hours left'), r => r.s.target ? Math.max(0, Math.round((r.s.target - (r.s.hours || 0)) * 10) / 10) : ''], [tr('ថ្ងៃ​នៅ​សល់', 'Days booked'), r => booked(r.s).days], [tr('ម៉ោង​កំណត់​រួច', 'Hours booked'), r => booked(r.s).hours], [tr('ម៉ោង​គោលដៅ', 'Target hours'), r => r.s.target || '']];
     var ok = typeof exportCSV === 'function' && exportCSV(`anzen-attendance-${span}-${todayStr()}.csv`, cols, rows);
     toast(ok ? tr('បាន​ទាញ​យក Excel ✓', 'Exported ✓') : tr('ទាញ​យក​មិន​បាន', 'Export failed'), ok ? 'good' : 'warn');
   };
